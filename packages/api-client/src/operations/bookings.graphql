@@ -1,0 +1,580 @@
+# ============================================================================
+# Booking Queries
+# ============================================================================
+
+query GetBookings(
+  $facilityId: ID
+  $staffId: ID
+  $startDate: String
+  $endDate: String
+  $statuses: [BookingStatus!]
+  $first: Int = 20
+  $skip: Int
+) {
+  bookings(
+    facilityId: $facilityId
+    staffId: $staffId
+    startDate: $startDate
+    endDate: $endDate
+    statuses: $statuses
+    first: $first
+    skip: $skip
+  ) {
+    edges {
+      cursor
+      node {
+        id
+        bookingNumber
+        bookingType
+        status
+        startTime
+        endTime
+        durationMinutes
+        guestCount
+        notes
+        member {
+          id
+          firstName
+          lastName
+          memberId
+          photoUrl
+          status
+        }
+        service {
+          id
+          name
+          category
+          durationMinutes
+          basePrice
+        }
+        staff {
+          id
+          firstName
+          lastName
+          photoUrl
+          role
+          isActive
+        }
+        facility {
+          id
+          name
+          type
+          location
+          capacity
+          isActive
+        }
+        pricing {
+          basePrice
+          subtotal
+          tax
+          total
+          modifiers {
+            label
+            amount
+            isPercentage
+          }
+        }
+        createdAt
+      }
+    }
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      startCursor
+      endCursor
+    }
+    totalCount
+  }
+}
+
+query GetBooking($id: ID!) {
+  booking(id: $id) {
+    id
+    bookingNumber
+    bookingType
+    status
+    startTime
+    endTime
+    durationMinutes
+    guestCount
+    notes
+    createdAt
+    member {
+      id
+      firstName
+      lastName
+      memberId
+      photoUrl
+      status
+    }
+    service {
+      id
+      name
+      description
+      category
+      durationMinutes
+      basePrice
+    }
+    staff {
+      id
+      firstName
+      lastName
+      photoUrl
+      role
+      isActive
+    }
+    facility {
+      id
+      name
+      type
+      location
+      capacity
+      isActive
+    }
+    resource {
+      id
+      name
+      facilityId
+      isActive
+    }
+    pricing {
+      basePrice
+      subtotal
+      tax
+      total
+      modifiers {
+        label
+        amount
+        isPercentage
+      }
+    }
+  }
+}
+
+query GetBookingStats {
+  bookingStats {
+    todayBookings
+    confirmedBookings
+    checkedInBookings
+    completedBookings
+    noShows
+    utilizationRate
+  }
+}
+
+query GetCalendarDay($date: String!, $facilityId: ID, $resourceIds: [ID!], $statuses: [BookingStatus!]) {
+  calendarDay(date: $date, facilityId: $facilityId, resourceIds: $resourceIds, statuses: $statuses) {
+    date
+    resources {
+      id
+      name
+      subtitle
+      type
+    }
+    bookings {
+      id
+      resourceId
+      bookingNumber
+      status
+      startTime
+      endTime
+      bufferBefore
+      bufferAfter
+      memberName
+      memberPhotoUrl
+      serviceName
+    }
+  }
+}
+
+# ============================================================================
+# Booking Mutations
+# ============================================================================
+
+mutation CreateBooking($input: CreateBookingInput!) {
+  createBooking(input: $input) {
+    success
+    booking {
+      id
+      bookingNumber
+      status
+      startTime
+      endTime
+      durationMinutes
+      member {
+        id
+        firstName
+        lastName
+      }
+      service {
+        id
+        name
+      }
+      staff {
+        id
+        firstName
+        lastName
+      }
+      facility {
+        id
+        name
+      }
+    }
+    error
+  }
+}
+
+mutation CancelBooking($input: CancelBookingInput!) {
+  cancelBooking(input: $input) {
+    success
+    message
+    error
+  }
+}
+
+mutation RescheduleBooking($input: RescheduleBookingInput!) {
+  rescheduleBooking(input: $input) {
+    success
+    booking {
+      id
+      status
+      startTime
+      endTime
+    }
+    error
+  }
+}
+
+mutation CheckInBooking($input: CheckInInput!) {
+  checkIn(input: $input) {
+    success
+    booking {
+      id
+      status
+    }
+    error
+  }
+}
+
+# ============================================================================
+# Facility Queries & Mutations
+# ============================================================================
+
+query GetFacilities($filter: FacilityFilterInput) {
+  facilities(filter: $filter) {
+    id
+    name
+    type
+    location
+    capacity
+    isActive
+  }
+}
+
+mutation CreateFacility($input: CreateFacilityInput!) {
+  createFacility(input: $input) {
+    success
+    facility {
+      id
+      name
+      type
+      location
+      capacity
+      isActive
+    }
+    error
+  }
+}
+
+mutation UpdateFacility($input: UpdateFacilityInput!) {
+  updateFacility(input: $input) {
+    success
+    facility {
+      id
+      name
+      type
+      location
+      capacity
+      isActive
+    }
+    error
+  }
+}
+
+mutation DeleteFacility($id: ID!) {
+  deleteFacility(id: $id) {
+    success
+    message
+    error
+  }
+}
+
+# ============================================================================
+# Service Queries & Mutations
+# ============================================================================
+
+query GetServices($filter: ServiceFilterInput) {
+  services(filter: $filter) {
+    id
+    name
+    category
+    description
+    durationMinutes
+    basePrice
+    isActive
+  }
+}
+
+mutation CreateService($input: CreateServiceInput!) {
+  createService(input: $input) {
+    success
+    service {
+      id
+      name
+      category
+      description
+      durationMinutes
+      bufferMinutes
+      basePrice
+      isActive
+      requiredCapabilities
+      requiredFacilityFeatures
+      tierDiscounts {
+        tierName
+        discountPercent
+      }
+      variations {
+        id
+        name
+        priceModifier
+        priceType
+      }
+    }
+    error
+  }
+}
+
+mutation UpdateService($input: UpdateServiceInput!) {
+  updateService(input: $input) {
+    success
+    service {
+      id
+      name
+      category
+      description
+      durationMinutes
+      bufferMinutes
+      basePrice
+      isActive
+      requiredCapabilities
+      requiredFacilityFeatures
+      tierDiscounts {
+        tierName
+        discountPercent
+      }
+      variations {
+        id
+        name
+        priceModifier
+        priceType
+      }
+    }
+    error
+  }
+}
+
+mutation DeleteService($id: ID!) {
+  deleteService(id: $id) {
+    success
+    message
+    error
+  }
+}
+
+# ============================================================================
+# Staff Queries & Mutations
+# ============================================================================
+
+query GetBookingStaff($filter: StaffFilterInput) {
+  bookingStaff(filter: $filter) {
+    id
+    firstName
+    lastName
+    photoUrl
+    role
+    capabilities
+    isActive
+  }
+}
+
+mutation CreateStaffMember($input: CreateStaffMemberInput!) {
+  createStaffMember(input: $input) {
+    success
+    staff {
+      id
+      firstName
+      lastName
+      photoUrl
+      email
+      phone
+      isActive
+      capabilities
+      detailedCapabilities {
+        capability
+        level
+      }
+      certifications {
+        id
+        name
+        expiresAt
+        status
+      }
+      workingHours {
+        dayOfWeek
+        isOpen
+        openTime
+        closeTime
+      }
+      defaultFacilityId
+    }
+    error
+  }
+}
+
+mutation UpdateStaffMember($input: UpdateStaffMemberInput!) {
+  updateStaffMember(input: $input) {
+    success
+    staff {
+      id
+      firstName
+      lastName
+      photoUrl
+      email
+      phone
+      isActive
+      capabilities
+      detailedCapabilities {
+        capability
+        level
+      }
+      certifications {
+        id
+        name
+        expiresAt
+        status
+      }
+      workingHours {
+        dayOfWeek
+        isOpen
+        openTime
+        closeTime
+      }
+      defaultFacilityId
+    }
+    error
+  }
+}
+
+mutation DeleteStaffMember($id: ID!) {
+  deleteStaffMember(id: $id) {
+    success
+    message
+    error
+  }
+}
+
+# ============================================================================
+# Waitlist Queries & Mutations
+# ============================================================================
+
+query GetWaitlist($facilityId: ID, $serviceId: ID, $date: String, $first: Int = 20, $skip: Int) {
+  waitlist(facilityId: $facilityId, serviceId: $serviceId, date: $date, first: $first, skip: $skip) {
+    edges {
+      cursor
+      node {
+        id
+        requestedDate
+        requestedTime
+        status
+        offerExpiresAt
+        position
+        notes
+        member {
+          id
+          firstName
+          lastName
+          memberId
+          photoUrl
+        }
+        serviceName
+        facilityName
+        createdAt
+      }
+    }
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+    }
+    totalCount
+  }
+}
+
+mutation JoinWaitlist($input: JoinWaitlistInput!) {
+  joinWaitlist(input: $input) {
+    success
+    entry {
+      id
+      status
+      requestedDate
+      requestedTime
+    }
+    error
+  }
+}
+
+mutation RemoveFromWaitlist($input: WaitlistActionInput!) {
+  removeFromWaitlist(input: $input) {
+    success
+    entry {
+      id
+      status
+    }
+    error
+  }
+}
+
+mutation SendWaitlistOffer($input: SendWaitlistOfferInput!) {
+  sendWaitlistOffer(input: $input) {
+    success
+    entry {
+      id
+      status
+      offerExpiresAt
+    }
+    error
+  }
+}
+
+mutation AcceptWaitlistOffer($input: WaitlistActionInput!) {
+  acceptWaitlistOffer(input: $input) {
+    success
+    entry {
+      id
+      status
+    }
+    message
+    error
+  }
+}
+
+mutation DeclineWaitlistOffer($input: WaitlistActionInput!) {
+  declineWaitlistOffer(input: $input) {
+    success
+    entry {
+      id
+      status
+    }
+    message
+    error
+  }
+}

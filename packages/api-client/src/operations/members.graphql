@@ -1,0 +1,249 @@
+# Members Queries
+
+query GetMyMember {
+  myMember {
+    id
+    memberId
+    firstName
+    lastName
+    email
+    phone
+    dateOfBirth
+    gender
+    avatarUrl
+    address
+    nationality
+    status
+    joinDate
+    expiryDate
+    renewalDate
+    isPrimaryMember
+    creditBalance
+    outstandingBalance
+    notes
+    isActive
+    membershipType {
+      id
+      name
+      code
+      description
+    }
+    membershipTier {
+      id
+      name
+      code
+    }
+    dependents {
+      id
+      firstName
+      lastName
+      relationship
+      dateOfBirth
+      email
+      phone
+      isActive
+    }
+  }
+}
+
+query GetMembers(
+  $first: Int
+  $skip: Int
+  $search: String
+  $status: MemberStatus
+  $membershipTypeId: ID
+) {
+  members(
+    first: $first
+    skip: $skip
+    search: $search
+    status: $status
+    membershipTypeId: $membershipTypeId
+  ) {
+    edges {
+      node {
+        id
+        memberId
+        firstName
+        lastName
+        email
+        phone
+        status
+        joinDate
+        expiryDate
+        isPrimaryMember
+        creditBalance
+        outstandingBalance
+        isActive
+        avatarUrl
+        membershipType {
+          id
+          name
+          code
+        }
+        membershipTier {
+          id
+          name
+          code
+        }
+      }
+      cursor
+    }
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      startCursor
+      endCursor
+    }
+    totalCount
+  }
+}
+
+query GetMember($id: ID!) {
+  member(id: $id) {
+    id
+    memberId
+    firstName
+    lastName
+    email
+    phone
+    dateOfBirth
+    gender
+    avatarUrl
+    address
+    nationality
+    idNumber
+    emergencyContact
+    emergencyPhone
+    status
+    joinDate
+    expiryDate
+    renewalDate
+    isPrimaryMember
+    creditBalance
+    outstandingBalance
+    notes
+    tags
+    isActive
+    createdAt
+    updatedAt
+    membershipType {
+      id
+      name
+      code
+      description
+    }
+    membershipTier {
+      id
+      name
+      code
+      description
+    }
+    household {
+      id
+      name
+      address
+      phone
+      email
+    }
+    referredBy {
+      id
+      memberId
+      firstName
+      lastName
+    }
+    dependents {
+      id
+      firstName
+      lastName
+      relationship
+      dateOfBirth
+      email
+      phone
+      isActive
+    }
+  }
+}
+
+query GetMemberStats {
+  memberStats {
+    total
+    active
+    suspended
+    inactive
+  }
+}
+
+# Members Mutations
+
+mutation CreateMember($input: CreateMemberInput!) {
+  createMember(input: $input) {
+    id
+    memberId
+    firstName
+    lastName
+    email
+    status
+  }
+}
+
+mutation UpdateMember($id: ID!, $input: UpdateMemberInput!) {
+  updateMember(id: $id, input: $input) {
+    id
+    memberId
+    firstName
+    lastName
+    email
+    status
+    updatedAt
+  }
+}
+
+mutation DeleteMember($id: ID!) {
+  deleteMember(id: $id) {
+    message
+  }
+}
+
+mutation ChangeMemberStatus($id: ID!, $input: ChangeStatusInput!) {
+  changeMemberStatus(id: $id, input: $input) {
+    id
+    memberId
+    status
+    updatedAt
+  }
+}
+
+# Dependent Mutations
+
+mutation CreateDependent($input: CreateDependentInput!) {
+  createDependent(input: $input) {
+    id
+    firstName
+    lastName
+    relationship
+    dateOfBirth
+    email
+    phone
+    isActive
+  }
+}
+
+mutation UpdateDependent($id: ID!, $input: UpdateDependentInput!) {
+  updateDependent(id: $id, input: $input) {
+    id
+    firstName
+    lastName
+    relationship
+    dateOfBirth
+    email
+    phone
+    isActive
+  }
+}
+
+mutation DeleteDependent($id: ID!) {
+  deleteDependent(id: $id) {
+    message
+  }
+}

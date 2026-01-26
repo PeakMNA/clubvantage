@@ -1,0 +1,176 @@
+# Membership Applications Queries and Mutations
+
+query GetApplications(
+  $first: Int
+  $skip: Int
+  $status: ApplicationStatus
+  $search: String
+) {
+  applications(
+    first: $first
+    skip: $skip
+    status: $status
+    search: $search
+  ) {
+    edges {
+      node {
+        id
+        applicationNumber
+        firstName
+        lastName
+        email
+        phone
+        status
+        submittedAt
+        reviewedAt
+        reviewedBy
+        approvedAt
+        approvedBy
+        rejectedAt
+        rejectedBy
+        withdrawnAt
+        reviewNotes
+        rejectionReason
+        membershipType {
+          id
+          name
+          code
+          description
+        }
+        sponsor {
+          id
+          memberId
+          firstName
+          lastName
+        }
+        createdAt
+        updatedAt
+      }
+      cursor
+    }
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      startCursor
+      endCursor
+    }
+    totalCount
+  }
+}
+
+query GetApplication($id: ID!) {
+  application(id: $id) {
+    id
+    applicationNumber
+    firstName
+    lastName
+    email
+    phone
+    status
+    submittedAt
+    reviewedAt
+    reviewedBy
+    approvedAt
+    approvedBy
+    rejectedAt
+    rejectedBy
+    withdrawnAt
+    reviewNotes
+    rejectionReason
+    membershipType {
+      id
+      name
+      code
+      description
+    }
+    sponsor {
+      id
+      memberId
+      firstName
+      lastName
+      email
+      phone
+    }
+    createdAt
+    updatedAt
+  }
+}
+
+query GetApplicationStats {
+  applicationStats {
+    submitted
+    underReview
+    pendingBoard
+    approved
+    rejected
+    total
+  }
+}
+
+mutation CreateApplication($input: CreateApplicationInput!) {
+  createApplication(input: $input) {
+    id
+    applicationNumber
+    firstName
+    lastName
+    email
+    phone
+    status
+    submittedAt
+    membershipType {
+      id
+      name
+      code
+    }
+    sponsor {
+      id
+      memberId
+      firstName
+      lastName
+    }
+    createdAt
+  }
+}
+
+mutation UpdateApplication($id: ID!, $input: UpdateApplicationInput!) {
+  updateApplication(id: $id, input: $input) {
+    id
+    applicationNumber
+    firstName
+    lastName
+    email
+    phone
+    status
+    reviewNotes
+    membershipType {
+      id
+      name
+      code
+    }
+    sponsor {
+      id
+      memberId
+      firstName
+      lastName
+    }
+    updatedAt
+  }
+}
+
+mutation ChangeApplicationStatus($id: ID!, $input: ChangeApplicationStatusInput!) {
+  changeApplicationStatus(id: $id, input: $input) {
+    id
+    applicationNumber
+    status
+    reviewedAt
+    reviewedBy
+    approvedAt
+    approvedBy
+    rejectedAt
+    rejectedBy
+    withdrawnAt
+    reviewNotes
+    rejectionReason
+    updatedAt
+  }
+}

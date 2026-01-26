@@ -1,0 +1,66 @@
+@import '@clubvantage/ui/globals.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Portal-specific CSS variables */
+:root {
+  /* Primary - Amber for actions */
+  --portal-primary: 245 158 11;
+  --portal-primary-hover: 217 119 6;
+  --portal-primary-light: 254 243 199;
+
+  /* Secondary - Emerald for success */
+  --portal-secondary: 16 185 129;
+  --portal-secondary-hover: 5 150 105;
+
+  /* Destructive - Red */
+  --portal-destructive: 239 68 68;
+
+  /* Safe area for mobile */
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Mobile-first bottom navigation safe area */
+.pb-safe {
+  padding-bottom: calc(56px + var(--safe-area-inset-bottom));
+}
+
+/* QR Code fullscreen mode */
+.qr-fullscreen {
+  position: fixed;
+  inset: 0;
+  background: black;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+/* Skeleton pulse animation */
+@keyframes skeleton-pulse {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.skeleton {
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+/* Pull to refresh indicator */
+.ptr-indicator {
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  transition: top 0.2s ease;
+}
+
+.ptr-indicator.active {
+  top: 20px;
+}

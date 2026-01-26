@@ -1,0 +1,1914 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+input AddGroupPlayersInput {
+  players: [GroupPlayerInput!]!
+}
+
+type ApplicationConnection {
+  edges: [ApplicationEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type ApplicationEdge {
+  cursor: String!
+  node: MembershipApplicationType!
+}
+
+type ApplicationMembershipTypeType {
+  code: String!
+  description: String
+  id: ID!
+  name: String!
+}
+
+type ApplicationSponsorType {
+  email: String
+  firstName: String!
+  id: ID!
+  lastName: String!
+  memberId: String!
+  phone: String
+}
+
+type ApplicationStatsType {
+  approved: Int!
+  pendingBoard: Int!
+  rejected: Int!
+  submitted: Int!
+  total: Int!
+  underReview: Int!
+}
+
+"""Membership application status options"""
+enum ApplicationStatus {
+  APPROVED
+  PENDING_BOARD
+  REJECTED
+  SUBMITTED
+  UNDER_REVIEW
+  WITHDRAWN
+}
+
+type BillingStatsType {
+  invoiceCount: Float!
+  outstandingBalance: String!
+  overdueAmount: String!
+  overdueCount: Float!
+  paidCount: Float!
+  totalRevenue: String!
+}
+
+type BlockMutationResponse {
+  block: TeeTimeBlockType
+  message: String
+  success: Boolean!
+}
+
+"""Type of tee time block"""
+enum BlockType {
+  MAINTENANCE
+  PRIVATE
+  STARTER
+  TOURNAMENT
+  WEATHER
+}
+
+type BookingConnection {
+  edges: [BookingEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type BookingEdge {
+  cursor: String!
+  node: BookingType!
+}
+
+type BookingMemberType {
+  firstName: String!
+  id: ID!
+  lastName: String!
+  memberId: String!
+  photoUrl: String
+  status: String!
+}
+
+type BookingPricingType {
+  basePrice: Float!
+  modifiers: [PriceModifierType!]!
+  subtotal: Float!
+  tax: Float
+  total: Float!
+}
+
+type BookingStatsType {
+  checkedInBookings: Int!
+  completedBookings: Int!
+  confirmedBookings: Int!
+  noShows: Int!
+  todayBookings: Int!
+  utilizationRate: Float!
+}
+
+enum BookingStatus {
+  CANCELLED
+  CHECKED_IN
+  COMPLETED
+  CONFIRMED
+  IN_PROGRESS
+  NO_SHOW
+  PENDING
+}
+
+type BookingType {
+  bookingNumber: String!
+  bookingType: BookingTypeEnum!
+  bufferAfter: Int
+  bufferBefore: Int
+  cancelReason: String
+  cancelledAt: DateTime
+  checkedInAt: DateTime
+  createdAt: DateTime!
+  createdBy: String
+  durationMinutes: Int!
+  endTime: DateTime!
+  facility: FacilityType
+  guestCount: Int
+  id: ID!
+  member: BookingMemberType!
+  notes: String
+  pricing: BookingPricingType
+  resource: ResourceType
+  service: ServiceType
+  staff: StaffType
+  startTime: DateTime!
+  status: BookingStatus!
+}
+
+enum BookingTypeEnum {
+  FACILITY
+  SERVICE
+}
+
+input CSVPlayerRow {
+  email: String
+  handicap: Int
+  memberId: String
+  name: String!
+  phone: String
+}
+
+type CaddyType {
+  caddyNumber: String!
+  firstName: String!
+  id: ID!
+  isActive: Boolean!
+  lastName: String!
+  phone: String
+}
+
+type CalendarBookingType {
+  bookingNumber: String!
+  bufferAfter: Int
+  bufferBefore: Int
+  endTime: DateTime!
+  id: ID!
+  memberName: String!
+  memberPhotoUrl: String
+  resourceId: ID!
+  serviceName: String!
+  startTime: DateTime!
+  status: BookingStatus!
+}
+
+type CalendarDayType {
+  bookings: [CalendarBookingType!]!
+  date: DateTime!
+  resources: [CalendarResourceType!]!
+}
+
+type CalendarResourceType {
+  id: ID!
+  name: String!
+  subtitle: String
+  type: ResourceTypeEnum!
+}
+
+input CancelBookingInput {
+  id: ID!
+  reason: String!
+}
+
+type CancelBookingResponseType {
+  error: String
+  message: String
+  success: Boolean!
+}
+
+type CancelResponseType {
+  message: String!
+}
+
+"""Golf cart type"""
+enum CartType {
+  SHARED
+  SINGLE
+  WALKING
+}
+
+input ChangeApplicationStatusInput {
+  rejectionReason: String
+  reviewNotes: String
+  status: ApplicationStatus!
+}
+
+input ChangeStatusInput {
+  reason: String
+  status: MemberStatus!
+}
+
+type ChargeTypeType {
+  code: String!
+  description: String
+  id: ID!
+  name: String!
+}
+
+input CheckInInput {
+  bookingId: ID!
+  outletId: ID
+}
+
+type CheckInResponseType {
+  booking: BookingType
+  checkedInAt: DateTime!
+  error: String
+  success: Boolean!
+}
+
+input CourseIntervalInput {
+  dayType: DayType!
+  intervalMin: Int! = 8
+  isPrimeTime: Boolean! = false
+  timeEnd: String!
+  timeStart: String!
+}
+
+input CreateApplicationInput {
+  email: String!
+  firstName: String!
+  lastName: String!
+  membershipTypeId: ID!
+  phone: String
+  reviewNotes: String
+  sponsorId: ID
+}
+
+input CreateBlockInput {
+  blockType: BlockType!
+  courseId: ID!
+  endTime: DateTime!
+  isRecurring: Boolean! = false
+  reason: String
+  recurringPattern: String
+  startTime: DateTime!
+}
+
+input CreateBookingInput {
+  addOnIds: [String!]
+  bookingType: BookingTypeEnum!
+  endTime: String!
+  facilityId: ID
+  guestCount: Int
+  memberId: ID!
+  notes: String
+  resourceId: ID
+  serviceId: ID
+  staffId: ID
+  startTime: String!
+}
+
+type CreateBookingResponseType {
+  booking: BookingType
+  error: String
+  success: Boolean!
+}
+
+input CreateDependentInput {
+  dateOfBirth: DateTime
+  email: String
+  firstName: String!
+  lastName: String!
+  memberId: ID!
+  phone: String
+  relationship: String!
+}
+
+input CreateFacilityInput {
+  capacity: Int!
+  description: String
+  features: [String!]
+  isActive: Boolean = true
+  location: String!
+  name: String!
+  operatingHours: [DayHoursInput!]
+  outletId: ID
+  revenueCenterId: ID
+  type: ResourceTypeEnum!
+}
+
+input CreateGroupBookingInput {
+  courseId: ID!
+  eventDate: DateTime!
+  groupName: String!
+  notes: String
+  players: [GroupPlayerInput!]
+  startFormat: StartFormat! = SEQUENTIAL
+  startTime: String!
+}
+
+input CreateInvoiceInput {
+  billingPeriod: String
+  dueDate: DateTime!
+  internalNotes: String
+  invoiceDate: DateTime!
+  lineItems: [InvoiceLineItemInput!]!
+  memberId: ID!
+  notes: String
+}
+
+input CreateLotteryInput {
+  courseId: ID!
+  drawTime: DateTime!
+  lotteryDate: DateTime!
+  lotteryType: LotteryType! = PRIME_TIME
+  maxRequestsPerMember: Int! = 1
+  requestWindowEnd: DateTime!
+  requestWindowStart: DateTime!
+  timeRangeEnd: String!
+  timeRangeStart: String!
+}
+
+input CreateLotteryRequestInput {
+  lotteryId: ID!
+  playerCount: Int! = 1
+  preference1: String!
+  preference2: String
+  preference3: String
+}
+
+input CreateMemberInput {
+  address: String
+  dateOfBirth: DateTime
+  email: String
+  emergencyContact: String
+  emergencyPhone: String
+  expiryDate: DateTime
+  firstName: String!
+  gender: String
+  householdId: ID
+  idNumber: String
+  isPrimaryMember: Boolean
+  joinDate: DateTime
+  lastName: String!
+  membershipTierId: ID
+  membershipTypeId: ID!
+  nationality: String
+  notes: String
+  phone: String
+  referralSource: String
+  referredById: ID
+  status: MemberStatus
+  tags: [String!]
+}
+
+input CreatePaymentInput {
+  accountLast4: String
+  allocations: [PaymentAllocationInput!]
+  amount: Float!
+  bankName: String
+  memberId: ID!
+  method: PaymentMethod!
+  notes: String
+  paymentDate: DateTime
+  referenceNumber: String
+}
+
+input CreateScheduleInput {
+  courseId: ID!
+  endDate: DateTime!
+  firstTeeTime: String!
+  intervals: [CourseIntervalInput!]
+  lastTeeTime: String!
+  paceOfPlay: Int
+  playFormat: PlayFormat! = EIGHTEEN_HOLE
+  seasonName: String!
+  startDate: DateTime!
+}
+
+input CreateServiceInput {
+  basePrice: Float!
+  bufferMinutes: Int = 0
+  category: String!
+  description: String
+  durationMinutes: Int!
+  isActive: Boolean = true
+  maxParticipants: Int
+  name: String!
+  requiredCapabilities: [String!]
+  requiredFacilityFeatures: [String!]
+  revenueCenterId: ID
+  tierDiscounts: [TierDiscountInput!]
+  variations: [ServiceVariationInput!]
+}
+
+input CreateStaffMemberInput {
+  avatarUrl: String
+  capabilities: [StaffCapabilityInput!]
+  certifications: [StaffCertificationInput!]
+  defaultFacilityId: ID
+  email: String
+  firstName: String!
+  isActive: Boolean = true
+  lastName: String!
+  phone: String
+  userId: ID
+  workingHours: [DayHoursInput!]
+}
+
+input CreateTeeTimeInput {
+  courseId: ID!
+  holes: Int = 18
+  notes: String
+  players: [TeeTimePlayerInput!]!
+  teeDate: DateTime!
+  teeTime: String!
+}
+
+input CreateWaitlistEntryInput {
+  courseId: ID!
+  playerCount: Int! = 1
+  requestedDate: DateTime!
+  requesterEmail: String
+  requesterName: String!
+  requesterPhone: String!
+  timeRangeEnd: String!
+  timeRangeStart: String!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+input DayHoursInput {
+  closeTime: String
+  dayOfWeek: String!
+  isOpen: Boolean!
+  openTime: String
+}
+
+type DayHoursType {
+  closeTime: String
+  dayOfWeek: String!
+  isOpen: Boolean!
+  openTime: String
+}
+
+"""Day type for scheduling"""
+enum DayType {
+  HOLIDAY
+  WEEKDAY
+  WEEKEND
+}
+
+type DeleteDependentResponseType {
+  message: String!
+}
+
+type DeleteMemberResponseType {
+  message: String!
+}
+
+type DeleteResponseType {
+  error: String
+  message: String
+  success: Boolean!
+}
+
+type DependentType {
+  dateOfBirth: DateTime
+  email: String
+  firstName: String!
+  id: ID!
+  isActive: Boolean!
+  lastName: String!
+  phone: String
+  relationship: String!
+}
+
+type ExtendedServiceType {
+  basePrice: Float!
+  bufferMinutes: Int
+  category: String!
+  description: String
+  durationMinutes: Int!
+  id: ID!
+  isActive: Boolean!
+  maxParticipants: Int
+  name: String!
+  requiredCapabilities: [String!]
+  requiredFacilityFeatures: [String!]
+  tierDiscounts: [TierDiscountType!]
+  variations: [ServiceVariationType!]
+}
+
+type ExtendedStaffType {
+  capabilities: [String!]
+  certifications: [StaffCertificationType!]
+  defaultFacilityId: ID
+  detailedCapabilities: [StaffCapabilityType!]
+  email: String
+  firstName: String!
+  id: ID!
+  isActive: Boolean!
+  lastName: String!
+  phone: String
+  photoUrl: String
+  role: String
+  userId: ID
+  workingHours: [DayHoursType!]
+}
+
+input FacilityFilterInput {
+  isActive: Boolean
+  type: ResourceTypeEnum
+}
+
+type FacilityResponseType {
+  error: String
+  facility: FacilityType
+  success: Boolean!
+}
+
+type FacilityType {
+  capacity: Int
+  id: ID!
+  isActive: Boolean!
+  location: String
+  name: String!
+  type: ResourceTypeEnum!
+}
+
+type FlightAssignment {
+  flightNumber: Int!
+  players: [GolfGroupPlayerType!]!
+  teeTime: String!
+}
+
+type FlightCheckInResponseType {
+  checkedInAt: DateTime!
+  success: Boolean!
+  teeTime: TeeTimeType!
+}
+
+type GolfCourseIntervalType {
+  dayType: DayType!
+  id: ID!
+  intervalMin: Int!
+  isPrimeTime: Boolean!
+  timeEnd: String!
+  timeStart: String!
+}
+
+type GolfCourseScheduleType {
+  courseId: ID!
+  createdAt: DateTime!
+  endDate: DateTime!
+  firstTeeTime: String!
+  id: ID!
+  intervals: [GolfCourseIntervalType!]
+  isActive: Boolean!
+  lastTeeTime: String!
+  paceOfPlay: Int
+  playFormat: PlayFormat!
+  seasonName: String!
+  startDate: DateTime!
+  updatedAt: DateTime!
+}
+
+type GolfCourseType {
+  code: String!
+  description: String
+  firstTeeTime: String!
+  holes: Int!
+  id: ID!
+  isActive: Boolean!
+  lastTeeTime: String!
+  name: String!
+  par: Int!
+  rating: Float
+  slope: Float
+  teeInterval: Int!
+}
+
+type GolfGroupBookingType {
+  course: GolfCourseType
+  courseId: ID!
+  createdAt: DateTime!
+  eventDate: DateTime!
+  groupName: String!
+  id: ID!
+  notes: String
+  players: [GolfGroupPlayerType!]!
+  startFormat: StartFormat!
+  startTime: String!
+  status: GroupBookingStatus!
+  totalPlayers: Int!
+  updatedAt: DateTime!
+}
+
+type GolfGroupPlayerType {
+  assignedFlight: Int
+  assignedPosition: Int
+  guestEmail: String
+  guestName: String
+  guestPhone: String
+  handicap: Int
+  id: ID!
+  memberId: ID
+  playerType: PlayerType!
+}
+
+type GolfLotteryRequestType {
+  assignedTime: String
+  createdAt: DateTime!
+  drawOrder: Int
+  id: ID!
+  lotteryId: ID!
+  member: PlayerMemberType
+  memberId: ID!
+  playerCount: Int!
+  preference1: String!
+  preference2: String
+  preference3: String
+  status: LotteryRequestStatus!
+  updatedAt: DateTime!
+}
+
+type GolfLotteryType {
+  course: GolfCourseType
+  courseId: ID!
+  createdAt: DateTime!
+  drawTime: DateTime!
+  id: ID!
+  lotteryDate: DateTime!
+  lotteryType: LotteryType!
+  maxRequestsPerMember: Int!
+  requestWindowEnd: DateTime!
+  requestWindowStart: DateTime!
+  requests: [GolfLotteryRequestType!]
+  status: LotteryStatus!
+  timeRangeEnd: String!
+  timeRangeStart: String!
+  totalRequests: Int
+  updatedAt: DateTime!
+}
+
+"""Golf waitlist entry status"""
+enum GolfWaitlistStatus {
+  BOOKED
+  CANCELLED
+  EXPIRED
+  NOTIFIED
+  PENDING
+}
+
+type GolfWaitlistType {
+  bookedTeeTimeId: ID
+  course: GolfCourseType
+  courseId: ID!
+  createdAt: DateTime!
+  expiresAt: DateTime
+  id: ID!
+  member: PlayerMemberType
+  memberId: ID
+  notifiedAt: DateTime
+  playerCount: Int!
+  priority: Int!
+  requestedDate: DateTime!
+  requesterEmail: String
+  requesterName: String!
+  requesterPhone: String!
+  status: GolfWaitlistStatus!
+  timeRangeEnd: String!
+  timeRangeStart: String!
+  updatedAt: DateTime!
+}
+
+type GroupBookingFlightsResponse {
+  flights: [FlightAssignment!]!
+  success: Boolean!
+  totalFlights: Int!
+}
+
+type GroupBookingMutationResponse {
+  groupBooking: GolfGroupBookingType
+  message: String
+  success: Boolean!
+  warnings: [String!]
+}
+
+"""Group booking status"""
+enum GroupBookingStatus {
+  CANCELLED
+  COMPLETED
+  CONFIRMED
+  DRAFT
+}
+
+input GroupPlayerInput {
+  guestEmail: String
+  guestName: String
+  guestPhone: String
+  handicap: Int
+  memberId: ID
+  playerType: PlayerType!
+}
+
+type HouseholdType {
+  address: String
+  email: String
+  id: ID!
+  name: String!
+  phone: String
+}
+
+input ImportPlayersFromCSVInput {
+  rows: [CSVPlayerRow!]!
+}
+
+type InvoiceConnection {
+  edges: [InvoiceTypeEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+input InvoiceLineItemInput {
+  chargeTypeId: ID!
+  description: String
+  discountPct: Float = 0
+  quantity: Float!
+  taxRate: Float = 0
+  taxType: String
+  unitPrice: Float!
+}
+
+type InvoiceLineItemType {
+  chargeType: ChargeTypeType
+  description: String
+  discountPct: String!
+  id: ID!
+  lineTotal: String!
+  quantity: Float!
+  taxRate: String!
+  taxType: String
+  unitPrice: String!
+}
+
+"""Invoice status options"""
+enum InvoiceStatus {
+  CANCELLED
+  DRAFT
+  OVERDUE
+  PAID
+  PARTIALLY_PAID
+  SENT
+  VOID
+}
+
+type InvoiceType {
+  balanceDue: String!
+  billingPeriod: String
+  createdAt: DateTime!
+  discountAmount: String!
+  dueDate: DateTime!
+  id: ID!
+  internalNotes: String
+  invoiceDate: DateTime!
+  invoiceNumber: String!
+  lineItems: [InvoiceLineItemType!]!
+  member: MemberSummaryBillingType
+  notes: String
+  paidAmount: String!
+  paidDate: DateTime
+  payments: [PaymentAllocationSummaryType!]
+  sentAt: DateTime
+  status: InvoiceStatus!
+  subtotal: String!
+  taxAmount: String!
+  totalAmount: String!
+  updatedAt: DateTime!
+  viewedAt: DateTime
+}
+
+type InvoiceTypeEdge {
+  cursor: String!
+  node: InvoiceType!
+}
+
+input JoinWaitlistInput {
+  facilityId: ID
+  memberId: ID!
+  notes: String
+  requestedDate: String!
+  requestedTime: String!
+  serviceId: ID
+}
+
+type LotteryDrawResult {
+  assignedCount: Int!
+  lottery: GolfLotteryType
+  message: String
+  success: Boolean!
+  totalRequests: Int!
+  waitlistedCount: Int!
+}
+
+type LotteryMutationResponse {
+  lottery: GolfLotteryType
+  message: String
+  success: Boolean!
+}
+
+type LotteryRequestMutationResponse {
+  message: String
+  request: GolfLotteryRequestType
+  success: Boolean!
+}
+
+"""Lottery request status"""
+enum LotteryRequestStatus {
+  ASSIGNED
+  CANCELLED
+  PENDING
+  WAITLISTED
+}
+
+"""Lottery status"""
+enum LotteryStatus {
+  CLOSED
+  DRAFT
+  DRAWN
+  OPEN
+  PUBLISHED
+}
+
+"""Type of lottery"""
+enum LotteryType {
+  PRIME_TIME
+  SPECIAL_EVENT
+}
+
+type MemberConnection {
+  edges: [MemberTypeEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type MemberStatsType {
+  active: Float!
+  inactive: Float!
+  suspended: Float!
+  total: Float!
+}
+
+"""Member status options"""
+enum MemberStatus {
+  ACTIVE
+  APPLICANT
+  LAPSED
+  LEAD
+  PROSPECT
+  REACTIVATED
+  RESIGNED
+  SUSPENDED
+  TERMINATED
+}
+
+type MemberSummaryBillingType {
+  firstName: String!
+  id: ID!
+  lastName: String!
+  memberId: String!
+}
+
+type MemberSummaryType {
+  firstName: String!
+  id: ID!
+  isPrimaryMember: Boolean
+  lastName: String!
+  memberId: String!
+}
+
+type MemberTransactionType {
+  amount: String!
+  date: DateTime!
+  description: String!
+  id: ID!
+  invoiceNumber: String
+  runningBalance: String!
+  type: String!
+}
+
+type MemberTransactionsType {
+  currentBalance: String!
+  transactions: [MemberTransactionType!]!
+}
+
+type MemberType {
+  address: String
+  avatarUrl: String
+  createdAt: DateTime!
+  creditBalance: String!
+  dateOfBirth: DateTime
+  dependents: [DependentType!]
+  email: String
+  emergencyContact: String
+  emergencyPhone: String
+  expiryDate: DateTime
+  firstName: String!
+  gender: String
+  household: HouseholdType
+  id: ID!
+  idNumber: String
+  isActive: Boolean!
+  isPrimaryMember: Boolean!
+  joinDate: DateTime!
+  lastName: String!
+  memberId: String!
+  membershipTier: MembershipTierType
+  membershipType: MembershipTypeType
+  nationality: String
+  notes: String
+  outstandingBalance: String!
+  phone: String
+  referredBy: MemberSummaryType
+  renewalDate: DateTime
+  status: MemberStatus!
+  tags: [String!]!
+  updatedAt: DateTime!
+}
+
+type MemberTypeEdge {
+  cursor: String!
+  node: MemberType!
+}
+
+type MembershipApplicationType {
+  applicationNumber: String!
+  approvedAt: DateTime
+  approvedBy: String
+  createdAt: DateTime!
+  email: String!
+  firstName: String!
+  id: ID!
+  lastName: String!
+  membershipType: ApplicationMembershipTypeType!
+  phone: String
+  rejectedAt: DateTime
+  rejectedBy: String
+  rejectionReason: String
+  reviewNotes: String
+  reviewedAt: DateTime
+  reviewedBy: String
+  sponsor: ApplicationSponsorType
+  status: ApplicationStatus!
+  submittedAt: DateTime!
+  updatedAt: DateTime!
+  withdrawnAt: DateTime
+}
+
+type MembershipApplicationTypeEdge {
+  cursor: String!
+  node: MembershipApplicationType!
+}
+
+type MembershipTierType {
+  code: String!
+  description: String
+  id: ID!
+  name: String!
+}
+
+type MembershipTypeType {
+  allowFamilyMembers: Boolean!
+  allowGuests: Boolean!
+  annualFee: Float
+  bookingAdvanceDays: Float!
+  code: String!
+  description: String
+  id: ID!
+  joiningFee: Float
+  maxFamilyMembers: Float!
+  maxGuestsPerBooking: Float!
+  monthlyFee: Float
+  name: String!
+  priorityBooking: Boolean!
+}
+
+input MoveTeeTimeInput {
+  newCourseId: ID
+  newTeeDate: DateTime!
+  newTeeTime: String!
+}
+
+type Mutation {
+  """Accept a waitlist offer"""
+  acceptWaitlistOffer(input: WaitlistActionInput!): WaitlistResponseType!
+
+  """Add players to a group booking"""
+  addGroupPlayers(id: ID!, input: AddGroupPlayersInput!): GroupBookingMutationResponse!
+
+  """Auto-assign players to flights"""
+  assignFlights(id: ID!, interval: Float! = 8): GroupBookingFlightsResponse!
+
+  """Cancel a booking"""
+  cancelBooking(input: CancelBookingInput!): CancelBookingResponseType!
+
+  """Cancel a group booking"""
+  cancelGroupBooking(id: ID!): GroupBookingMutationResponse!
+
+  """Cancel a lottery request"""
+  cancelLotteryRequest(id: ID!): LotteryRequestMutationResponse!
+
+  """Cancel a tee time"""
+  cancelTeeTime(id: ID!, reason: String): CancelResponseType!
+
+  """Cancel a waitlist entry"""
+  cancelWaitlistEntry(id: ID!): WaitlistMutationResponse!
+
+  """Change the status of a membership application"""
+  changeApplicationStatus(id: ID!, input: ChangeApplicationStatusInput!): MembershipApplicationType!
+
+  """Change member status"""
+  changeMemberStatus(id: ID!, input: ChangeStatusInput!): MemberType!
+
+  """Check in a booking"""
+  checkIn(input: CheckInInput!): CheckInResponseType!
+
+  """Close a lottery to new requests"""
+  closeLottery(id: ID!): LotteryMutationResponse!
+
+  """Confirm group booking and create tee times"""
+  confirmGroupBooking(id: ID!): GroupBookingMutationResponse!
+
+  """Convert a waitlist entry to a booking"""
+  convertWaitlistToBooking(id: ID!, teeTimeId: ID!): WaitlistMutationResponse!
+
+  """Create a new membership application"""
+  createApplication(input: CreateApplicationInput!): MembershipApplicationType!
+
+  """Create a new booking"""
+  createBooking(input: CreateBookingInput!): CreateBookingResponseType!
+
+  """Create a course schedule"""
+  createCourseSchedule(input: CreateScheduleInput!): ScheduleMutationResponse!
+
+  """Add a dependent to a member"""
+  createDependent(input: CreateDependentInput!): DependentType!
+
+  """Create a new facility"""
+  createFacility(input: CreateFacilityInput!): FacilityResponseType!
+
+  """Create a group booking"""
+  createGroupBooking(input: CreateGroupBookingInput!): GroupBookingMutationResponse!
+
+  """Create a new invoice"""
+  createInvoice(input: CreateInvoiceInput!): InvoiceType!
+
+  """Create a lottery"""
+  createLottery(input: CreateLotteryInput!): LotteryMutationResponse!
+
+  """Create a new member"""
+  createMember(input: CreateMemberInput!): MemberType!
+
+  """Create a new service"""
+  createService(input: CreateServiceInput!): ServiceResponseType!
+
+  """Create a new staff member"""
+  createStaffMember(input: CreateStaffMemberInput!): StaffResponseType!
+
+  """Create a new tee time booking"""
+  createTeeTime(input: CreateTeeTimeInput!): TeeTimeType!
+
+  """Create a tee time block"""
+  createTeeTimeBlock(input: CreateBlockInput!): BlockMutationResponse!
+
+  """Add to waitlist"""
+  createWaitlistEntry(input: CreateWaitlistEntryInput!): WaitlistMutationResponse!
+
+  """Decline a waitlist offer"""
+  declineWaitlistOffer(input: WaitlistActionInput!): WaitlistResponseType!
+
+  """Delete a course schedule"""
+  deleteCourseSchedule(id: ID!): ScheduleMutationResponse!
+
+  """Delete a dependent"""
+  deleteDependent(id: ID!): DeleteDependentResponseType!
+
+  """Delete a facility"""
+  deleteFacility(id: ID!): DeleteResponseType!
+
+  """Delete a draft group booking"""
+  deleteGroupBooking(id: ID!): GroupBookingMutationResponse!
+
+  """Delete a draft lottery"""
+  deleteLottery(id: ID!): LotteryMutationResponse!
+
+  """Soft delete a member"""
+  deleteMember(id: ID!): DeleteMemberResponseType!
+
+  """Delete a service"""
+  deleteService(id: ID!): DeleteResponseType!
+
+  """Delete a staff member"""
+  deleteStaffMember(id: ID!): DeleteResponseType!
+
+  """Delete a tee time block"""
+  deleteTeeTimeBlock(id: ID!): BlockMutationResponse!
+
+  """Delete a waitlist entry"""
+  deleteWaitlistEntry(id: ID!): WaitlistMutationResponse!
+
+  """Execute the lottery draw"""
+  executeLotteryDraw(id: ID!): LotteryDrawResult!
+
+  """Mark expired waitlist entries"""
+  expireOldWaitlistEntries: WaitlistMutationResponse!
+
+  """Import players from CSV data"""
+  importPlayersFromCSV(id: ID!, input: ImportPlayersFromCSVInput!): GroupBookingMutationResponse!
+
+  """Join a waitlist"""
+  joinWaitlist(input: JoinWaitlistInput!): WaitlistResponseType!
+
+  """Move a tee time to a different slot"""
+  moveTeeTime(id: ID!, input: MoveTeeTimeInput!): TeeTimeType!
+
+  """Notify waitlist when a tee time is cancelled"""
+  notifyWaitlistForCancellation(availableSpots: Float! = 4, courseId: ID!, date: DateTime!, time: String!): WaitlistNotificationResult!
+
+  """Open a lottery for requests"""
+  openLottery(id: ID!): LotteryMutationResponse!
+
+  """Publish lottery results and create tee times"""
+  publishLotteryResults(id: ID!): LotteryMutationResponse!
+
+  """Record a payment"""
+  recordPayment(input: CreatePaymentInput!): PaymentType!
+
+  """Remove entry from waitlist"""
+  removeFromWaitlist(input: WaitlistActionInput!): WaitlistResponseType!
+
+  """Remove a player from a group booking"""
+  removeGroupPlayer(groupBookingId: ID!, playerId: ID!): GroupBookingMutationResponse!
+
+  """Reschedule a booking"""
+  rescheduleBooking(input: RescheduleBookingInput!): CreateBookingResponseType!
+
+  """Send an invoice"""
+  sendInvoice(id: ID!): InvoiceType!
+
+  """Send offer to waitlist entry"""
+  sendWaitlistOffer(input: SendWaitlistOfferInput!): WaitlistResponseType!
+
+  """Submit a lottery request (member)"""
+  submitLotteryRequest(input: CreateLotteryRequestInput!): LotteryRequestMutationResponse!
+
+  """Update an existing membership application"""
+  updateApplication(id: ID!, input: UpdateApplicationInput!): MembershipApplicationType!
+
+  """Update a course schedule"""
+  updateCourseSchedule(id: ID!, input: UpdateScheduleInput!): ScheduleMutationResponse!
+
+  """Update a dependent"""
+  updateDependent(id: ID!, input: UpdateDependentInput!): DependentType!
+
+  """Update an existing facility"""
+  updateFacility(input: UpdateFacilityInput!): FacilityResponseType!
+
+  """Update a group booking"""
+  updateGroupBooking(id: ID!, input: UpdateGroupBookingInput!): GroupBookingMutationResponse!
+
+  """Update a lottery"""
+  updateLottery(id: ID!, input: UpdateLotteryInput!): LotteryMutationResponse!
+
+  """Update an existing member"""
+  updateMember(id: ID!, input: UpdateMemberInput!): MemberType!
+
+  """Update an existing service"""
+  updateService(input: UpdateServiceInput!): ServiceResponseType!
+
+  """Update a staff member"""
+  updateStaffMember(input: UpdateStaffMemberInput!): StaffResponseType!
+
+  """Update an existing tee time"""
+  updateTeeTime(id: ID!, input: UpdateTeeTimeInput!): TeeTimeType!
+
+  """Update a tee time block"""
+  updateTeeTimeBlock(id: ID!, input: UpdateBlockInput!): BlockMutationResponse!
+
+  """Update a waitlist entry"""
+  updateWaitlistEntry(id: ID!, input: UpdateWaitlistEntryInput!): WaitlistMutationResponse!
+
+  """Void an invoice"""
+  voidInvoice(id: ID!, input: VoidInvoiceInput!): InvoiceType!
+}
+
+type PageInfo {
+  endCursor: String
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+}
+
+input PaymentAllocationInput {
+  amount: Float!
+  invoiceId: ID!
+}
+
+type PaymentAllocationSummaryType {
+  amount: String!
+  id: ID!
+  payment: PaymentSummaryType!
+}
+
+"""Payment method options"""
+enum PaymentMethod {
+  BANK_TRANSFER
+  CASH
+  CHECK
+  CREDIT_CARD
+  DIRECT_DEBIT
+  MOBILE_PAYMENT
+  OTHER
+}
+
+type PaymentSummaryType {
+  amount: String!
+  id: ID!
+  method: PaymentMethod!
+  paymentDate: DateTime!
+  receiptNumber: String!
+}
+
+type PaymentType {
+  accountLast4: String
+  amount: String!
+  bankName: String
+  createdAt: DateTime!
+  id: ID!
+  member: MemberSummaryBillingType
+  method: PaymentMethod!
+  notes: String
+  paymentDate: DateTime!
+  receiptNumber: String!
+  referenceNumber: String
+}
+
+type PaymentTypeEdge {
+  cursor: String!
+  node: PaymentType!
+}
+
+"""Golf play format (18 holes or cross-tee)"""
+enum PlayFormat {
+  CROSS_TEE
+  EIGHTEEN_HOLE
+}
+
+type PlayerMemberType {
+  firstName: String!
+  id: ID!
+  lastName: String!
+  memberId: String!
+}
+
+"""Type of player in a tee time"""
+enum PlayerType {
+  DEPENDENT
+  GUEST
+  MEMBER
+  WALK_UP
+}
+
+type PriceModifierType {
+  amount: Float!
+  isPercentage: Boolean!
+  label: String!
+}
+
+type Query {
+  """Get active schedule for a course and date"""
+  activeSchedule(courseId: ID!, date: DateTime!): GolfCourseScheduleType
+
+  """Get a single membership application by ID"""
+  application(id: ID!): MembershipApplicationType!
+
+  """Get application statistics"""
+  applicationStats: ApplicationStatsType!
+
+  """Get paginated list of membership applications"""
+  applications(after: String, first: Int = 10, search: String, skip: Int, status: ApplicationStatus): ApplicationConnection!
+
+  """Get billing statistics for the current month"""
+  billingStats: BillingStatsType!
+
+  """Get a single booking by ID"""
+  booking(id: ID!): BookingType!
+
+  """Get list of staff for booking"""
+  bookingStaff(filter: StaffFilterInput): [StaffType!]!
+
+  """Get booking statistics for today"""
+  bookingStats: BookingStatsType!
+
+  """Get paginated list of bookings"""
+  bookings(after: String, bookingType: BookingTypeEnum, endDate: String, facilityId: ID, first: Int = 20, memberId: ID, search: String, skip: Int, staffId: ID, startDate: String, statuses: [BookingStatus!]): BookingConnection!
+
+  """Get calendar data for a specific day"""
+  calendarDay(date: String!, facilityId: ID, resourceIds: [ID!], statuses: [BookingStatus!]): CalendarDayType!
+
+  """Get schedules for a course"""
+  courseSchedules(courseId: ID!): [GolfCourseScheduleType!]!
+
+  """Get all golf courses"""
+  courses: [GolfCourseType!]!
+
+  """Get list of facilities"""
+  facilities(filter: FacilityFilterInput): [FacilityType!]!
+
+  """Generate a tee ticket for a tee time"""
+  generateTeeTicket(teeTimeId: ID!): TeeTicketType
+
+  """Get a single group booking"""
+  groupBooking(id: ID!): GolfGroupBookingType!
+
+  """Get group bookings"""
+  groupBookings(courseId: ID, endDate: DateTime, startDate: DateTime, status: GroupBookingStatus): [GolfGroupBookingType!]!
+
+  """Get a single invoice by ID"""
+  invoice(id: ID!): InvoiceType!
+
+  """Get paginated list of invoices"""
+  invoices(after: String, endDate: DateTime, first: Int = 10, memberId: ID, search: String, skip: Int, sortBy: String = "invoiceDate", sortOrder: String = "desc", startDate: DateTime, status: InvoiceStatus): InvoiceConnection!
+
+  """Get lotteries"""
+  lotteries(courseId: ID, endDate: DateTime, startDate: DateTime, status: LotteryStatus): [GolfLotteryType!]!
+
+  """Get a single lottery"""
+  lottery(id: ID!): GolfLotteryType!
+
+  """Get a single member by ID"""
+  member(id: ID!): MemberType!
+
+  """Get member dependents"""
+  memberDependents(memberId: ID!): [DependentType!]!
+
+  """Get member statistics"""
+  memberStats: MemberStatsType!
+
+  """Get transaction history for a member"""
+  memberTransactions(memberId: ID!): MemberTransactionsType!
+
+  """Get paginated list of members"""
+  members(after: String, first: Int = 10, householdId: ID, membershipTypeId: ID, search: String, skip: Int, sortBy: String = "createdAt", sortOrder: String = "desc", status: MemberStatus): MemberConnection!
+
+  """Get all membership types"""
+  membershipTypes: [MembershipTypeType!]!
+
+  """Get current member's invoices"""
+  myInvoices(after: String, endDate: DateTime, first: Int = 10, memberId: ID, search: String, skip: Int, sortBy: String = "invoiceDate", sortOrder: String = "desc", startDate: DateTime, status: InvoiceStatus): InvoiceConnection!
+
+  """Get current user lottery requests"""
+  myLotteryRequests: [GolfLotteryRequestType!]!
+
+  """Get the current user's member profile"""
+  myMember: MemberType
+
+  """Get current user waitlist entries"""
+  myWaitlistEntries: [GolfWaitlistType!]!
+
+  """Get open lotteries for member portal"""
+  openLotteries: [GolfLotteryType!]!
+
+  """Get list of services"""
+  services(filter: ServiceFilterInput): [ServiceType!]!
+
+  """Get tee sheet for a course and date"""
+  teeSheet(courseId: ID!, date: DateTime!): [TeeSheetSlotType!]!
+
+  """Get a single tee time by ID"""
+  teeTime(id: ID!): TeeTimeType!
+
+  """Get tee time blocks for a course"""
+  teeTimeBlocks(blockType: BlockType, courseId: ID!, endDate: DateTime, startDate: DateTime): [TeeTimeBlockType!]!
+
+  """Get paginated list of tee times"""
+  teeTimes(courseId: ID, endDate: DateTime, first: Int = 20, memberId: ID, skip: Int, startDate: DateTime, status: TeeTimeStatus): TeeTimeConnection!
+
+  """Validate a tee ticket by barcode"""
+  validateTeeTicket(barcode: String!): TeeTicketValidationResult!
+
+  """Get waitlist entries"""
+  waitlist(date: String, facilityId: ID, first: Int = 20, serviceId: ID, skip: Int): WaitlistConnection!
+
+  """Get waitlist entries"""
+  waitlistEntries(courseId: ID, endDate: DateTime, startDate: DateTime, status: GolfWaitlistStatus): [GolfWaitlistType!]!
+
+  """Get a single waitlist entry"""
+  waitlistEntry(id: ID!): GolfWaitlistType!
+
+  """Get waitlist entries for a specific date/course"""
+  waitlistForDate(courseId: ID!, date: DateTime!): [GolfWaitlistType!]!
+}
+
+input RescheduleBookingInput {
+  id: ID!
+  newResourceId: ID
+  newStartTime: String!
+}
+
+type ResourceType {
+  facility: FacilityType
+  facilityId: ID!
+  id: ID!
+  isActive: Boolean!
+  name: String!
+}
+
+enum ResourceTypeEnum {
+  COURT
+  POOL
+  ROOM
+  SPA
+  STUDIO
+}
+
+type ScheduleMutationResponse {
+  message: String
+  schedule: GolfCourseScheduleType
+  success: Boolean!
+}
+
+input SendWaitlistOfferInput {
+  entryId: ID!
+  expiresInHours: Int = 24
+}
+
+input ServiceFilterInput {
+  category: String
+  isActive: Boolean
+}
+
+type ServiceResponseType {
+  error: String
+  service: ExtendedServiceType
+  success: Boolean!
+}
+
+type ServiceType {
+  basePrice: Float!
+  category: String!
+  description: String
+  durationMinutes: Int!
+  id: ID!
+  isActive: Boolean!
+  name: String!
+}
+
+input ServiceVariationInput {
+  id: String
+  name: String!
+  priceModifier: Float!
+  priceType: String! = "add"
+}
+
+type ServiceVariationType {
+  id: ID!
+  name: String!
+  priceModifier: Float!
+  priceType: String!
+}
+
+input StaffCapabilityInput {
+  capability: String!
+  level: String! = "intermediate"
+}
+
+type StaffCapabilityType {
+  capability: String!
+  level: String!
+}
+
+input StaffCertificationInput {
+  expiresAt: String!
+  id: String
+  name: String!
+}
+
+type StaffCertificationType {
+  expiresAt: DateTime
+  id: ID!
+  name: String!
+  status: String!
+}
+
+input StaffFilterInput {
+  availableOn: String
+  capability: String
+  isActive: Boolean
+}
+
+type StaffResponseType {
+  error: String
+  staff: ExtendedStaffType
+  success: Boolean!
+}
+
+type StaffType {
+  capabilities: [String!]
+  firstName: String!
+  id: ID!
+  isActive: Boolean!
+  lastName: String!
+  photoUrl: String
+  role: String
+}
+
+"""Tournament start format"""
+enum StartFormat {
+  SEQUENTIAL
+  SHOTGUN
+}
+
+type Subscription {
+  """Subscribe to tee time cancellations"""
+  teeTimeCancelled: TeeTimeType!
+
+  """Subscribe to tee time check-ins"""
+  teeTimeCheckedIn: TeeTimeType!
+
+  """Subscribe to new tee time creations"""
+  teeTimeCreated(courseId: ID): TeeTimeType!
+
+  """Subscribe to tee time updates for a specific course and date"""
+  teeTimeUpdated(courseId: ID, date: DateTime): TeeTimeType!
+}
+
+type TeeSheetBlockInfoType {
+  blockType: String!
+  id: ID!
+  reason: String
+}
+
+type TeeSheetSlotType {
+  available: Boolean!
+  blockInfo: TeeSheetBlockInfoType
+  blocked: Boolean!
+  booking: TeeTimeType
+  courseId: ID!
+  date: String!
+  isPrimeTime: Boolean!
+  time: String!
+}
+
+type TeeTicketPlayerType {
+  caddyName: String
+  cartType: String!
+  handicap: Int
+  memberId: String
+  name: String!
+  position: Int!
+  type: String!
+}
+
+type TeeTicketType {
+  barcode: String
+  caddyAssignment: String
+  cartAssignment: String
+  checkedInAt: DateTime!
+  checkedInBy: String!
+  clubLogo: String
+  clubName: String!
+  courseName: String!
+  holes: Int!
+  notes: String
+  players: [TeeTicketPlayerType!]!
+  qrCode: String
+  teeDate: DateTime!
+  teeTime: String!
+  ticketNumber: String!
+}
+
+type TeeTicketValidationResult {
+  message: String
+  teeTimeId: ID
+  valid: Boolean!
+}
+
+type TeeTimeBlockType {
+  blockType: BlockType!
+  course: GolfCourseType
+  courseId: ID!
+  createdAt: DateTime!
+  endTime: DateTime!
+  id: ID!
+  isRecurring: Boolean!
+  reason: String
+  recurringPattern: String
+  startTime: DateTime!
+  updatedAt: DateTime!
+}
+
+type TeeTimeConnection {
+  edges: [TeeTimeTypeEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+input TeeTimePlayerInput {
+  caddyId: ID
+  cartType: CartType = WALKING
+  guestEmail: String
+  guestName: String
+  guestPhone: String
+  memberId: ID
+  playerType: PlayerType!
+  position: Int!
+  sharedWithPosition: Int
+}
+
+type TeeTimePlayerType {
+  caddy: CaddyType
+  cartType: CartType!
+  checkedInAt: DateTime
+  guestEmail: String
+  guestName: String
+  guestPhone: String
+  id: ID!
+  member: PlayerMemberType
+  playerType: PlayerType!
+  position: Int!
+  sharedWithPosition: Int
+}
+
+"""Tee time booking status"""
+enum TeeTimeStatus {
+  CANCELLED
+  CHECKED_IN
+  COMPLETED
+  CONFIRMED
+  IN_PROGRESS
+  NO_SHOW
+  PENDING
+}
+
+type TeeTimeType {
+  course: GolfCourseType
+  createdAt: DateTime!
+  holes: Int!
+  id: ID!
+  notes: String
+  players: [TeeTimePlayerType!]!
+  status: TeeTimeStatus!
+  teeDate: DateTime!
+  teeTime: String!
+  teeTimeNumber: String!
+  updatedAt: DateTime!
+}
+
+type TeeTimeTypeEdge {
+  cursor: String!
+  node: TeeTimeType!
+}
+
+input TierDiscountInput {
+  discountPercent: Float!
+  tierName: String!
+}
+
+type TierDiscountType {
+  discountPercent: Float!
+  tierName: String!
+}
+
+input UpdateApplicationInput {
+  email: String
+  firstName: String
+  lastName: String
+  membershipTypeId: ID
+  phone: String
+  reviewNotes: String
+  sponsorId: ID
+}
+
+input UpdateBlockInput {
+  blockType: BlockType
+  endTime: DateTime
+  isRecurring: Boolean
+  reason: String
+  recurringPattern: String
+  startTime: DateTime
+}
+
+input UpdateDependentInput {
+  dateOfBirth: DateTime
+  email: String
+  firstName: String
+  isActive: Boolean
+  lastName: String
+  phone: String
+  relationship: String
+}
+
+input UpdateFacilityInput {
+  capacity: Int
+  description: String
+  features: [String!]
+  id: ID!
+  isActive: Boolean
+  location: String
+  name: String
+  operatingHours: [DayHoursInput!]
+  outletId: ID
+  revenueCenterId: ID
+  type: ResourceTypeEnum
+}
+
+input UpdateGroupBookingInput {
+  eventDate: DateTime
+  groupName: String
+  notes: String
+  startFormat: StartFormat
+  startTime: String
+  status: GroupBookingStatus
+}
+
+input UpdateLotteryInput {
+  drawTime: DateTime
+  lotteryDate: DateTime
+  lotteryType: LotteryType
+  maxRequestsPerMember: Int
+  requestWindowEnd: DateTime
+  requestWindowStart: DateTime
+  status: LotteryStatus
+  timeRangeEnd: String
+  timeRangeStart: String
+}
+
+input UpdateMemberInput {
+  address: String
+  dateOfBirth: DateTime
+  email: String
+  emergencyContact: String
+  emergencyPhone: String
+  expiryDate: DateTime
+  firstName: String
+  gender: String
+  householdId: ID
+  idNumber: String
+  isPrimaryMember: Boolean
+  lastName: String
+  membershipTierId: ID
+  membershipTypeId: ID
+  nationality: String
+  notes: String
+  phone: String
+  tags: [String!]
+}
+
+input UpdateScheduleInput {
+  endDate: DateTime
+  firstTeeTime: String
+  isActive: Boolean
+  lastTeeTime: String
+  paceOfPlay: Int
+  playFormat: PlayFormat
+  seasonName: String
+  startDate: DateTime
+}
+
+input UpdateServiceInput {
+  basePrice: Float
+  bufferMinutes: Int
+  category: String
+  description: String
+  durationMinutes: Int
+  id: ID!
+  isActive: Boolean
+  maxParticipants: Int
+  name: String
+  requiredCapabilities: [String!]
+  requiredFacilityFeatures: [String!]
+  revenueCenterId: ID
+  tierDiscounts: [TierDiscountInput!]
+  variations: [ServiceVariationInput!]
+}
+
+input UpdateStaffMemberInput {
+  avatarUrl: String
+  capabilities: [StaffCapabilityInput!]
+  certifications: [StaffCertificationInput!]
+  defaultFacilityId: ID
+  email: String
+  firstName: String
+  id: ID!
+  isActive: Boolean
+  lastName: String
+  phone: String
+  userId: ID
+  workingHours: [DayHoursInput!]
+}
+
+input UpdateTeeTimeInput {
+  notes: String
+  players: [TeeTimePlayerInput!]
+  status: TeeTimeStatus
+}
+
+input UpdateWaitlistEntryInput {
+  playerCount: Int
+  priority: Int
+  requesterEmail: String
+  requesterName: String
+  requesterPhone: String
+  status: GolfWaitlistStatus
+  timeRangeEnd: String
+  timeRangeStart: String
+}
+
+input VoidInvoiceInput {
+  reason: String!
+}
+
+input WaitlistActionInput {
+  entryId: ID!
+}
+
+type WaitlistConnection {
+  edges: [WaitlistEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type WaitlistEdge {
+  cursor: String!
+  node: WaitlistEntryType!
+}
+
+type WaitlistEntryType {
+  createdAt: DateTime!
+  facilityName: String
+  id: ID!
+  member: BookingMemberType!
+  notes: String
+  offerExpiresAt: DateTime
+  position: Int!
+  requestedDate: DateTime!
+  requestedTime: String!
+  serviceName: String
+  status: WaitlistStatus!
+}
+
+type WaitlistMutationResponse {
+  message: String
+  success: Boolean!
+  waitlistEntry: GolfWaitlistType
+}
+
+type WaitlistNotificationResult {
+  message: String
+  notifiedCount: Int!
+  notifiedEntries: [GolfWaitlistType!]!
+  success: Boolean!
+}
+
+type WaitlistResponseType {
+  entry: WaitlistEntryType
+  error: String
+  message: String
+  success: Boolean!
+}
+
+enum WaitlistStatus {
+  ACCEPTED
+  DECLINED
+  EXPIRED
+  OFFER_SENT
+  WAITING
+}

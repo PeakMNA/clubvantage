@@ -1,0 +1,228 @@
+# Golf Queries
+
+query GetTeeSheet($courseId: ID!, $date: DateTime!) {
+  teeSheet(courseId: $courseId, date: $date) {
+    time
+    courseId
+    date
+    available
+    booking {
+      id
+      teeTimeNumber
+      teeDate
+      teeTime
+      holes
+      status
+      notes
+      players {
+        id
+        position
+        playerType
+        member {
+          id
+          memberId
+          firstName
+          lastName
+        }
+        guestName
+        guestEmail
+        guestPhone
+        cartType
+        sharedWithPosition
+        caddy {
+          id
+          caddyNumber
+          firstName
+          lastName
+        }
+        checkedInAt
+      }
+    }
+  }
+}
+
+query GetCourses {
+  courses {
+    id
+    name
+    code
+    description
+    holes
+    par
+    slope
+    rating
+    firstTeeTime
+    lastTeeTime
+    teeInterval
+    isActive
+  }
+}
+
+query GetTeeTime($id: ID!) {
+  teeTime(id: $id) {
+    id
+    teeTimeNumber
+    teeDate
+    teeTime
+    holes
+    status
+    notes
+    createdAt
+    updatedAt
+    course {
+      id
+      name
+      code
+      holes
+      par
+    }
+    players {
+      id
+      position
+      playerType
+      member {
+        id
+        memberId
+        firstName
+        lastName
+      }
+      guestName
+      guestEmail
+      guestPhone
+      cartType
+      sharedWithPosition
+      caddy {
+        id
+        caddyNumber
+        firstName
+        lastName
+        phone
+        isActive
+      }
+      checkedInAt
+    }
+  }
+}
+
+query GetTeeTimes(
+  $courseId: ID
+  $startDate: DateTime
+  $endDate: DateTime
+  $status: TeeTimeStatus
+  $memberId: ID
+  $first: Int
+  $skip: Int
+) {
+  teeTimes(
+    courseId: $courseId
+    startDate: $startDate
+    endDate: $endDate
+    status: $status
+    memberId: $memberId
+    first: $first
+    skip: $skip
+  ) {
+    edges {
+      node {
+        id
+        teeTimeNumber
+        teeDate
+        teeTime
+        holes
+        status
+        course {
+          id
+          name
+          code
+        }
+        players {
+          id
+          position
+          playerType
+          member {
+            id
+            memberId
+            firstName
+            lastName
+          }
+          guestName
+        }
+      }
+      cursor
+    }
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      startCursor
+      endCursor
+    }
+    totalCount
+  }
+}
+
+# Golf Mutations
+
+mutation CreateTeeTime($input: CreateTeeTimeInput!) {
+  createTeeTime(input: $input) {
+    id
+    teeTimeNumber
+    teeDate
+    teeTime
+    holes
+    status
+    course {
+      id
+      name
+    }
+    players {
+      id
+      position
+      playerType
+      member {
+        id
+        firstName
+        lastName
+      }
+      guestName
+    }
+  }
+}
+
+mutation UpdateTeeTime($id: ID!, $input: UpdateTeeTimeInput!) {
+  updateTeeTime(id: $id, input: $input) {
+    id
+    teeTimeNumber
+    status
+    updatedAt
+  }
+}
+
+mutation CheckInTeeTime($input: CheckInInput!) {
+  checkIn(input: $input) {
+    success
+    booking {
+      id
+      status
+    }
+    error
+  }
+}
+
+mutation CancelTeeTime($id: ID!, $reason: String) {
+  cancelTeeTime(id: $id, reason: $reason) {
+    message
+  }
+}
+
+mutation MoveTeeTime($id: ID!, $input: MoveTeeTimeInput!) {
+  moveTeeTime(id: $id, input: $input) {
+    id
+    teeDate
+    teeTime
+    status
+    course {
+      id
+      name
+    }
+  }
+}

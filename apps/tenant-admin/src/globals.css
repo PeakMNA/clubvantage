@@ -1,0 +1,159 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Base colors - can be overridden by tenant branding */
+    --background: 210 40% 98%;
+    --foreground: 222.2 47.4% 11.2%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 47.4% 11.2%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 47.4% 11.2%;
+
+    /* Primary - defaults to ClubVantage blue, overridden by tenant */
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+
+    /* Secondary */
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    /* Muted */
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    /* Accent - tenant's accent color */
+    --accent: 160 84% 39%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Destructive */
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+
+    --radius: 0.5rem;
+
+    /* Tenant Branding CSS Variables */
+    --tenant-primary: 221.2 83.2% 53.3%;
+    --tenant-secondary: 215.4 16.3% 46.9%;
+    --tenant-accent: 160 84% 39%;
+
+    /* Status colors (same as Platform Manager) */
+    --status-active: 160 84% 39%;
+    --status-pending: 38 92% 50%;
+    --status-suspended: 0 84% 60%;
+    --status-archived: 25 5% 45%;
+    --status-converted: 217 91% 60%;
+
+    /* Subscription tier colors */
+    --tier-starter: 215 16% 47%;
+    --tier-professional: 217 91% 60%;
+    --tier-enterprise: 271 81% 56%;
+  }
+
+  .dark {
+    --background: 224 71% 4%;
+    --foreground: 213 31% 91%;
+
+    --card: 224 71% 4%;
+    --card-foreground: 213 31% 91%;
+
+    --popover: 224 71% 4%;
+    --popover-foreground: 213 31% 91%;
+
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 222.2 47.4% 11.2%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 223 47% 11%;
+    --muted-foreground: 215.4 16.3% 56.9%;
+
+    --accent: 160 84% 39%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 216 34% 17%;
+    --input: 216 34% 17%;
+    --ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* Tenant branding utilities */
+@layer utilities {
+  .bg-tenant-primary {
+    background-color: hsl(var(--tenant-primary));
+  }
+  .text-tenant-primary {
+    color: hsl(var(--tenant-primary));
+  }
+  .border-tenant-primary {
+    border-color: hsl(var(--tenant-primary));
+  }
+  .bg-tenant-accent {
+    background-color: hsl(var(--tenant-accent));
+  }
+  .text-tenant-accent {
+    color: hsl(var(--tenant-accent));
+  }
+  .ring-tenant-primary {
+    --tw-ring-color: hsl(var(--tenant-primary));
+  }
+}
+
+/* Usage bar styles */
+@layer utilities {
+  .usage-bar {
+    @apply h-2 rounded-full bg-slate-200 overflow-hidden;
+  }
+  .usage-bar-fill {
+    @apply h-full rounded-full transition-all duration-300;
+  }
+  .usage-bar-fill-normal {
+    @apply bg-blue-500;
+  }
+  .usage-bar-fill-warning {
+    @apply bg-amber-500;
+  }
+  .usage-bar-fill-critical {
+    @apply bg-red-500;
+  }
+}
+
+/* Custom scrollbar for sidebar */
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(203 213 225) transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: rgb(203 213 225);
+    border-radius: 3px;
+  }
+}

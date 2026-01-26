@@ -1,0 +1,431 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+   Platform Manager Design System
+   ============================================
+   Primary: Blue 800 (#1E40AF) - Professional admin interface
+   Secondary: Slate - Clean, neutral tones
+   Status: Emerald/Amber/Red/Blue for clear visual feedback
+   ============================================ */
+
+@layer base {
+  :root {
+    /* ----------------------------------------
+       Primary: Deep Blue
+       Professional, trustworthy admin interface
+       ---------------------------------------- */
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+
+    /* ----------------------------------------
+       Secondary: Slate
+       Neutral, clean interface elements
+       ---------------------------------------- */
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    /* ----------------------------------------
+       Accent: Blue 700
+       ---------------------------------------- */
+    --accent: 217.2 91.2% 59.8%;
+    --accent-foreground: 210 40% 98%;
+
+    /* ----------------------------------------
+       Background & Foreground
+       ---------------------------------------- */
+    --background: 210 40% 98%;
+    --foreground: 222.2 84% 4.9%;
+
+    /* ----------------------------------------
+       Card & Popover
+       ---------------------------------------- */
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    /* ----------------------------------------
+       Muted (Slate 100/500)
+       ---------------------------------------- */
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    /* ----------------------------------------
+       Border & Input (Slate 200)
+       ---------------------------------------- */
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+
+    /* ----------------------------------------
+       Status Colors
+       ---------------------------------------- */
+    --success: 160 84% 39%;
+    --success-foreground: 0 0% 100%;
+    --success-bg: 152 81% 96%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 21 92% 14%;
+    --warning-bg: 48 96% 89%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+    --destructive-bg: 0 86% 97%;
+
+    --info: 217 91% 60%;
+    --info-foreground: 0 0% 100%;
+    --info-bg: 214 95% 93%;
+
+    /* ----------------------------------------
+       Tenant Status Colors
+       ---------------------------------------- */
+    --status-active: 160 84% 39%;        /* Emerald 500 */
+    --status-active-bg: 152 81% 96%;     /* Emerald 50 */
+    --status-pending: 38 92% 50%;        /* Amber 500 */
+    --status-pending-bg: 48 96% 89%;     /* Amber 100 */
+    --status-suspended: 0 84% 60%;       /* Red 500 */
+    --status-suspended-bg: 0 86% 97%;    /* Red 50 */
+    --status-archived: 25 5% 45%;        /* Stone 500 */
+    --status-archived-bg: 60 5% 96%;     /* Stone 100 */
+    --status-converted: 217 91% 60%;     /* Blue 500 */
+    --status-converted-bg: 214 95% 93%;  /* Blue 100 */
+
+    /* ----------------------------------------
+       Health Score Colors
+       ---------------------------------------- */
+    --health-healthy: 160 84% 39%;       /* Emerald - 80-100 */
+    --health-warning: 38 92% 50%;        /* Amber - 60-79 */
+    --health-critical: 0 84% 60%;        /* Red - 0-59 */
+
+    /* ----------------------------------------
+       Waitlist Status Colors
+       ---------------------------------------- */
+    --waitlist-pending: 38 92% 50%;
+    --waitlist-approved: 160 84% 39%;
+    --waitlist-rejected: 0 84% 60%;
+    --waitlist-converted: 217 91% 60%;
+
+    /* ----------------------------------------
+       Feature Status Colors
+       ---------------------------------------- */
+    --feature-considering: 25 5% 45%;     /* Stone 500 */
+    --feature-planned: 217 91% 60%;       /* Blue 500 */
+    --feature-in-progress: 38 92% 50%;    /* Amber 500 */
+    --feature-completed: 160 84% 39%;     /* Emerald 500 */
+
+    /* ----------------------------------------
+       Subscription Tier Colors
+       ---------------------------------------- */
+    --tier-starter: 215 16% 47%;         /* Slate 500 */
+    --tier-professional: 217 91% 60%;    /* Blue 500 */
+    --tier-enterprise: 262 83% 58%;      /* Purple 500 */
+
+    /* ----------------------------------------
+       Sidebar (Professional Dark)
+       ---------------------------------------- */
+    --sidebar-background: 222.2 84% 4.9%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 217.2 91.2% 59.8%;
+    --sidebar-primary-foreground: 222.2 84% 4.9%;
+    --sidebar-accent: 217.2 32.6% 17.5%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217.2 32.6% 17.5%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* ----------------------------------------
+       Chart Colors
+       ---------------------------------------- */
+    --chart-1: 221.2 83.2% 53.3%;
+    --chart-2: 160 84% 39%;
+    --chart-3: 38 92% 50%;
+    --chart-4: 262 83% 58%;
+    --chart-5: 0 84% 60%;
+
+    /* ----------------------------------------
+       Border Radius
+       ---------------------------------------- */
+    --radius: 0.5rem;
+
+    /* ----------------------------------------
+       Tenant Branding (CSS Custom Properties)
+       These can be overridden for tenant-specific theming
+       ---------------------------------------- */
+    --tenant-primary: 221.2 83.2% 53.3%;
+    --tenant-secondary: 160 84% 39%;
+    --tenant-accent: 38 92% 50%;
+  }
+
+  .dark {
+    /* ----------------------------------------
+       Dark Mode: Professional Slate Dark
+       ---------------------------------------- */
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 8%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 8%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 84% 4.9%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --accent: 217.2 91.2% 59.8%;
+    --accent-foreground: 222.2 84% 4.9%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --destructive: 0 62.8% 50.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 217.2 91.2% 59.8%;
+
+    /* Dark sidebar */
+    --sidebar-background: 222.2 84% 3%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 217.2 91.2% 59.8%;
+    --sidebar-primary-foreground: 222.2 84% 4.9%;
+    --sidebar-accent: 217.2 32.6% 12%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217.2 32.6% 12%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Typography */
+  h1 {
+    @apply text-h1 tracking-tight;
+  }
+
+  h2 {
+    @apply text-h2 tracking-tight;
+  }
+
+  h3 {
+    @apply text-h3 tracking-tight;
+  }
+
+  h4 {
+    @apply text-h4;
+  }
+}
+
+/* ----------------------------------------
+   Custom Scrollbar (Slate)
+   ---------------------------------------- */
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 4px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--muted-foreground) / 0.5);
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ----------------------------------------
+   Status Badge Utilities
+   ---------------------------------------- */
+@layer utilities {
+  .status-active {
+    @apply bg-emerald-50 text-emerald-700 border-emerald-200;
+  }
+
+  .status-pending {
+    @apply bg-amber-50 text-amber-700 border-amber-200;
+  }
+
+  .status-suspended {
+    @apply bg-red-50 text-red-700 border-red-200;
+  }
+
+  .status-archived {
+    @apply bg-stone-100 text-stone-600 border-stone-200;
+  }
+
+  .status-converted {
+    @apply bg-blue-50 text-blue-700 border-blue-200;
+  }
+}
+
+/* ----------------------------------------
+   Health Score Ring
+   ---------------------------------------- */
+@layer utilities {
+  .health-ring-healthy {
+    stroke: hsl(var(--health-healthy));
+  }
+
+  .health-ring-warning {
+    stroke: hsl(var(--health-warning));
+  }
+
+  .health-ring-critical {
+    stroke: hsl(var(--health-critical));
+  }
+}
+
+/* ----------------------------------------
+   Animation Utilities
+   ---------------------------------------- */
+@layer utilities {
+  .animate-in {
+    animation: animate-in 0.2s ease-out;
+  }
+
+  @keyframes animate-in {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Shimmer effect for loading states */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--muted)) 0%,
+      hsl(var(--background)) 50%,
+      hsl(var(--muted)) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite linear;
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+}
+
+/* ----------------------------------------
+   Impersonation Banner
+   ---------------------------------------- */
+@layer utilities {
+  .impersonation-banner {
+    @apply fixed top-0 left-0 right-0 z-50;
+    @apply bg-red-600 text-white;
+    @apply px-4 py-2;
+    @apply flex items-center justify-between;
+    @apply shadow-lg;
+  }
+}
+
+/* ----------------------------------------
+   Data Table Utilities
+   ---------------------------------------- */
+@layer utilities {
+  .table-row-hover {
+    @apply hover:bg-slate-50 transition-colors duration-150;
+  }
+
+  .table-header {
+    @apply bg-slate-50/80 text-slate-600 text-xs font-medium uppercase tracking-wide;
+  }
+}
+
+/* ----------------------------------------
+   Filter Chip Utilities
+   ---------------------------------------- */
+@layer utilities {
+  .filter-chip {
+    @apply inline-flex items-center gap-1.5;
+    @apply px-3 py-1.5 rounded-full;
+    @apply text-sm font-medium;
+    @apply border border-slate-200 bg-white;
+    @apply hover:bg-slate-50 hover:border-slate-300;
+    @apply transition-colors duration-150;
+    @apply cursor-pointer select-none;
+  }
+
+  .filter-chip-active {
+    @apply bg-blue-50 border-blue-200 text-blue-700;
+    @apply hover:bg-blue-100 hover:border-blue-300;
+  }
+}
+
+/* ----------------------------------------
+   KPI Card Utilities
+   ---------------------------------------- */
+@layer utilities {
+  .kpi-trend-up {
+    @apply text-emerald-600;
+  }
+
+  .kpi-trend-down {
+    @apply text-red-600;
+  }
+
+  .kpi-trend-neutral {
+    @apply text-slate-500;
+  }
+}
+
+/* ----------------------------------------
+   Glassmorphism
+   ---------------------------------------- */
+@layer utilities {
+  .glass {
+    background: hsl(var(--background) / 0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .glass-strong {
+    background: hsl(var(--background) / 0.95);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+}

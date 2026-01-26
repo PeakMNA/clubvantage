@@ -1,0 +1,522 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+   ClubVantage Design System
+   ============================================
+   Primary: Amber (warm, inviting, premium)
+   Secondary: Emerald (fresh, natural, growth)
+   Neutral: Stone (warm grays, sophisticated)
+   ============================================ */
+
+@layer base {
+  :root {
+    /* ----------------------------------------
+       Primary: Amber
+       Warm, inviting, premium feel
+       ---------------------------------------- */
+    --primary: 38 92% 50%;
+    --primary-foreground: 22 78% 26%;
+
+    /* ----------------------------------------
+       Secondary: Emerald
+       Fresh, natural, growth-oriented
+       ---------------------------------------- */
+    --secondary: 60 5% 96%;
+    --secondary-foreground: 24 10% 10%;
+
+    /* ----------------------------------------
+       Accent: Amber-600 (darker amber for contrast)
+       ---------------------------------------- */
+    --accent: 32 95% 44%;
+    --accent-foreground: 48 100% 96%;
+
+    /* ----------------------------------------
+       Background & Foreground (Stone-based)
+       ---------------------------------------- */
+    --background: 60 9% 98%;
+    --foreground: 24 10% 10%;
+
+    /* ----------------------------------------
+       Card & Popover
+       ---------------------------------------- */
+    --card: 0 0% 100%;
+    --card-foreground: 24 10% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 24 10% 10%;
+
+    /* ----------------------------------------
+       Muted (Stone-300/500)
+       ---------------------------------------- */
+    --muted: 24 6% 83%;
+    --muted-foreground: 25 5% 45%;
+
+    /* ----------------------------------------
+       Border & Input (Stone-200)
+       ---------------------------------------- */
+    --border: 20 6% 90%;
+    --input: 20 6% 90%;
+    --ring: 38 92% 50%;
+
+    /* ----------------------------------------
+       Status Colors
+       ---------------------------------------- */
+    --success: 160 84% 39%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 22 78% 26%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --info: 199 89% 48%;
+    --info-foreground: 0 0% 100%;
+
+    /* ----------------------------------------
+       Member Status Colors
+       ---------------------------------------- */
+    --status-active: 160 84% 39%;        /* emerald-500 - Active members */
+    --status-pending: 38 92% 50%;        /* amber-500 - Awaiting approval */
+    --status-suspended: 0 84% 60%;       /* red-500 - 91+ days overdue */
+    --status-inactive: 25 6% 45%;        /* stone-500 - Inactive with reason */
+    --status-inactive-bg: 20 6% 90%;     /* stone-200 - Inactive background */
+    --status-cancelled: 220 9% 46%;      /* gray-500 - Cancelled */
+    --status-cancelled-bg: 220 14% 91%;  /* gray-200 - Cancelled background */
+    --status-lapsed: 0 84% 60%;          /* red-500 - Lapsed membership */
+    --status-prospect: 199 89% 48%;      /* sky-500 - Prospects */
+    --status-lead: 262 83% 58%;          /* purple-500 - Leads */
+
+    /* ----------------------------------------
+       Application Status Colors
+       ---------------------------------------- */
+    --app-submitted: 217 91% 60%;        /* blue-500 - New submissions */
+    --app-under-review: 38 92% 50%;      /* amber-500 - Being reviewed */
+    --app-pending-board: 262 83% 58%;    /* purple-500 - Awaiting board */
+    --app-approved: 160 84% 39%;         /* emerald-500 - Approved */
+    --app-rejected: 0 84% 60%;           /* red-500 - Rejected */
+    --app-withdrawn: 220 9% 46%;         /* gray-500 - Withdrawn */
+    --app-withdrawn-bg: 220 14% 91%;     /* gray-200 - Withdrawn background */
+
+    /* ----------------------------------------
+       Person Type Colors
+       ---------------------------------------- */
+    --person-member: 217 91% 60%;        /* blue-500 - Member badge */
+    --person-dependent: 262 83% 58%;     /* purple-500 - Dependent badge */
+    --person-guest: 38 92% 50%;          /* amber-500 - Guest badge */
+
+    /* ----------------------------------------
+       Charge Type Colors
+       ---------------------------------------- */
+    --charge-recurring: 217 91% 60%;     /* blue-500 - Monthly/quarterly/annual */
+    --charge-usage: 262 83% 58%;         /* purple-500 - Per-visit/per-booking */
+
+    /* ----------------------------------------
+       Invoice Status Colors
+       ---------------------------------------- */
+    --invoice-draft: 25 5% 45%;
+    --invoice-sent: 199 89% 48%;
+    --invoice-paid: 160 84% 39%;
+    --invoice-overdue: 0 84% 60%;
+    --invoice-partial: 38 92% 50%;
+
+    /* ----------------------------------------
+       Booking Status Colors
+       ---------------------------------------- */
+    --booking-pending: 38 92% 50%;
+    --booking-confirmed: 160 84% 39%;
+    --booking-cancelled: 0 84% 60%;
+    --booking-completed: 25 5% 45%;
+
+    /* ----------------------------------------
+       Sidebar (Warm Stone Theme)
+       ---------------------------------------- */
+    --sidebar-background: 60 5% 96%;
+    --sidebar-foreground: 24 10% 10%;
+    --sidebar-primary: 38 92% 50%;
+    --sidebar-primary-foreground: 22 78% 26%;
+    --sidebar-accent: 20 6% 90%;
+    --sidebar-accent-foreground: 24 10% 10%;
+    --sidebar-border: 20 6% 90%;
+    --sidebar-ring: 38 92% 50%;
+
+    /* ----------------------------------------
+       Chart Colors
+       ---------------------------------------- */
+    --chart-1: 38 92% 50%;
+    --chart-2: 160 84% 39%;
+    --chart-3: 199 89% 48%;
+    --chart-4: 262 83% 58%;
+    --chart-5: 0 84% 60%;
+
+    /* ----------------------------------------
+       Border Radius
+       ---------------------------------------- */
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    /* ----------------------------------------
+       Dark Mode: Warm Stone Dark
+       Premium, sophisticated dark theme
+       ---------------------------------------- */
+    --background: 20 14% 8%;
+    --foreground: 60 9% 98%;
+
+    --card: 20 10% 12%;
+    --card-foreground: 60 9% 98%;
+
+    --popover: 20 10% 12%;
+    --popover-foreground: 60 9% 98%;
+
+    --primary: 43 96% 56%;
+    --primary-foreground: 20 14% 8%;
+
+    --secondary: 24 6% 18%;
+    --secondary-foreground: 60 9% 98%;
+
+    --accent: 38 92% 50%;
+    --accent-foreground: 20 14% 8%;
+
+    --muted: 24 6% 20%;
+    --muted-foreground: 24 5% 64%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 60 9% 98%;
+
+    --success: 160 84% 39%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 43 96% 56%;
+    --warning-foreground: 20 14% 8%;
+
+    --info: 199 89% 48%;
+    --info-foreground: 0 0% 100%;
+
+    --border: 24 6% 20%;
+    --input: 24 6% 18%;
+    --ring: 43 96% 56%;
+
+    /* ----------------------------------------
+       Dark Mode Status Colors
+       ---------------------------------------- */
+    --status-active: 160 84% 45%;
+    --status-pending: 43 96% 56%;
+    --status-suspended: 0 72% 55%;
+    --status-inactive: 24 5% 55%;
+    --status-inactive-bg: 24 6% 20%;
+    --status-cancelled: 220 9% 55%;
+    --status-cancelled-bg: 220 10% 18%;
+
+    /* ----------------------------------------
+       Dark Mode Sidebar
+       ---------------------------------------- */
+    --sidebar-background: 20 14% 8%;
+    --sidebar-foreground: 60 5% 96%;
+    --sidebar-primary: 43 96% 56%;
+    --sidebar-primary-foreground: 20 14% 8%;
+    --sidebar-accent: 24 6% 16%;
+    --sidebar-accent-foreground: 60 5% 96%;
+    --sidebar-border: 24 6% 18%;
+    --sidebar-ring: 43 96% 56%;
+
+    /* ----------------------------------------
+       Dark Mode Chart Colors
+       ---------------------------------------- */
+    --chart-1: 43 96% 56%;
+    --chart-2: 160 84% 45%;
+    --chart-3: 199 89% 55%;
+    --chart-4: 262 83% 65%;
+    --chart-5: 0 72% 55%;
+  }
+
+  /* ----------------------------------------
+     Dark Mode Enhancements
+     ---------------------------------------- */
+  .dark ::selection {
+    background-color: hsl(43 96% 56% / 0.3);
+    color: hsl(60 9% 98%);
+  }
+
+  /* Smooth theme transition */
+  html.transitioning,
+  html.transitioning *,
+  html.transitioning *::before,
+  html.transitioning *::after {
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.2s ease !important;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* ----------------------------------------
+     Typography Scale - DM Sans
+     ---------------------------------------- */
+  h1 {
+    @apply text-3xl font-semibold tracking-tight;
+  }
+
+  h2 {
+    @apply text-2xl font-semibold tracking-tight;
+  }
+
+  h3 {
+    @apply text-xl font-semibold tracking-tight;
+  }
+
+  h4 {
+    @apply text-lg font-medium;
+  }
+
+  /* Selection styling */
+  ::selection {
+    background-color: hsl(38 92% 50% / 0.2);
+    color: hsl(24 10% 10%);
+  }
+}
+
+/* ----------------------------------------
+   Custom Scrollbar (Warm Stone)
+   ---------------------------------------- */
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted)) transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--muted));
+    border-radius: 4px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--muted-foreground));
+  }
+
+  /* Hide scrollbar utility */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ----------------------------------------
+   Animation Classes
+   ---------------------------------------- */
+@layer utilities {
+  .animate-in {
+    animation: animate-in 0.2s ease-out;
+  }
+
+  .animate-out {
+    animation: animate-out 0.2s ease-in;
+  }
+
+  @keyframes animate-in {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes animate-out {
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+  }
+
+  /* Slide animations */
+  .slide-in-from-top {
+    animation: slide-in-from-top 0.2s ease-out;
+  }
+
+  .slide-in-from-bottom {
+    animation: slide-in-from-bottom 0.2s ease-out;
+  }
+
+  @keyframes slide-in-from-top {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slide-in-from-bottom {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Shimmer effect for loading states */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--muted)) 0%,
+      hsl(var(--background)) 50%,
+      hsl(var(--muted)) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite linear;
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+}
+
+/* ----------------------------------------
+   Glassmorphism Utilities
+   ---------------------------------------- */
+@layer utilities {
+  .glass {
+    background: hsl(var(--background) / 0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .glass-strong {
+    background: hsl(var(--background) / 0.95);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+}
+
+/* ----------------------------------------
+   Booking Status Patterns
+   ---------------------------------------- */
+@layer utilities {
+  .booking-status-stripes {
+    background-image: repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 4px,
+      hsl(var(--warning) / 0.15) 4px,
+      hsl(var(--warning) / 0.15) 8px
+    );
+  }
+
+  .dark .booking-status-stripes {
+    background-image: repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 4px,
+      hsl(var(--warning) / 0.1) 4px,
+      hsl(var(--warning) / 0.1) 8px
+    );
+  }
+
+  /* Unavailable time slot diagonal stripes */
+  .time-slot-unavailable {
+    background-image: repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 3px,
+      hsl(var(--muted-foreground) / 0.08) 3px,
+      hsl(var(--muted-foreground) / 0.08) 6px
+    );
+  }
+
+  .dark .time-slot-unavailable {
+    background-image: repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 3px,
+      hsl(var(--muted-foreground) / 0.12) 3px,
+      hsl(var(--muted-foreground) / 0.12) 6px
+    );
+  }
+}
+
+/* ----------------------------------------
+   Gradient Utilities
+   ---------------------------------------- */
+@layer utilities {
+  .gradient-amber {
+    background: linear-gradient(
+      135deg,
+      hsl(48 96% 89%) 0%,
+      hsl(38 92% 50%) 100%
+    );
+  }
+
+  .gradient-emerald {
+    background: linear-gradient(
+      135deg,
+      hsl(152 76% 80%) 0%,
+      hsl(160 84% 39%) 100%
+    );
+  }
+
+  .gradient-stone {
+    background: linear-gradient(
+      135deg,
+      hsl(60 9% 98%) 0%,
+      hsl(20 6% 90%) 100%
+    );
+  }
+
+  /* Accent line gradients */
+  .accent-line-amber {
+    background: linear-gradient(
+      90deg,
+      hsl(48 97% 77%) 0%,
+      hsl(38 92% 50%) 50%,
+      hsl(48 97% 77%) 100%
+    );
+  }
+
+  .accent-line-emerald {
+    background: linear-gradient(
+      90deg,
+      hsl(152 76% 80%) 0%,
+      hsl(160 84% 39%) 50%,
+      hsl(152 76% 80%) 100%
+    );
+  }
+}

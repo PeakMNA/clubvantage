@@ -1,0 +1,404 @@
+import { Resolver, Query, Mutation, Args, ID } from '@nestjs/graphql';
+import { UseGuards } from '@nestjs/common';
+import { BillingService } from '@/modules/billing/billing.service';
+import { PrismaService } from '@/shared/prisma/prisma.service';
+import { GqlAuthGuard } from '../guards/gql-auth.guard';
+import { GqlCurrentUser } from '../common/decorators/gql-current-user.decorator';
+import { JwtPayload } from '@/modules/auth/interfaces/jwt-payload.interface';
+import {
+  InvoiceType,
+  InvoiceConnection,
+  PaymentType,
+  BillingStatsType,
+  MemberTransactionsType,
+  MemberTransactionType,
+} from './billing.types';
+import {
+  CreateInvoiceInput,
+  CreatePaymentInput,
+  InvoicesQueryArgs,
+  VoidInvoiceInput,
+} from './billing.input';
+import { encodeCursor } from '../common/pagination';
+
+@Resolver(() => InvoiceType)
+@UseGuards(GqlAuthGuard)
+export class BillingResolver {
+  constructor(
+    private readonly billingService: BillingService,
+    private readonly prisma: PrismaService,
+  ) {}
+
+  @Query(() => InvoiceConnection, { name: 'myInvoices', description: 'Get current member\'s invoices' })
+  async getMyInvoices(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args() args: InvoicesQueryArgs,
+  ): Promise<InvoiceConnection> {
+    // Find the current user's member ID
+    const dbUser = await this.prisma.user.findUnique({
+      where: { id: user.sub },
+      select: { memberId: true },
+    });
+
+    if (!dbUser?.memberId) {
+      return {
+        edges: [],
+        pageInfo: {
+          hasNextPage: false,
+          hasPreviousPage: false,
+          startCursor: null,
+          endCursor: null,
+        },
+        totalCount: 0,
+      };
+    }
+
+    const { first, after, skip, startDate, endDate, ...queryParams } = args;
+    const page = skip ? Math.floor(skip / (first || 20)) + 1 : 1;
+    const limit = first || 20;
+
+    const result = await this.billingService.findAllInvoices(user.tenantId, {
+      ...queryParams,
+      memberId: dbUser.memberId,
+      startDate: startDate?.toISOString(),
+      endDate: endDate?.toISOString(),
+      page,
+      limit,
+    });
+
+    const edges = result.data.map((invoice: any) => ({
+      node: this.transformInvoice(invoice),
+      cursor: encodeCursor(invoice.id),
+    }));
+
+    return {
+      edges,
+      pageInfo: {
+        hasNextPage: page < result.meta.totalPages,
+        hasPreviousPage: page > 1,
+        startCursor: edges.length > 0 ? edges[0].cursor : null,
+        endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
+      },
+      totalCount: result.meta.total,
+    };
+  }
+
+  @Query(() => InvoiceConnection, { name: 'invoices', description: 'Get paginated list of invoices' })
+  async getInvoices(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args() args: InvoicesQueryArgs,
+  ): Promise<InvoiceConnection> {
+    const { first, after, skip, startDate, endDate, ...queryParams } = args;
+
+    const page = skip ? Math.floor(skip / (first || 20)) + 1 : 1;
+    const limit = first || 20;
+
+    const result = await this.billingService.findAllInvoices(user.tenantId, {
+      ...queryParams,
+      startDate: startDate?.toISOString(),
+      endDate: endDate?.toISOString(),
+      page,
+      limit,
+    });
+
+    const edges = result.data.map((invoice: any) => ({
+      node: this.transformInvoice(invoice),
+      cursor: encodeCursor(invoice.id),
+    }));
+
+    return {
+      edges,
+      pageInfo: {
+        hasNextPage: page < result.meta.totalPages,
+        hasPreviousPage: page > 1,
+        startCursor: edges.length > 0 ? edges[0].cursor : null,
+        endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
+      },
+      totalCount: result.meta.total,
+    };
+  }
+
+  @Query(() => InvoiceType, { name: 'invoice', description: 'Get a single invoice by ID' })
+  async getInvoice(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('id', { type: () => ID }) id: string,
+  ): Promise<InvoiceType> {
+    const invoice = await this.billingService.findInvoice(user.tenantId, id);
+    return this.transformInvoice(invoice);
+  }
+
+  @Query(() => BillingStatsType, { name: 'billingStats', description: 'Get billing statistics for the current month' })
+  async getBillingStats(@GqlCurrentUser() user: JwtPayload): Promise<BillingStatsType> {
+    // Get current month date range
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+    // Aggregate payments for current month (revenue)
+    const paymentsAggregate = await this.prisma.payment.aggregate({
+      where: {
+        clubId: user.tenantId,
+        paymentDate: { gte: startOfMonth, lte: endOfMonth },
+      },
+      _sum: { amount: true },
+    });
+
+    // Get outstanding balance (all unpaid invoices)
+    const outstandingInvoices = await this.prisma.invoice.aggregate({
+      where: {
+        clubId: user.tenantId,
+        status: { in: ['SENT', 'PARTIALLY_PAID', 'OVERDUE'] },
+      },
+      _sum: { balanceDue: true },
+      _count: true,
+    });
+
+    // Get overdue invoices
+    const overdueInvoices = await this.prisma.invoice.aggregate({
+      where: {
+        clubId: user.tenantId,
+        status: 'OVERDUE',
+      },
+      _sum: { balanceDue: true },
+      _count: true,
+    });
+
+    // Get invoice counts for the month
+    const [invoiceCount, paidCount] = await Promise.all([
+      this.prisma.invoice.count({
+        where: {
+          clubId: user.tenantId,
+          invoiceDate: { gte: startOfMonth, lte: endOfMonth },
+        },
+      }),
+      this.prisma.invoice.count({
+        where: {
+          clubId: user.tenantId,
+          status: 'PAID',
+          paidDate: { gte: startOfMonth, lte: endOfMonth },
+        },
+      }),
+    ]);
+
+    return {
+      totalRevenue: (paymentsAggregate._sum.amount?.toNumber() || 0).toString(),
+      outstandingBalance: (outstandingInvoices._sum.balanceDue?.toNumber() || 0).toString(),
+      overdueAmount: (overdueInvoices._sum.balanceDue?.toNumber() || 0).toString(),
+      invoiceCount,
+      paidCount,
+      overdueCount: overdueInvoices._count || 0,
+    };
+  }
+
+  @Query(() => MemberTransactionsType, { name: 'memberTransactions', description: 'Get transaction history for a member' })
+  async getMemberTransactions(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('memberId', { type: () => ID }) memberId: string,
+  ): Promise<MemberTransactionsType> {
+    // Verify member belongs to this tenant
+    const member = await this.prisma.member.findFirst({
+      where: { id: memberId, clubId: user.tenantId },
+    });
+    if (!member) {
+      throw new Error('Member not found');
+    }
+
+    // Get all invoices for this member
+    const invoices = await this.prisma.invoice.findMany({
+      where: { memberId, deletedAt: null },
+      orderBy: { invoiceDate: 'asc' },
+    });
+
+    // Get all payments for this member
+    const payments = await this.prisma.payment.findMany({
+      where: { memberId },
+      orderBy: { paymentDate: 'asc' },
+    });
+
+    // Combine and sort by date
+    const transactions: MemberTransactionType[] = [];
+
+    // Add invoices as transactions
+    for (const invoice of invoices) {
+      transactions.push({
+        id: invoice.id,
+        date: invoice.invoiceDate,
+        type: 'INVOICE',
+        description: invoice.billingPeriod || `Invoice ${invoice.invoiceNumber}`,
+        invoiceNumber: invoice.invoiceNumber,
+        amount: invoice.totalAmount.toNumber().toString(),
+        runningBalance: '0', // Will calculate below
+      });
+    }
+
+    // Add payments as transactions (negative amounts)
+    for (const payment of payments) {
+      transactions.push({
+        id: payment.id,
+        date: payment.paymentDate,
+        type: 'PAYMENT',
+        description: `Payment - ${payment.receiptNumber}`,
+        invoiceNumber: undefined,
+        amount: (-payment.amount.toNumber()).toString(),
+        runningBalance: '0', // Will calculate below
+      });
+    }
+
+    // Sort all transactions by date
+    transactions.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    // Calculate running balance
+    let runningBalance = 0;
+    for (const tx of transactions) {
+      runningBalance += parseFloat(tx.amount);
+      tx.runningBalance = runningBalance.toFixed(2);
+    }
+
+    return {
+      transactions,
+      currentBalance: runningBalance.toFixed(2),
+    };
+  }
+
+  @Mutation(() => InvoiceType, { name: 'createInvoice', description: 'Create a new invoice' })
+  async createInvoice(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('input') input: CreateInvoiceInput,
+  ): Promise<InvoiceType> {
+    const invoice = await this.billingService.createInvoice(
+      user.tenantId,
+      {
+        ...input,
+        invoiceDate: input.invoiceDate.toISOString(),
+        dueDate: input.dueDate.toISOString(),
+        lineItems: input.lineItems.map((li) => ({
+          ...li,
+          description: li.description || '',
+        })),
+      },
+      user.sub,
+      user.email,
+    );
+    return this.transformInvoice(invoice);
+  }
+
+  @Mutation(() => InvoiceType, { name: 'sendInvoice', description: 'Send an invoice' })
+  async sendInvoice(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('id', { type: () => ID }) id: string,
+  ): Promise<InvoiceType> {
+    const invoice = await this.billingService.sendInvoice(
+      user.tenantId,
+      id,
+      user.sub,
+      user.email,
+    );
+    return this.transformInvoice(invoice);
+  }
+
+  @Mutation(() => InvoiceType, { name: 'voidInvoice', description: 'Void an invoice' })
+  async voidInvoice(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('id', { type: () => ID }) id: string,
+    @Args('input') input: VoidInvoiceInput,
+  ): Promise<InvoiceType> {
+    const invoice = await this.billingService.voidInvoice(
+      user.tenantId,
+      id,
+      input.reason,
+      user.sub,
+      user.email,
+    );
+    return this.transformInvoice(invoice);
+  }
+
+  @Mutation(() => PaymentType, { name: 'recordPayment', description: 'Record a payment' })
+  async recordPayment(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('input') input: CreatePaymentInput,
+  ): Promise<PaymentType> {
+    const payment = await this.billingService.createPayment(
+      user.tenantId,
+      {
+        ...input,
+        paymentDate: input.paymentDate?.toISOString(),
+      },
+      user.sub,
+      user.email,
+    );
+    return this.transformPayment(payment);
+  }
+
+  private transformInvoice(invoice: any): InvoiceType {
+    return {
+      id: invoice.id,
+      invoiceNumber: invoice.invoiceNumber,
+      invoiceDate: invoice.invoiceDate,
+      dueDate: invoice.dueDate,
+      billingPeriod: invoice.billingPeriod,
+      subtotal: invoice.subtotal?.toString() || '0',
+      taxAmount: invoice.taxAmount?.toString() || '0',
+      discountAmount: invoice.discountAmount?.toString() || '0',
+      totalAmount: invoice.totalAmount?.toString() || '0',
+      paidAmount: invoice.paidAmount?.toString() || '0',
+      balanceDue: invoice.balanceDue?.toString() || '0',
+      status: invoice.status,
+      notes: invoice.notes,
+      internalNotes: invoice.internalNotes,
+      sentAt: invoice.sentAt,
+      viewedAt: invoice.viewedAt,
+      paidDate: invoice.paidDate,
+      createdAt: invoice.createdAt,
+      updatedAt: invoice.updatedAt,
+      member: invoice.member ? {
+        id: invoice.member.id,
+        memberId: invoice.member.memberId,
+        firstName: invoice.member.firstName,
+        lastName: invoice.member.lastName,
+      } : undefined,
+      lineItems: invoice.lineItems?.map((li: any) => ({
+        id: li.id,
+        description: li.description,
+        quantity: li.quantity,
+        unitPrice: li.unitPrice?.toString() || '0',
+        discountPct: li.discountPct?.toString() || '0',
+        taxType: li.taxType,
+        taxRate: li.taxRate?.toString() || '0',
+        lineTotal: li.lineTotal?.toString() || '0',
+        chargeType: li.chargeType,
+      })) || [],
+      payments: invoice.payments?.map((pa: any) => ({
+        id: pa.id,
+        amount: pa.amount?.toString() || '0',
+        payment: {
+          id: pa.payment.id,
+          receiptNumber: pa.payment.receiptNumber,
+          amount: pa.payment.amount?.toString() || '0',
+          method: pa.payment.method,
+          paymentDate: pa.payment.paymentDate,
+        },
+      })) || [],
+    };
+  }
+
+  private transformPayment(payment: any): PaymentType {
+    return {
+      id: payment.id,
+      receiptNumber: payment.receiptNumber,
+      amount: payment.amount?.toString() || '0',
+      method: payment.method,
+      paymentDate: payment.paymentDate,
+      referenceNumber: payment.referenceNumber,
+      bankName: payment.bankName,
+      accountLast4: payment.accountLast4,
+      notes: payment.notes,
+      createdAt: payment.createdAt,
+      member: payment.member ? {
+        id: payment.member.id,
+        memberId: payment.member.memberId,
+        firstName: payment.member.firstName,
+        lastName: payment.member.lastName,
+      } : undefined,
+    };
+  }
+}

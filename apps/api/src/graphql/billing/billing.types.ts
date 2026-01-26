@@ -1,0 +1,273 @@
+import { ObjectType, Field, ID, registerEnumType } from '@nestjs/graphql';
+import { Paginated } from '../common/pagination';
+import { InvoiceStatus } from '@/modules/billing/dto/invoice-query.dto';
+import { PaymentMethod } from '@/modules/billing/dto/create-payment.dto';
+
+// Re-export and register enums for GraphQL
+export { InvoiceStatus, PaymentMethod };
+
+registerEnumType(InvoiceStatus, {
+  name: 'InvoiceStatus',
+  description: 'Invoice status options',
+});
+
+registerEnumType(PaymentMethod, {
+  name: 'PaymentMethod',
+  description: 'Payment method options',
+});
+
+@ObjectType()
+export class MemberSummaryBillingType {
+  @Field(() => ID)
+  id: string;
+
+  @Field()
+  memberId: string;
+
+  @Field()
+  firstName: string;
+
+  @Field()
+  lastName: string;
+}
+
+@ObjectType()
+export class ChargeTypeType {
+  @Field(() => ID)
+  id: string;
+
+  @Field()
+  name: string;
+
+  @Field()
+  code: string;
+
+  @Field({ nullable: true })
+  description?: string;
+}
+
+@ObjectType()
+export class InvoiceLineItemType {
+  @Field(() => ID)
+  id: string;
+
+  @Field({ nullable: true })
+  description?: string;
+
+  @Field()
+  quantity: number;
+
+  @Field()
+  unitPrice: string;
+
+  @Field()
+  discountPct: string;
+
+  @Field({ nullable: true })
+  taxType?: string;
+
+  @Field()
+  taxRate: string;
+
+  @Field()
+  lineTotal: string;
+
+  @Field(() => ChargeTypeType, { nullable: true })
+  chargeType?: ChargeTypeType;
+}
+
+@ObjectType()
+export class PaymentSummaryType {
+  @Field(() => ID)
+  id: string;
+
+  @Field()
+  receiptNumber: string;
+
+  @Field()
+  amount: string;
+
+  @Field(() => PaymentMethod)
+  method: PaymentMethod;
+
+  @Field()
+  paymentDate: Date;
+}
+
+@ObjectType()
+export class PaymentAllocationSummaryType {
+  @Field(() => ID)
+  id: string;
+
+  @Field()
+  amount: string;
+
+  @Field(() => PaymentSummaryType)
+  payment: PaymentSummaryType;
+}
+
+@ObjectType()
+export class InvoiceType {
+  @Field(() => ID)
+  id: string;
+
+  @Field()
+  invoiceNumber: string;
+
+  @Field()
+  invoiceDate: Date;
+
+  @Field()
+  dueDate: Date;
+
+  @Field({ nullable: true })
+  billingPeriod?: string;
+
+  @Field()
+  subtotal: string;
+
+  @Field()
+  taxAmount: string;
+
+  @Field()
+  discountAmount: string;
+
+  @Field()
+  totalAmount: string;
+
+  @Field()
+  paidAmount: string;
+
+  @Field()
+  balanceDue: string;
+
+  @Field(() => InvoiceStatus)
+  status: InvoiceStatus;
+
+  @Field({ nullable: true })
+  notes?: string;
+
+  @Field({ nullable: true })
+  internalNotes?: string;
+
+  @Field({ nullable: true })
+  sentAt?: Date;
+
+  @Field({ nullable: true })
+  viewedAt?: Date;
+
+  @Field({ nullable: true })
+  paidDate?: Date;
+
+  @Field()
+  createdAt: Date;
+
+  @Field()
+  updatedAt: Date;
+
+  @Field(() => MemberSummaryBillingType, { nullable: true })
+  member?: MemberSummaryBillingType;
+
+  @Field(() => [InvoiceLineItemType])
+  lineItems: InvoiceLineItemType[];
+
+  @Field(() => [PaymentAllocationSummaryType], { nullable: true })
+  payments?: PaymentAllocationSummaryType[];
+}
+
+@ObjectType()
+export class InvoiceConnection extends Paginated(InvoiceType) {}
+
+@ObjectType()
+export class PaymentType {
+  @Field(() => ID)
+  id: string;
+
+  @Field()
+  receiptNumber: string;
+
+  @Field()
+  amount: string;
+
+  @Field(() => PaymentMethod)
+  method: PaymentMethod;
+
+  @Field()
+  paymentDate: Date;
+
+  @Field({ nullable: true })
+  referenceNumber?: string;
+
+  @Field({ nullable: true })
+  bankName?: string;
+
+  @Field({ nullable: true })
+  accountLast4?: string;
+
+  @Field({ nullable: true })
+  notes?: string;
+
+  @Field()
+  createdAt: Date;
+
+  @Field(() => MemberSummaryBillingType, { nullable: true })
+  member?: MemberSummaryBillingType;
+}
+
+@ObjectType()
+export class PaymentConnection extends Paginated(PaymentType) {}
+
+@ObjectType()
+export class BillingStatsType {
+  @Field()
+  totalRevenue: string;
+
+  @Field()
+  outstandingBalance: string;
+
+  @Field()
+  overdueAmount: string;
+
+  @Field()
+  invoiceCount: number;
+
+  @Field()
+  paidCount: number;
+
+  @Field()
+  overdueCount: number;
+}
+
+// Transaction type for A/R history - combines invoices and payments
+@ObjectType()
+export class MemberTransactionType {
+  @Field(() => ID)
+  id: string;
+
+  @Field()
+  date: Date;
+
+  @Field()
+  type: string; // 'INVOICE' | 'PAYMENT' | 'CREDIT' | 'ADJUSTMENT'
+
+  @Field()
+  description: string;
+
+  @Field({ nullable: true })
+  invoiceNumber?: string;
+
+  @Field()
+  amount: string;
+
+  @Field()
+  runningBalance: string;
+}
+
+@ObjectType()
+export class MemberTransactionsType {
+  @Field(() => [MemberTransactionType])
+  transactions: MemberTransactionType[];
+
+  @Field()
+  currentBalance: string;
+}

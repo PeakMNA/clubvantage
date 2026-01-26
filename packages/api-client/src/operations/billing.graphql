@@ -1,0 +1,233 @@
+# Billing Queries
+
+query GetBillingStats {
+  billingStats {
+    totalRevenue
+    outstandingBalance
+    overdueAmount
+    invoiceCount
+    paidCount
+    overdueCount
+  }
+}
+
+query GetMyInvoices(
+  $first: Int
+  $skip: Int
+  $status: InvoiceStatus
+  $startDate: DateTime
+  $endDate: DateTime
+) {
+  myInvoices(
+    first: $first
+    skip: $skip
+    status: $status
+    startDate: $startDate
+    endDate: $endDate
+  ) {
+    edges {
+      node {
+        id
+        invoiceNumber
+        invoiceDate
+        dueDate
+        billingPeriod
+        subtotal
+        taxAmount
+        totalAmount
+        paidAmount
+        balanceDue
+        status
+        sentAt
+        paidDate
+        lineItems {
+          id
+          description
+          quantity
+          unitPrice
+          lineTotal
+          chargeType {
+            id
+            name
+            code
+          }
+        }
+      }
+      cursor
+    }
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      startCursor
+      endCursor
+    }
+    totalCount
+  }
+}
+
+query GetInvoices(
+  $first: Int
+  $skip: Int
+  $memberId: ID
+  $status: InvoiceStatus
+  $startDate: DateTime
+  $endDate: DateTime
+) {
+  invoices(
+    first: $first
+    skip: $skip
+    memberId: $memberId
+    status: $status
+    startDate: $startDate
+    endDate: $endDate
+  ) {
+    edges {
+      node {
+        id
+        invoiceNumber
+        invoiceDate
+        dueDate
+        billingPeriod
+        subtotal
+        taxAmount
+        discountAmount
+        totalAmount
+        paidAmount
+        balanceDue
+        status
+        sentAt
+        paidDate
+        member {
+          id
+          memberId
+          firstName
+          lastName
+        }
+      }
+      cursor
+    }
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      startCursor
+      endCursor
+    }
+    totalCount
+  }
+}
+
+query GetInvoice($id: ID!) {
+  invoice(id: $id) {
+    id
+    invoiceNumber
+    invoiceDate
+    dueDate
+    billingPeriod
+    subtotal
+    taxAmount
+    discountAmount
+    totalAmount
+    paidAmount
+    balanceDue
+    status
+    notes
+    internalNotes
+    sentAt
+    viewedAt
+    paidDate
+    createdAt
+    updatedAt
+    member {
+      id
+      memberId
+      firstName
+      lastName
+    }
+    lineItems {
+      id
+      description
+      quantity
+      unitPrice
+      discountPct
+      taxType
+      taxRate
+      lineTotal
+      chargeType {
+        id
+        name
+        code
+        description
+      }
+    }
+    payments {
+      id
+      amount
+      payment {
+        id
+        receiptNumber
+        amount
+        method
+        paymentDate
+      }
+    }
+  }
+}
+
+query GetMemberTransactions($memberId: ID!) {
+  memberTransactions(memberId: $memberId) {
+    transactions {
+      id
+      date
+      type
+      description
+      invoiceNumber
+      amount
+      runningBalance
+    }
+    currentBalance
+  }
+}
+
+# Billing Mutations
+
+mutation CreateInvoice($input: CreateInvoiceInput!) {
+  createInvoice(input: $input) {
+    id
+    invoiceNumber
+    totalAmount
+    status
+  }
+}
+
+mutation SendInvoice($id: ID!) {
+  sendInvoice(id: $id) {
+    id
+    invoiceNumber
+    sentAt
+    status
+  }
+}
+
+mutation VoidInvoice($id: ID!, $input: VoidInvoiceInput!) {
+  voidInvoice(id: $id, input: $input) {
+    id
+    invoiceNumber
+    status
+  }
+}
+
+mutation RecordPayment($input: CreatePaymentInput!) {
+  recordPayment(input: $input) {
+    id
+    receiptNumber
+    amount
+    method
+    paymentDate
+    member {
+      id
+      memberId
+      firstName
+      lastName
+    }
+  }
+}
