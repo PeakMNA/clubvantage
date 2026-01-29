@@ -18,7 +18,7 @@ import { AddPlayerFlow, type PlayerData } from './add-player-flow'
 import { BookingNotes } from './booking-notes'
 import { GolferCountSelector } from './golfer-count-selector'
 import { HoleSelector } from './hole-selector'
-import type { Booking, BookingStatus, BookingPlayer } from './types'
+import type { Booking, BookingStatus, BookingPlayer, Cart } from './types'
 import type { PlayerType } from './player-type-badge'
 
 // ============================================================================
@@ -30,6 +30,7 @@ interface PlayerSlotData {
   caddyRequest: CaddyValue
   cartRequest: CartValue
   rentalRequest: RentalValue
+  cartId?: string | null
 }
 
 interface ClubSettings {
@@ -50,6 +51,7 @@ interface PlayerPayload {
   caddyRequest: 'NONE' | 'REQUEST' | string
   cartRequest: 'NONE' | 'REQUEST'
   rentalRequest: 'NONE' | 'REQUEST'
+  cartId?: string
 }
 
 interface BookingPayload {
@@ -79,6 +81,7 @@ export interface BookingModalProps {
 
   // Data
   availableCaddies: CaddyPickerCaddy[]
+  availableCarts?: Cart[]
   clubSettings: ClubSettings
 
   // Search
@@ -148,6 +151,7 @@ function bookingPlayerToSlotData(player: BookingPlayer, clubSettings: ClubSettin
     caddyRequest: (player.caddyRequest as CaddyValue) || 'NONE',
     cartRequest: (player.cartRequest as CartValue) || (clubSettings.cartPolicy === 'REQUIRED' ? 'REQUEST' : 'NONE'),
     rentalRequest: (player.rentalRequest as RentalValue) || (clubSettings.rentalPolicy === 'REQUIRED' ? 'REQUEST' : 'NONE'),
+    cartId: player.cartId || null,
   }
 }
 
@@ -157,6 +161,7 @@ function getEmptySlot(clubSettings: ClubSettings): PlayerSlotData {
     caddyRequest: 'NONE',
     cartRequest: clubSettings.cartPolicy === 'REQUIRED' ? 'REQUEST' : 'NONE',
     rentalRequest: clubSettings.rentalPolicy === 'REQUIRED' ? 'REQUEST' : 'NONE',
+    cartId: null,
   }
 }
 
@@ -441,6 +446,7 @@ export function BookingModal({
   startingHole = 1,
   booking,
   availableCaddies,
+  availableCarts,
   clubSettings,
   onSearchMembers,
   onSave,
@@ -527,6 +533,7 @@ export function BookingModal({
           caddyRequest: existingSlot.caddyRequest,
           cartRequest: existingSlot.cartRequest,
           rentalRequest: existingSlot.rentalRequest,
+          cartId: existingSlot.cartId,
         }
       }
       return newSlots
@@ -575,6 +582,17 @@ export function BookingModal({
     })
   }
 
+  const handleCartAssign = (position: number, cartId: string | null) => {
+    setSlots((prev) => {
+      const newSlots = [...prev]
+      const slot = newSlots[position]
+      if (slot) {
+        newSlots[position] = { ...slot, cartId }
+      }
+      return newSlots
+    })
+  }
+
   const handleDiscard = () => {
     if (mode === 'existing' && booking) {
       const initialSlots = getInitialSlots(booking, clubSettings)
@@ -612,6 +630,7 @@ export function BookingModal({
             caddyRequest: slot.caddyRequest,
             cartRequest: slot.cartRequest,
             rentalRequest: slot.rentalRequest,
+            cartId: slot.cartId || undefined,
           })
         } else if (mode === 'new' && i < golferCount) {
           // Empty slot in new booking - create placeholder
@@ -623,6 +642,7 @@ export function BookingModal({
             caddyRequest: slot.caddyRequest,
             cartRequest: slot.cartRequest,
             rentalRequest: slot.rentalRequest,
+            cartId: slot.cartId || undefined,
           })
         }
       })
@@ -865,6 +885,9 @@ export function BookingModal({
                   onAddPlayer={() => setAddingPlayerPosition(index)}
                   onRemovePlayer={() => handleRemovePlayer(index)}
                   availableCaddies={availableCaddies}
+                  availableCarts={availableCarts}
+                  assignedCartId={slot.cartId}
+                  onCartAssign={(id) => handleCartAssign(index, id)}
                   cartPolicy={clubSettings.cartPolicy}
                   rentalPolicy={clubSettings.rentalPolicy}
                   state={state}
