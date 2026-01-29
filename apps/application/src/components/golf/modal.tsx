@@ -8,7 +8,7 @@ interface ModalProps {
   isOpen: boolean
   onClose: () => void
   title: string
-  subtitle?: string
+  subtitle?: ReactNode
   children: ReactNode
   footer?: ReactNode
   size?: 'sm' | 'md' | 'lg' | 'xl'
@@ -59,7 +59,7 @@ export function Modal({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 z-50"
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
         onClick={onClose}
       />
 
@@ -68,36 +68,40 @@ export function Modal({
         <div
           ref={modalRef}
           className={cn(
-            'w-full bg-card rounded-lg shadow-xl flex flex-col max-h-[90vh]',
-            'animate-in fade-in zoom-in-95 duration-200',
+            'w-full bg-white rounded-2xl shadow-2xl shadow-stone-900/20 flex flex-col max-h-[85vh]',
+            'animate-in fade-in-0 zoom-in-95 duration-200',
             sizeClasses[size]
           )}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-start justify-between p-4 border-b">
-            <div>
-              <h2 className="text-lg font-semibold">{title}</h2>
-              {subtitle && (
-                <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>
-              )}
-            </div>
+          <div className="relative border-b border-stone-100 bg-gradient-to-b from-stone-50 to-white px-6 pb-4 pt-5">
+            {/* Close Button */}
             <button
               onClick={onClose}
-              className="p-2 hover:bg-muted rounded-md transition-colors -mr-2 -mt-2"
+              className="absolute right-4 top-4 rounded-lg p-2 text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-600"
             >
               <X className="h-5 w-5" />
             </button>
+
+            <div>
+              <h2 className="text-xl font-bold text-stone-900">{title}</h2>
+              {subtitle && (
+                typeof subtitle === 'string'
+                  ? <p className="mt-1.5 text-sm text-stone-500">{subtitle}</p>
+                  : subtitle
+              )}
+            </div>
           </div>
 
           {/* Body */}
-          <div className="flex-1 overflow-y-auto p-4">
+          <div className="flex-1 overflow-y-auto px-6 py-5">
             {children}
           </div>
 
           {/* Footer */}
           {footer && (
-            <div className="border-t p-4 flex justify-end gap-3">
+            <div className="flex justify-end gap-3 border-t border-stone-100 bg-stone-50/50 px-6 py-4">
               {footer}
             </div>
           )}

@@ -385,15 +385,16 @@ function WorkflowActions({
 
 interface HeaderSubtitleProps {
   mode: 'new' | 'existing'
-  booking: Booking | null | undefined
+  booking?: Booking | null
   time: string
   courseName: string
   date: Date
+  startingHole?: 1 | 10
 }
 
-function HeaderSubtitle({ mode, booking, time, courseName, date }: HeaderSubtitleProps) {
+function HeaderSubtitle({ mode, booking, time, courseName, date, startingHole }: HeaderSubtitleProps) {
   return (
-    <div className="flex items-center gap-3 mt-2">
+    <div className="flex items-center gap-3 mt-2 flex-wrap">
       {mode === 'existing' && booking && (
         <FlightStatusBadge status={mapBookingStatusToFlightStatus(booking.status)} size="sm" />
       )}
@@ -409,6 +410,9 @@ function HeaderSubtitle({ mode, booking, time, courseName, date }: HeaderSubtitl
         <Calendar className="h-3.5 w-3.5 text-stone-400" />
         <span>{formatDate(date)}</span>
       </div>
+      {startingHole === 10 && (
+        <span className="text-sm text-amber-600 font-medium">· Hole 10 Start</span>
+      )}
     </div>
   )
 }
@@ -764,18 +768,20 @@ export function BookingModal({
       isOpen={isOpen}
       onClose={handleClose}
       title={mode === 'new' ? 'New Booking' : `Booking #${booking?.bookingNumber || ''}`}
-      subtitle={`${formatTime(time)} \u00b7 ${courseName} \u00b7 ${formatDate(date)}`}
+      subtitle={
+        <HeaderSubtitle
+          mode={mode}
+          booking={booking}
+          time={time}
+          courseName={courseName}
+          date={date}
+          startingHole={startingHole}
+        />
+      }
       footer={footer}
       size="lg"
     >
       <div className="space-y-6">
-        {/* Header context row with status badge */}
-        {mode === 'existing' && booking && (
-          <div className="flex items-center gap-3 -mt-2 mb-4">
-            <FlightStatusBadge status={mapBookingStatusToFlightStatus(booking.status)} size="sm" />
-          </div>
-        )}
-
         {/* Error Banner */}
         {error && (
           <div className="flex items-center gap-2 p-3 bg-red-50 text-red-700 rounded-lg">
