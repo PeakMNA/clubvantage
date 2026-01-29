@@ -958,6 +958,11 @@ export default function GolfPage() {
   const [carts, setCarts] = useState(mockCarts)
   const [caddies, setCaddies] = useState<Caddy[]>([])
 
+  // Filter available carts for BookingModal
+  const availableCarts = useMemo(() => {
+    return carts.filter(cart => cart.status === 'available')
+  }, [carts])
+
   // Update caddies when API data is available
   useEffect(() => {
     if (caddiesData?.searchCaddies && caddiesData.searchCaddies.length > 0) {
@@ -2666,6 +2671,7 @@ export default function GolfPage() {
             status: c.status as 'available' | 'assigned' | 'off-duty',
           }
         })}
+        availableCarts={availableCarts}
         clubSettings={mockClubSettings}
         onSearchMembers={handleSearchMembers}
         onSave={async (payload) => {
