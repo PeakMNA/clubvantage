@@ -327,8 +327,8 @@ function CaddySelector({
       triggerClassName={cn(
         'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all w-full justify-start',
         isActive
-          ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200'
-          : 'bg-stone-100 text-stone-500 hover:bg-stone-200 hover:text-stone-700',
+          ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 ring-1 ring-emerald-200 dark:ring-emerald-700'
+          : 'bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700 hover:text-stone-700 dark:hover:text-stone-200',
         disabled && 'opacity-50 cursor-not-allowed'
       )}
     />
