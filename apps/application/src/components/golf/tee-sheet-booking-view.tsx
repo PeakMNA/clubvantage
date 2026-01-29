@@ -2,12 +2,17 @@
 
 import { cn } from '@clubvantage/ui'
 import { AlertCircle, RefreshCw, Settings, Plus, AlertTriangle, Lock } from 'lucide-react'
-import { PlacementModeOverlay, usePlacementMode } from './placement-mode-overlay'
+import {
+  PlacementModeOverlay,
+  usePlacementMode,
+  type SlotValidationResult,
+} from './placement-mode-overlay'
+import { PartialFitDialog } from './partial-fit-dialog'
 import { BookingContextMenu, SlotContextMenu, type BookingAction, type SlotAction } from './context-menus'
 import { FlightStatusBadge } from './flight-status-badge'
 import { PlayerTypeBadge } from './player-type-badge'
 import type { Flight, Booking, BookingStatus, Player } from './types'
-import { useState, useMemo } from 'react'
+import { useState, useCallback } from 'react'
 
 interface TeeSheetBookingViewProps {
   flights: Flight[]
@@ -21,7 +26,7 @@ interface TeeSheetBookingViewProps {
   onAddBooking: (teeTime: string, slotIndex: number) => void
   onBookingAction: (bookingId: string, action: BookingAction) => void
   onSlotAction: (teeTime: string, action: SlotAction) => void
-  onPlacementSelect: (teeTime: string) => void
+  onPlacementSelect: (teeTime: string, selectedPlayerIds?: string[]) => void
   onReleaseBlock: (blockId: string) => void
 }
 
@@ -149,6 +154,13 @@ export function TeeSheetBookingView({
     teeTime: string
   }>({ isOpen: false, position: { x: 0, y: 0 }, teeTime: '' })
 
+  // Partial fit dialog state
+  const [partialFitDialog, setPartialFitDialog] = useState<{
+    isOpen: boolean
+    targetTime: string
+    validation: SlotValidationResult | null
+  }>({ isOpen: false, targetTime: '', validation: null })
+
   // In Cross mode, split by starting hole
   const isCrossMode = bookingMode === 'CROSS'
   const hole1Flights = isCrossMode ? flights.filter((f) => (f.startingHole ?? 1) === 1) : flights
@@ -183,6 +195,36 @@ export function TeeSheetBookingView({
     onSlotAction(slotContextMenu.teeTime, action)
     setSlotContextMenu((prev) => ({ ...prev, isOpen: false }))
   }
+
+  // Handle slot click during placement mode
+  const handlePlacementSlotClick = useCallback(
+    (teeTime: string, validation: SlotValidationResult | null) => {
+      if (!validation) return
+
+      if (validation.status === 'valid') {
+        // Valid - proceed directly
+        onPlacementSelect(teeTime)
+      } else if (validation.status === 'partial') {
+        // Partial - show dialog to select which players
+        setPartialFitDialog({
+          isOpen: true,
+          targetTime: teeTime,
+          validation,
+        })
+      }
+      // Invalid or source - do nothing
+    },
+    [onPlacementSelect]
+  )
+
+  // Handle partial fit dialog confirmation
+  const handlePartialFitConfirm = useCallback(
+    (selectedPlayerIds: string[]) => {
+      onPlacementSelect(partialFitDialog.targetTime, selectedPlayerIds)
+      setPartialFitDialog({ isOpen: false, targetTime: '', validation: null })
+    },
+    [onPlacementSelect, partialFitDialog.targetTime]
+  )
 
   // Error state
   if (error) {
@@ -268,30 +310,29 @@ export function TeeSheetBookingView({
             const isPartial = filledSlots > 0 && filledSlots < 4 && !isBlocked
             const displayStatus = mapFlightStatus(flight.status)
 
+            // Get smart validation for this slot during placement mode
+            const slotValidation = placementMode.state.active
+              ? placementMode.getSlotValidation(flight.time)
+              : null
+            const slotClass = placementMode.state.active
+              ? placementMode.getSlotClass(flight.time)
+              : ''
+
             return (
               <tr
                 key={flight.id}
                 className={cn(
                   'transition-colors',
                   isBlocked && 'bg-stone-100/50 dark:bg-stone-800/50',
-                  isPartial && 'border-l-4 border-l-amber-400',
-                  !isBlocked && 'hover:bg-stone-50 dark:hover:bg-stone-800/50',
-                  // Placement mode styling
-                  placementMode.state.active && placementMode.state.sourceBooking && (
-                    placementMode.state.sourceBooking.sourceTeeTime === flight.time
-                      ? 'ring-2 ring-amber-400 bg-amber-50/50 dark:bg-amber-900/30'
-                      : filledSlots + placementMode.state.sourceBooking.playerCount <= 4 && !isBlocked
-                        ? 'ring-2 ring-emerald-400 bg-emerald-50/30 dark:bg-emerald-900/20 cursor-pointer'
-                        : 'opacity-50 bg-red-50/30 dark:bg-red-900/20'
-                  )
+                  isPartial && !placementMode.state.active && 'border-l-4 border-l-amber-400',
+                  !isBlocked && !placementMode.state.active && 'hover:bg-stone-50 dark:hover:bg-stone-800/50',
+                  // Smart placement mode styling
+                  placementMode.state.active && slotClass
                 )}
                 onContextMenu={(e) => handleRowContextMenu(e, flight.time)}
                 onClick={() => {
-                  if (placementMode.state.active && placementMode.state.sourceBooking) {
-                    const canAccept = filledSlots + placementMode.state.sourceBooking.playerCount <= 4 && !isBlocked
-                    if (canAccept) {
-                      onPlacementSelect(flight.time)
-                    }
+                  if (placementMode.state.active && slotValidation) {
+                    handlePlacementSlotClick(flight.time, slotValidation)
                   }
                 }}
               >
@@ -364,6 +405,27 @@ export function TeeSheetBookingView({
           isProcessing={false}
         />
       )}
+
+      {/* Partial Fit Dialog */}
+      {partialFitDialog.isOpen &&
+        placementMode.state.sourceBooking &&
+        partialFitDialog.validation && (
+          <PartialFitDialog
+            isOpen={partialFitDialog.isOpen}
+            action={placementMode.state.action}
+            players={placementMode.state.sourceBooking.playerNames.map((name, i) => ({
+              id: placementMode.state.sourceBooking?.playerIds?.[i] || `player-${i}`,
+              name,
+            }))}
+            canFit={partialFitDialog.validation.canFit}
+            targetTime={partialFitDialog.targetTime}
+            sourceTime={placementMode.state.sourceBooking.sourceTeeTime}
+            onConfirm={handlePartialFitConfirm}
+            onCancel={() =>
+              setPartialFitDialog({ isOpen: false, targetTime: '', validation: null })
+            }
+          />
+        )}
 
       {/* Context Menus */}
       <BookingContextMenu
