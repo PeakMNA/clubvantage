@@ -19,6 +19,7 @@ export function HoleSelector({ value, onChange }: HoleSelectorProps) {
             key={num}
             type="button"
             onClick={() => onChange(num)}
+            aria-label={`Select ${num} holes`}
             className={cn(
               'flex-1 py-3 text-lg font-bold rounded-xl border-2 transition-all',
               value === num

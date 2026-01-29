@@ -117,6 +117,7 @@ function MemberSearch({ onSelect, onBack, searchFn }: MemberSearchProps) {
         <button
           type="button"
           onClick={onBack}
+          aria-label="Go back"
           className="p-2 hover:bg-muted rounded-lg transition-colors"
         >
           <ChevronUp className="h-4 w-4" />
@@ -204,6 +205,7 @@ function GuestForm({ onSubmit, onBack, bookerName, requireContact }: GuestFormPr
         <button
           type="button"
           onClick={onBack}
+          aria-label="Go back"
           className="p-2 hover:bg-muted rounded-lg transition-colors"
         >
           <ChevronUp className="h-4 w-4" />
@@ -299,6 +301,7 @@ function DependentSearch({ onSelect, onBack, bookingMemberId }: DependentSearchP
         <button
           type="button"
           onClick={onBack}
+          aria-label="Go back"
           className="p-2 hover:bg-muted rounded-lg transition-colors"
         >
           <ChevronUp className="h-4 w-4" />
@@ -368,6 +371,7 @@ function WalkupForm({ onSubmit, onBack }: WalkupFormProps) {
         <button
           type="button"
           onClick={onBack}
+          aria-label="Go back"
           className="p-2 hover:bg-muted rounded-lg transition-colors"
         >
           <ChevronUp className="h-4 w-4" />
