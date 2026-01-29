@@ -3,6 +3,7 @@ import {
   NotFoundException,
   BadRequestException,
   ConflictException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '@/shared/prisma/prisma.service';
 import { RedisService } from '@/shared/redis/redis.service';
@@ -36,22 +37,29 @@ export interface CreateFlightDto {
   teeDate: string;
   teeTime: string;
   holes?: number;
+  startingHole?: number; // 1 or 10 (for Cross mode)
   players: {
     position: number;
     playerType: PlayerType;
     memberId?: string;
+    dependentId?: string; // For DEPENDENT player type - links to Dependent table
     guestName?: string;
     guestEmail?: string;
     guestPhone?: string;
     cartType?: CartType;
     sharedWithPosition?: number;
     caddyId?: string;
+    // Per-player booking options (Task #6)
+    caddyRequest?: string;
+    cartRequest?: string;
+    rentalRequest?: string;
   }[];
   notes?: string;
 }
 
 export interface UpdateFlightDto {
   players?: CreateFlightDto['players'];
+  holes?: number;
   notes?: string;
   status?: BookingStatus;
 }
@@ -73,6 +81,8 @@ export interface TeeSheetSlot {
 
 @Injectable()
 export class GolfService {
+  private readonly logger = new Logger(GolfService.name);
+
   constructor(
     private prisma: PrismaService,
     private redis: RedisService,
@@ -84,6 +94,8 @@ export class GolfService {
     courseId: string,
     date: string,
   ): Promise<TeeSheetSlot[]> {
+    this.logger.log(`getTeeSheet called with tenantId: ${tenantId}, courseId: ${courseId}, date: ${date}`);
+
     const course = await this.prisma.golfCourse.findFirst({
       where: { id: courseId, clubId: tenantId },
     });
@@ -92,7 +104,12 @@ export class GolfService {
       throw new NotFoundException('Course not found');
     }
 
-    const teeDate = new Date(date);
+    // Parse the input date - it could be "2026-01-27" or "2026-01-27T00:00:00.000Z"
+    // Extract just the date part for consistency
+    const dateOnly = date.split('T')[0];
+    // Ensure date is at UTC midnight to match database storage
+    const teeDate = new Date(`${dateOnly}T00:00:00.000Z`);
+    this.logger.log(`Parsed teeDate: ${teeDate.toISOString()}, dateOnly: ${dateOnly}`);
 
     // Get active schedule for this date
     const activeSchedule = await this.getActiveScheduleForDate(tenantId, courseId, teeDate);
@@ -100,14 +117,31 @@ export class GolfService {
     // Get blocks for this date
     const blocks = await this.getBlocksForDate(tenantId, courseId, teeDate);
 
-    const teeTimes = await this.prisma.teeTime.findMany({
-      where: {
-        clubId: tenantId,
-        courseId,
-        teeDate,
-      },
-      include: {
-        players: {
+    // Use raw SQL to query by date string to avoid timezone issues
+    // The DATE column stores just the date without time
+    const teeTimes = await this.prisma.$queryRaw<any[]>`
+      SELECT
+        tt.id, tt."teeTimeNumber", tt."teeDate", tt."teeTime", tt.holes, tt.status,
+        tt."confirmedAt", tt."checkedInAt", tt."startedAt", tt."completedAt",
+        tt.notes, tt."internalNotes", tt."cancelReason", tt."cancelledAt", tt."cancelledBy"
+      FROM tee_times tt
+      WHERE tt."clubId" = ${tenantId}::uuid
+        AND tt."courseId" = ${courseId}::uuid
+        AND tt."teeDate" = ${dateOnly}::date
+      ORDER BY tt."teeTime" ASC
+    `;
+
+    this.logger.log(`Found ${teeTimes.length} tee times for date ${dateOnly} (raw query)`);
+    this.logger.log(`Query params - tenantId: ${tenantId}, courseId: ${courseId}, dateOnly: ${dateOnly}`);
+    if (teeTimes.length > 0) {
+      this.logger.log(`First tee time: ${JSON.stringify(teeTimes[0])}`);
+    }
+
+    // Fetch players for each tee time
+    const teeTimesWithPlayers = await Promise.all(
+      teeTimes.map(async (tt: any) => {
+        const players = await this.prisma.teeTimePlayer.findMany({
+          where: { teeTimeId: tt.id },
           include: {
             member: {
               select: { id: true, memberId: true, firstName: true, lastName: true },
@@ -117,10 +151,10 @@ export class GolfService {
             },
           },
           orderBy: { position: 'asc' },
-        },
-      },
-      orderBy: { teeTime: 'asc' },
-    });
+        });
+        return { ...tt, players };
+      })
+    );
 
     // Use schedule times/intervals if available, otherwise fall back to course defaults
     const firstTeeTime = activeSchedule?.firstTeeTime || course.firstTeeTime;
@@ -132,19 +166,59 @@ export class GolfService {
       : this.generateTimeSlots(firstTeeTime, lastTeeTime, course.teeInterval);
 
     // Map bookings and blocks to slots
+    // Multiple bookings can share a time slot - aggregate all players
     return slots.map((slotInfo) => {
       const time = typeof slotInfo === 'string' ? slotInfo : slotInfo.time;
       const isPrimeTime = typeof slotInfo === 'string' ? false : slotInfo.isPrimeTime;
 
-      const booking = teeTimes.find((t) => t.teeTime === time);
+      // Find ALL bookings at this time (multiple booking groups can share a slot)
+      const bookingsAtTime = teeTimesWithPlayers.filter((t: any) => t.teeTime === time && t.status !== 'CANCELLED');
       const block = this.findBlockForTime(blocks, teeDate, time);
+
+      // Aggregate all players from all bookings into a single view
+      // Use the first booking's metadata (id, status, etc.) for the slot
+      let aggregatedBooking = null;
+      if (bookingsAtTime.length > 0) {
+        const firstBooking = bookingsAtTime[0];
+        const allPlayers = bookingsAtTime.flatMap((b: any) => b.players);
+
+        // Build booking groups array for UI to display separate bookings
+        // Use first player's info as "bookedBy" since we don't track booking member separately
+        const bookingGroups = bookingsAtTime.map((b: any, index: number) => {
+          const firstPlayer = b.players[0];
+          const bookerName = firstPlayer?.member
+            ? `${firstPlayer.member.firstName} ${firstPlayer.member.lastName}`
+            : firstPlayer?.guestName || 'Unknown';
+          return {
+            id: b.id,
+            groupNumber: (index + 1) as 1 | 2,
+            bookedBy: {
+              id: firstPlayer?.member?.id || firstPlayer?.id || '',
+              name: bookerName,
+              memberId: firstPlayer?.member?.memberId || undefined,
+            },
+            playerIds: b.players.map((p: any) => p.id),
+          };
+        });
+
+        aggregatedBooking = {
+          ...firstBooking,
+          players: allPlayers,
+          // Store all booking IDs for reference
+          bookingIds: bookingsAtTime.map((b: any) => b.id),
+          // Include booking groups for UI
+          bookingGroups,
+        };
+      }
+
+      const totalPlayers = aggregatedBooking?.players?.length || 0;
 
       return {
         time,
         courseId,
         date,
-        booking: booking || null,
-        available: !booking && !block,
+        booking: aggregatedBooking,
+        available: totalPlayers < 4 && !block,
         blocked: !!block,
         blockInfo: block ? {
           id: block.id,
@@ -347,7 +421,10 @@ export class GolfService {
     }
 
     try {
-      const teeDate = new Date(dto.teeDate);
+      // Normalize teeDate to UTC midnight to match database storage
+      // Input can be "2026-01-27" or "2026-01-27T00:00:00.000Z"
+      const dateStr = dto.teeDate.split('T')[0];
+      const teeDate = new Date(`${dateStr}T00:00:00.000Z`);
 
       // Check if time is blocked
       const blocks = await this.getBlocksForDate(tenantId, dto.courseId, teeDate);
@@ -359,18 +436,37 @@ export class GolfService {
         );
       }
 
-      // Check if slot is available
-      const existing = await this.prisma.teeTime.findFirst({
+      // Check if slot has capacity for new players
+      // Multiple bookings can share a flight as long as total players ≤ 4
+      // Filter by startingHole to support CROSS mode (front 9 and back 9 are separate)
+      const startingHole = dto.startingHole || 1;
+      const existingBookings = await this.prisma.teeTime.findMany({
         where: {
           clubId: tenantId,
           courseId: dto.courseId,
           teeDate,
           teeTime: dto.teeTime,
+          startingHole,
+          status: { not: 'CANCELLED' },
+        },
+        include: {
+          players: true,
         },
       });
 
-      if (existing) {
-        throw new ConflictException('This tee time is already booked');
+      const existingPlayerCount = existingBookings.reduce(
+        (total, booking) => total + booking.players.length,
+        0,
+      );
+      const newPlayerCount = dto.players.length;
+
+      if (existingPlayerCount + newPlayerCount > 4) {
+        const availableSlots = 4 - existingPlayerCount;
+        throw new ConflictException(
+          availableSlots > 0
+            ? `Only ${availableSlots} position${availableSlots === 1 ? '' : 's'} available at this tee time`
+            : 'This tee time is fully booked',
+        );
       }
 
       // Generate tee time number
@@ -396,19 +492,28 @@ export class GolfService {
           teeDate,
           teeTime: dto.teeTime,
           holes: dto.holes || 18,
+          startingHole,
           status: 'CONFIRMED',
           notes: dto.notes,
           players: {
             create: dto.players.map((p: any) => ({
               position: p.position,
               playerType: p.playerType,
-              memberId: p.memberId,
+              // For MEMBER: set memberId (FK to members table)
+              // For DEPENDENT: set dependentId (FK to dependents table)
+              // For GUEST/WALK_UP: use guestName/Email/Phone instead
+              memberId: p.playerType === 'MEMBER' ? p.memberId : null,
+              dependentId: p.playerType === 'DEPENDENT' ? p.dependentId : null,
               guestName: p.guestName,
               guestEmail: p.guestEmail,
               guestPhone: p.guestPhone,
               cartType: p.cartType || 'WALKING',
               sharedWithPosition: p.sharedWithPosition,
               caddyId: p.caddyId,
+              // Per-player booking options (Task #6)
+              caddyRequest: p.caddyRequest || 'NONE',
+              cartRequest: p.cartRequest || 'NONE',
+              rentalRequest: p.rentalRequest || 'NONE',
             })),
           },
         },
@@ -417,6 +522,7 @@ export class GolfService {
             include: {
               member: true,
               caddy: true,
+              dependent: true,
             },
           },
           course: true,
@@ -444,7 +550,7 @@ export class GolfService {
       where: { id, clubId: tenantId },
       include: {
         players: {
-          include: { member: true, caddy: true },
+          include: { member: true, caddy: true, dependent: true },
           orderBy: { position: 'asc' },
         },
         course: true,
@@ -470,11 +576,12 @@ export class GolfService {
     const updated = await this.prisma.teeTime.update({
       where: { id },
       data: {
-        notes: dto.notes,
-        status: dto.status as any,
+        ...(dto.holes !== undefined && { holes: dto.holes }),
+        ...(dto.notes !== undefined && { notes: dto.notes }),
+        ...(dto.status !== undefined && { status: dto.status as any }),
       },
       include: {
-        players: { include: { member: true, caddy: true } },
+        players: { include: { member: true, caddy: true, dependent: true } },
         course: true,
       },
     });
@@ -485,6 +592,104 @@ export class GolfService {
       aggregateId: id,
       type: 'UPDATED',
       data: dto,
+      userId,
+      userEmail,
+    });
+
+    return updated;
+  }
+
+  async updateFlightPlayers(
+    tenantId: string,
+    id: string,
+    players: Array<{
+      position: number;
+      playerType: string;
+      memberId?: string;
+      dependentId?: string; // For DEPENDENT player type - links to Dependent table
+      guestName?: string;
+      guestEmail?: string;
+      guestPhone?: string;
+      cartType?: string;
+      sharedWithPosition?: number;
+      caddyId?: string;
+      caddyRequest?: string;
+      cartRequest?: string;
+      cartId?: string;
+      rentalRequest?: string;
+      cartStatus?: string;
+      caddyStatus?: string;
+    }>,
+    userId: string,
+    userEmail: string,
+  ) {
+    // Get the existing tee time to verify it exists
+    const existing = await this.getFlight(tenantId, id);
+
+    // Validate player count (max 4 per tee time)
+    if (players.length > 4) {
+      throw new BadRequestException('Maximum 4 players per tee time');
+    }
+
+    // For updates, we only enforce max 4 players per booking
+    // The booking already exists and its slot was validated on creation
+    // We trust that the user can edit their own booking's players
+
+    // Delete existing players and create new ones in a transaction
+    const updated = await this.prisma.$transaction(async (tx) => {
+      // Delete existing players
+      await tx.teeTimePlayer.deleteMany({
+        where: { teeTimeId: id },
+      });
+
+      // Prepare player data for creation
+      const playerData = players.map((p) => ({
+        teeTimeId: id,
+        position: p.position,
+        playerType: p.playerType as any,
+        // For MEMBER: set memberId (FK to members table)
+        // For DEPENDENT: set dependentId (FK to dependents table)
+        // For GUEST/WALK_UP: use guestName/Email/Phone instead
+        memberId: p.playerType === 'MEMBER' ? p.memberId : null,
+        dependentId: p.playerType === 'DEPENDENT' ? p.dependentId : null,
+        guestName: p.guestName,
+        guestEmail: p.guestEmail,
+        guestPhone: p.guestPhone,
+        cartType: (p.cartType as any) || 'WALKING',
+        sharedWithPosition: p.sharedWithPosition,
+        caddyId: p.caddyId,
+        caddyRequest: p.caddyRequest || 'NONE',
+        cartRequest: p.cartRequest || 'NONE',
+        cartId: p.cartId || null,
+        rentalRequest: p.rentalRequest || 'NONE',
+        cartStatus: (p.cartStatus as any) || 'NONE',
+        caddyStatus: (p.caddyStatus as any) || 'NONE',
+      }));
+
+      // Create new players
+      await tx.teeTimePlayer.createMany({
+        data: playerData,
+      });
+
+      // Return updated tee time
+      return tx.teeTime.findUnique({
+        where: { id },
+        include: {
+          players: {
+            include: { member: true, caddy: true, dependent: true },
+            orderBy: { position: 'asc' },
+          },
+          course: true,
+        },
+      });
+    });
+
+    await this.eventStore.append({
+      tenantId,
+      aggregateType: 'TeeTime',
+      aggregateId: id,
+      type: 'PLAYERS_UPDATED',
+      data: { players },
       userId,
       userEmail,
     });
@@ -931,5 +1136,309 @@ export class GolfService {
     return this.prisma.teeTimeBlock.delete({
       where: { id: blockId },
     });
+  }
+
+  // ============================================================================
+  // WEEK VIEW OCCUPANCY
+  // ============================================================================
+
+  /**
+   * Get week view occupancy data showing player positions for each time slot
+   * Used by the Week view to display 4 player blocks per flight
+   */
+  async getWeekViewOccupancy(
+    tenantId: string,
+    courseId: string,
+    startDate: string,
+    endDate: string,
+    startTime?: string,
+    endTime?: string,
+  ): Promise<{
+    date: string;
+    time: string;
+    nine: 'FRONT' | 'BACK';
+    isBlocked: boolean;
+    positions: {
+      position: number;
+      status: 'AVAILABLE' | 'BOOKED' | 'BLOCKED';
+      player?: {
+        id: string;
+        name: string;
+        type: PlayerType;
+        memberId?: string;
+      };
+    }[];
+  }[]> {
+    this.logger.log(`getWeekViewOccupancy: tenantId=${tenantId}, courseId=${courseId}, startDate=${startDate}, endDate=${endDate}, startTime=${startTime}, endTime=${endTime}`);
+
+    // Parse date range first
+    const start = new Date(`${startDate}T00:00:00.000Z`);
+    const end = new Date(`${endDate}T00:00:00.000Z`);
+
+    // Helper to convert HH:MM to minutes for comparison
+    const timeToMinutes = (time: string): number => {
+      const [hours, minutes] = time.split(':').map(Number);
+      return (hours ?? 0) * 60 + (minutes ?? 0);
+    };
+
+    // Parse optional time filters
+    const startTimeMinutes = startTime ? timeToMinutes(startTime) : null;
+    const endTimeMinutes = endTime ? timeToMinutes(endTime) : null;
+
+    // OPTIMIZATION: Batch fetch all data in parallel (reduces from ~10 sequential queries to 4 parallel)
+    const [course, teeTimes, blocks, schedules] = await Promise.all([
+      // 1. Fetch course
+      this.prisma.golfCourse.findFirst({
+        where: { id: courseId, clubId: tenantId },
+      }),
+      // 2. Fetch all tee times in the date range
+      this.prisma.teeTime.findMany({
+        where: {
+          clubId: tenantId,
+          courseId,
+          teeDate: {
+            gte: start,
+            lte: end,
+          },
+          status: { not: BookingStatus.CANCELLED },
+        },
+        include: {
+          players: {
+            include: {
+              member: {
+                select: { id: true, memberId: true, firstName: true, lastName: true },
+              },
+            },
+            orderBy: { position: 'asc' },
+          },
+        },
+      }),
+      // 3. Fetch all blocks in the date range
+      this.prisma.teeTimeBlock.findMany({
+        where: {
+          courseId,
+          course: { clubId: tenantId },
+          OR: [
+            {
+              isRecurring: false,
+              startTime: { lte: end },
+              endTime: { gte: start },
+            },
+            {
+              isRecurring: true,
+            },
+          ],
+        },
+      }),
+      // 4. OPTIMIZATION: Batch fetch all schedules that overlap the date range (instead of N queries)
+      this.prisma.golfCourseSchedule.findMany({
+        where: {
+          courseId,
+          isActive: true,
+          startDate: { lte: end },
+          endDate: { gte: start },
+          course: { clubId: tenantId },
+        },
+        include: {
+          intervals: true,
+        },
+      }),
+    ]);
+
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+
+    this.logger.log(`Found ${teeTimes.length} tee times, ${schedules.length} schedules in range`);
+
+    // Build a map of bookings by date+time+nine for quick lookup
+    // Multiple bookings can exist at the same time slot, so store arrays
+    const bookingMap = new Map<string, typeof teeTimes>();
+    for (const tt of teeTimes) {
+      const dateStr = tt.teeDate.toISOString().split('T')[0];
+      const nine = tt.startingHole === 10 ? 'BACK' : 'FRONT';
+      const key = `${dateStr}|${tt.teeTime}|${nine}`;
+      const existing = bookingMap.get(key) || [];
+      existing.push(tt);
+      bookingMap.set(key, existing);
+    }
+
+    // Helper to find the active schedule for a specific date (from pre-fetched data - no DB query!)
+    const findScheduleForDate = (date: Date) => {
+      return schedules.find(s => s.startDate <= date && s.endDate >= date);
+    };
+
+    // Generate all slots for each day in the range
+    const slots: {
+      date: string;
+      time: string;
+      nine: 'FRONT' | 'BACK';
+      isBlocked: boolean;
+      positions: {
+        position: number;
+        status: 'AVAILABLE' | 'BOOKED' | 'BLOCKED';
+        player?: {
+          id: string;
+          name: string;
+          type: PlayerType;
+          memberId?: string;
+        };
+      }[];
+    }[] = [];
+
+    // Iterate through each day
+    const currentDate = new Date(start);
+    while (currentDate <= end) {
+      const dateStr = currentDate.toISOString().split('T')[0];
+
+      // Get schedule for this date (from pre-fetched data - no DB query!)
+      const schedule = findScheduleForDate(currentDate);
+      const firstTeeTime = schedule?.firstTeeTime || course.firstTeeTime;
+      const lastTeeTime = schedule?.lastTeeTime || course.lastTeeTime;
+
+      // Generate time slots for this day
+      const timeSlots = schedule?.intervals?.length
+        ? this.generateTimeSlotsFromIntervals(firstTeeTime, lastTeeTime, schedule.intervals, currentDate)
+        : this.generateTimeSlots(firstTeeTime, lastTeeTime, course.teeInterval);
+
+      // For each time slot, generate Front 9 and Back 9 entries
+      for (const slotInfo of timeSlots) {
+        const time = typeof slotInfo === 'string' ? slotInfo : slotInfo.time;
+
+        // Apply time range filter if specified
+        if (startTimeMinutes !== null || endTimeMinutes !== null) {
+          const slotMinutes = timeToMinutes(time);
+          if (startTimeMinutes !== null && slotMinutes < startTimeMinutes) continue;
+          if (endTimeMinutes !== null && slotMinutes >= endTimeMinutes) continue;
+        }
+
+        for (const nine of ['FRONT', 'BACK'] as const) {
+          const key = `${dateStr}|${time}|${nine}`;
+          const bookings = bookingMap.get(key) || [];
+          const block = this.findBlockForTime(blocks, currentDate, time);
+          const isBlocked = !!block;
+
+          // Aggregate all players from all bookings at this time slot
+          const allPlayers = bookings.flatMap(b => b.players);
+
+          // Generate 4 positions
+          const positions: {
+            position: number;
+            status: 'AVAILABLE' | 'BOOKED' | 'BLOCKED';
+            player?: {
+              id: string;
+              name: string;
+              type: PlayerType;
+              memberId?: string;
+            };
+          }[] = [];
+
+          for (let pos = 1; pos <= 4; pos++) {
+            const player = allPlayers.find(p => p.position === pos);
+
+            if (isBlocked) {
+              positions.push({ position: pos, status: 'BLOCKED' });
+            } else if (player) {
+              const playerName = player.member
+                ? `${player.member.firstName} ${player.member.lastName}`
+                : player.guestName || 'Unknown';
+
+              positions.push({
+                position: pos,
+                status: 'BOOKED',
+                player: {
+                  id: player.id,
+                  name: playerName,
+                  type: player.playerType as PlayerType,
+                  memberId: player.member?.memberId,
+                },
+              });
+            } else {
+              positions.push({ position: pos, status: 'AVAILABLE' });
+            }
+          }
+
+          slots.push({
+            date: dateStr,
+            time,
+            nine,
+            isBlocked,
+            positions,
+          });
+        }
+      }
+
+      // Move to next day
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    this.logger.log(`Generated ${slots.length} week view slots`);
+    return slots;
+  }
+
+  /**
+   * Update a single player's rental status (cart/caddy)
+   */
+  async updatePlayerRentalStatus(
+    tenantId: string,
+    playerId: string,
+    updates: {
+      cartStatus?: string;
+      caddyStatus?: string;
+      caddyId?: string | null;
+    },
+    userId: string,
+  ) {
+    this.logger.log(`Updating player rental status: ${playerId}, updates: ${JSON.stringify(updates)}`);
+
+    // Verify the player exists and belongs to a tee time in this tenant
+    const player = await this.prisma.teeTimePlayer.findFirst({
+      where: {
+        id: playerId,
+        teeTime: {
+          course: {
+            clubId: tenantId,
+          },
+        },
+      },
+      include: {
+        teeTime: true,
+        member: true,
+        caddy: true,
+      },
+    });
+
+    if (!player) {
+      throw new NotFoundException(`Player not found: ${playerId}`);
+    }
+
+    // Build update data
+    const updateData: Record<string, unknown> = {};
+
+    if (updates.cartStatus !== undefined) {
+      updateData.cartStatus = updates.cartStatus;
+    }
+
+    if (updates.caddyStatus !== undefined) {
+      updateData.caddyStatus = updates.caddyStatus;
+    }
+
+    if (updates.caddyId !== undefined) {
+      updateData.caddyId = updates.caddyId;
+    }
+
+    // Update the player
+    const updatedPlayer = await this.prisma.teeTimePlayer.update({
+      where: { id: playerId },
+      data: updateData,
+      include: {
+        member: true,
+        caddy: true,
+      },
+    });
+
+    this.logger.log(`Updated player rental status: ${playerId}`);
+
+    return updatedPlayer;
   }
 }

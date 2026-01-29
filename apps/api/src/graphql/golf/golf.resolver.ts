@@ -23,6 +23,17 @@ import {
   BlockType,
   TeeTicketType,
   TeeTicketValidationResult,
+  ClubGolfSettingsType,
+  CaddyType,
+  WeekViewOccupancyInput,
+  WeekViewOccupancyResponse,
+  WeekViewSlotType,
+  NineType,
+  PositionStatus,
+  WeekViewPositionType,
+  WeekViewPlayerType,
+  PlayerType,
+  TeeTimePlayerType,
 } from './golf.types';
 import {
   CreateTeeTimeInput,
@@ -36,6 +47,8 @@ import {
   UpdateBlockInput,
   BlocksQueryArgs,
   CourseIntervalInput,
+  TeeTimePlayerInput,
+  UpdatePlayerRentalStatusInput,
 } from './golf.input';
 import { encodeCursor } from '../common/pagination';
 import { PUBSUB_TOKEN, SubscriptionEvents } from '../common/pubsub';
@@ -57,6 +70,7 @@ export class GolfResolver {
     @Args() args: TeeSheetArgs,
   ): Promise<TeeSheetSlotType[]> {
     const dateStr = args.date.toISOString().split('T')[0];
+    console.log(`[GolfResolver] getTeeSheet - tenantId: ${user.tenantId}, courseId: ${args.courseId}, date: ${dateStr}`);
     const slots = await this.golfService.getTeeSheet(user.tenantId, args.courseId, dateStr);
 
     return slots.map((slot: any) => ({
@@ -85,12 +99,126 @@ export class GolfResolver {
       description: c.description,
       holes: c.holes,
       par: c.par,
-      slope: c.slope?.toNumber(),
+      slope: c.slope,
       rating: c.rating?.toNumber(),
       firstTeeTime: c.firstTeeTime,
       lastTeeTime: c.lastTeeTime,
       teeInterval: c.teeInterval,
       isActive: c.isActive,
+    }));
+  }
+
+  // ============================================
+  // Week View Occupancy Query
+  // ============================================
+
+  @Query(() => WeekViewOccupancyResponse, {
+    name: 'weekViewOccupancy',
+    description: 'Get week view occupancy data showing player positions for each time slot',
+  })
+  async getWeekViewOccupancy(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('input') input: WeekViewOccupancyInput,
+  ): Promise<WeekViewOccupancyResponse> {
+    const slots = await this.golfService.getWeekViewOccupancy(
+      user.tenantId,
+      input.courseId,
+      input.startDate,
+      input.endDate,
+      input.startTime,
+      input.endTime,
+    );
+
+    return {
+      slots: slots.map((slot) => ({
+        date: slot.date,
+        time: slot.time,
+        nine: slot.nine as NineType,
+        isBlocked: slot.isBlocked,
+        positions: slot.positions.map((pos) => ({
+          position: pos.position,
+          status: pos.status as PositionStatus,
+          player: pos.player
+            ? {
+                id: pos.player.id,
+                name: pos.player.name,
+                type: pos.player.type as PlayerType,
+                memberId: pos.player.memberId,
+              }
+            : undefined,
+        })),
+      })),
+    };
+  }
+
+  // ============================================
+  // Club Golf Settings Query (Task #6)
+  // ============================================
+
+  @Query(() => ClubGolfSettingsType, {
+    name: 'clubGolfSettings',
+    description: 'Get club golf settings',
+    nullable: true,
+  })
+  async getClubGolfSettings(@GqlCurrentUser() user: JwtPayload): Promise<ClubGolfSettingsType | null> {
+    const settings = await this.prisma.clubGolfSettings.findUnique({
+      where: { clubId: user.tenantId },
+    });
+
+    if (!settings) {
+      return null;
+    }
+
+    return {
+      id: settings.id,
+      cartPolicy: settings.cartPolicy as any,
+      rentalPolicy: settings.rentalPolicy as any,
+      caddyDrivesCart: settings.caddyDrivesCart,
+      maxGuestsPerMember: settings.maxGuestsPerMember,
+      requireGuestContact: settings.requireGuestContact,
+    };
+  }
+
+  // ============================================
+  // Caddy Search Query (Task #6)
+  // ============================================
+
+  @Query(() => [CaddyType], {
+    name: 'searchCaddies',
+    description: 'Search for caddies by name or number',
+  })
+  async searchCaddies(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('search', { nullable: true }) search?: string,
+    @Args('courseId', { type: () => ID, nullable: true }) courseId?: string,
+  ): Promise<CaddyType[]> {
+    const where: any = {
+      clubId: user.tenantId,
+      isActive: true,
+    };
+
+    // Add search filter if provided
+    if (search) {
+      where.OR = [
+        { caddyNumber: { contains: search, mode: 'insensitive' } },
+        { firstName: { contains: search, mode: 'insensitive' } },
+        { lastName: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    const caddies = await this.prisma.caddy.findMany({
+      where,
+      orderBy: { caddyNumber: 'asc' },
+      take: 50, // Limit results
+    });
+
+    return caddies.map((caddy: any) => ({
+      id: caddy.id,
+      caddyNumber: caddy.caddyNumber,
+      firstName: caddy.firstName,
+      lastName: caddy.lastName,
+      phone: caddy.phone,
+      isActive: caddy.isActive,
     }));
   }
 
@@ -133,7 +261,7 @@ export class GolfResolver {
         take,
         include: {
           players: {
-            include: { member: true, caddy: true },
+            include: { member: true, caddy: true, dependent: true },
             orderBy: { position: 'asc' },
           },
           course: true,
@@ -167,29 +295,47 @@ export class GolfResolver {
     @GqlCurrentUser() user: JwtPayload,
     @Args('input') input: CreateTeeTimeInput,
   ): Promise<TeeTimeType> {
-    const teeTime = await this.golfService.createFlight(
-      user.tenantId,
-      {
-        courseId: input.courseId,
-        teeDate: input.teeDate.toISOString().split('T')[0],
-        teeTime: input.teeTime,
-        holes: input.holes,
-        players: input.players,
-        notes: input.notes,
-      },
-      user.sub,
-      user.email,
-    );
+    // Debug logging
+    console.log('createTeeTime called with input:', JSON.stringify({
+      courseId: input.courseId,
+      teeDate: input.teeDate,
+      teeTime: input.teeTime,
+      holes: input.holes,
+      players: input.players,
+      notes: input.notes,
+    }, null, 2));
+    console.log('User tenantId:', user.tenantId);
 
-    const transformedTeeTime = this.transformTeeTime(teeTime);
+    try {
+      const teeTime = await this.golfService.createFlight(
+        user.tenantId,
+        {
+          courseId: input.courseId,
+          teeDate: input.teeDate.toISOString().split('T')[0],
+          teeTime: input.teeTime,
+          holes: input.holes,
+          startingHole: input.startingHole,
+          players: input.players,
+          notes: input.notes,
+        },
+        user.sub,
+        user.email,
+      );
 
-    // Publish creation event
-    await this.pubSub.publish(SubscriptionEvents.TEE_TIME_CREATED, {
-      teeTimeCreated: transformedTeeTime,
-      tenantId: user.tenantId,
-    });
+      const transformedTeeTime = this.transformTeeTime(teeTime);
 
-    return transformedTeeTime;
+      // Publish creation event
+      await this.pubSub.publish(SubscriptionEvents.TEE_TIME_CREATED, {
+        teeTimeCreated: transformedTeeTime,
+        tenantId: user.tenantId,
+      });
+
+      console.log('Tee time created successfully:', teeTime.id);
+      return transformedTeeTime;
+    } catch (error) {
+      console.error('Error creating tee time:', error);
+      throw error;
+    }
   }
 
   @Mutation(() => TeeTimeType, { name: 'updateTeeTime', description: 'Update an existing tee time' })
@@ -215,6 +361,67 @@ export class GolfResolver {
     });
 
     return transformedTeeTime;
+  }
+
+  @Mutation(() => TeeTimeType, { name: 'updateTeeTimePlayers', description: 'Update players for an existing tee time (with proper capacity check)' })
+  async updateTeeTimePlayers(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('id', { type: () => ID }) id: string,
+    @Args('players', { type: () => [TeeTimePlayerInput] }) players: TeeTimePlayerInput[],
+  ): Promise<TeeTimeType> {
+    const teeTime = await this.golfService.updateFlightPlayers(
+      user.tenantId,
+      id,
+      players.map(p => ({
+        position: p.position,
+        playerType: p.playerType,
+        memberId: p.memberId,
+        guestName: p.guestName,
+        guestEmail: p.guestEmail,
+        guestPhone: p.guestPhone,
+        cartType: p.cartType,
+        sharedWithPosition: p.sharedWithPosition,
+        caddyId: p.caddyId,
+        caddyRequest: p.caddyRequest,
+        cartRequest: p.cartRequest,
+        cartId: p.cartId,
+        rentalRequest: p.rentalRequest,
+        cartStatus: p.cartStatus,
+        caddyStatus: p.caddyStatus,
+      })),
+      user.sub,
+      user.email,
+    );
+
+    const transformedTeeTime = this.transformTeeTime(teeTime);
+
+    // Publish update event
+    await this.pubSub.publish(SubscriptionEvents.TEE_TIME_UPDATED, {
+      teeTimeUpdated: transformedTeeTime,
+      tenantId: user.tenantId,
+    });
+
+    return transformedTeeTime;
+  }
+
+  @Mutation(() => TeeTimePlayerType, { name: 'updatePlayerRentalStatus', description: 'Update a single player rental status (cart/caddy)' })
+  async updatePlayerRentalStatus(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('playerId', { type: () => ID }) playerId: string,
+    @Args('input') input: UpdatePlayerRentalStatusInput,
+  ) {
+    const player = await this.golfService.updatePlayerRentalStatus(
+      user.tenantId,
+      playerId,
+      {
+        cartStatus: input.cartStatus,
+        caddyStatus: input.caddyStatus,
+        caddyId: input.caddyId,
+      },
+      user.sub,
+    );
+    // Return raw Prisma data - GraphQL will serialize it
+    return player as unknown as TeeTimePlayerType;
   }
 
   @Mutation(() => FlightCheckInResponseType, { name: 'checkIn', description: 'Check in all players for a tee time' })
@@ -282,8 +489,9 @@ export class GolfResolver {
       throw new Error('Cannot move a cancelled tee time');
     }
 
-    // Check for conflicts at the new slot
-    const conflictingTeeTime = await this.prisma.teeTime.findFirst({
+    // Check for capacity at the new slot
+    // Multiple bookings can share a flight as long as total players ≤ 4
+    const existingAtDestination = await this.prisma.teeTime.findMany({
       where: {
         clubId: user.tenantId,
         courseId: input.newCourseId || existingTeeTime.courseId,
@@ -292,10 +500,22 @@ export class GolfResolver {
         status: { not: 'CANCELLED' },
         id: { not: id },
       },
+      include: { players: true },
     });
 
-    if (conflictingTeeTime) {
-      throw new Error('The new time slot is already booked');
+    const destinationPlayerCount = existingAtDestination.reduce(
+      (total, booking) => total + booking.players.length,
+      0,
+    );
+    const movingPlayerCount = existingTeeTime.players.length;
+
+    if (destinationPlayerCount + movingPlayerCount > 4) {
+      const availableSlots = 4 - destinationPlayerCount;
+      throw new Error(
+        availableSlots > 0
+          ? `Only ${availableSlots} position${availableSlots === 1 ? '' : 's'} available at the new time slot`
+          : 'The new time slot is fully booked',
+      );
     }
 
     // Update the tee time
@@ -310,7 +530,7 @@ export class GolfResolver {
       include: {
         course: true,
         players: {
-          include: { member: true, caddy: true },
+          include: { member: true, caddy: true, dependent: true },
           orderBy: { position: 'asc' },
         },
       },
@@ -727,6 +947,7 @@ export class GolfResolver {
       teeDate: teeTime.teeDate,
       teeTime: teeTime.teeTime,
       holes: teeTime.holes,
+      startingHole: teeTime.startingHole ?? 1,
       status: teeTime.status,
       notes: teeTime.notes,
       createdAt: teeTime.createdAt,
@@ -738,7 +959,7 @@ export class GolfResolver {
         description: teeTime.course.description,
         holes: teeTime.course.holes,
         par: teeTime.course.par,
-        slope: teeTime.course.slope?.toNumber(),
+        slope: teeTime.course.slope,
         rating: teeTime.course.rating?.toNumber(),
         firstTeeTime: teeTime.course.firstTeeTime,
         lastTeeTime: teeTime.course.lastTeeTime,
@@ -755,6 +976,13 @@ export class GolfResolver {
           firstName: p.member.firstName,
           lastName: p.member.lastName,
         } : undefined,
+        dependent: p.dependent ? {
+          id: p.dependent.id,
+          firstName: p.dependent.firstName,
+          lastName: p.dependent.lastName,
+          relationship: p.dependent.relationship,
+          memberId: p.dependent.memberId,
+        } : undefined,
         guestName: p.guestName,
         guestEmail: p.guestEmail,
         guestPhone: p.guestPhone,
@@ -768,8 +996,26 @@ export class GolfResolver {
           phone: p.caddy.phone,
           isActive: p.caddy.isActive,
         } : undefined,
+        // Per-player booking options (Task #6)
+        caddyRequest: p.caddyRequest,
+        cartRequest: p.cartRequest,
+        rentalRequest: p.rentalRequest,
+        // Rental status tracking
+        cartStatus: p.cartStatus,
+        caddyStatus: p.caddyStatus,
         checkedInAt: p.checkedInAt,
       })) || [],
+      // Booking groups for multiple bookings at same time slot
+      bookingGroups: teeTime.bookingGroups?.map((g: any) => ({
+        id: g.id,
+        groupNumber: g.groupNumber,
+        bookedBy: {
+          id: g.bookedBy?.id || '',
+          name: g.bookedBy?.name || 'Unknown',
+          memberId: g.bookedBy?.memberId,
+        },
+        playerIds: g.playerIds || [],
+      })),
     };
   }
 
@@ -817,7 +1063,7 @@ export class GolfResolver {
         description: block.course.description,
         holes: block.course.holes,
         par: block.course.par,
-        slope: block.course.slope?.toNumber(),
+        slope: block.course.slope,
         rating: block.course.rating?.toNumber(),
         firstTeeTime: block.course.firstTeeTime,
         lastTeeTime: block.course.lastTeeTime,

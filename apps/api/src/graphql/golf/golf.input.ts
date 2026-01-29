@@ -11,9 +11,10 @@ import {
   Max,
   IsEmail,
   IsBoolean,
+  IsDate,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { TeeTimeStatus, CartType, PlayerType, PlayFormat, DayType, BlockType } from './golf.types';
+import { TeeTimeStatus, CartType, PlayerType, PlayFormat, DayType, BlockType, RentalStatus } from './golf.types';
 
 @InputType()
 export class TeeTimePlayerInput {
@@ -27,10 +28,15 @@ export class TeeTimePlayerInput {
   @IsEnum(PlayerType)
   playerType: PlayerType;
 
-  @Field(() => ID, { nullable: true })
+  @Field(() => ID, { nullable: true, description: 'Member UUID (for MEMBER player type)' })
   @IsOptional()
   @IsUUID()
   memberId?: string;
+
+  @Field(() => ID, { nullable: true, description: 'Dependent UUID (for DEPENDENT player type)' })
+  @IsOptional()
+  @IsUUID()
+  dependentId?: string;
 
   @Field({ nullable: true })
   @IsOptional()
@@ -63,6 +69,55 @@ export class TeeTimePlayerInput {
   @IsOptional()
   @IsUUID()
   caddyId?: string;
+
+  // Per-player booking options (Task #6)
+  @Field(() => String, { nullable: true, defaultValue: 'NONE' })
+  @IsOptional()
+  @IsString()
+  caddyRequest?: string; // 'NONE' | 'REQUEST' | caddyId
+
+  @Field(() => String, { nullable: true, defaultValue: 'NONE' })
+  @IsOptional()
+  @IsString()
+  cartRequest?: string; // 'NONE' | 'REQUEST'
+
+  @Field(() => ID, { nullable: true, description: 'Assigned cart ID' })
+  @IsOptional()
+  @IsUUID()
+  cartId?: string;
+
+  @Field(() => String, { nullable: true, defaultValue: 'NONE' })
+  @IsOptional()
+  @IsString()
+  rentalRequest?: string; // 'NONE' | 'REQUEST'
+
+  @Field(() => RentalStatus, { nullable: true, defaultValue: RentalStatus.NONE })
+  @IsOptional()
+  @IsEnum(RentalStatus)
+  cartStatus?: RentalStatus;
+
+  @Field(() => RentalStatus, { nullable: true, defaultValue: RentalStatus.NONE })
+  @IsOptional()
+  @IsEnum(RentalStatus)
+  caddyStatus?: RentalStatus;
+}
+
+@InputType()
+export class UpdatePlayerRentalStatusInput {
+  @Field(() => RentalStatus, { nullable: true })
+  @IsOptional()
+  @IsEnum(RentalStatus)
+  cartStatus?: RentalStatus;
+
+  @Field(() => RentalStatus, { nullable: true })
+  @IsOptional()
+  @IsEnum(RentalStatus)
+  caddyStatus?: RentalStatus;
+
+  @Field(() => ID, { nullable: true })
+  @IsOptional()
+  @IsUUID()
+  caddyId?: string;
 }
 
 @InputType()
@@ -72,6 +127,7 @@ export class CreateTeeTimeInput {
   courseId: string;
 
   @Field()
+  @IsDate()
   teeDate: Date;
 
   @Field()
@@ -84,6 +140,11 @@ export class CreateTeeTimeInput {
   @Min(9)
   @Max(18)
   holes?: number;
+
+  @Field(() => Int, { nullable: true, defaultValue: 1 })
+  @IsOptional()
+  @IsInt()
+  startingHole?: number; // 1 or 10 (for Cross mode)
 
   @Field(() => [TeeTimePlayerInput])
   @IsArray()
@@ -105,6 +166,13 @@ export class UpdateTeeTimeInput {
   @ValidateNested({ each: true })
   @Type(() => TeeTimePlayerInput)
   players?: TeeTimePlayerInput[];
+
+  @Field(() => Int, { nullable: true })
+  @IsOptional()
+  @IsInt()
+  @Min(9)
+  @Max(18)
+  holes?: number;
 
   @Field({ nullable: true })
   @IsOptional()
@@ -139,6 +207,8 @@ export class TeeSheetArgs {
   courseId: string;
 
   @Field()
+  @IsDate()
+  @Type(() => Date)
   date: Date;
 }
 

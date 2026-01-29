@@ -20,6 +20,29 @@ export type Scalars = {
   DateTime: { input: string; output: string; }
 };
 
+export type ActiveSeasonInfo = {
+  __typename?: 'ActiveSeasonInfo';
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+};
+
+export type ActiveSpecialDayInfo = {
+  __typename?: 'ActiveSpecialDayInfo';
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  type: SpecialDayType;
+};
+
+export type AddGroupPlayersInput = {
+  players: Array<GroupPlayerInput>;
+};
+
+/** Days to which a configuration applies */
+export type ApplicableDays =
+  | 'ALL'
+  | 'WEEKDAY'
+  | 'WEEKEND';
+
 export type ApplicationConnection = {
   __typename?: 'ApplicationConnection';
   edges: Array<ApplicationEdge>;
@@ -80,6 +103,21 @@ export type BillingStatsType = {
   totalRevenue: Scalars['String']['output'];
 };
 
+export type BlockMutationResponse = {
+  __typename?: 'BlockMutationResponse';
+  block?: Maybe<TeeTimeBlockType>;
+  message?: Maybe<Scalars['String']['output']>;
+  success: Scalars['Boolean']['output'];
+};
+
+/** Type of tee time block */
+export type BlockType =
+  | 'MAINTENANCE'
+  | 'PRIVATE'
+  | 'STARTER'
+  | 'TOURNAMENT'
+  | 'WEATHER';
+
 export type BookingConnection = {
   __typename?: 'BookingConnection';
   edges: Array<BookingEdge>;
@@ -93,6 +131,21 @@ export type BookingEdge = {
   node: BookingType;
 };
 
+export type BookingGroupBookedByType = {
+  __typename?: 'BookingGroupBookedByType';
+  id: Scalars['ID']['output'];
+  memberId?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+};
+
+export type BookingGroupType = {
+  __typename?: 'BookingGroupType';
+  bookedBy: BookingGroupBookedByType;
+  groupNumber: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  playerIds: Array<Scalars['String']['output']>;
+};
+
 export type BookingMemberType = {
   __typename?: 'BookingMemberType';
   firstName: Scalars['String']['output'];
@@ -102,6 +155,11 @@ export type BookingMemberType = {
   photoUrl?: Maybe<Scalars['String']['output']>;
   status: Scalars['String']['output'];
 };
+
+/** Tee sheet display mode - EIGHTEEN (single column) or CROSS (dual columns) */
+export type BookingMode =
+  | 'CROSS'
+  | 'EIGHTEEN';
 
 export type BookingPricingType = {
   __typename?: 'BookingPricingType';
@@ -161,6 +219,14 @@ export type BookingTypeEnum =
   | 'FACILITY'
   | 'SERVICE';
 
+export type CsvPlayerRow = {
+  email?: InputMaybe<Scalars['String']['input']>;
+  handicap?: InputMaybe<Scalars['Int']['input']>;
+  memberId?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+  phone?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type CaddyType = {
   __typename?: 'CaddyType';
   caddyNumber: Scalars['String']['output'];
@@ -218,6 +284,11 @@ export type CancelResponseType = {
   message: Scalars['String']['output'];
 };
 
+/** Cart policy for golf bookings */
+export type CartPolicy =
+  | 'OPTIONAL'
+  | 'REQUIRED';
+
 /** Golf cart type */
 export type CartType =
   | 'SHARED'
@@ -256,6 +327,24 @@ export type CheckInResponseType = {
   success: Scalars['Boolean']['output'];
 };
 
+export type ClubGolfSettingsType = {
+  __typename?: 'ClubGolfSettingsType';
+  caddyDrivesCart: Scalars['Boolean']['output'];
+  cartPolicy: CartPolicy;
+  id: Scalars['ID']['output'];
+  maxGuestsPerMember: Scalars['Int']['output'];
+  rentalPolicy: RentalPolicy;
+  requireGuestContact: Scalars['Boolean']['output'];
+};
+
+export type CourseIntervalInput = {
+  dayType: DayType;
+  intervalMin?: Scalars['Int']['input'];
+  isPrimeTime?: Scalars['Boolean']['input'];
+  timeEnd: Scalars['String']['input'];
+  timeStart: Scalars['String']['input'];
+};
+
 export type CreateApplicationInput = {
   email: Scalars['String']['input'];
   firstName: Scalars['String']['input'];
@@ -264,6 +353,16 @@ export type CreateApplicationInput = {
   phone?: InputMaybe<Scalars['String']['input']>;
   reviewNotes?: InputMaybe<Scalars['String']['input']>;
   sponsorId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+export type CreateBlockInput = {
+  blockType: BlockType;
+  courseId: Scalars['ID']['input'];
+  endTime: Scalars['DateTime']['input'];
+  isRecurring?: Scalars['Boolean']['input'];
+  reason?: InputMaybe<Scalars['String']['input']>;
+  recurringPattern?: InputMaybe<Scalars['String']['input']>;
+  startTime: Scalars['DateTime']['input'];
 };
 
 export type CreateBookingInput = {
@@ -310,6 +409,16 @@ export type CreateFacilityInput = {
   type: ResourceTypeEnum;
 };
 
+export type CreateGroupBookingInput = {
+  courseId: Scalars['ID']['input'];
+  eventDate: Scalars['DateTime']['input'];
+  groupName: Scalars['String']['input'];
+  notes?: InputMaybe<Scalars['String']['input']>;
+  players?: InputMaybe<Array<GroupPlayerInput>>;
+  startFormat?: StartFormat;
+  startTime: Scalars['String']['input'];
+};
+
 export type CreateInvoiceInput = {
   billingPeriod?: InputMaybe<Scalars['String']['input']>;
   dueDate: Scalars['DateTime']['input'];
@@ -318,6 +427,26 @@ export type CreateInvoiceInput = {
   lineItems: Array<InvoiceLineItemInput>;
   memberId: Scalars['ID']['input'];
   notes?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type CreateLotteryInput = {
+  courseId: Scalars['ID']['input'];
+  drawTime: Scalars['DateTime']['input'];
+  lotteryDate: Scalars['DateTime']['input'];
+  lotteryType?: LotteryType;
+  maxRequestsPerMember?: Scalars['Int']['input'];
+  requestWindowEnd: Scalars['DateTime']['input'];
+  requestWindowStart: Scalars['DateTime']['input'];
+  timeRangeEnd: Scalars['String']['input'];
+  timeRangeStart: Scalars['String']['input'];
+};
+
+export type CreateLotteryRequestInput = {
+  lotteryId: Scalars['ID']['input'];
+  playerCount?: Scalars['Int']['input'];
+  preference1: Scalars['String']['input'];
+  preference2?: InputMaybe<Scalars['String']['input']>;
+  preference3?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type CreateMemberInput = {
@@ -357,6 +486,35 @@ export type CreatePaymentInput = {
   referenceNumber?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type CreateScheduleInput = {
+  courseId: Scalars['ID']['input'];
+  endDate: Scalars['DateTime']['input'];
+  firstTeeTime: Scalars['String']['input'];
+  intervals?: InputMaybe<Array<CourseIntervalInput>>;
+  lastTeeTime: Scalars['String']['input'];
+  paceOfPlay?: InputMaybe<Scalars['Int']['input']>;
+  playFormat?: PlayFormat;
+  seasonName: Scalars['String']['input'];
+  startDate: Scalars['DateTime']['input'];
+};
+
+export type CreateSeasonInput = {
+  endDay: Scalars['Int']['input'];
+  endMonth: Scalars['Int']['input'];
+  isRecurring?: InputMaybe<Scalars['Boolean']['input']>;
+  name: Scalars['String']['input'];
+  overrideBookingWindow?: InputMaybe<Scalars['Int']['input']>;
+  overrideFirstTee?: InputMaybe<Scalars['String']['input']>;
+  overrideLastTee?: InputMaybe<Scalars['String']['input']>;
+  overrideTimePeriods?: InputMaybe<Scalars['Boolean']['input']>;
+  overrideTwilightTime?: InputMaybe<Scalars['String']['input']>;
+  priority?: InputMaybe<Scalars['Int']['input']>;
+  startDay: Scalars['Int']['input'];
+  startMonth: Scalars['Int']['input'];
+  weekdayBookingMode?: InputMaybe<BookingMode>;
+  weekendBookingMode?: InputMaybe<BookingMode>;
+};
+
 export type CreateServiceInput = {
   basePrice: Scalars['Float']['input'];
   bufferMinutes?: InputMaybe<Scalars['Int']['input']>;
@@ -371,6 +529,19 @@ export type CreateServiceInput = {
   revenueCenterId?: InputMaybe<Scalars['ID']['input']>;
   tierDiscounts?: InputMaybe<Array<TierDiscountInput>>;
   variations?: InputMaybe<Array<ServiceVariationInput>>;
+};
+
+export type CreateSpecialDayInput = {
+  bookingMode?: InputMaybe<BookingMode>;
+  customFirstTee?: InputMaybe<Scalars['String']['input']>;
+  customLastTee?: InputMaybe<Scalars['String']['input']>;
+  customTimePeriods?: InputMaybe<Scalars['Boolean']['input']>;
+  endDate: Scalars['String']['input'];
+  isRecurring?: InputMaybe<Scalars['Boolean']['input']>;
+  name: Scalars['String']['input'];
+  notes?: InputMaybe<Scalars['String']['input']>;
+  startDate: Scalars['String']['input'];
+  type: SpecialDayType;
 };
 
 export type CreateStaffMemberInput = {
@@ -392,8 +563,30 @@ export type CreateTeeTimeInput = {
   holes?: InputMaybe<Scalars['Int']['input']>;
   notes?: InputMaybe<Scalars['String']['input']>;
   players: Array<TeeTimePlayerInput>;
+  startingHole?: InputMaybe<Scalars['Int']['input']>;
   teeDate: Scalars['DateTime']['input'];
   teeTime: Scalars['String']['input'];
+};
+
+export type CreateTimePeriodInput = {
+  applicableDays: ApplicableDays;
+  endTime?: InputMaybe<Scalars['String']['input']>;
+  intervalMinutes: Scalars['Int']['input'];
+  isPrimeTime: Scalars['Boolean']['input'];
+  name: Scalars['String']['input'];
+  sortOrder?: InputMaybe<Scalars['Int']['input']>;
+  startTime: Scalars['String']['input'];
+};
+
+export type CreateWaitlistEntryInput = {
+  courseId: Scalars['ID']['input'];
+  playerCount?: Scalars['Int']['input'];
+  requestedDate: Scalars['DateTime']['input'];
+  requesterEmail?: InputMaybe<Scalars['String']['input']>;
+  requesterName: Scalars['String']['input'];
+  requesterPhone: Scalars['String']['input'];
+  timeRangeEnd: Scalars['String']['input'];
+  timeRangeStart: Scalars['String']['input'];
 };
 
 export type DayHoursInput = {
@@ -411,6 +604,12 @@ export type DayHoursType = {
   openTime?: Maybe<Scalars['String']['output']>;
 };
 
+/** Day type for scheduling */
+export type DayType =
+  | 'HOLIDAY'
+  | 'WEEKDAY'
+  | 'WEEKEND';
+
 export type DeleteDependentResponseType = {
   __typename?: 'DeleteDependentResponseType';
   message: Scalars['String']['output'];
@@ -419,6 +618,12 @@ export type DeleteDependentResponseType = {
 export type DeleteMemberResponseType = {
   __typename?: 'DeleteMemberResponseType';
   message: Scalars['String']['output'];
+};
+
+export type DeleteMutationResponse = {
+  __typename?: 'DeleteMutationResponse';
+  message?: Maybe<Scalars['String']['output']>;
+  success: Scalars['Boolean']['output'];
 };
 
 export type DeleteResponseType = {
@@ -438,6 +643,22 @@ export type DependentType = {
   lastName: Scalars['String']['output'];
   phone?: Maybe<Scalars['String']['output']>;
   relationship: Scalars['String']['output'];
+};
+
+export type EffectiveScheduleType = {
+  __typename?: 'EffectiveScheduleType';
+  activeSeason?: Maybe<ActiveSeasonInfo>;
+  activeSpecialDay?: Maybe<ActiveSpecialDayInfo>;
+  bookingMode: BookingMode;
+  bookingWindowDays: Scalars['Int']['output'];
+  courseId: Scalars['ID']['output'];
+  date: Scalars['String']['output'];
+  firstTee: Scalars['String']['output'];
+  isClosed: Scalars['Boolean']['output'];
+  lastTee: Scalars['String']['output'];
+  timePeriods: Array<GolfTimePeriodType>;
+  twilightMode: TwilightMode;
+  twilightTime: Scalars['String']['output'];
 };
 
 export type ExtendedServiceType = {
@@ -497,11 +718,45 @@ export type FacilityType = {
   type: ResourceTypeEnum;
 };
 
+export type FlightAssignment = {
+  __typename?: 'FlightAssignment';
+  flightNumber: Scalars['Int']['output'];
+  players: Array<GolfGroupPlayerType>;
+  teeTime: Scalars['String']['output'];
+};
+
 export type FlightCheckInResponseType = {
   __typename?: 'FlightCheckInResponseType';
   checkedInAt: Scalars['DateTime']['output'];
   success: Scalars['Boolean']['output'];
   teeTime: TeeTimeType;
+};
+
+export type GolfCourseIntervalType = {
+  __typename?: 'GolfCourseIntervalType';
+  dayType: DayType;
+  id: Scalars['ID']['output'];
+  intervalMin: Scalars['Int']['output'];
+  isPrimeTime: Scalars['Boolean']['output'];
+  timeEnd: Scalars['String']['output'];
+  timeStart: Scalars['String']['output'];
+};
+
+export type GolfCourseScheduleType = {
+  __typename?: 'GolfCourseScheduleType';
+  courseId: Scalars['ID']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  endDate: Scalars['DateTime']['output'];
+  firstTeeTime: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  intervals?: Maybe<Array<GolfCourseIntervalType>>;
+  isActive: Scalars['Boolean']['output'];
+  lastTeeTime: Scalars['String']['output'];
+  paceOfPlay?: Maybe<Scalars['Int']['output']>;
+  playFormat: PlayFormat;
+  seasonName: Scalars['String']['output'];
+  startDate: Scalars['DateTime']['output'];
+  updatedAt: Scalars['DateTime']['output'];
 };
 
 export type GolfCourseType = {
@@ -520,6 +775,204 @@ export type GolfCourseType = {
   teeInterval: Scalars['Int']['output'];
 };
 
+export type GolfGroupBookingType = {
+  __typename?: 'GolfGroupBookingType';
+  course?: Maybe<GolfCourseType>;
+  courseId: Scalars['ID']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  eventDate: Scalars['DateTime']['output'];
+  groupName: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  notes?: Maybe<Scalars['String']['output']>;
+  players: Array<GolfGroupPlayerType>;
+  startFormat: StartFormat;
+  startTime: Scalars['String']['output'];
+  status: GroupBookingStatus;
+  totalPlayers: Scalars['Int']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+export type GolfGroupPlayerType = {
+  __typename?: 'GolfGroupPlayerType';
+  assignedFlight?: Maybe<Scalars['Int']['output']>;
+  assignedPosition?: Maybe<Scalars['Int']['output']>;
+  guestEmail?: Maybe<Scalars['String']['output']>;
+  guestName?: Maybe<Scalars['String']['output']>;
+  guestPhone?: Maybe<Scalars['String']['output']>;
+  handicap?: Maybe<Scalars['Int']['output']>;
+  id: Scalars['ID']['output'];
+  memberId?: Maybe<Scalars['ID']['output']>;
+  playerType: PlayerType;
+};
+
+export type GolfLotteryRequestType = {
+  __typename?: 'GolfLotteryRequestType';
+  assignedTime?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  drawOrder?: Maybe<Scalars['Int']['output']>;
+  id: Scalars['ID']['output'];
+  lotteryId: Scalars['ID']['output'];
+  member?: Maybe<PlayerMemberType>;
+  memberId: Scalars['ID']['output'];
+  playerCount: Scalars['Int']['output'];
+  preference1: Scalars['String']['output'];
+  preference2?: Maybe<Scalars['String']['output']>;
+  preference3?: Maybe<Scalars['String']['output']>;
+  status: LotteryRequestStatus;
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+export type GolfLotteryType = {
+  __typename?: 'GolfLotteryType';
+  course?: Maybe<GolfCourseType>;
+  courseId: Scalars['ID']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  drawTime: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  lotteryDate: Scalars['DateTime']['output'];
+  lotteryType: LotteryType;
+  maxRequestsPerMember: Scalars['Int']['output'];
+  requestWindowEnd: Scalars['DateTime']['output'];
+  requestWindowStart: Scalars['DateTime']['output'];
+  requests?: Maybe<Array<GolfLotteryRequestType>>;
+  status: LotteryStatus;
+  timeRangeEnd: Scalars['String']['output'];
+  timeRangeStart: Scalars['String']['output'];
+  totalRequests?: Maybe<Scalars['Int']['output']>;
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+export type GolfScheduleConfigType = {
+  __typename?: 'GolfScheduleConfigType';
+  clubLatitude?: Maybe<Scalars['Float']['output']>;
+  clubLongitude?: Maybe<Scalars['Float']['output']>;
+  courseId: Scalars['ID']['output'];
+  defaultBookingWindowDays: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  seasons: Array<GolfSeasonType>;
+  specialDays: Array<GolfSpecialDayType>;
+  timePeriods: Array<GolfTimePeriodType>;
+  twilightFixedDefault: Scalars['String']['output'];
+  twilightMinutesBeforeSunset: Scalars['Int']['output'];
+  twilightMode: TwilightMode;
+  weekdayBookingMode: BookingMode;
+  weekdayFirstTee: Scalars['String']['output'];
+  weekdayLastTee: Scalars['String']['output'];
+  weekendBookingMode: BookingMode;
+  weekendFirstTee: Scalars['String']['output'];
+  weekendLastTee: Scalars['String']['output'];
+};
+
+export type GolfSeasonType = {
+  __typename?: 'GolfSeasonType';
+  endDay: Scalars['Int']['output'];
+  endMonth: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  isRecurring: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  overrideBookingWindow?: Maybe<Scalars['Int']['output']>;
+  overrideFirstTee?: Maybe<Scalars['String']['output']>;
+  overrideLastTee?: Maybe<Scalars['String']['output']>;
+  overrideTimePeriods: Scalars['Boolean']['output'];
+  overrideTwilightTime?: Maybe<Scalars['String']['output']>;
+  priority: Scalars['Int']['output'];
+  startDay: Scalars['Int']['output'];
+  startMonth: Scalars['Int']['output'];
+  timePeriods: Array<GolfTimePeriodType>;
+  weekdayBookingMode?: Maybe<BookingMode>;
+  weekendBookingMode?: Maybe<BookingMode>;
+};
+
+export type GolfSpecialDayType = {
+  __typename?: 'GolfSpecialDayType';
+  bookingMode?: Maybe<BookingMode>;
+  customFirstTee?: Maybe<Scalars['String']['output']>;
+  customLastTee?: Maybe<Scalars['String']['output']>;
+  customTimePeriods: Scalars['Boolean']['output'];
+  endDate: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  isRecurring: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  notes?: Maybe<Scalars['String']['output']>;
+  startDate: Scalars['String']['output'];
+  timePeriods: Array<GolfTimePeriodType>;
+  type: SpecialDayType;
+};
+
+export type GolfTimePeriodType = {
+  __typename?: 'GolfTimePeriodType';
+  applicableDays: ApplicableDays;
+  endTime?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  intervalMinutes: Scalars['Int']['output'];
+  isPrimeTime: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  sortOrder: Scalars['Int']['output'];
+  startTime: Scalars['String']['output'];
+};
+
+/** Golf waitlist entry status */
+export type GolfWaitlistStatus =
+  | 'BOOKED'
+  | 'CANCELLED'
+  | 'EXPIRED'
+  | 'NOTIFIED'
+  | 'PENDING';
+
+export type GolfWaitlistType = {
+  __typename?: 'GolfWaitlistType';
+  bookedTeeTimeId?: Maybe<Scalars['ID']['output']>;
+  course?: Maybe<GolfCourseType>;
+  courseId: Scalars['ID']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  expiresAt?: Maybe<Scalars['DateTime']['output']>;
+  id: Scalars['ID']['output'];
+  member?: Maybe<PlayerMemberType>;
+  memberId?: Maybe<Scalars['ID']['output']>;
+  notifiedAt?: Maybe<Scalars['DateTime']['output']>;
+  playerCount: Scalars['Int']['output'];
+  priority: Scalars['Int']['output'];
+  requestedDate: Scalars['DateTime']['output'];
+  requesterEmail?: Maybe<Scalars['String']['output']>;
+  requesterName: Scalars['String']['output'];
+  requesterPhone: Scalars['String']['output'];
+  status: GolfWaitlistStatus;
+  timeRangeEnd: Scalars['String']['output'];
+  timeRangeStart: Scalars['String']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+export type GroupBookingFlightsResponse = {
+  __typename?: 'GroupBookingFlightsResponse';
+  flights: Array<FlightAssignment>;
+  success: Scalars['Boolean']['output'];
+  totalFlights: Scalars['Int']['output'];
+};
+
+export type GroupBookingMutationResponse = {
+  __typename?: 'GroupBookingMutationResponse';
+  groupBooking?: Maybe<GolfGroupBookingType>;
+  message?: Maybe<Scalars['String']['output']>;
+  success: Scalars['Boolean']['output'];
+  warnings?: Maybe<Array<Scalars['String']['output']>>;
+};
+
+/** Group booking status */
+export type GroupBookingStatus =
+  | 'CANCELLED'
+  | 'COMPLETED'
+  | 'CONFIRMED'
+  | 'DRAFT';
+
+export type GroupPlayerInput = {
+  guestEmail?: InputMaybe<Scalars['String']['input']>;
+  guestName?: InputMaybe<Scalars['String']['input']>;
+  guestPhone?: InputMaybe<Scalars['String']['input']>;
+  handicap?: InputMaybe<Scalars['Int']['input']>;
+  memberId?: InputMaybe<Scalars['ID']['input']>;
+  playerType: PlayerType;
+};
+
 export type HouseholdType = {
   __typename?: 'HouseholdType';
   address?: Maybe<Scalars['String']['output']>;
@@ -527,6 +980,10 @@ export type HouseholdType = {
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
   phone?: Maybe<Scalars['String']['output']>;
+};
+
+export type ImportPlayersFromCsvInput = {
+  rows: Array<CsvPlayerRow>;
 };
 
 export type InvoiceConnection = {
@@ -609,6 +1066,50 @@ export type JoinWaitlistInput = {
   requestedTime: Scalars['String']['input'];
   serviceId?: InputMaybe<Scalars['ID']['input']>;
 };
+
+export type LotteryDrawResult = {
+  __typename?: 'LotteryDrawResult';
+  assignedCount: Scalars['Int']['output'];
+  lottery?: Maybe<GolfLotteryType>;
+  message?: Maybe<Scalars['String']['output']>;
+  success: Scalars['Boolean']['output'];
+  totalRequests: Scalars['Int']['output'];
+  waitlistedCount: Scalars['Int']['output'];
+};
+
+export type LotteryMutationResponse = {
+  __typename?: 'LotteryMutationResponse';
+  lottery?: Maybe<GolfLotteryType>;
+  message?: Maybe<Scalars['String']['output']>;
+  success: Scalars['Boolean']['output'];
+};
+
+export type LotteryRequestMutationResponse = {
+  __typename?: 'LotteryRequestMutationResponse';
+  message?: Maybe<Scalars['String']['output']>;
+  request?: Maybe<GolfLotteryRequestType>;
+  success: Scalars['Boolean']['output'];
+};
+
+/** Lottery request status */
+export type LotteryRequestStatus =
+  | 'ASSIGNED'
+  | 'CANCELLED'
+  | 'PENDING'
+  | 'WAITLISTED';
+
+/** Lottery status */
+export type LotteryStatus =
+  | 'CLOSED'
+  | 'DRAFT'
+  | 'DRAWN'
+  | 'OPEN'
+  | 'PUBLISHED';
+
+/** Type of lottery */
+export type LotteryType =
+  | 'PRIME_TIME'
+  | 'SPECIAL_EVENT';
 
 export type MemberConnection = {
   __typename?: 'MemberConnection';
@@ -778,74 +1279,162 @@ export type Mutation = {
   __typename?: 'Mutation';
   /** Accept a waitlist offer */
   acceptWaitlistOffer: WaitlistResponseType;
+  /** Add players to a group booking */
+  addGroupPlayers: GroupBookingMutationResponse;
+  /** Auto-assign players to flights */
+  assignFlights: GroupBookingFlightsResponse;
   /** Cancel a booking */
   cancelBooking: CancelBookingResponseType;
+  /** Cancel a group booking */
+  cancelGroupBooking: GroupBookingMutationResponse;
+  /** Cancel a lottery request */
+  cancelLotteryRequest: LotteryRequestMutationResponse;
   /** Cancel a tee time */
   cancelTeeTime: CancelResponseType;
+  /** Cancel a waitlist entry */
+  cancelWaitlistEntry: WaitlistMutationResponse;
   /** Change the status of a membership application */
   changeApplicationStatus: MembershipApplicationType;
   /** Change member status */
   changeMemberStatus: MemberType;
   /** Check in a booking */
   checkIn: CheckInResponseType;
+  /** Close a lottery to new requests */
+  closeLottery: LotteryMutationResponse;
+  /** Confirm group booking and create tee times */
+  confirmGroupBooking: GroupBookingMutationResponse;
+  /** Convert a waitlist entry to a booking */
+  convertWaitlistToBooking: WaitlistMutationResponse;
   /** Create a new membership application */
   createApplication: MembershipApplicationType;
   /** Create a new booking */
   createBooking: CreateBookingResponseType;
+  /** Create a course schedule */
+  createCourseSchedule: ScheduleMutationResponse;
+  /** Create default schedule configuration for a course */
+  createDefaultScheduleConfig: ScheduleConfigMutationResponse;
   /** Add a dependent to a member */
   createDependent: DependentType;
   /** Create a new facility */
   createFacility: FacilityResponseType;
+  /** Create a group booking */
+  createGroupBooking: GroupBookingMutationResponse;
   /** Create a new invoice */
   createInvoice: InvoiceType;
+  /** Create a lottery */
+  createLottery: LotteryMutationResponse;
   /** Create a new member */
   createMember: MemberType;
+  /** Create a season */
+  createSeason: SeasonMutationResponse;
   /** Create a new service */
   createService: ServiceResponseType;
+  /** Create a special day */
+  createSpecialDay: SpecialDayMutationResponse;
   /** Create a new staff member */
   createStaffMember: StaffResponseType;
   /** Create a new tee time booking */
   createTeeTime: TeeTimeType;
+  /** Create a tee time block */
+  createTeeTimeBlock: BlockMutationResponse;
+  /** Create a time period */
+  createTimePeriod: TimePeriodMutationResponse;
+  /** Add to waitlist */
+  createWaitlistEntry: WaitlistMutationResponse;
   /** Decline a waitlist offer */
   declineWaitlistOffer: WaitlistResponseType;
+  /** Delete a course schedule */
+  deleteCourseSchedule: ScheduleMutationResponse;
   /** Delete a dependent */
   deleteDependent: DeleteDependentResponseType;
   /** Delete a facility */
   deleteFacility: DeleteResponseType;
+  /** Delete a draft group booking */
+  deleteGroupBooking: GroupBookingMutationResponse;
+  /** Delete a draft lottery */
+  deleteLottery: LotteryMutationResponse;
   /** Soft delete a member */
   deleteMember: DeleteMemberResponseType;
+  /** Delete a season */
+  deleteSeason: DeleteMutationResponse;
   /** Delete a service */
   deleteService: DeleteResponseType;
+  /** Delete a special day */
+  deleteSpecialDay: DeleteMutationResponse;
   /** Delete a staff member */
   deleteStaffMember: DeleteResponseType;
+  /** Delete a tee time block */
+  deleteTeeTimeBlock: BlockMutationResponse;
+  /** Delete a time period */
+  deleteTimePeriod: DeleteMutationResponse;
+  /** Delete a waitlist entry */
+  deleteWaitlistEntry: WaitlistMutationResponse;
+  /** Execute the lottery draw */
+  executeLotteryDraw: LotteryDrawResult;
+  /** Mark expired waitlist entries */
+  expireOldWaitlistEntries: WaitlistMutationResponse;
+  /** Import players from CSV data */
+  importPlayersFromCSV: GroupBookingMutationResponse;
   /** Join a waitlist */
   joinWaitlist: WaitlistResponseType;
   /** Move a tee time to a different slot */
   moveTeeTime: TeeTimeType;
+  /** Notify waitlist when a tee time is cancelled */
+  notifyWaitlistForCancellation: WaitlistNotificationResult;
+  /** Open a lottery for requests */
+  openLottery: LotteryMutationResponse;
+  /** Publish lottery results and create tee times */
+  publishLotteryResults: LotteryMutationResponse;
   /** Record a payment */
   recordPayment: PaymentType;
   /** Remove entry from waitlist */
   removeFromWaitlist: WaitlistResponseType;
+  /** Remove a player from a group booking */
+  removeGroupPlayer: GroupBookingMutationResponse;
   /** Reschedule a booking */
   rescheduleBooking: CreateBookingResponseType;
   /** Send an invoice */
   sendInvoice: InvoiceType;
   /** Send offer to waitlist entry */
   sendWaitlistOffer: WaitlistResponseType;
+  /** Submit a lottery request (member) */
+  submitLotteryRequest: LotteryRequestMutationResponse;
   /** Update an existing membership application */
   updateApplication: MembershipApplicationType;
+  /** Update a course schedule */
+  updateCourseSchedule: ScheduleMutationResponse;
   /** Update a dependent */
   updateDependent: DependentType;
   /** Update an existing facility */
   updateFacility: FacilityResponseType;
+  /** Update a group booking */
+  updateGroupBooking: GroupBookingMutationResponse;
+  /** Update a lottery */
+  updateLottery: LotteryMutationResponse;
   /** Update an existing member */
   updateMember: MemberType;
+  /** Update a single player rental status (cart/caddy) */
+  updatePlayerRentalStatus: TeeTimePlayerType;
+  /** Update schedule configuration */
+  updateScheduleConfig: ScheduleConfigMutationResponse;
+  /** Update a season */
+  updateSeason: SeasonMutationResponse;
   /** Update an existing service */
   updateService: ServiceResponseType;
+  /** Update a special day */
+  updateSpecialDay: SpecialDayMutationResponse;
   /** Update a staff member */
   updateStaffMember: StaffResponseType;
   /** Update an existing tee time */
   updateTeeTime: TeeTimeType;
+  /** Update a tee time block */
+  updateTeeTimeBlock: BlockMutationResponse;
+  /** Update players for an existing tee time (with proper capacity check) */
+  updateTeeTimePlayers: TeeTimeType;
+  /** Update a time period */
+  updateTimePeriod: TimePeriodMutationResponse;
+  /** Update a waitlist entry */
+  updateWaitlistEntry: WaitlistMutationResponse;
   /** Void an invoice */
   voidInvoice: InvoiceType;
 };
@@ -856,14 +1445,41 @@ export type MutationAcceptWaitlistOfferArgs = {
 };
 
 
+export type MutationAddGroupPlayersArgs = {
+  id: Scalars['ID']['input'];
+  input: AddGroupPlayersInput;
+};
+
+
+export type MutationAssignFlightsArgs = {
+  id: Scalars['ID']['input'];
+  interval?: Scalars['Float']['input'];
+};
+
+
 export type MutationCancelBookingArgs = {
   input: CancelBookingInput;
+};
+
+
+export type MutationCancelGroupBookingArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationCancelLotteryRequestArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
 export type MutationCancelTeeTimeArgs = {
   id: Scalars['ID']['input'];
   reason?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationCancelWaitlistEntryArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -884,6 +1500,22 @@ export type MutationCheckInArgs = {
 };
 
 
+export type MutationCloseLotteryArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationConfirmGroupBookingArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationConvertWaitlistToBookingArgs = {
+  id: Scalars['ID']['input'];
+  teeTimeId: Scalars['ID']['input'];
+};
+
+
 export type MutationCreateApplicationArgs = {
   input: CreateApplicationInput;
 };
@@ -891,6 +1523,16 @@ export type MutationCreateApplicationArgs = {
 
 export type MutationCreateBookingArgs = {
   input: CreateBookingInput;
+};
+
+
+export type MutationCreateCourseScheduleArgs = {
+  input: CreateScheduleInput;
+};
+
+
+export type MutationCreateDefaultScheduleConfigArgs = {
+  courseId: Scalars['ID']['input'];
 };
 
 
@@ -904,8 +1546,18 @@ export type MutationCreateFacilityArgs = {
 };
 
 
+export type MutationCreateGroupBookingArgs = {
+  input: CreateGroupBookingInput;
+};
+
+
 export type MutationCreateInvoiceArgs = {
   input: CreateInvoiceInput;
+};
+
+
+export type MutationCreateLotteryArgs = {
+  input: CreateLotteryInput;
 };
 
 
@@ -914,8 +1566,20 @@ export type MutationCreateMemberArgs = {
 };
 
 
+export type MutationCreateSeasonArgs = {
+  input: CreateSeasonInput;
+  scheduleId: Scalars['ID']['input'];
+};
+
+
 export type MutationCreateServiceArgs = {
   input: CreateServiceInput;
+};
+
+
+export type MutationCreateSpecialDayArgs = {
+  input: CreateSpecialDayInput;
+  scheduleId: Scalars['ID']['input'];
 };
 
 
@@ -929,8 +1593,29 @@ export type MutationCreateTeeTimeArgs = {
 };
 
 
+export type MutationCreateTeeTimeBlockArgs = {
+  input: CreateBlockInput;
+};
+
+
+export type MutationCreateTimePeriodArgs = {
+  input: CreateTimePeriodInput;
+  scheduleId: Scalars['ID']['input'];
+};
+
+
+export type MutationCreateWaitlistEntryArgs = {
+  input: CreateWaitlistEntryInput;
+};
+
+
 export type MutationDeclineWaitlistOfferArgs = {
   input: WaitlistActionInput;
+};
+
+
+export type MutationDeleteCourseScheduleArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -944,7 +1629,22 @@ export type MutationDeleteFacilityArgs = {
 };
 
 
+export type MutationDeleteGroupBookingArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteLotteryArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteMemberArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteSeasonArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -954,8 +1654,39 @@ export type MutationDeleteServiceArgs = {
 };
 
 
+export type MutationDeleteSpecialDayArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteStaffMemberArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteTeeTimeBlockArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteTimePeriodArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteWaitlistEntryArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationExecuteLotteryDrawArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationImportPlayersFromCsvArgs = {
+  id: Scalars['ID']['input'];
+  input: ImportPlayersFromCsvInput;
 };
 
 
@@ -970,6 +1701,24 @@ export type MutationMoveTeeTimeArgs = {
 };
 
 
+export type MutationNotifyWaitlistForCancellationArgs = {
+  availableSpots?: Scalars['Float']['input'];
+  courseId: Scalars['ID']['input'];
+  date: Scalars['DateTime']['input'];
+  time: Scalars['String']['input'];
+};
+
+
+export type MutationOpenLotteryArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationPublishLotteryResultsArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationRecordPaymentArgs = {
   input: CreatePaymentInput;
 };
@@ -977,6 +1726,12 @@ export type MutationRecordPaymentArgs = {
 
 export type MutationRemoveFromWaitlistArgs = {
   input: WaitlistActionInput;
+};
+
+
+export type MutationRemoveGroupPlayerArgs = {
+  groupBookingId: Scalars['ID']['input'];
+  playerId: Scalars['ID']['input'];
 };
 
 
@@ -995,9 +1750,20 @@ export type MutationSendWaitlistOfferArgs = {
 };
 
 
+export type MutationSubmitLotteryRequestArgs = {
+  input: CreateLotteryRequestInput;
+};
+
+
 export type MutationUpdateApplicationArgs = {
   id: Scalars['ID']['input'];
   input: UpdateApplicationInput;
+};
+
+
+export type MutationUpdateCourseScheduleArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateScheduleInput;
 };
 
 
@@ -1012,14 +1778,50 @@ export type MutationUpdateFacilityArgs = {
 };
 
 
+export type MutationUpdateGroupBookingArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateGroupBookingInput;
+};
+
+
+export type MutationUpdateLotteryArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateLotteryInput;
+};
+
+
 export type MutationUpdateMemberArgs = {
   id: Scalars['ID']['input'];
   input: UpdateMemberInput;
 };
 
 
+export type MutationUpdatePlayerRentalStatusArgs = {
+  input: UpdatePlayerRentalStatusInput;
+  playerId: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdateScheduleConfigArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateScheduleConfigInput;
+};
+
+
+export type MutationUpdateSeasonArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateSeasonInput;
+};
+
+
 export type MutationUpdateServiceArgs = {
   input: UpdateServiceInput;
+};
+
+
+export type MutationUpdateSpecialDayArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateSpecialDayInput;
 };
 
 
@@ -1034,10 +1836,39 @@ export type MutationUpdateTeeTimeArgs = {
 };
 
 
+export type MutationUpdateTeeTimeBlockArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateBlockInput;
+};
+
+
+export type MutationUpdateTeeTimePlayersArgs = {
+  id: Scalars['ID']['input'];
+  players: Array<TeeTimePlayerInput>;
+};
+
+
+export type MutationUpdateTimePeriodArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateTimePeriodInput;
+};
+
+
+export type MutationUpdateWaitlistEntryArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateWaitlistEntryInput;
+};
+
+
 export type MutationVoidInvoiceArgs = {
   id: Scalars['ID']['input'];
   input: VoidInvoiceInput;
 };
+
+/** Which nine holes (front or back) for crossover mode */
+export type NineType =
+  | 'BACK'
+  | 'FRONT';
 
 export type PageInfo = {
   __typename?: 'PageInfo';
@@ -1099,6 +1930,21 @@ export type PaymentTypeEdge = {
   node: PaymentType;
 };
 
+/** Golf play format (18 holes or cross-tee) */
+export type PlayFormat =
+  | 'CROSS_TEE'
+  | 'EIGHTEEN_HOLE';
+
+export type PlayerDependentType = {
+  __typename?: 'PlayerDependentType';
+  firstName: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  lastName: Scalars['String']['output'];
+  /** Parent member UUID */
+  memberId?: Maybe<Scalars['ID']['output']>;
+  relationship: Scalars['String']['output'];
+};
+
 export type PlayerMemberType = {
   __typename?: 'PlayerMemberType';
   firstName: Scalars['String']['output'];
@@ -1114,6 +1960,12 @@ export type PlayerType =
   | 'MEMBER'
   | 'WALK_UP';
 
+/** Status of a player position in a tee time slot */
+export type PositionStatus =
+  | 'AVAILABLE'
+  | 'BLOCKED'
+  | 'BOOKED';
+
 export type PriceModifierType = {
   __typename?: 'PriceModifierType';
   amount: Scalars['Float']['output'];
@@ -1123,6 +1975,8 @@ export type PriceModifierType = {
 
 export type Query = {
   __typename?: 'Query';
+  /** Get active schedule for a course and date */
+  activeSchedule?: Maybe<GolfCourseScheduleType>;
   /** Get a single membership application by ID */
   application: MembershipApplicationType;
   /** Get application statistics */
@@ -1141,14 +1995,32 @@ export type Query = {
   bookings: BookingConnection;
   /** Get calendar data for a specific day */
   calendarDay: CalendarDayType;
+  /** Get club golf settings including cart, rental, and caddy policies */
+  clubGolfSettings?: Maybe<ClubGolfSettingsType>;
+  /** Get schedules for a course */
+  courseSchedules: Array<GolfCourseScheduleType>;
   /** Get all golf courses */
   courses: Array<GolfCourseType>;
   /** Get list of facilities */
   facilities: Array<FacilityType>;
+  /** Generate a tee ticket for a tee time */
+  generateTeeTicket?: Maybe<TeeTicketType>;
+  /** Get the effective schedule for a specific date (with season/special day overrides applied) */
+  getEffectiveScheduleForDate: EffectiveScheduleType;
+  /** Get schedule configuration for a course. Creates default config if autoCreate is true. */
+  getScheduleConfig?: Maybe<GolfScheduleConfigType>;
+  /** Get a single group booking */
+  groupBooking: GolfGroupBookingType;
+  /** Get group bookings */
+  groupBookings: Array<GolfGroupBookingType>;
   /** Get a single invoice by ID */
   invoice: InvoiceType;
   /** Get paginated list of invoices */
   invoices: InvoiceConnection;
+  /** Get lotteries */
+  lotteries: Array<GolfLotteryType>;
+  /** Get a single lottery */
+  lottery: GolfLotteryType;
   /** Get a single member by ID */
   member: MemberType;
   /** Get member dependents */
@@ -1163,18 +2035,44 @@ export type Query = {
   membershipTypes: Array<MembershipTypeType>;
   /** Get current member's invoices */
   myInvoices: InvoiceConnection;
+  /** Get current user lottery requests */
+  myLotteryRequests: Array<GolfLotteryRequestType>;
   /** Get the current user's member profile */
   myMember?: Maybe<MemberType>;
+  /** Get current user waitlist entries */
+  myWaitlistEntries: Array<GolfWaitlistType>;
+  /** Get open lotteries for member portal */
+  openLotteries: Array<GolfLotteryType>;
+  /** Search for caddies by name or caddy number */
+  searchCaddies: Array<CaddyType>;
   /** Get list of services */
   services: Array<ServiceType>;
   /** Get tee sheet for a course and date */
   teeSheet: Array<TeeSheetSlotType>;
   /** Get a single tee time by ID */
   teeTime: TeeTimeType;
+  /** Get tee time blocks for a course */
+  teeTimeBlocks: Array<TeeTimeBlockType>;
   /** Get paginated list of tee times */
   teeTimes: TeeTimeConnection;
+  /** Validate a tee ticket by barcode */
+  validateTeeTicket: TeeTicketValidationResult;
   /** Get waitlist entries */
   waitlist: WaitlistConnection;
+  /** Get waitlist entries */
+  waitlistEntries: Array<GolfWaitlistType>;
+  /** Get a single waitlist entry */
+  waitlistEntry: GolfWaitlistType;
+  /** Get waitlist entries for a specific date/course */
+  waitlistForDate: Array<GolfWaitlistType>;
+  /** Get week view occupancy data showing player positions for each time slot */
+  weekViewOccupancy: WeekViewOccupancyResponse;
+};
+
+
+export type QueryActiveScheduleArgs = {
+  courseId: Scalars['ID']['input'];
+  date: Scalars['DateTime']['input'];
 };
 
 
@@ -1225,8 +2123,43 @@ export type QueryCalendarDayArgs = {
 };
 
 
+export type QueryCourseSchedulesArgs = {
+  courseId: Scalars['ID']['input'];
+};
+
+
 export type QueryFacilitiesArgs = {
   filter?: InputMaybe<FacilityFilterInput>;
+};
+
+
+export type QueryGenerateTeeTicketArgs = {
+  teeTimeId: Scalars['ID']['input'];
+};
+
+
+export type QueryGetEffectiveScheduleForDateArgs = {
+  courseId: Scalars['ID']['input'];
+  date: Scalars['DateTime']['input'];
+};
+
+
+export type QueryGetScheduleConfigArgs = {
+  autoCreate?: InputMaybe<Scalars['Boolean']['input']>;
+  courseId: Scalars['ID']['input'];
+};
+
+
+export type QueryGroupBookingArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryGroupBookingsArgs = {
+  courseId?: InputMaybe<Scalars['ID']['input']>;
+  endDate?: InputMaybe<Scalars['DateTime']['input']>;
+  startDate?: InputMaybe<Scalars['DateTime']['input']>;
+  status?: InputMaybe<GroupBookingStatus>;
 };
 
 
@@ -1246,6 +2179,19 @@ export type QueryInvoicesArgs = {
   sortOrder?: InputMaybe<Scalars['String']['input']>;
   startDate?: InputMaybe<Scalars['DateTime']['input']>;
   status?: InputMaybe<InvoiceStatus>;
+};
+
+
+export type QueryLotteriesArgs = {
+  courseId?: InputMaybe<Scalars['ID']['input']>;
+  endDate?: InputMaybe<Scalars['DateTime']['input']>;
+  startDate?: InputMaybe<Scalars['DateTime']['input']>;
+  status?: InputMaybe<LotteryStatus>;
+};
+
+
+export type QueryLotteryArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -1291,6 +2237,12 @@ export type QueryMyInvoicesArgs = {
 };
 
 
+export type QuerySearchCaddiesArgs = {
+  courseId?: InputMaybe<Scalars['ID']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type QueryServicesArgs = {
   filter?: InputMaybe<ServiceFilterInput>;
 };
@@ -1307,6 +2259,14 @@ export type QueryTeeTimeArgs = {
 };
 
 
+export type QueryTeeTimeBlocksArgs = {
+  blockType?: InputMaybe<BlockType>;
+  courseId: Scalars['ID']['input'];
+  endDate?: InputMaybe<Scalars['DateTime']['input']>;
+  startDate?: InputMaybe<Scalars['DateTime']['input']>;
+};
+
+
 export type QueryTeeTimesArgs = {
   courseId?: InputMaybe<Scalars['ID']['input']>;
   endDate?: InputMaybe<Scalars['DateTime']['input']>;
@@ -1318,6 +2278,11 @@ export type QueryTeeTimesArgs = {
 };
 
 
+export type QueryValidateTeeTicketArgs = {
+  barcode: Scalars['String']['input'];
+};
+
+
 export type QueryWaitlistArgs = {
   date?: InputMaybe<Scalars['String']['input']>;
   facilityId?: InputMaybe<Scalars['ID']['input']>;
@@ -1325,6 +2290,43 @@ export type QueryWaitlistArgs = {
   serviceId?: InputMaybe<Scalars['ID']['input']>;
   skip?: InputMaybe<Scalars['Int']['input']>;
 };
+
+
+export type QueryWaitlistEntriesArgs = {
+  courseId?: InputMaybe<Scalars['ID']['input']>;
+  endDate?: InputMaybe<Scalars['DateTime']['input']>;
+  startDate?: InputMaybe<Scalars['DateTime']['input']>;
+  status?: InputMaybe<GolfWaitlistStatus>;
+};
+
+
+export type QueryWaitlistEntryArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryWaitlistForDateArgs = {
+  courseId: Scalars['ID']['input'];
+  date: Scalars['DateTime']['input'];
+};
+
+
+export type QueryWeekViewOccupancyArgs = {
+  input: WeekViewOccupancyInput;
+};
+
+/** Rental club policy for golf bookings */
+export type RentalPolicy =
+  | 'OPTIONAL'
+  | 'REQUIRED';
+
+/** Status of rental item (cart/caddy) for a player */
+export type RentalStatus =
+  | 'ASSIGNED'
+  | 'NONE'
+  | 'PAID'
+  | 'REQUESTED'
+  | 'RETURNED';
 
 export type RescheduleBookingInput = {
   id: Scalars['ID']['input'];
@@ -1347,6 +2349,27 @@ export type ResourceTypeEnum =
   | 'ROOM'
   | 'SPA'
   | 'STUDIO';
+
+export type ScheduleConfigMutationResponse = {
+  __typename?: 'ScheduleConfigMutationResponse';
+  config?: Maybe<GolfScheduleConfigType>;
+  message?: Maybe<Scalars['String']['output']>;
+  success: Scalars['Boolean']['output'];
+};
+
+export type ScheduleMutationResponse = {
+  __typename?: 'ScheduleMutationResponse';
+  message?: Maybe<Scalars['String']['output']>;
+  schedule?: Maybe<GolfCourseScheduleType>;
+  success: Scalars['Boolean']['output'];
+};
+
+export type SeasonMutationResponse = {
+  __typename?: 'SeasonMutationResponse';
+  message?: Maybe<Scalars['String']['output']>;
+  season?: Maybe<GolfSeasonType>;
+  success: Scalars['Boolean']['output'];
+};
 
 export type SendWaitlistOfferInput = {
   entryId: Scalars['ID']['input'];
@@ -1390,6 +2413,20 @@ export type ServiceVariationType = {
   priceModifier: Scalars['Float']['output'];
   priceType: Scalars['String']['output'];
 };
+
+export type SpecialDayMutationResponse = {
+  __typename?: 'SpecialDayMutationResponse';
+  message?: Maybe<Scalars['String']['output']>;
+  specialDay?: Maybe<GolfSpecialDayType>;
+  success: Scalars['Boolean']['output'];
+};
+
+/** Type of special day */
+export type SpecialDayType =
+  | 'CLOSED'
+  | 'CUSTOM'
+  | 'HOLIDAY'
+  | 'WEEKEND';
 
 export type StaffCapabilityInput = {
   capability: Scalars['String']['input'];
@@ -1440,6 +2477,11 @@ export type StaffType = {
   role?: Maybe<Scalars['String']['output']>;
 };
 
+/** Tournament start format */
+export type StartFormat =
+  | 'SEQUENTIAL'
+  | 'SHOTGUN';
+
 export type Subscription = {
   __typename?: 'Subscription';
   /** Subscribe to tee time cancellations */
@@ -1463,13 +2505,75 @@ export type SubscriptionTeeTimeUpdatedArgs = {
   date?: InputMaybe<Scalars['DateTime']['input']>;
 };
 
+export type TeeSheetBlockInfoType = {
+  __typename?: 'TeeSheetBlockInfoType';
+  blockType: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  reason?: Maybe<Scalars['String']['output']>;
+};
+
 export type TeeSheetSlotType = {
   __typename?: 'TeeSheetSlotType';
   available: Scalars['Boolean']['output'];
+  blockInfo?: Maybe<TeeSheetBlockInfoType>;
+  blocked: Scalars['Boolean']['output'];
   booking?: Maybe<TeeTimeType>;
   courseId: Scalars['ID']['output'];
   date: Scalars['String']['output'];
+  isPrimeTime: Scalars['Boolean']['output'];
   time: Scalars['String']['output'];
+};
+
+export type TeeTicketPlayerType = {
+  __typename?: 'TeeTicketPlayerType';
+  caddyName?: Maybe<Scalars['String']['output']>;
+  cartType: Scalars['String']['output'];
+  handicap?: Maybe<Scalars['Int']['output']>;
+  memberId?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  position: Scalars['Int']['output'];
+  type: Scalars['String']['output'];
+};
+
+export type TeeTicketType = {
+  __typename?: 'TeeTicketType';
+  barcode?: Maybe<Scalars['String']['output']>;
+  caddyAssignment?: Maybe<Scalars['String']['output']>;
+  cartAssignment?: Maybe<Scalars['String']['output']>;
+  checkedInAt: Scalars['DateTime']['output'];
+  checkedInBy: Scalars['String']['output'];
+  clubLogo?: Maybe<Scalars['String']['output']>;
+  clubName: Scalars['String']['output'];
+  courseName: Scalars['String']['output'];
+  holes: Scalars['Int']['output'];
+  notes?: Maybe<Scalars['String']['output']>;
+  players: Array<TeeTicketPlayerType>;
+  qrCode?: Maybe<Scalars['String']['output']>;
+  teeDate: Scalars['DateTime']['output'];
+  teeTime: Scalars['String']['output'];
+  ticketNumber: Scalars['String']['output'];
+};
+
+export type TeeTicketValidationResult = {
+  __typename?: 'TeeTicketValidationResult';
+  message?: Maybe<Scalars['String']['output']>;
+  teeTimeId?: Maybe<Scalars['ID']['output']>;
+  valid: Scalars['Boolean']['output'];
+};
+
+export type TeeTimeBlockType = {
+  __typename?: 'TeeTimeBlockType';
+  blockType: BlockType;
+  course?: Maybe<GolfCourseType>;
+  courseId: Scalars['ID']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  endTime: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  isRecurring: Scalars['Boolean']['output'];
+  reason?: Maybe<Scalars['String']['output']>;
+  recurringPattern?: Maybe<Scalars['String']['output']>;
+  startTime: Scalars['DateTime']['output'];
+  updatedAt: Scalars['DateTime']['output'];
 };
 
 export type TeeTimeConnection = {
@@ -1481,21 +2585,36 @@ export type TeeTimeConnection = {
 
 export type TeeTimePlayerInput = {
   caddyId?: InputMaybe<Scalars['ID']['input']>;
+  caddyRequest?: InputMaybe<Scalars['String']['input']>;
+  caddyStatus?: InputMaybe<RentalStatus>;
+  /** Assigned cart ID */
+  cartId?: InputMaybe<Scalars['ID']['input']>;
+  cartRequest?: InputMaybe<Scalars['String']['input']>;
+  cartStatus?: InputMaybe<RentalStatus>;
   cartType?: InputMaybe<CartType>;
+  /** Dependent UUID (for DEPENDENT player type) */
+  dependentId?: InputMaybe<Scalars['ID']['input']>;
   guestEmail?: InputMaybe<Scalars['String']['input']>;
   guestName?: InputMaybe<Scalars['String']['input']>;
   guestPhone?: InputMaybe<Scalars['String']['input']>;
+  /** Member UUID (for MEMBER player type) */
   memberId?: InputMaybe<Scalars['ID']['input']>;
   playerType: PlayerType;
   position: Scalars['Int']['input'];
+  rentalRequest?: InputMaybe<Scalars['String']['input']>;
   sharedWithPosition?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type TeeTimePlayerType = {
   __typename?: 'TeeTimePlayerType';
   caddy?: Maybe<CaddyType>;
+  caddyRequest?: Maybe<Scalars['String']['output']>;
+  caddyStatus?: Maybe<RentalStatus>;
+  cartRequest?: Maybe<Scalars['String']['output']>;
+  cartStatus?: Maybe<RentalStatus>;
   cartType: CartType;
   checkedInAt?: Maybe<Scalars['DateTime']['output']>;
+  dependent?: Maybe<PlayerDependentType>;
   guestEmail?: Maybe<Scalars['String']['output']>;
   guestName?: Maybe<Scalars['String']['output']>;
   guestPhone?: Maybe<Scalars['String']['output']>;
@@ -1503,6 +2622,7 @@ export type TeeTimePlayerType = {
   member?: Maybe<PlayerMemberType>;
   playerType: PlayerType;
   position: Scalars['Int']['output'];
+  rentalRequest?: Maybe<Scalars['String']['output']>;
   sharedWithPosition?: Maybe<Scalars['Int']['output']>;
 };
 
@@ -1518,12 +2638,14 @@ export type TeeTimeStatus =
 
 export type TeeTimeType = {
   __typename?: 'TeeTimeType';
+  bookingGroups?: Maybe<Array<BookingGroupType>>;
   course?: Maybe<GolfCourseType>;
   createdAt: Scalars['DateTime']['output'];
   holes: Scalars['Int']['output'];
   id: Scalars['ID']['output'];
   notes?: Maybe<Scalars['String']['output']>;
   players: Array<TeeTimePlayerType>;
+  startingHole: Scalars['Int']['output'];
   status: TeeTimeStatus;
   teeDate: Scalars['DateTime']['output'];
   teeTime: Scalars['String']['output'];
@@ -1548,6 +2670,18 @@ export type TierDiscountType = {
   tierName: Scalars['String']['output'];
 };
 
+export type TimePeriodMutationResponse = {
+  __typename?: 'TimePeriodMutationResponse';
+  message?: Maybe<Scalars['String']['output']>;
+  success: Scalars['Boolean']['output'];
+  timePeriod?: Maybe<GolfTimePeriodType>;
+};
+
+/** Twilight calculation mode */
+export type TwilightMode =
+  | 'FIXED'
+  | 'SUNSET';
+
 export type UpdateApplicationInput = {
   email?: InputMaybe<Scalars['String']['input']>;
   firstName?: InputMaybe<Scalars['String']['input']>;
@@ -1556,6 +2690,15 @@ export type UpdateApplicationInput = {
   phone?: InputMaybe<Scalars['String']['input']>;
   reviewNotes?: InputMaybe<Scalars['String']['input']>;
   sponsorId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+export type UpdateBlockInput = {
+  blockType?: InputMaybe<BlockType>;
+  endTime?: InputMaybe<Scalars['DateTime']['input']>;
+  isRecurring?: InputMaybe<Scalars['Boolean']['input']>;
+  reason?: InputMaybe<Scalars['String']['input']>;
+  recurringPattern?: InputMaybe<Scalars['String']['input']>;
+  startTime?: InputMaybe<Scalars['DateTime']['input']>;
 };
 
 export type UpdateDependentInput = {
@@ -1582,6 +2725,27 @@ export type UpdateFacilityInput = {
   type?: InputMaybe<ResourceTypeEnum>;
 };
 
+export type UpdateGroupBookingInput = {
+  eventDate?: InputMaybe<Scalars['DateTime']['input']>;
+  groupName?: InputMaybe<Scalars['String']['input']>;
+  notes?: InputMaybe<Scalars['String']['input']>;
+  startFormat?: InputMaybe<StartFormat>;
+  startTime?: InputMaybe<Scalars['String']['input']>;
+  status?: InputMaybe<GroupBookingStatus>;
+};
+
+export type UpdateLotteryInput = {
+  drawTime?: InputMaybe<Scalars['DateTime']['input']>;
+  lotteryDate?: InputMaybe<Scalars['DateTime']['input']>;
+  lotteryType?: InputMaybe<LotteryType>;
+  maxRequestsPerMember?: InputMaybe<Scalars['Int']['input']>;
+  requestWindowEnd?: InputMaybe<Scalars['DateTime']['input']>;
+  requestWindowStart?: InputMaybe<Scalars['DateTime']['input']>;
+  status?: InputMaybe<LotteryStatus>;
+  timeRangeEnd?: InputMaybe<Scalars['String']['input']>;
+  timeRangeStart?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type UpdateMemberInput = {
   address?: InputMaybe<Scalars['String']['input']>;
   dateOfBirth?: InputMaybe<Scalars['DateTime']['input']>;
@@ -1603,6 +2767,55 @@ export type UpdateMemberInput = {
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
+export type UpdatePlayerRentalStatusInput = {
+  caddyId?: InputMaybe<Scalars['ID']['input']>;
+  caddyStatus?: InputMaybe<RentalStatus>;
+  cartStatus?: InputMaybe<RentalStatus>;
+};
+
+export type UpdateScheduleConfigInput = {
+  clubLatitude?: InputMaybe<Scalars['Float']['input']>;
+  clubLongitude?: InputMaybe<Scalars['Float']['input']>;
+  defaultBookingWindowDays?: InputMaybe<Scalars['Int']['input']>;
+  twilightFixedDefault?: InputMaybe<Scalars['String']['input']>;
+  twilightMinutesBeforeSunset?: InputMaybe<Scalars['Int']['input']>;
+  twilightMode?: InputMaybe<TwilightMode>;
+  weekdayBookingMode?: InputMaybe<BookingMode>;
+  weekdayFirstTee?: InputMaybe<Scalars['String']['input']>;
+  weekdayLastTee?: InputMaybe<Scalars['String']['input']>;
+  weekendBookingMode?: InputMaybe<BookingMode>;
+  weekendFirstTee?: InputMaybe<Scalars['String']['input']>;
+  weekendLastTee?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateScheduleInput = {
+  endDate?: InputMaybe<Scalars['DateTime']['input']>;
+  firstTeeTime?: InputMaybe<Scalars['String']['input']>;
+  isActive?: InputMaybe<Scalars['Boolean']['input']>;
+  lastTeeTime?: InputMaybe<Scalars['String']['input']>;
+  paceOfPlay?: InputMaybe<Scalars['Int']['input']>;
+  playFormat?: InputMaybe<PlayFormat>;
+  seasonName?: InputMaybe<Scalars['String']['input']>;
+  startDate?: InputMaybe<Scalars['DateTime']['input']>;
+};
+
+export type UpdateSeasonInput = {
+  endDay?: InputMaybe<Scalars['Int']['input']>;
+  endMonth?: InputMaybe<Scalars['Int']['input']>;
+  isRecurring?: InputMaybe<Scalars['Boolean']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  overrideBookingWindow?: InputMaybe<Scalars['Int']['input']>;
+  overrideFirstTee?: InputMaybe<Scalars['String']['input']>;
+  overrideLastTee?: InputMaybe<Scalars['String']['input']>;
+  overrideTimePeriods?: InputMaybe<Scalars['Boolean']['input']>;
+  overrideTwilightTime?: InputMaybe<Scalars['String']['input']>;
+  priority?: InputMaybe<Scalars['Int']['input']>;
+  startDay?: InputMaybe<Scalars['Int']['input']>;
+  startMonth?: InputMaybe<Scalars['Int']['input']>;
+  weekdayBookingMode?: InputMaybe<BookingMode>;
+  weekendBookingMode?: InputMaybe<BookingMode>;
+};
+
 export type UpdateServiceInput = {
   basePrice?: InputMaybe<Scalars['Float']['input']>;
   bufferMinutes?: InputMaybe<Scalars['Int']['input']>;
@@ -1618,6 +2831,19 @@ export type UpdateServiceInput = {
   revenueCenterId?: InputMaybe<Scalars['ID']['input']>;
   tierDiscounts?: InputMaybe<Array<TierDiscountInput>>;
   variations?: InputMaybe<Array<ServiceVariationInput>>;
+};
+
+export type UpdateSpecialDayInput = {
+  bookingMode?: InputMaybe<BookingMode>;
+  customFirstTee?: InputMaybe<Scalars['String']['input']>;
+  customLastTee?: InputMaybe<Scalars['String']['input']>;
+  customTimePeriods?: InputMaybe<Scalars['Boolean']['input']>;
+  endDate?: InputMaybe<Scalars['String']['input']>;
+  isRecurring?: InputMaybe<Scalars['Boolean']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  notes?: InputMaybe<Scalars['String']['input']>;
+  startDate?: InputMaybe<Scalars['String']['input']>;
+  type?: InputMaybe<SpecialDayType>;
 };
 
 export type UpdateStaffMemberInput = {
@@ -1636,9 +2862,31 @@ export type UpdateStaffMemberInput = {
 };
 
 export type UpdateTeeTimeInput = {
+  holes?: InputMaybe<Scalars['Int']['input']>;
   notes?: InputMaybe<Scalars['String']['input']>;
   players?: InputMaybe<Array<TeeTimePlayerInput>>;
   status?: InputMaybe<TeeTimeStatus>;
+};
+
+export type UpdateTimePeriodInput = {
+  applicableDays?: InputMaybe<ApplicableDays>;
+  endTime?: InputMaybe<Scalars['String']['input']>;
+  intervalMinutes?: InputMaybe<Scalars['Int']['input']>;
+  isPrimeTime?: InputMaybe<Scalars['Boolean']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  sortOrder?: InputMaybe<Scalars['Int']['input']>;
+  startTime?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateWaitlistEntryInput = {
+  playerCount?: InputMaybe<Scalars['Int']['input']>;
+  priority?: InputMaybe<Scalars['Int']['input']>;
+  requesterEmail?: InputMaybe<Scalars['String']['input']>;
+  requesterName?: InputMaybe<Scalars['String']['input']>;
+  requesterPhone?: InputMaybe<Scalars['String']['input']>;
+  status?: InputMaybe<GolfWaitlistStatus>;
+  timeRangeEnd?: InputMaybe<Scalars['String']['input']>;
+  timeRangeStart?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type VoidInvoiceInput = {
@@ -1677,6 +2925,21 @@ export type WaitlistEntryType = {
   status: WaitlistStatus;
 };
 
+export type WaitlistMutationResponse = {
+  __typename?: 'WaitlistMutationResponse';
+  message?: Maybe<Scalars['String']['output']>;
+  success: Scalars['Boolean']['output'];
+  waitlistEntry?: Maybe<GolfWaitlistType>;
+};
+
+export type WaitlistNotificationResult = {
+  __typename?: 'WaitlistNotificationResult';
+  message?: Maybe<Scalars['String']['output']>;
+  notifiedCount: Scalars['Int']['output'];
+  notifiedEntries: Array<GolfWaitlistType>;
+  success: Scalars['Boolean']['output'];
+};
+
 export type WaitlistResponseType = {
   __typename?: 'WaitlistResponseType';
   entry?: Maybe<WaitlistEntryType>;
@@ -1691,6 +2954,45 @@ export type WaitlistStatus =
   | 'EXPIRED'
   | 'OFFER_SENT'
   | 'WAITING';
+
+export type WeekViewOccupancyInput = {
+  courseId: Scalars['ID']['input'];
+  endDate: Scalars['String']['input'];
+  /** Optional end time filter (HH:MM format, e.g., "12:00") */
+  endTime?: InputMaybe<Scalars['String']['input']>;
+  startDate: Scalars['String']['input'];
+  /** Optional start time filter (HH:MM format, e.g., "06:00") */
+  startTime?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type WeekViewOccupancyResponse = {
+  __typename?: 'WeekViewOccupancyResponse';
+  slots: Array<WeekViewSlotType>;
+};
+
+export type WeekViewPlayerType = {
+  __typename?: 'WeekViewPlayerType';
+  id: Scalars['ID']['output'];
+  memberId?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  type: PlayerType;
+};
+
+export type WeekViewPositionType = {
+  __typename?: 'WeekViewPositionType';
+  player?: Maybe<WeekViewPlayerType>;
+  position: Scalars['Int']['output'];
+  status: PositionStatus;
+};
+
+export type WeekViewSlotType = {
+  __typename?: 'WeekViewSlotType';
+  date: Scalars['String']['output'];
+  isBlocked: Scalars['Boolean']['output'];
+  nine: NineType;
+  positions: Array<WeekViewPositionType>;
+  time: Scalars['String']['output'];
+};
 
 export type GetApplicationsQueryVariables = Exact<{
   first?: InputMaybe<Scalars['Int']['input']>;
@@ -2007,7 +3309,7 @@ export type GetTeeSheetQueryVariables = Exact<{
 }>;
 
 
-export type GetTeeSheetQuery = { __typename?: 'Query', teeSheet: Array<{ __typename?: 'TeeSheetSlotType', time: string, courseId: string, date: string, available: boolean, booking?: { __typename?: 'TeeTimeType', id: string, teeTimeNumber: string, teeDate: string, teeTime: string, holes: number, status: TeeTimeStatus, notes?: string | null | undefined, players: Array<{ __typename?: 'TeeTimePlayerType', id: string, position: number, playerType: PlayerType, guestName?: string | null | undefined, guestEmail?: string | null | undefined, guestPhone?: string | null | undefined, cartType: CartType, sharedWithPosition?: number | null | undefined, checkedInAt?: string | null | undefined, member?: { __typename?: 'PlayerMemberType', id: string, memberId: string, firstName: string, lastName: string } | null | undefined, caddy?: { __typename?: 'CaddyType', id: string, caddyNumber: string, firstName: string, lastName: string } | null | undefined }> } | null | undefined }> };
+export type GetTeeSheetQuery = { __typename?: 'Query', teeSheet: Array<{ __typename?: 'TeeSheetSlotType', time: string, courseId: string, date: string, available: boolean, booking?: { __typename?: 'TeeTimeType', id: string, teeTimeNumber: string, teeDate: string, teeTime: string, holes: number, status: TeeTimeStatus, notes?: string | null | undefined, players: Array<{ __typename?: 'TeeTimePlayerType', id: string, position: number, playerType: PlayerType, guestName?: string | null | undefined, guestEmail?: string | null | undefined, guestPhone?: string | null | undefined, cartType: CartType, caddyRequest?: string | null | undefined, cartRequest?: string | null | undefined, rentalRequest?: string | null | undefined, cartStatus?: RentalStatus | null | undefined, caddyStatus?: RentalStatus | null | undefined, sharedWithPosition?: number | null | undefined, checkedInAt?: string | null | undefined, member?: { __typename?: 'PlayerMemberType', id: string, memberId: string, firstName: string, lastName: string } | null | undefined, caddy?: { __typename?: 'CaddyType', id: string, caddyNumber: string, firstName: string, lastName: string } | null | undefined }>, bookingGroups?: Array<{ __typename?: 'BookingGroupType', id: string, groupNumber: number, playerIds: Array<string>, bookedBy: { __typename?: 'BookingGroupBookedByType', id: string, name: string, memberId?: string | null | undefined } }> | null | undefined } | null | undefined }> };
 
 export type GetCoursesQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -2019,7 +3321,7 @@ export type GetTeeTimeQueryVariables = Exact<{
 }>;
 
 
-export type GetTeeTimeQuery = { __typename?: 'Query', teeTime: { __typename?: 'TeeTimeType', id: string, teeTimeNumber: string, teeDate: string, teeTime: string, holes: number, status: TeeTimeStatus, notes?: string | null | undefined, createdAt: string, updatedAt: string, course?: { __typename?: 'GolfCourseType', id: string, name: string, code: string, holes: number, par: number } | null | undefined, players: Array<{ __typename?: 'TeeTimePlayerType', id: string, position: number, playerType: PlayerType, guestName?: string | null | undefined, guestEmail?: string | null | undefined, guestPhone?: string | null | undefined, cartType: CartType, sharedWithPosition?: number | null | undefined, checkedInAt?: string | null | undefined, member?: { __typename?: 'PlayerMemberType', id: string, memberId: string, firstName: string, lastName: string } | null | undefined, caddy?: { __typename?: 'CaddyType', id: string, caddyNumber: string, firstName: string, lastName: string, phone?: string | null | undefined, isActive: boolean } | null | undefined }> } };
+export type GetTeeTimeQuery = { __typename?: 'Query', teeTime: { __typename?: 'TeeTimeType', id: string, teeTimeNumber: string, teeDate: string, teeTime: string, holes: number, status: TeeTimeStatus, notes?: string | null | undefined, createdAt: string, updatedAt: string, course?: { __typename?: 'GolfCourseType', id: string, name: string, code: string, holes: number, par: number } | null | undefined, players: Array<{ __typename?: 'TeeTimePlayerType', id: string, position: number, playerType: PlayerType, guestName?: string | null | undefined, guestEmail?: string | null | undefined, guestPhone?: string | null | undefined, cartType: CartType, caddyRequest?: string | null | undefined, cartRequest?: string | null | undefined, rentalRequest?: string | null | undefined, cartStatus?: RentalStatus | null | undefined, caddyStatus?: RentalStatus | null | undefined, sharedWithPosition?: number | null | undefined, checkedInAt?: string | null | undefined, member?: { __typename?: 'PlayerMemberType', id: string, memberId: string, firstName: string, lastName: string } | null | undefined, caddy?: { __typename?: 'CaddyType', id: string, caddyNumber: string, firstName: string, lastName: string, phone?: string | null | undefined, isActive: boolean } | null | undefined }> } };
 
 export type GetTeeTimesQueryVariables = Exact<{
   courseId?: InputMaybe<Scalars['ID']['input']>;
@@ -2049,6 +3351,14 @@ export type UpdateTeeTimeMutationVariables = Exact<{
 
 export type UpdateTeeTimeMutation = { __typename?: 'Mutation', updateTeeTime: { __typename?: 'TeeTimeType', id: string, teeTimeNumber: string, status: TeeTimeStatus, updatedAt: string } };
 
+export type UpdateTeeTimePlayersMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  players: Array<TeeTimePlayerInput> | TeeTimePlayerInput;
+}>;
+
+
+export type UpdateTeeTimePlayersMutation = { __typename?: 'Mutation', updateTeeTimePlayers: { __typename?: 'TeeTimeType', id: string, teeTimeNumber: string, teeDate: string, teeTime: string, holes: number, status: TeeTimeStatus, course?: { __typename?: 'GolfCourseType', id: string, name: string } | null | undefined, players: Array<{ __typename?: 'TeeTimePlayerType', id: string, position: number, playerType: PlayerType, guestName?: string | null | undefined, guestEmail?: string | null | undefined, guestPhone?: string | null | undefined, cartType: CartType, caddyRequest?: string | null | undefined, cartRequest?: string | null | undefined, rentalRequest?: string | null | undefined, cartStatus?: RentalStatus | null | undefined, caddyStatus?: RentalStatus | null | undefined, member?: { __typename?: 'PlayerMemberType', id: string, firstName: string, lastName: string } | null | undefined }> } };
+
 export type CheckInTeeTimeMutationVariables = Exact<{
   input: CheckInInput;
 }>;
@@ -2071,6 +3381,29 @@ export type MoveTeeTimeMutationVariables = Exact<{
 
 
 export type MoveTeeTimeMutation = { __typename?: 'Mutation', moveTeeTime: { __typename?: 'TeeTimeType', id: string, teeDate: string, teeTime: string, status: TeeTimeStatus, course?: { __typename?: 'GolfCourseType', id: string, name: string } | null | undefined } };
+
+export type UpdatePlayerRentalStatusMutationVariables = Exact<{
+  playerId: Scalars['ID']['input'];
+  input: UpdatePlayerRentalStatusInput;
+}>;
+
+
+export type UpdatePlayerRentalStatusMutation = { __typename?: 'Mutation', updatePlayerRentalStatus: { __typename?: 'TeeTimePlayerType', id: string, position: number, playerType: PlayerType, cartStatus?: RentalStatus | null | undefined, caddyStatus?: RentalStatus | null | undefined, caddy?: { __typename?: 'CaddyType', id: string, caddyNumber: string, firstName: string, lastName: string } | null | undefined } };
+
+export type GetWeekViewOccupancyQueryVariables = Exact<{
+  input: WeekViewOccupancyInput;
+}>;
+
+
+export type GetWeekViewOccupancyQuery = { __typename?: 'Query', weekViewOccupancy: { __typename?: 'WeekViewOccupancyResponse', slots: Array<{ __typename?: 'WeekViewSlotType', date: string, time: string, nine: NineType, isBlocked: boolean, positions: Array<{ __typename?: 'WeekViewPositionType', position: number, status: PositionStatus, player?: { __typename?: 'WeekViewPlayerType', id: string, name: string, type: PlayerType, memberId?: string | null | undefined } | null | undefined }> }> } };
+
+export type SearchCaddiesQueryVariables = Exact<{
+  search?: InputMaybe<Scalars['String']['input']>;
+  courseId?: InputMaybe<Scalars['ID']['input']>;
+}>;
+
+
+export type SearchCaddiesQuery = { __typename?: 'Query', searchCaddies: Array<{ __typename?: 'CaddyType', id: string, caddyNumber: string, firstName: string, lastName: string, phone?: string | null | undefined, isActive: boolean }> };
 
 export type GetMyMemberQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -4279,6 +5612,11 @@ export const GetTeeSheetDocument = `
         guestEmail
         guestPhone
         cartType
+        caddyRequest
+        cartRequest
+        rentalRequest
+        cartStatus
+        caddyStatus
         sharedWithPosition
         caddy {
           id
@@ -4287,6 +5625,16 @@ export const GetTeeSheetDocument = `
           lastName
         }
         checkedInAt
+      }
+      bookingGroups {
+        id
+        groupNumber
+        bookedBy {
+          id
+          name
+          memberId
+        }
+        playerIds
       }
     }
   }
@@ -4429,6 +5777,11 @@ export const GetTeeTimeDocument = `
       guestEmail
       guestPhone
       cartType
+      caddyRequest
+      cartRequest
+      rentalRequest
+      cartStatus
+      caddyStatus
       sharedWithPosition
       caddy {
         id
@@ -4649,6 +6002,58 @@ export const useUpdateTeeTimeMutation = <
 
 useUpdateTeeTimeMutation.fetcher = (variables: UpdateTeeTimeMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<UpdateTeeTimeMutation, UpdateTeeTimeMutationVariables>(UpdateTeeTimeDocument, variables, options);
 
+export const UpdateTeeTimePlayersDocument = `
+    mutation UpdateTeeTimePlayers($id: ID!, $players: [TeeTimePlayerInput!]!) {
+  updateTeeTimePlayers(id: $id, players: $players) {
+    id
+    teeTimeNumber
+    teeDate
+    teeTime
+    holes
+    status
+    course {
+      id
+      name
+    }
+    players {
+      id
+      position
+      playerType
+      member {
+        id
+        firstName
+        lastName
+      }
+      guestName
+      guestEmail
+      guestPhone
+      cartType
+      caddyRequest
+      cartRequest
+      rentalRequest
+      cartStatus
+      caddyStatus
+    }
+  }
+}
+    `;
+
+export const useUpdateTeeTimePlayersMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<UpdateTeeTimePlayersMutation, TError, UpdateTeeTimePlayersMutationVariables, TContext>) => {
+    
+    return useMutation<UpdateTeeTimePlayersMutation, TError, UpdateTeeTimePlayersMutationVariables, TContext>(
+      {
+    mutationKey: ['UpdateTeeTimePlayers'],
+    mutationFn: (variables?: UpdateTeeTimePlayersMutationVariables) => graphqlFetcher<UpdateTeeTimePlayersMutation, UpdateTeeTimePlayersMutationVariables>(UpdateTeeTimePlayersDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useUpdateTeeTimePlayersMutation.fetcher = (variables: UpdateTeeTimePlayersMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<UpdateTeeTimePlayersMutation, UpdateTeeTimePlayersMutationVariables>(UpdateTeeTimePlayersDocument, variables, options);
+
 export const CheckInTeeTimeDocument = `
     mutation CheckInTeeTime($input: CheckInInput!) {
   checkIn(input: $input) {
@@ -4732,6 +6137,160 @@ export const useMoveTeeTimeMutation = <
 
 
 useMoveTeeTimeMutation.fetcher = (variables: MoveTeeTimeMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<MoveTeeTimeMutation, MoveTeeTimeMutationVariables>(MoveTeeTimeDocument, variables, options);
+
+export const UpdatePlayerRentalStatusDocument = `
+    mutation UpdatePlayerRentalStatus($playerId: ID!, $input: UpdatePlayerRentalStatusInput!) {
+  updatePlayerRentalStatus(playerId: $playerId, input: $input) {
+    id
+    position
+    playerType
+    cartStatus
+    caddyStatus
+    caddy {
+      id
+      caddyNumber
+      firstName
+      lastName
+    }
+  }
+}
+    `;
+
+export const useUpdatePlayerRentalStatusMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<UpdatePlayerRentalStatusMutation, TError, UpdatePlayerRentalStatusMutationVariables, TContext>) => {
+    
+    return useMutation<UpdatePlayerRentalStatusMutation, TError, UpdatePlayerRentalStatusMutationVariables, TContext>(
+      {
+    mutationKey: ['UpdatePlayerRentalStatus'],
+    mutationFn: (variables?: UpdatePlayerRentalStatusMutationVariables) => graphqlFetcher<UpdatePlayerRentalStatusMutation, UpdatePlayerRentalStatusMutationVariables>(UpdatePlayerRentalStatusDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useUpdatePlayerRentalStatusMutation.fetcher = (variables: UpdatePlayerRentalStatusMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<UpdatePlayerRentalStatusMutation, UpdatePlayerRentalStatusMutationVariables>(UpdatePlayerRentalStatusDocument, variables, options);
+
+export const GetWeekViewOccupancyDocument = `
+    query GetWeekViewOccupancy($input: WeekViewOccupancyInput!) {
+  weekViewOccupancy(input: $input) {
+    slots {
+      date
+      time
+      nine
+      isBlocked
+      positions {
+        position
+        status
+        player {
+          id
+          name
+          type
+          memberId
+        }
+      }
+    }
+  }
+}
+    `;
+
+export const useGetWeekViewOccupancyQuery = <
+      TData = GetWeekViewOccupancyQuery,
+      TError = unknown
+    >(
+      variables: GetWeekViewOccupancyQueryVariables,
+      options?: Omit<UseQueryOptions<GetWeekViewOccupancyQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetWeekViewOccupancyQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetWeekViewOccupancyQuery, TError, TData>(
+      {
+    queryKey: ['GetWeekViewOccupancy', variables],
+    queryFn: graphqlFetcher<GetWeekViewOccupancyQuery, GetWeekViewOccupancyQueryVariables>(GetWeekViewOccupancyDocument, variables),
+    ...options
+  }
+    )};
+
+useGetWeekViewOccupancyQuery.getKey = (variables: GetWeekViewOccupancyQueryVariables) => ['GetWeekViewOccupancy', variables];
+
+export const useInfiniteGetWeekViewOccupancyQuery = <
+      TData = InfiniteData<GetWeekViewOccupancyQuery>,
+      TError = unknown
+    >(
+      variables: GetWeekViewOccupancyQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetWeekViewOccupancyQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetWeekViewOccupancyQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetWeekViewOccupancyQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetWeekViewOccupancy.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetWeekViewOccupancyQuery, GetWeekViewOccupancyQueryVariables>(GetWeekViewOccupancyDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetWeekViewOccupancyQuery.getKey = (variables: GetWeekViewOccupancyQueryVariables) => ['GetWeekViewOccupancy.infinite', variables];
+
+
+useGetWeekViewOccupancyQuery.fetcher = (variables: GetWeekViewOccupancyQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetWeekViewOccupancyQuery, GetWeekViewOccupancyQueryVariables>(GetWeekViewOccupancyDocument, variables, options);
+
+export const SearchCaddiesDocument = `
+    query SearchCaddies($search: String, $courseId: ID) {
+  searchCaddies(search: $search, courseId: $courseId) {
+    id
+    caddyNumber
+    firstName
+    lastName
+    phone
+    isActive
+  }
+}
+    `;
+
+export const useSearchCaddiesQuery = <
+      TData = SearchCaddiesQuery,
+      TError = unknown
+    >(
+      variables?: SearchCaddiesQueryVariables,
+      options?: Omit<UseQueryOptions<SearchCaddiesQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<SearchCaddiesQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<SearchCaddiesQuery, TError, TData>(
+      {
+    queryKey: variables === undefined ? ['SearchCaddies'] : ['SearchCaddies', variables],
+    queryFn: graphqlFetcher<SearchCaddiesQuery, SearchCaddiesQueryVariables>(SearchCaddiesDocument, variables),
+    ...options
+  }
+    )};
+
+useSearchCaddiesQuery.getKey = (variables?: SearchCaddiesQueryVariables) => variables === undefined ? ['SearchCaddies'] : ['SearchCaddies', variables];
+
+export const useInfiniteSearchCaddiesQuery = <
+      TData = InfiniteData<SearchCaddiesQuery>,
+      TError = unknown
+    >(
+      variables: SearchCaddiesQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<SearchCaddiesQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<SearchCaddiesQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<SearchCaddiesQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? variables === undefined ? ['SearchCaddies.infinite'] : ['SearchCaddies.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<SearchCaddiesQuery, SearchCaddiesQueryVariables>(SearchCaddiesDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteSearchCaddiesQuery.getKey = (variables?: SearchCaddiesQueryVariables) => variables === undefined ? ['SearchCaddies.infinite'] : ['SearchCaddies.infinite', variables];
+
+
+useSearchCaddiesQuery.fetcher = (variables?: SearchCaddiesQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<SearchCaddiesQuery, SearchCaddiesQueryVariables>(SearchCaddiesDocument, variables, options);
 
 export const GetMyMemberDocument = `
     query GetMyMember {

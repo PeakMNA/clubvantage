@@ -2,8 +2,26 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type ActiveSeasonInfo {
+  id: ID!
+  name: String!
+}
+
+type ActiveSpecialDayInfo {
+  id: ID!
+  name: String!
+  type: SpecialDayType!
+}
+
 input AddGroupPlayersInput {
   players: [GroupPlayerInput!]!
+}
+
+"""Days to which a configuration applies"""
+enum ApplicableDays {
+  ALL
+  WEEKDAY
+  WEEKEND
 }
 
 type ApplicationConnection {
@@ -87,6 +105,19 @@ type BookingEdge {
   node: BookingType!
 }
 
+type BookingGroupBookedByType {
+  id: ID!
+  memberId: String
+  name: String!
+}
+
+type BookingGroupType {
+  bookedBy: BookingGroupBookedByType!
+  groupNumber: Int!
+  id: ID!
+  playerIds: [String!]!
+}
+
 type BookingMemberType {
   firstName: String!
   id: ID!
@@ -94,6 +125,14 @@ type BookingMemberType {
   memberId: String!
   photoUrl: String
   status: String!
+}
+
+"""
+Tee sheet display mode - EIGHTEEN (single column) or CROSS (dual columns)
+"""
+enum BookingMode {
+  CROSS
+  EIGHTEEN
 }
 
 type BookingPricingType {
@@ -212,6 +251,12 @@ type CancelResponseType {
   message: String!
 }
 
+"""Cart policy for golf bookings"""
+enum CartPolicy {
+  OPTIONAL
+  REQUIRED
+}
+
 """Golf cart type"""
 enum CartType {
   SHARED
@@ -247,6 +292,15 @@ type CheckInResponseType {
   checkedInAt: DateTime!
   error: String
   success: Boolean!
+}
+
+type ClubGolfSettingsType {
+  caddyDrivesCart: Boolean!
+  cartPolicy: CartPolicy!
+  id: ID!
+  maxGuestsPerMember: Int!
+  rentalPolicy: RentalPolicy!
+  requireGuestContact: Boolean!
 }
 
 input CourseIntervalInput {
@@ -409,6 +463,23 @@ input CreateScheduleInput {
   startDate: DateTime!
 }
 
+input CreateSeasonInput {
+  endDay: Int!
+  endMonth: Int!
+  isRecurring: Boolean = true
+  name: String!
+  overrideBookingWindow: Int
+  overrideFirstTee: String
+  overrideLastTee: String
+  overrideTimePeriods: Boolean = false
+  overrideTwilightTime: String
+  priority: Int = 0
+  startDay: Int!
+  startMonth: Int!
+  weekdayBookingMode: BookingMode
+  weekendBookingMode: BookingMode
+}
+
 input CreateServiceInput {
   basePrice: Float!
   bufferMinutes: Int = 0
@@ -423,6 +494,19 @@ input CreateServiceInput {
   revenueCenterId: ID
   tierDiscounts: [TierDiscountInput!]
   variations: [ServiceVariationInput!]
+}
+
+input CreateSpecialDayInput {
+  bookingMode: BookingMode
+  customFirstTee: String
+  customLastTee: String
+  customTimePeriods: Boolean = false
+  endDate: String!
+  isRecurring: Boolean = true
+  name: String!
+  notes: String
+  startDate: String!
+  type: SpecialDayType!
 }
 
 input CreateStaffMemberInput {
@@ -444,8 +528,19 @@ input CreateTeeTimeInput {
   holes: Int = 18
   notes: String
   players: [TeeTimePlayerInput!]!
+  startingHole: Int = 1
   teeDate: DateTime!
   teeTime: String!
+}
+
+input CreateTimePeriodInput {
+  applicableDays: ApplicableDays!
+  endTime: String
+  intervalMinutes: Int!
+  isPrimeTime: Boolean!
+  name: String!
+  sortOrder: Int
+  startTime: String!
 }
 
 input CreateWaitlistEntryInput {
@@ -493,6 +588,11 @@ type DeleteMemberResponseType {
   message: String!
 }
 
+type DeleteMutationResponse {
+  message: String
+  success: Boolean!
+}
+
 type DeleteResponseType {
   error: String
   message: String
@@ -508,6 +608,21 @@ type DependentType {
   lastName: String!
   phone: String
   relationship: String!
+}
+
+type EffectiveScheduleType {
+  activeSeason: ActiveSeasonInfo
+  activeSpecialDay: ActiveSpecialDayInfo
+  bookingMode: BookingMode!
+  bookingWindowDays: Int!
+  courseId: ID!
+  date: String!
+  firstTee: String!
+  isClosed: Boolean!
+  lastTee: String!
+  timePeriods: [GolfTimePeriodType!]!
+  twilightMode: TwilightMode!
+  twilightTime: String!
 }
 
 type ExtendedServiceType {
@@ -676,6 +791,71 @@ type GolfLotteryType {
   timeRangeStart: String!
   totalRequests: Int
   updatedAt: DateTime!
+}
+
+type GolfScheduleConfigType {
+  clubLatitude: Float
+  clubLongitude: Float
+  courseId: ID!
+  defaultBookingWindowDays: Int!
+  id: ID!
+  seasons: [GolfSeasonType!]!
+  specialDays: [GolfSpecialDayType!]!
+  timePeriods: [GolfTimePeriodType!]!
+  twilightFixedDefault: String!
+  twilightMinutesBeforeSunset: Int!
+  twilightMode: TwilightMode!
+  weekdayBookingMode: BookingMode!
+  weekdayFirstTee: String!
+  weekdayLastTee: String!
+  weekendBookingMode: BookingMode!
+  weekendFirstTee: String!
+  weekendLastTee: String!
+}
+
+type GolfSeasonType {
+  endDay: Int!
+  endMonth: Int!
+  id: ID!
+  isRecurring: Boolean!
+  name: String!
+  overrideBookingWindow: Int
+  overrideFirstTee: String
+  overrideLastTee: String
+  overrideTimePeriods: Boolean!
+  overrideTwilightTime: String
+  priority: Int!
+  startDay: Int!
+  startMonth: Int!
+  timePeriods: [GolfTimePeriodType!]!
+  weekdayBookingMode: BookingMode
+  weekendBookingMode: BookingMode
+}
+
+type GolfSpecialDayType {
+  bookingMode: BookingMode
+  customFirstTee: String
+  customLastTee: String
+  customTimePeriods: Boolean!
+  endDate: String!
+  id: ID!
+  isRecurring: Boolean!
+  name: String!
+  notes: String
+  startDate: String!
+  timePeriods: [GolfTimePeriodType!]!
+  type: SpecialDayType!
+}
+
+type GolfTimePeriodType {
+  applicableDays: ApplicableDays!
+  endTime: String
+  id: ID!
+  intervalMinutes: Int!
+  isPrimeTime: Boolean!
+  name: String!
+  sortOrder: Int!
+  startTime: String!
 }
 
 """Golf waitlist entry status"""
@@ -1078,6 +1258,9 @@ type Mutation {
   """Create a course schedule"""
   createCourseSchedule(input: CreateScheduleInput!): ScheduleMutationResponse!
 
+  """Create default schedule configuration for a course"""
+  createDefaultScheduleConfig(courseId: ID!): ScheduleConfigMutationResponse!
+
   """Add a dependent to a member"""
   createDependent(input: CreateDependentInput!): DependentType!
 
@@ -1096,8 +1279,14 @@ type Mutation {
   """Create a new member"""
   createMember(input: CreateMemberInput!): MemberType!
 
+  """Create a season"""
+  createSeason(input: CreateSeasonInput!, scheduleId: ID!): SeasonMutationResponse!
+
   """Create a new service"""
   createService(input: CreateServiceInput!): ServiceResponseType!
+
+  """Create a special day"""
+  createSpecialDay(input: CreateSpecialDayInput!, scheduleId: ID!): SpecialDayMutationResponse!
 
   """Create a new staff member"""
   createStaffMember(input: CreateStaffMemberInput!): StaffResponseType!
@@ -1107,6 +1296,9 @@ type Mutation {
 
   """Create a tee time block"""
   createTeeTimeBlock(input: CreateBlockInput!): BlockMutationResponse!
+
+  """Create a time period"""
+  createTimePeriod(input: CreateTimePeriodInput!, scheduleId: ID!): TimePeriodMutationResponse!
 
   """Add to waitlist"""
   createWaitlistEntry(input: CreateWaitlistEntryInput!): WaitlistMutationResponse!
@@ -1132,14 +1324,23 @@ type Mutation {
   """Soft delete a member"""
   deleteMember(id: ID!): DeleteMemberResponseType!
 
+  """Delete a season"""
+  deleteSeason(id: ID!): DeleteMutationResponse!
+
   """Delete a service"""
   deleteService(id: ID!): DeleteResponseType!
+
+  """Delete a special day"""
+  deleteSpecialDay(id: ID!): DeleteMutationResponse!
 
   """Delete a staff member"""
   deleteStaffMember(id: ID!): DeleteResponseType!
 
   """Delete a tee time block"""
   deleteTeeTimeBlock(id: ID!): BlockMutationResponse!
+
+  """Delete a time period"""
+  deleteTimePeriod(id: ID!): DeleteMutationResponse!
 
   """Delete a waitlist entry"""
   deleteWaitlistEntry(id: ID!): WaitlistMutationResponse!
@@ -1210,8 +1411,20 @@ type Mutation {
   """Update an existing member"""
   updateMember(id: ID!, input: UpdateMemberInput!): MemberType!
 
+  """Update a single player rental status (cart/caddy)"""
+  updatePlayerRentalStatus(input: UpdatePlayerRentalStatusInput!, playerId: ID!): TeeTimePlayerType!
+
+  """Update schedule configuration"""
+  updateScheduleConfig(id: ID!, input: UpdateScheduleConfigInput!): ScheduleConfigMutationResponse!
+
+  """Update a season"""
+  updateSeason(id: ID!, input: UpdateSeasonInput!): SeasonMutationResponse!
+
   """Update an existing service"""
   updateService(input: UpdateServiceInput!): ServiceResponseType!
+
+  """Update a special day"""
+  updateSpecialDay(id: ID!, input: UpdateSpecialDayInput!): SpecialDayMutationResponse!
 
   """Update a staff member"""
   updateStaffMember(input: UpdateStaffMemberInput!): StaffResponseType!
@@ -1222,11 +1435,23 @@ type Mutation {
   """Update a tee time block"""
   updateTeeTimeBlock(id: ID!, input: UpdateBlockInput!): BlockMutationResponse!
 
+  """Update players for an existing tee time (with proper capacity check)"""
+  updateTeeTimePlayers(id: ID!, players: [TeeTimePlayerInput!]!): TeeTimeType!
+
+  """Update a time period"""
+  updateTimePeriod(id: ID!, input: UpdateTimePeriodInput!): TimePeriodMutationResponse!
+
   """Update a waitlist entry"""
   updateWaitlistEntry(id: ID!, input: UpdateWaitlistEntryInput!): WaitlistMutationResponse!
 
   """Void an invoice"""
   voidInvoice(id: ID!, input: VoidInvoiceInput!): InvoiceType!
+}
+
+"""Which nine holes (front or back) for crossover mode"""
+enum NineType {
+  BACK
+  FRONT
 }
 
 type PageInfo {
@@ -1291,6 +1516,16 @@ enum PlayFormat {
   EIGHTEEN_HOLE
 }
 
+type PlayerDependentType {
+  firstName: String!
+  id: ID!
+  lastName: String!
+
+  """Parent member UUID"""
+  memberId: ID
+  relationship: String!
+}
+
 type PlayerMemberType {
   firstName: String!
   id: ID!
@@ -1304,6 +1539,13 @@ enum PlayerType {
   GUEST
   MEMBER
   WALK_UP
+}
+
+"""Status of a player position in a tee time slot"""
+enum PositionStatus {
+  AVAILABLE
+  BLOCKED
+  BOOKED
 }
 
 type PriceModifierType {
@@ -1343,6 +1585,9 @@ type Query {
   """Get calendar data for a specific day"""
   calendarDay(date: String!, facilityId: ID, resourceIds: [ID!], statuses: [BookingStatus!]): CalendarDayType!
 
+  """Get club golf settings including cart, rental, and caddy policies"""
+  clubGolfSettings: ClubGolfSettingsType
+
   """Get schedules for a course"""
   courseSchedules(courseId: ID!): [GolfCourseScheduleType!]!
 
@@ -1354,6 +1599,16 @@ type Query {
 
   """Generate a tee ticket for a tee time"""
   generateTeeTicket(teeTimeId: ID!): TeeTicketType
+
+  """
+  Get the effective schedule for a specific date (with season/special day overrides applied)
+  """
+  getEffectiveScheduleForDate(courseId: ID!, date: DateTime!): EffectiveScheduleType!
+
+  """
+  Get schedule configuration for a course. Creates default config if autoCreate is true.
+  """
+  getScheduleConfig(autoCreate: Boolean = false, courseId: ID!): GolfScheduleConfigType
 
   """Get a single group booking"""
   groupBooking(id: ID!): GolfGroupBookingType!
@@ -1406,6 +1661,9 @@ type Query {
   """Get open lotteries for member portal"""
   openLotteries: [GolfLotteryType!]!
 
+  """Search for caddies by name or caddy number"""
+  searchCaddies(courseId: ID, search: String): [CaddyType!]!
+
   """Get list of services"""
   services(filter: ServiceFilterInput): [ServiceType!]!
 
@@ -1435,6 +1693,26 @@ type Query {
 
   """Get waitlist entries for a specific date/course"""
   waitlistForDate(courseId: ID!, date: DateTime!): [GolfWaitlistType!]!
+
+  """
+  Get week view occupancy data showing player positions for each time slot
+  """
+  weekViewOccupancy(input: WeekViewOccupancyInput!): WeekViewOccupancyResponse!
+}
+
+"""Rental club policy for golf bookings"""
+enum RentalPolicy {
+  OPTIONAL
+  REQUIRED
+}
+
+"""Status of rental item (cart/caddy) for a player"""
+enum RentalStatus {
+  ASSIGNED
+  NONE
+  PAID
+  REQUESTED
+  RETURNED
 }
 
 input RescheduleBookingInput {
@@ -1459,9 +1737,21 @@ enum ResourceTypeEnum {
   STUDIO
 }
 
+type ScheduleConfigMutationResponse {
+  config: GolfScheduleConfigType
+  message: String
+  success: Boolean!
+}
+
 type ScheduleMutationResponse {
   message: String
   schedule: GolfCourseScheduleType
+  success: Boolean!
+}
+
+type SeasonMutationResponse {
+  message: String
+  season: GolfSeasonType
   success: Boolean!
 }
 
@@ -1503,6 +1793,20 @@ type ServiceVariationType {
   name: String!
   priceModifier: Float!
   priceType: String!
+}
+
+type SpecialDayMutationResponse {
+  message: String
+  specialDay: GolfSpecialDayType
+  success: Boolean!
+}
+
+"""Type of special day"""
+enum SpecialDayType {
+  CLOSED
+  CUSTOM
+  HOLIDAY
+  WEEKEND
 }
 
 input StaffCapabilityInput {
@@ -1643,20 +1947,38 @@ type TeeTimeConnection {
 
 input TeeTimePlayerInput {
   caddyId: ID
+  caddyRequest: String = "NONE"
+  caddyStatus: RentalStatus = NONE
+
+  """Assigned cart ID"""
+  cartId: ID
+  cartRequest: String = "NONE"
+  cartStatus: RentalStatus = NONE
   cartType: CartType = WALKING
+
+  """Dependent UUID (for DEPENDENT player type)"""
+  dependentId: ID
   guestEmail: String
   guestName: String
   guestPhone: String
+
+  """Member UUID (for MEMBER player type)"""
   memberId: ID
   playerType: PlayerType!
   position: Int!
+  rentalRequest: String = "NONE"
   sharedWithPosition: Int
 }
 
 type TeeTimePlayerType {
   caddy: CaddyType
+  caddyRequest: String
+  caddyStatus: RentalStatus
+  cartRequest: String
+  cartStatus: RentalStatus
   cartType: CartType!
   checkedInAt: DateTime
+  dependent: PlayerDependentType
   guestEmail: String
   guestName: String
   guestPhone: String
@@ -1664,6 +1986,7 @@ type TeeTimePlayerType {
   member: PlayerMemberType
   playerType: PlayerType!
   position: Int!
+  rentalRequest: String
   sharedWithPosition: Int
 }
 
@@ -1679,12 +2002,14 @@ enum TeeTimeStatus {
 }
 
 type TeeTimeType {
+  bookingGroups: [BookingGroupType!]
   course: GolfCourseType
   createdAt: DateTime!
   holes: Int!
   id: ID!
   notes: String
   players: [TeeTimePlayerType!]!
+  startingHole: Int!
   status: TeeTimeStatus!
   teeDate: DateTime!
   teeTime: String!
@@ -1705,6 +2030,18 @@ input TierDiscountInput {
 type TierDiscountType {
   discountPercent: Float!
   tierName: String!
+}
+
+type TimePeriodMutationResponse {
+  message: String
+  success: Boolean!
+  timePeriod: GolfTimePeriodType
+}
+
+"""Twilight calculation mode"""
+enum TwilightMode {
+  FIXED
+  SUNSET
 }
 
 input UpdateApplicationInput {
@@ -1792,6 +2129,27 @@ input UpdateMemberInput {
   tags: [String!]
 }
 
+input UpdatePlayerRentalStatusInput {
+  caddyId: ID
+  caddyStatus: RentalStatus
+  cartStatus: RentalStatus
+}
+
+input UpdateScheduleConfigInput {
+  clubLatitude: Float
+  clubLongitude: Float
+  defaultBookingWindowDays: Int
+  twilightFixedDefault: String
+  twilightMinutesBeforeSunset: Int
+  twilightMode: TwilightMode
+  weekdayBookingMode: BookingMode
+  weekdayFirstTee: String
+  weekdayLastTee: String
+  weekendBookingMode: BookingMode
+  weekendFirstTee: String
+  weekendLastTee: String
+}
+
 input UpdateScheduleInput {
   endDate: DateTime
   firstTeeTime: String
@@ -1801,6 +2159,23 @@ input UpdateScheduleInput {
   playFormat: PlayFormat
   seasonName: String
   startDate: DateTime
+}
+
+input UpdateSeasonInput {
+  endDay: Int
+  endMonth: Int
+  isRecurring: Boolean
+  name: String
+  overrideBookingWindow: Int
+  overrideFirstTee: String
+  overrideLastTee: String
+  overrideTimePeriods: Boolean
+  overrideTwilightTime: String
+  priority: Int
+  startDay: Int
+  startMonth: Int
+  weekdayBookingMode: BookingMode
+  weekendBookingMode: BookingMode
 }
 
 input UpdateServiceInput {
@@ -1820,6 +2195,19 @@ input UpdateServiceInput {
   variations: [ServiceVariationInput!]
 }
 
+input UpdateSpecialDayInput {
+  bookingMode: BookingMode
+  customFirstTee: String
+  customLastTee: String
+  customTimePeriods: Boolean
+  endDate: String
+  isRecurring: Boolean
+  name: String
+  notes: String
+  startDate: String
+  type: SpecialDayType
+}
+
 input UpdateStaffMemberInput {
   avatarUrl: String
   capabilities: [StaffCapabilityInput!]
@@ -1836,9 +2224,20 @@ input UpdateStaffMemberInput {
 }
 
 input UpdateTeeTimeInput {
+  holes: Int
   notes: String
   players: [TeeTimePlayerInput!]
   status: TeeTimeStatus
+}
+
+input UpdateTimePeriodInput {
+  applicableDays: ApplicableDays
+  endTime: String
+  intervalMinutes: Int
+  isPrimeTime: Boolean
+  name: String
+  sortOrder: Int
+  startTime: String
 }
 
 input UpdateWaitlistEntryInput {
@@ -1911,4 +2310,41 @@ enum WaitlistStatus {
   EXPIRED
   OFFER_SENT
   WAITING
+}
+
+input WeekViewOccupancyInput {
+  courseId: ID!
+  endDate: String!
+
+  """Optional end time filter (HH:MM format, e.g., "12:00")"""
+  endTime: String
+  startDate: String!
+
+  """Optional start time filter (HH:MM format, e.g., "06:00")"""
+  startTime: String
+}
+
+type WeekViewOccupancyResponse {
+  slots: [WeekViewSlotType!]!
+}
+
+type WeekViewPlayerType {
+  id: ID!
+  memberId: String
+  name: String!
+  type: PlayerType!
+}
+
+type WeekViewPositionType {
+  player: WeekViewPlayerType
+  position: Int!
+  status: PositionStatus!
+}
+
+type WeekViewSlotType {
+  date: String!
+  isBlocked: Boolean!
+  nine: NineType!
+  positions: [WeekViewPositionType!]!
+  time: String!
 }
