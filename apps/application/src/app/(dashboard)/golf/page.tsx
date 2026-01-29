@@ -2061,7 +2061,7 @@ export default function GolfPage() {
                   availability={monthAvailability}
                 />
 
-                <div className="flex border border-border rounded-md overflow-hidden">
+                <div className="flex border border-border rounded-md overflow-hidden bg-card">
                   {(['day', 'week', 'month'] as ViewMode[]).map((mode) => (
                     <button
                       key={mode}
@@ -2077,7 +2077,7 @@ export default function GolfPage() {
                       className={`px-3 py-1.5 text-sm capitalize ${
                         viewMode === mode
                           ? 'bg-primary text-primary-foreground'
-                          : 'hover:bg-muted'
+                          : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                       }`}
                     >
                       {mode}
@@ -2087,13 +2087,13 @@ export default function GolfPage() {
 
                 {/* Layout toggle - only show in day view */}
                 {viewMode === 'day' && (
-                  <div className="flex border border-border rounded-md overflow-hidden">
+                  <div className="flex border border-border rounded-md overflow-hidden bg-card">
                     <button
                       onClick={() => setLayoutType('list')}
                       className={`px-3 py-1.5 text-sm flex items-center gap-1.5 ${
                         layoutType === 'list'
                           ? 'bg-primary text-primary-foreground'
-                          : 'hover:bg-muted'
+                          : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                       }`}
                       title="List view"
                     >
@@ -2104,7 +2104,7 @@ export default function GolfPage() {
                       className={`px-3 py-1.5 text-sm flex items-center gap-1.5 ${
                         layoutType === 'split'
                           ? 'bg-primary text-primary-foreground'
-                          : 'hover:bg-muted'
+                          : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                       }`}
                       title="Front 9 / Back 9 split view"
                     >
@@ -2116,12 +2116,12 @@ export default function GolfPage() {
 
               <div className="flex items-center gap-4">
                 <select
-                  className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  className="h-10 rounded-md border border-input bg-card text-foreground px-3 py-2 text-sm"
                   value={selectedCourse}
                   onChange={(e) => setSelectedCourse(e.target.value)}
                 >
                   {courses.map((course) => (
-                    <option key={course.id} value={course.id}>
+                    <option key={course.id} value={course.id} className="bg-card text-foreground">
                       {course.name}
                     </option>
                   ))}
