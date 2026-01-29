@@ -140,9 +140,9 @@ function playerTypeToPayloadType(type: PlayerType): 'MEMBER' | 'GUEST' | 'DEPEND
 function bookingPlayerToSlotData(player: BookingPlayer, clubSettings: ClubSettings): PlayerSlotData {
   return {
     player: {
-      id: player.memberUuid || player.playerId,
-      name: player.name,
-      type: player.playerType as PlayerType,
+      id: player.memberUuid || player.playerId || '',
+      name: player.name || 'Unknown',
+      type: (player.playerType?.toLowerCase() as PlayerType) || 'member',
       memberId: player.memberId,
     },
     caddyRequest: (player.caddyRequest as CaddyValue) || 'NONE',
@@ -270,6 +270,7 @@ function WorkflowActions({
           type="button"
           onClick={onCancel}
           disabled={isProcessing}
+          aria-label="Cancel this booking"
           className="px-3 py-2 text-red-600 border border-red-200 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors disabled:opacity-50 mr-auto"
         >
           Cancel Booking
@@ -284,6 +285,7 @@ function WorkflowActions({
               type="button"
               onClick={onCheckIn}
               disabled={isProcessing}
+              aria-label="Check in players"
               className="px-3 py-2 bg-emerald-500 text-white rounded-lg text-sm font-medium hover:bg-emerald-600 transition-colors disabled:opacity-50 flex items-center gap-2"
             >
               {isProcessingThis('checkIn') && <Loader2 className="h-4 w-4 animate-spin" />}
@@ -295,6 +297,7 @@ function WorkflowActions({
               type="button"
               onClick={onMove}
               disabled={isProcessing}
+              aria-label="Move booking to different time"
               className="px-3 py-2 border border-stone-200 rounded-lg text-sm font-medium hover:bg-stone-50 transition-colors disabled:opacity-50"
             >
               Move
@@ -305,6 +308,7 @@ function WorkflowActions({
               type="button"
               onClick={onCopy}
               disabled={isProcessing}
+              aria-label="Copy booking to new time"
               className="px-3 py-2 border border-stone-200 rounded-lg text-sm font-medium hover:bg-stone-50 transition-colors disabled:opacity-50"
             >
               Copy
@@ -320,6 +324,7 @@ function WorkflowActions({
               type="button"
               onClick={onMarkOnCourse}
               disabled={isProcessing}
+              aria-label="Mark players as on course"
               className="px-3 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 transition-colors disabled:opacity-50 flex items-center gap-2"
             >
               {isProcessingThis('markOnCourse') && <Loader2 className="h-4 w-4 animate-spin" />}
@@ -331,6 +336,7 @@ function WorkflowActions({
               type="button"
               onClick={onSettle}
               disabled={isProcessing}
+              aria-label="Settle charges"
               className="px-3 py-2 border border-stone-200 rounded-lg text-sm font-medium hover:bg-stone-50 transition-colors disabled:opacity-50"
             >
               Settle
@@ -346,6 +352,7 @@ function WorkflowActions({
               type="button"
               onClick={onMarkFinished}
               disabled={isProcessing}
+              aria-label="Mark round as finished"
               className="px-3 py-2 bg-stone-600 text-white rounded-lg text-sm font-medium hover:bg-stone-700 transition-colors disabled:opacity-50 flex items-center gap-2"
             >
               {isProcessingThis('markFinished') && <Loader2 className="h-4 w-4 animate-spin" />}
@@ -357,6 +364,7 @@ function WorkflowActions({
               type="button"
               onClick={onSettle}
               disabled={isProcessing}
+              aria-label="Settle charges"
               className="px-3 py-2 border border-stone-200 rounded-lg text-sm font-medium hover:bg-stone-50 transition-colors disabled:opacity-50"
             >
               Settle
@@ -370,6 +378,7 @@ function WorkflowActions({
           type="button"
           onClick={onSettle}
           disabled={isProcessing}
+          aria-label="View receipt"
           className="px-3 py-2 border border-stone-200 rounded-lg text-sm font-medium hover:bg-stone-50 transition-colors disabled:opacity-50"
         >
           View Receipt
@@ -658,8 +667,8 @@ export function BookingModal({
     try {
       await onCancel()
       onClose()
-    } catch {
-      setError('Failed to cancel booking.')
+    } catch (err) {
+      setError(err instanceof Error ? `Failed to cancel: ${err.message}` : 'Failed to cancel booking. Please try again.')
     } finally {
       setProcessingAction(undefined)
     }
@@ -689,6 +698,8 @@ export function BookingModal({
             setProcessingAction('checkIn')
             try {
               await onCheckIn()
+            } catch (err) {
+              setError(err instanceof Error ? `Failed to check in: ${err.message}` : 'Failed to check in. Please try again.')
             } finally {
               setProcessingAction(undefined)
             }
@@ -697,6 +708,8 @@ export function BookingModal({
             setProcessingAction('markOnCourse')
             try {
               await onMarkOnCourse()
+            } catch (err) {
+              setError(err instanceof Error ? `Failed to mark on course: ${err.message}` : 'Failed to mark on course. Please try again.')
             } finally {
               setProcessingAction(undefined)
             }
@@ -705,6 +718,8 @@ export function BookingModal({
             setProcessingAction('markFinished')
             try {
               await onMarkFinished()
+            } catch (err) {
+              setError(err instanceof Error ? `Failed to mark finished: ${err.message}` : 'Failed to mark finished. Please try again.')
             } finally {
               setProcessingAction(undefined)
             }
