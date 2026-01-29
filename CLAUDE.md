@@ -60,6 +60,15 @@ ClubVantage is an AI-First Club Management ERP system for country clubs and golf
 | Cancelled | `bg-stone-100` | `text-stone-500` (strikethrough) |
 | Blocked | `bg-gray-200` | `text-gray-600` (with warning icon) |
 
+### Rental Status Badges (Golf Cart/Caddy)
+| Status | Background | Text | Usage |
+|--------|------------|------|-------|
+| None | `bg-stone-100` | `text-stone-600` | No rental requested |
+| Requested | `bg-amber-100` | `text-amber-700` | Member requested rental |
+| Paid | `bg-emerald-100` | `text-emerald-700` | Payment received |
+| Assigned | `bg-blue-100` | `text-blue-700` | Cart/caddy assigned to player |
+| Returned | `bg-purple-100` | `text-purple-700` | Rental completed/returned |
+
 ### Visual Patterns
 - **Glassmorphism**: `bg-white/80 backdrop-blur-sm`
 - **Card shadows**: `shadow-lg shadow-stone-200/30`

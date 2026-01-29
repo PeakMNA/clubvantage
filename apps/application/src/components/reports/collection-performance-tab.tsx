@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { ReportKpiCard } from './report-kpi-card'
 import { DrillDownLink } from './drill-down-link'
 import { FilterBar } from './filter-bar'
-import { ChartWrapper, LineChart, DonutChart, BarChart } from './charts'
+import { ChartWrapper, DynamicLineChart as LineChart, DynamicDonutChart as DonutChart, DynamicBarChart as BarChart } from './charts'
 import { Card, CardContent, CardHeader, CardTitle } from '@clubvantage/ui'
 import { cn } from '@clubvantage/ui'
 

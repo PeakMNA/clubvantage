@@ -17,6 +17,7 @@ import {
   ArrowRight,
   CalendarDays,
   Star,
+  X,
 } from 'lucide-react';
 
 type FeatureStatus = 'planned' | 'in-progress' | 'completed' | 'considering';
@@ -671,7 +672,7 @@ function SuggestFeatureModal({ onClose }: { onClose: () => void }) {
                 onClick={onClose}
                 className="text-charcoal-400 hover:text-charcoal-600 transition-colors"
               >
-                ✕
+                <X className="h-5 w-5" />
               </button>
             </div>
             <form onSubmit={handleSubmit} className="space-y-4">

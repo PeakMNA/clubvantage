@@ -28,6 +28,11 @@ query GetTeeSheet($courseId: ID!, $date: DateTime!) {
         guestEmail
         guestPhone
         cartType
+        caddyRequest
+        cartRequest
+        rentalRequest
+        cartStatus
+        caddyStatus
         sharedWithPosition
         caddy {
           id
@@ -36,6 +41,16 @@ query GetTeeSheet($courseId: ID!, $date: DateTime!) {
           lastName
         }
         checkedInAt
+      }
+      bookingGroups {
+        id
+        groupNumber
+        bookedBy {
+          id
+          name
+          memberId
+        }
+        playerIds
       }
     }
   }
@@ -90,6 +105,11 @@ query GetTeeTime($id: ID!) {
       guestEmail
       guestPhone
       cartType
+      caddyRequest
+      cartRequest
+      rentalRequest
+      cartStatus
+      caddyStatus
       sharedWithPosition
       caddy {
         id
@@ -197,6 +217,40 @@ mutation UpdateTeeTime($id: ID!, $input: UpdateTeeTimeInput!) {
   }
 }
 
+mutation UpdateTeeTimePlayers($id: ID!, $players: [TeeTimePlayerInput!]!) {
+  updateTeeTimePlayers(id: $id, players: $players) {
+    id
+    teeTimeNumber
+    teeDate
+    teeTime
+    holes
+    status
+    course {
+      id
+      name
+    }
+    players {
+      id
+      position
+      playerType
+      member {
+        id
+        firstName
+        lastName
+      }
+      guestName
+      guestEmail
+      guestPhone
+      cartType
+      caddyRequest
+      cartRequest
+      rentalRequest
+      cartStatus
+      caddyStatus
+    }
+  }
+}
+
 mutation CheckInTeeTime($input: CheckInInput!) {
   checkIn(input: $input) {
     success
@@ -224,5 +278,55 @@ mutation MoveTeeTime($id: ID!, $input: MoveTeeTimeInput!) {
       id
       name
     }
+  }
+}
+
+mutation UpdatePlayerRentalStatus($playerId: ID!, $input: UpdatePlayerRentalStatusInput!) {
+  updatePlayerRentalStatus(playerId: $playerId, input: $input) {
+    id
+    position
+    playerType
+    cartStatus
+    caddyStatus
+    caddy {
+      id
+      caddyNumber
+      firstName
+      lastName
+    }
+  }
+}
+
+# Week View Occupancy Query
+query GetWeekViewOccupancy($input: WeekViewOccupancyInput!) {
+  weekViewOccupancy(input: $input) {
+    slots {
+      date
+      time
+      nine
+      isBlocked
+      positions {
+        position
+        status
+        player {
+          id
+          name
+          type
+          memberId
+        }
+      }
+    }
+  }
+}
+
+# Caddies Query
+query SearchCaddies($search: String, $courseId: ID) {
+  searchCaddies(search: $search, courseId: $courseId) {
+    id
+    caddyNumber
+    firstName
+    lastName
+    phone
+    isActive
   }
 }

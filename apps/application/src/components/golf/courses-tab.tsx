@@ -1,7 +1,7 @@
 'use client'
 
 import { cn } from '@clubvantage/ui'
-import { Plus, MapPin, Clock, Settings, Flag, BarChart3 } from 'lucide-react'
+import { Plus, MapPin, Settings, Flag } from 'lucide-react'
 import type { Course } from './types'
 
 interface CoursesTabProps {
@@ -82,10 +82,10 @@ function CourseCard({
           </div>
         </div>
 
-        {/* Interval */}
+        {/* Schedule Info */}
         <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-          <Clock className="h-4 w-4 text-muted-foreground" />
-          <span>{course.interval} minute intervals</span>
+          <Settings className="h-4 w-4 text-muted-foreground" />
+          <span>Schedule configured in Settings</span>
         </div>
 
         {/* Condition notes */}

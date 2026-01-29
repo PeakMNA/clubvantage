@@ -5,25 +5,37 @@ import { useRouter } from 'next/navigation'
 import { Plus, Wand2 } from 'lucide-react'
 import { Button } from '@clubvantage/ui'
 
+// Direct imports to optimize bundle size (avoid barrel imports)
+import { BillingTabsLayout, type BillingTab } from '@/components/billing/billing-tabs-layout'
+import { type AgingStatus } from '@/components/billing/aging-badge'
+
+// Dynamic imports for tab content - only loaded when tab is selected
 import {
-  BillingTabsLayout,
-  InvoiceRegister,
-  ReceiptRegister,
-  WhtCertificatesTab,
-  AgingDashboardTab,
-  type BillingTab,
-  type InvoiceRegisterItem,
-  type InvoiceRegisterSummary,
-  type ReceiptRegisterItem,
-  type ReceiptRegisterSummary,
-  type ReceiptAllocation,
-  type WhtCertificateItem,
-  type WhtCertificatesSummary,
-  type AgingBucket,
-  type AgingMember,
-  type ReinstatedMember,
-  type AgingStatus,
-} from '@/components/billing'
+  DynamicInvoiceRegister as InvoiceRegister,
+  DynamicReceiptRegister as ReceiptRegister,
+  DynamicWhtCertificatesTab as WhtCertificatesTab,
+  DynamicAgingDashboardTab as AgingDashboardTab,
+} from '@/components/billing/dynamic-tabs'
+
+// Type-only imports for data structures
+import type {
+  InvoiceRegisterItem,
+  InvoiceRegisterSummary,
+} from '@/components/billing/invoice-register'
+import type {
+  ReceiptRegisterItem,
+  ReceiptRegisterSummary,
+  ReceiptAllocation,
+} from '@/components/billing/receipt-register'
+import type {
+  WhtCertificateItem,
+  WhtCertificatesSummary,
+} from '@/components/billing/wht-certificates-tab'
+import type {
+  AgingBucket,
+  AgingMember,
+  ReinstatedMember,
+} from '@/components/billing/aging-dashboard-tab'
 
 import { useInvoices } from '@/hooks/use-billing'
 

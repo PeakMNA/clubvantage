@@ -52,7 +52,7 @@ export interface InvoiceRegisterSummary {
 
 type QuickFilter = 'all' | 'draft' | 'sent' | 'overdue' | 'paid'
 
-interface InvoiceRegisterProps {
+export interface InvoiceRegisterProps {
   /** Invoice data to display */
   invoices: InvoiceRegisterItem[]
   /** Summary metrics */

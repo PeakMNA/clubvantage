@@ -2,9 +2,9 @@
 
 import { useState, ReactNode } from 'react'
 import { cn } from '@clubvantage/ui'
-import { Calendar, MapPin, Car, Users, Settings, ChevronRight } from 'lucide-react'
+import { Calendar, MapPin, Car, Users, Settings, ChevronRight, List } from 'lucide-react'
 
-export type GolfTab = 'tee-sheet' | 'courses' | 'carts' | 'caddies' | 'settings'
+export type GolfTab = 'tee-sheet' | 'bookings' | 'courses' | 'carts' | 'caddies' | 'settings'
 
 interface GolfTabsLayoutProps {
   /** Controlled active tab - if provided, component is controlled */
@@ -25,6 +25,7 @@ const tabs: Array<{
   description: string
 }> = [
   { id: 'tee-sheet', label: 'Tee Sheet', shortLabel: 'Tee Sheet', icon: Calendar, description: 'Manage tee times' },
+  { id: 'bookings', label: 'Bookings', shortLabel: 'Bookings', icon: List, description: 'Search and manage bookings' },
   { id: 'courses', label: 'Courses', shortLabel: 'Courses', icon: MapPin, description: 'Course settings' },
   { id: 'carts', label: 'Carts', shortLabel: 'Carts', icon: Car, description: 'Fleet management' },
   { id: 'caddies', label: 'Caddies', shortLabel: 'Caddies', icon: Users, description: 'Caddy roster' },

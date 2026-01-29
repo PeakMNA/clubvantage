@@ -46,7 +46,7 @@ export interface WhtCertificatesSummary {
 
 type StatusFilter = 'all' | WhtStatus
 
-interface WhtCertificatesTabProps {
+export interface WhtCertificatesTabProps {
   /** Certificate data */
   certificates: WhtCertificateItem[]
   /** Summary metrics */

@@ -8,13 +8,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Check, Users, Lightbulb, Gift, Zap, Star, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faGolfBallTee, faDumbbell, faTableTennis, faBuildingColumns, faLocationDot, type IconDefinition } from '@fortawesome/free-solid-svg-icons';
 
-const clubTypes = [
-  { id: 'golf', label: 'Golf & Country Club', icon: '⛳' },
-  { id: 'fitness', label: 'Fitness Center', icon: '🏋️' },
-  { id: 'sports', label: 'Sports Club', icon: '🎾' },
-  { id: 'social', label: 'Social Club', icon: '🏛️' },
-  { id: 'other', label: 'Other', icon: '📍' },
+const clubTypes: Array<{ id: string; label: string; icon: IconDefinition }> = [
+  { id: 'golf', label: 'Golf & Country Club', icon: faGolfBallTee },
+  { id: 'fitness', label: 'Fitness Center', icon: faDumbbell },
+  { id: 'sports', label: 'Sports Club', icon: faTableTennis },
+  { id: 'social', label: 'Social Club', icon: faBuildingColumns },
+  { id: 'other', label: 'Other', icon: faLocationDot },
 ];
 
 const interestAreas = [
@@ -303,7 +305,7 @@ export default function WaitlistPage() {
                               : 'border-cream-300 hover:border-cream-400'
                           )}
                         >
-                          <span className="text-xl">{type.icon}</span>
+                          <FontAwesomeIcon icon={type.icon} className="h-5 w-5 text-primary-500" />
                           <span className="text-sm font-medium text-charcoal-700">
                             {type.label}
                           </span>

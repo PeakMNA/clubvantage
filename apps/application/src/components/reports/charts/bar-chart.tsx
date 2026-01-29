@@ -13,13 +13,13 @@ import {
 } from 'recharts'
 import { cn } from '@clubvantage/ui'
 
-interface BarChartData {
+export interface BarChartData {
   category: string
   value: number
   previousValue?: number
 }
 
-interface BarChartProps {
+export interface BarChartProps {
   data: BarChartData[]
   orientation?: 'horizontal' | 'vertical'
   showComparison?: boolean

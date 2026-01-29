@@ -5,10 +5,11 @@ import { AlertCircle, RefreshCw, Settings, Clock, Users, Car, AlertTriangle, Che
 import { TeeSheetRow } from './tee-sheet-row'
 import { FlightStatusBadge } from './flight-status-badge'
 import { PlayerTypeBadge } from './player-type-badge'
-import type { Flight, Player } from './types'
+import type { Flight, Player, BookingMode } from './types'
 
 interface TeeSheetGridProps {
   flights: Flight[]
+  bookingMode?: BookingMode // EIGHTEEN = single column, CROSS = dual columns
   isLoading?: boolean
   error?: string
   onRetry?: () => void
@@ -201,6 +202,7 @@ function FlightCard({
 
 export function TeeSheetGrid({
   flights,
+  bookingMode = 'EIGHTEEN',
   isLoading,
   error,
   onRetry,
@@ -214,6 +216,10 @@ export function TeeSheetGrid({
   onMoveFlight,
   onCancelFlight,
 }: TeeSheetGridProps) {
+  // In Cross mode, split flights by starting hole
+  const isCrossMode = bookingMode === 'CROSS'
+  const hole1Flights = isCrossMode ? flights.filter(f => (f.startingHole ?? 1) === 1) : flights
+  const hole10Flights = isCrossMode ? flights.filter(f => f.startingHole === 10) : []
   if (error) {
     return (
       <div className="relative overflow-hidden rounded-2xl border border/60 bg-card/80 shadow-lg shadow-slate-200/30 dark:shadow-black/20 backdrop-blur-sm">
@@ -267,12 +273,101 @@ export function TeeSheetGrid({
     )
   }
 
+  // Render helper for table structure
+  const renderTable = (flightList: Flight[], headerPrefix?: string) => (
+    <table className="w-full">
+      <thead>
+        <tr className="border-b border/60 bg-muted/80">
+          <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-20">
+            Time
+          </th>
+          <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider min-w-[140px]">
+            Player 1
+          </th>
+          <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider min-w-[140px]">
+            Player 2
+          </th>
+          <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider min-w-[140px]">
+            Player 3
+          </th>
+          <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider min-w-[140px]">
+            Player 4
+          </th>
+          <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-28">
+            Status
+          </th>
+          <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-20">
+            Resources
+          </th>
+          <th className="px-2 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-12">
+            <span className="sr-only">Actions</span>
+          </th>
+        </tr>
+      </thead>
+      <tbody className="divide-y divide-border">
+        {isLoading ? (
+          Array.from({ length: 10 }).map((_, i) => <SkeletonRow key={i} />)
+        ) : (
+          flightList.map((flight) => (
+            <TeeSheetRow
+              key={flight.id}
+              flight={flight}
+              onRowClick={onFlightClick}
+              onBookSlot={onBookSlot}
+              onPlayerClick={onPlayerClick}
+              onCheckIn={onCheckIn}
+              onNoShow={onNoShow}
+              onResendConfirmation={onResendConfirmation}
+              onEditFlight={onEditFlight}
+              onMoveFlight={onMoveFlight}
+              onCancelFlight={onCancelFlight}
+            />
+          ))
+        )}
+      </tbody>
+    </table>
+  )
+
   return (
     <>
       {/* Mobile: Card Layout */}
       <div className="md:hidden space-y-3">
         {isLoading ? (
           Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
+        ) : isCrossMode ? (
+          // Cross mode mobile - show starting hole indicator
+          <>
+            {/* Hole 1 Section */}
+            <div className="mb-4">
+              <div className="flex items-center gap-2 mb-2 px-1">
+                <span className="text-xs font-bold text-blue-600 bg-blue-100 px-2 py-1 rounded">Hole 1</span>
+                <span className="text-xs text-muted-foreground">{hole1Flights.length} slots</span>
+              </div>
+              {hole1Flights.map((flight) => (
+                <FlightCard
+                  key={flight.id}
+                  flight={flight}
+                  onFlightClick={onFlightClick}
+                  onBookSlot={onBookSlot}
+                />
+              ))}
+            </div>
+            {/* Hole 10 Section */}
+            <div>
+              <div className="flex items-center gap-2 mb-2 px-1">
+                <span className="text-xs font-bold text-purple-600 bg-purple-100 px-2 py-1 rounded">Hole 10</span>
+                <span className="text-xs text-muted-foreground">{hole10Flights.length} slots</span>
+              </div>
+              {hole10Flights.map((flight) => (
+                <FlightCard
+                  key={flight.id}
+                  flight={flight}
+                  onFlightClick={onFlightClick}
+                  onBookSlot={onBookSlot}
+                />
+              ))}
+            </div>
+          </>
         ) : (
           flights.map((flight) => (
             <FlightCard
@@ -286,64 +381,62 @@ export function TeeSheetGrid({
       </div>
 
       {/* Desktop: Table Layout */}
-      <div className="hidden md:block relative overflow-hidden rounded-2xl border border/60 bg-card/80 shadow-lg shadow-slate-200/30 dark:shadow-black/20 backdrop-blur-sm">
-        <div className="absolute inset-0 bg-gradient-to-br from-muted/50 to-transparent pointer-events-none" />
-        <div className="absolute left-0 top-0 h-1 w-full bg-gradient-to-r from-emerald-300 via-emerald-500 to-emerald-300" />
+      {isCrossMode ? (
+        // Cross Mode: Dual-Column Layout
+        <div className="hidden md:block relative overflow-hidden rounded-2xl border border/60 bg-card/80 shadow-lg shadow-slate-200/30 dark:shadow-black/20 backdrop-blur-sm">
+          <div className="absolute inset-0 bg-gradient-to-br from-muted/50 to-transparent pointer-events-none" />
+          <div className="absolute left-0 top-0 h-1 w-full bg-gradient-to-r from-blue-400 via-purple-500 to-blue-400" />
 
-        <div className="relative overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border/60 bg-muted/80">
-                <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-20">
-                  Time
-                </th>
-                <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider min-w-[140px]">
-                  Player 1
-                </th>
-                <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider min-w-[140px]">
-                  Player 2
-                </th>
-                <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider min-w-[140px]">
-                  Player 3
-                </th>
-                <th className="px-3 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider min-w-[140px]">
-                  Player 4
-                </th>
-                <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-28">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-20">
-                  Resources
-                </th>
-                <th className="px-2 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider w-12">
-                  <span className="sr-only">Actions</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {isLoading ? (
-                Array.from({ length: 10 }).map((_, i) => <SkeletonRow key={i} />)
-              ) : (
-                flights.map((flight) => (
-                  <TeeSheetRow
-                    key={flight.id}
-                    flight={flight}
-                    onRowClick={onFlightClick}
-                    onBookSlot={onBookSlot}
-                    onPlayerClick={onPlayerClick}
-                    onCheckIn={onCheckIn}
-                    onNoShow={onNoShow}
-                    onResendConfirmation={onResendConfirmation}
-                    onEditFlight={onEditFlight}
-                    onMoveFlight={onMoveFlight}
-                    onCancelFlight={onCancelFlight}
-                  />
-                ))
-              )}
-            </tbody>
-          </table>
+          {/* Cross Mode Header */}
+          <div className="relative flex items-center justify-between px-4 py-2 bg-muted/60 border-b border/60">
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-bold text-purple-600 bg-purple-100 px-2 py-1 rounded">Cross Mode</span>
+              <span className="text-xs text-muted-foreground">Dual tee starts: Hole 1 + Hole 10</span>
+            </div>
+            <div className="flex items-center gap-4 text-xs">
+              <span className="text-muted-foreground">
+                Hole 1: <span className="font-medium text-foreground">{hole1Flights.length}</span> slots
+              </span>
+              <span className="text-muted-foreground">
+                Hole 10: <span className="font-medium text-foreground">{hole10Flights.length}</span> slots
+              </span>
+            </div>
+          </div>
+
+          {/* Dual Column Tables */}
+          <div className="relative grid grid-cols-2 divide-x divide-border">
+            {/* Hole 1 Column */}
+            <div>
+              <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-500/10 border-b border/60">
+                <span className="text-xs font-bold text-blue-700 dark:text-blue-400">Hole 1 Start</span>
+              </div>
+              <div className="overflow-x-auto">
+                {renderTable(hole1Flights)}
+              </div>
+            </div>
+
+            {/* Hole 10 Column */}
+            <div>
+              <div className="flex items-center gap-2 px-4 py-2 bg-purple-50 dark:bg-purple-500/10 border-b border/60">
+                <span className="text-xs font-bold text-purple-700 dark:text-purple-400">Hole 10 Start</span>
+              </div>
+              <div className="overflow-x-auto">
+                {renderTable(hole10Flights)}
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      ) : (
+        // EIGHTEEN Mode: Single-Column Layout (default)
+        <div className="hidden md:block relative overflow-hidden rounded-2xl border border/60 bg-card/80 shadow-lg shadow-slate-200/30 dark:shadow-black/20 backdrop-blur-sm">
+          <div className="absolute inset-0 bg-gradient-to-br from-muted/50 to-transparent pointer-events-none" />
+          <div className="absolute left-0 top-0 h-1 w-full bg-gradient-to-r from-emerald-300 via-emerald-500 to-emerald-300" />
+
+          <div className="relative overflow-x-auto">
+            {renderTable(flights)}
+          </div>
+        </div>
+      )}
     </>
   )
 }

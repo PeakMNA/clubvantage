@@ -29,24 +29,19 @@ import {
   DropdownMenuTrigger,
 } from '@clubvantage/ui';
 
-import {
-  FilterBar,
-  AdvancedFiltersPanel,
-  StatusBadge,
-  AddMemberModal,
-  BulkSelectionBar,
-  MemberListNoResults,
-  MemberListEmpty,
-  MemberListSkeleton,
-  StatusChangeDialog,
-  BulkActionDialog,
-  type MemberStatus,
-  type MemberFilters,
-  type Member,
-  type QuickFilterOption,
-  type AddMemberFormData,
-  type SelectedMember,
-} from '@/components/members';
+// Direct imports to optimize bundle size (avoid barrel imports)
+import { FilterBar } from '@/components/members/filter-bar';
+import { AdvancedFiltersPanel } from '@/components/members/advanced-filters-panel';
+import { StatusBadge } from '@/components/members/status-badge';
+// Dynamic modal import for better bundle size - only loaded when modal is opened
+import { DynamicAddMemberModal as AddMemberModal } from '@/components/members/dynamic-modals';
+import type { AddMemberFormData } from '@/components/members/add-member-modal';
+import { BulkSelectionBar, type SelectedMember } from '@/components/members/bulk-selection-bar';
+import { MemberListNoResults, MemberListEmpty } from '@/components/members/empty-states';
+import { MemberListSkeleton } from '@/components/members/loading-skeletons';
+import { StatusChangeDialog, BulkActionDialog } from '@/components/members/confirmation-dialog';
+import { type QuickFilterOption } from '@/components/members/quick-filter-chips';
+import type { MemberStatus, MemberFilters, Member } from '@/components/members/types';
 
 import { useMembers, useMemberMutations, filterMembersLocal } from '@/hooks/use-members';
 import { useMembershipTypes } from '@/hooks/use-membership-types';
@@ -89,15 +84,6 @@ export default function MembersPage() {
   // Fetch members from API
   const membersResult = useMembers({ pageSize: 100 });
   const { members: apiMembers, totalCount, isLoading: isMembersLoading, refetch, error: membersError } = membersResult;
-
-  // Debug: Log members fetch state
-  console.log('[MembersPage] Members fetch state:', {
-    membersCount: apiMembers.length,
-    totalCount,
-    isLoading: isMembersLoading,
-    error: membersError?.message || 'none',
-    rawResult: membersResult
-  });
 
   // Fetch membership types from API with fallback
   const { membershipTypes: apiMembershipTypes } = useMembershipTypes();
@@ -305,25 +291,22 @@ export default function MembersPage() {
   }, [statusChangeDialog.member, statusChangeDialog.newStatus]);
 
   // Bulk action handlers for BulkSelectionBar
-  const handleBulkSendInvoice = useCallback(async (memberIds: string[]) => {
+  const handleBulkSendInvoice = useCallback(async (_memberIds: string[]) => {
     setBulkActionLoading((prev) => ({ ...prev, sendInvoice: true }));
     try {
-      // Simulate API call
+      // TODO: Implement send invoice API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      console.log('Send invoice to:', memberIds);
       handleClearSelection();
     } finally {
       setBulkActionLoading((prev) => ({ ...prev, sendInvoice: false }));
     }
   }, [handleClearSelection]);
 
-  const handleBulkExport = useCallback(async (memberIds: string[]) => {
+  const handleBulkExport = useCallback(async (_memberIds: string[]) => {
     setBulkActionLoading((prev) => ({ ...prev, export: true }));
     try {
-      // Simulate API call
+      // TODO: Implement export API call - trigger CSV/Excel download
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      console.log('Export members:', memberIds);
-      // In real app, would trigger CSV/Excel download
     } finally {
       setBulkActionLoading((prev) => ({ ...prev, export: false }));
     }
@@ -346,13 +329,13 @@ export default function MembersPage() {
 
   // Bulk action confirmation handler
   const handleConfirmBulkAction = useCallback(async () => {
-    const memberIds = Array.from(selectedMemberIds);
+    const _memberIds = Array.from(selectedMemberIds);
 
     if (bulkActionDialog.action === 'delete') {
       setBulkActionLoading((prev) => ({ ...prev, delete: true }));
       try {
+        // TODO: Implement delete API call
         await new Promise((resolve) => setTimeout(resolve, 1000));
-        console.log('Deleted members:', memberIds);
         handleClearSelection();
         setBulkActionDialog({ open: false, action: null });
       } finally {
@@ -361,8 +344,8 @@ export default function MembersPage() {
     } else if (bulkActionDialog.action === 'changeStatus' && bulkActionDialog.newStatus) {
       setBulkActionLoading((prev) => ({ ...prev, changeStatus: true }));
       try {
+        // TODO: Implement bulk status change API call
         await new Promise((resolve) => setTimeout(resolve, 1000));
-        console.log('Changed status to', bulkActionDialog.newStatus, 'for:', memberIds);
         handleClearSelection();
         setBulkActionDialog({ open: false, action: null });
       } finally {

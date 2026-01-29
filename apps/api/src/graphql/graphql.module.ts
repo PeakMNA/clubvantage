@@ -14,6 +14,7 @@ import { BillingGraphqlModule } from './billing/billing.module';
 import { GolfGraphqlModule } from './golf/golf.module';
 import { BookingsGraphQLModule } from './bookings/bookings.module';
 import { ApplicationsGraphqlModule } from './applications/applications.module';
+import { ScheduleConfigGraphqlModule } from './schedule-config/schedule-config.module';
 
 @Module({
   imports: [
@@ -28,10 +29,17 @@ import { ApplicationsGraphqlModule } from './applications/applications.module';
         introspection: configService.get('app.env') !== 'production',
         context: ({ req, res }: { req: Request; res: Response }) => ({ req, res }),
         formatError: (error) => {
+          // Log the full error for debugging
+          console.error('GraphQL Error:', JSON.stringify(error, null, 2));
+          if (error.extensions?.originalError) {
+            console.error('Original Error:', JSON.stringify(error.extensions.originalError, null, 2));
+          }
           const graphQLFormattedError = {
             message: error.message,
             code: error.extensions?.code || 'INTERNAL_SERVER_ERROR',
             path: error.path,
+            // Include validation details if present
+            validationErrors: (error.extensions?.originalError as any)?.message,
           };
           return graphQLFormattedError;
         },
@@ -47,6 +55,7 @@ import { ApplicationsGraphqlModule } from './applications/applications.module';
     GolfGraphqlModule,
     BookingsGraphQLModule,
     ApplicationsGraphqlModule,
+    ScheduleConfigGraphqlModule,
   ],
 })
 export class GraphqlModule {}

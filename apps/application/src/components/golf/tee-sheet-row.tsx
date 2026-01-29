@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, memo, useCallback } from 'react'
 import { cn } from '@clubvantage/ui'
 import {
   Car,
@@ -14,11 +14,27 @@ import {
   ArrowRightLeft,
   Trash2,
   Plus,
-  Link2
+  Link2,
+  ShoppingCart
 } from 'lucide-react'
 import { FlightStatusBadge, type FlightStatus } from './flight-status-badge'
 import { PlayerTypeBadge } from './player-type-badge'
-import type { Flight, Player } from './types'
+import type { Flight, Player, RentalStatus } from './types'
+
+function getRentalStatusColor(status: RentalStatus | undefined): string {
+  switch (status) {
+    case 'requested':
+      return 'text-amber-600 bg-amber-50 dark:bg-amber-500/20 dark:text-amber-400'
+    case 'paid':
+      return 'text-emerald-600 bg-emerald-50 dark:bg-emerald-500/20 dark:text-emerald-400'
+    case 'assigned':
+      return 'text-blue-600 bg-blue-50 dark:bg-blue-500/20 dark:text-blue-400'
+    case 'returned':
+      return 'text-purple-600 bg-purple-50 dark:bg-purple-500/20 dark:text-purple-400'
+    default:
+      return ''
+  }
+}
 
 interface TeeSheetRowProps {
   flight: Flight
@@ -46,7 +62,7 @@ function getGroupIndicatorColor(groupId: 1 | 2): string {
   return groupId === 1 ? 'bg-blue-500' : 'bg-purple-500'
 }
 
-function PlayerCell({ player, position, onBookClick, onPlayerClick, isBlocked, groupId }: PlayerCellProps) {
+const PlayerCell = memo(function PlayerCell({ player, position, onBookClick, onPlayerClick, isBlocked, groupId }: PlayerCellProps) {
   if (isBlocked) {
     return (
       <div className="flex items-center justify-center text-muted-foreground text-sm">
@@ -94,9 +110,41 @@ function PlayerCell({ player, position, onBookClick, onPlayerClick, isBlocked, g
         />
       )}
       <div className={cn(effectiveGroupId && 'pl-2')}>
-        <span className="font-medium text-sm text-foreground truncate max-w-[120px] block">
-          {player.name}
-        </span>
+        <div className="flex items-center gap-1.5">
+          <span className="font-medium text-sm text-foreground truncate max-w-[100px]">
+            {player.name}
+          </span>
+          {/* Rental status badges */}
+          {player.cartStatus && player.cartStatus !== 'none' && (
+            <span
+              title={`Cart: ${player.cartStatus}${player.cartSharedWith ? ` (shared with P${player.cartSharedWith})` : ''}`}
+              className={cn('px-1 py-0.5 rounded text-[10px] font-medium flex items-center gap-0.5 flex-shrink-0', getRentalStatusColor(player.cartStatus))}
+            >
+              <Car className="h-2.5 w-2.5" />
+              {player.cartStatus.charAt(0).toUpperCase()}
+            </span>
+          )}
+          {player.caddyStatus && player.caddyStatus !== 'none' && (
+            <span
+              title={`Caddy: ${player.caddyStatus}`}
+              className={cn('px-1 py-0.5 rounded text-[10px] font-medium flex items-center gap-0.5 flex-shrink-0', getRentalStatusColor(player.caddyStatus))}
+            >
+              <Users className="h-2.5 w-2.5" />
+              {player.caddyStatus.charAt(0).toUpperCase()}
+            </span>
+          )}
+          {/* Fallback to legacy boolean icons if no status set */}
+          {!player.cartStatus && player.hasCart && (
+            <span title={player.cartSharedWith ? `Cart (shared with P${player.cartSharedWith})` : 'Cart rental'}>
+              <Car className="h-3.5 w-3.5 text-blue-500 flex-shrink-0" />
+            </span>
+          )}
+          {!player.caddyStatus && player.hasCaddy && (
+            <span title="Caddy assigned">
+              <Users className="h-3.5 w-3.5 text-amber-500 flex-shrink-0" />
+            </span>
+          )}
+        </div>
         <div className="flex items-center gap-1.5 mt-0.5">
           <PlayerTypeBadge type={player.type} />
           {player.handicap !== undefined && (
@@ -106,7 +154,7 @@ function PlayerCell({ player, position, onBookClick, onPlayerClick, isBlocked, g
       </div>
     </button>
   )
-}
+})
 
 interface RowActionsMenuProps {
   flight: Flight
@@ -119,7 +167,7 @@ interface RowActionsMenuProps {
   onAddPlayer?: () => void
 }
 
-function RowActionsMenu({
+const RowActionsMenu = memo(function RowActionsMenu({
   flight,
   onCheckIn,
   onNoShow,
@@ -276,9 +324,9 @@ function RowActionsMenu({
       )}
     </div>
   )
-}
+})
 
-export function TeeSheetRow({
+export const TeeSheetRow = memo(function TeeSheetRow({
   flight,
   onRowClick,
   onBookSlot,
@@ -390,4 +438,4 @@ export function TeeSheetRow({
       </td>
     </tr>
   )
-}
+})

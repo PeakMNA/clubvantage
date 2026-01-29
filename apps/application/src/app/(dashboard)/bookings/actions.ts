@@ -1,5 +1,7 @@
 'use server';
 
+import { cache } from 'react';
+import { requireAuth, requirePermission } from '@/lib/auth/server-auth';
 import {
   bookingService,
   pricingService,
@@ -251,10 +253,15 @@ export interface GetAvailabilityInput {
 }
 
 // ============================================================================
-// MOCK DATA FETCHERS (Replace with actual database queries)
+// CACHED DATA FETCHERS (Replace with actual database queries)
+// React.cache() deduplicates calls within a single request lifecycle
 // ============================================================================
 
-async function getMemberContext(memberId: string): Promise<MemberContext> {
+/**
+ * Get member context for booking validation
+ * Cached to avoid duplicate database queries within the same request
+ */
+const getMemberContext = cache(async (memberId: string): Promise<MemberContext> => {
   // TODO: Replace with actual database query
   return {
     id: memberId,
@@ -264,9 +271,13 @@ async function getMemberContext(memberId: string): Promise<MemberContext> {
     credits: 5000,
     noShowCount: 0,
   };
-}
+});
 
-async function getServiceContext(serviceId: string): Promise<ServiceContext | undefined> {
+/**
+ * Get service context for booking validation and pricing
+ * Cached to avoid duplicate database queries within the same request
+ */
+const getServiceContext = cache(async (serviceId: string): Promise<ServiceContext | undefined> => {
   // TODO: Replace with actual database query
   const services: Record<string, ServiceContext> = {
     s1: { id: 's1', name: 'Thai Massage', basePrice: 2000, durationMinutes: 90, bufferMinutes: 15 },
@@ -277,9 +288,13 @@ async function getServiceContext(serviceId: string): Promise<ServiceContext | un
     s8: { id: 's8', name: 'Personal Training', basePrice: 1500, durationMinutes: 60, bufferMinutes: 0 },
   };
   return services[serviceId];
-}
+});
 
-async function getStaffContext(staffId: string): Promise<StaffContext | undefined> {
+/**
+ * Get staff context for availability and capability checks
+ * Cached to avoid duplicate database queries within the same request
+ */
+const getStaffContext = cache(async (staffId: string): Promise<StaffContext | undefined> => {
   // TODO: Replace with actual database query
   const staff: Record<string, StaffContext> = {
     st1: {
@@ -328,9 +343,13 @@ async function getStaffContext(staffId: string): Promise<StaffContext | undefine
     },
   };
   return staff[staffId];
-}
+});
 
-async function getFacilityContext(facilityId: string): Promise<FacilityContext | undefined> {
+/**
+ * Get facility context for availability checks
+ * Cached to avoid duplicate database queries within the same request
+ */
+const getFacilityContext = cache(async (facilityId: string): Promise<FacilityContext | undefined> => {
   // TODO: Replace with actual database query
   const facilities: Record<string, FacilityContext> = {
     f1: { id: 'f1', name: 'Tennis Court 1', operatingHours: { start: '06:00', end: '22:00' }, capacity: 4 },
@@ -340,17 +359,51 @@ async function getFacilityContext(facilityId: string): Promise<FacilityContext |
     f7: { id: 'f7', name: 'Yoga Studio', operatingHours: { start: '06:00', end: '22:00' }, capacity: 20 },
   };
   return facilities[facilityId];
-}
+});
 
-async function getExistingBookings(
+type ExistingBooking = { startTime: Date; endTime: Date; staffId?: string; facilityId?: string };
+
+/**
+ * Cache for existing bookings queries within a request
+ * Uses a Map with composite key for multi-parameter caching
+ */
+const bookingsCache = new Map<string, Promise<ExistingBooking[]>>();
+
+/**
+ * Get existing bookings for conflict detection
+ * Uses in-memory cache for deduplication within the same request
+ */
+async function getExistingBookingsForDate(
   date: Date,
   staffId?: string,
   facilityId?: string
-): Promise<Array<{ startTime: Date; endTime: Date; staffId?: string; facilityId?: string }>> {
-  // TODO: Replace with actual database query
-  // Return mock existing bookings for the date
-  const dateStr = date.toISOString().split('T')[0];
+): Promise<ExistingBooking[]> {
+  // Extract date string (toISOString always returns "YYYY-MM-DDTHH:mm:ss.sssZ" format)
+  const dateStr = date.toISOString().split('T')[0]!;
+  const cacheKey = `${dateStr}:${staffId ?? ''}:${facilityId ?? ''}`;
 
+  // Return cached promise if available
+  const cached = bookingsCache.get(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  // Create and cache the query promise
+  const queryPromise = fetchExistingBookings(dateStr, staffId, facilityId);
+  bookingsCache.set(cacheKey, queryPromise);
+
+  return queryPromise;
+}
+
+/**
+ * Actual database fetch for existing bookings
+ * TODO: Replace with actual database query
+ */
+async function fetchExistingBookings(
+  dateStr: string,
+  staffId?: string,
+  facilityId?: string
+): Promise<ExistingBooking[]> {
   // Simulate some existing bookings
   if (staffId === 'st1') {
     return [
@@ -383,11 +436,14 @@ export async function validateBooking(
   input: ValidateBookingInput
 ): Promise<BookingValidationResult> {
   try {
-    const member = await getMemberContext(input.memberId);
-    const service = input.serviceId ? await getServiceContext(input.serviceId) : undefined;
-    const staff = input.staffId ? await getStaffContext(input.staffId) : undefined;
-    const facility = input.facilityId ? await getFacilityContext(input.facilityId) : undefined;
-    const existingBookings = await getExistingBookings(input.startTime, input.staffId, input.facilityId);
+    // Parallelize independent queries to eliminate waterfall
+    const [member, service, staff, facility, existingBookings] = await Promise.all([
+      getMemberContext(input.memberId),
+      input.serviceId ? getServiceContext(input.serviceId) : Promise.resolve(undefined),
+      input.staffId ? getStaffContext(input.staffId) : Promise.resolve(undefined),
+      input.facilityId ? getFacilityContext(input.facilityId) : Promise.resolve(undefined),
+      getExistingBookingsForDate(input.startTime, input.staffId, input.facilityId),
+    ]);
 
     const bookingInput: CreateBookingInput = {
       clubId: input.clubId,
@@ -425,12 +481,15 @@ export async function calculateBookingPrice(
   input: CalculatePriceInput
 ): Promise<PriceBreakdown | null> {
   try {
-    const service = await getServiceContext(input.serviceId);
+    // Parallelize service and member queries
+    const [service, member] = await Promise.all([
+      getServiceContext(input.serviceId),
+      getMemberContext(input.memberId),
+    ]);
+
     if (!service) {
       return null;
     }
-
-    const member = await getMemberContext(input.memberId);
 
     return bookingService.calculateBookingPrice(
       service,
@@ -450,9 +509,12 @@ export async function getAvailableSlots(
   input: GetAvailabilityInput
 ): Promise<DayAvailability | null> {
   try {
-    const staff = input.staffId ? await getStaffContext(input.staffId) : undefined;
-    const facility = input.facilityId ? await getFacilityContext(input.facilityId) : undefined;
-    const existingBookings = await getExistingBookings(input.date, input.staffId, input.facilityId);
+    // Parallelize staff, facility, and bookings queries
+    const [staff, facility, existingBookings] = await Promise.all([
+      input.staffId ? getStaffContext(input.staffId) : Promise.resolve(undefined),
+      input.facilityId ? getFacilityContext(input.facilityId) : Promise.resolve(undefined),
+      getExistingBookingsForDate(input.date, input.staffId, input.facilityId),
+    ]);
 
     return await availabilityService.getAvailability(
       {
@@ -508,14 +570,14 @@ export async function prepareQuickBooking(
       };
     }
 
-    // Calculate price
-    const price = await calculateBookingPrice({
-      serviceId: input.serviceId,
-      memberId: input.memberId,
-    });
-
-    // Get service for buffer time
-    const service = await getServiceContext(input.serviceId);
+    // Parallelize price calculation and service fetch (both independent)
+    const [price, service] = await Promise.all([
+      calculateBookingPrice({
+        serviceId: input.serviceId,
+        memberId: input.memberId,
+      }),
+      getServiceContext(input.serviceId),
+    ]);
     const bufferMinutes = service?.bufferMinutes || 0;
 
     // Generate booking number
@@ -695,11 +757,15 @@ export interface FacilityCrudResult {
 
 /**
  * Create a new facility
+ * Requires authentication and 'facility:create' permission
  */
 export async function createFacility(
   input: CreateFacilityInput
 ): Promise<FacilityCrudResult> {
   try {
+    // Verify authentication and permissions
+    await requirePermission('facility:create');
+
     const client = getServerClient();
     const variables: CreateFacilityMutationVariables = { input };
     const result = await client.request<CreateFacilityMutation>(
@@ -736,11 +802,15 @@ export async function createFacility(
 
 /**
  * Update an existing facility
+ * Requires authentication and 'facility:update' permission
  */
 export async function updateFacility(
   input: UpdateFacilityInput
 ): Promise<FacilityCrudResult> {
   try {
+    // Verify authentication and permissions
+    await requirePermission('facility:update');
+
     const client = getServerClient();
     const variables: UpdateFacilityMutationVariables = { input };
     const result = await client.request<UpdateFacilityMutation>(
@@ -777,9 +847,13 @@ export async function updateFacility(
 
 /**
  * Delete a facility
+ * Requires authentication and 'facility:delete' permission
  */
 export async function deleteFacility(id: string): Promise<{ success: boolean; message?: string; error?: string }> {
   try {
+    // Verify authentication and permissions
+    await requirePermission('facility:delete');
+
     const client = getServerClient();
     const variables: DeleteFacilityMutationVariables = { id };
     const result = await client.request<DeleteFacilityMutation>(
@@ -829,11 +903,15 @@ export interface ServiceCrudResult {
 
 /**
  * Create a new service
+ * Requires authentication and 'service:create' permission
  */
 export async function createService(
   input: CreateServiceInput
 ): Promise<ServiceCrudResult> {
   try {
+    // Verify authentication and permissions
+    await requirePermission('service:create');
+
     const client = getServerClient();
     const variables: CreateServiceMutationVariables = { input };
     const result = await client.request<CreateServiceMutation>(
@@ -873,11 +951,15 @@ export async function createService(
 
 /**
  * Update an existing service
+ * Requires authentication and 'service:update' permission
  */
 export async function updateService(
   input: UpdateServiceInput
 ): Promise<ServiceCrudResult> {
   try {
+    // Verify authentication and permissions
+    await requirePermission('service:update');
+
     const client = getServerClient();
     const variables: UpdateServiceMutationVariables = { input };
     const result = await client.request<UpdateServiceMutation>(
@@ -917,9 +999,13 @@ export async function updateService(
 
 /**
  * Delete a service
+ * Requires authentication and 'service:delete' permission
  */
 export async function deleteService(id: string): Promise<{ success: boolean; message?: string; error?: string }> {
   try {
+    // Verify authentication and permissions
+    await requirePermission('service:delete');
+
     const client = getServerClient();
     const variables: DeleteServiceMutationVariables = { id };
     const result = await client.request<DeleteServiceMutation>(
@@ -968,11 +1054,15 @@ export interface StaffCrudResult {
 
 /**
  * Create a new staff member
+ * Requires authentication and 'staff:create' permission
  */
 export async function createStaffMember(
   input: CreateStaffMemberInput
 ): Promise<StaffCrudResult> {
   try {
+    // Verify authentication and permissions
+    await requirePermission('staff:create');
+
     const client = getServerClient();
     const variables: CreateStaffMemberMutationVariables = { input };
     const result = await client.request<CreateStaffMemberMutation>(
@@ -1011,11 +1101,15 @@ export async function createStaffMember(
 
 /**
  * Update an existing staff member
+ * Requires authentication and 'staff:update' permission
  */
 export async function updateStaffMember(
   input: UpdateStaffMemberInput
 ): Promise<StaffCrudResult> {
   try {
+    // Verify authentication and permissions
+    await requirePermission('staff:update');
+
     const client = getServerClient();
     const variables: UpdateStaffMemberMutationVariables = { input };
     const result = await client.request<UpdateStaffMemberMutation>(
@@ -1054,9 +1148,13 @@ export async function updateStaffMember(
 
 /**
  * Delete a staff member
+ * Requires authentication and 'staff:delete' permission
  */
 export async function deleteStaffMember(id: string): Promise<{ success: boolean; message?: string; error?: string }> {
   try {
+    // Verify authentication and permissions
+    await requirePermission('staff:delete');
+
     const client = getServerClient();
     const variables: DeleteStaffMemberMutationVariables = { id };
     const result = await client.request<DeleteStaffMemberMutation>(

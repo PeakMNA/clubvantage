@@ -6,7 +6,7 @@ import { X, Plus, Car, Users, ChevronDown, ChevronUp, FileText, Loader2, Check, 
 import { FlightStatusBadge, type FlightStatus } from './flight-status-badge'
 import { PlayerCard } from './player-card'
 import { BookingGroupsSection } from './booking-groups-section'
-import type { Flight, Player, Cart, Caddy } from './types'
+import type { Flight, Player, Cart, Caddy, RentalStatus } from './types'
 
 interface FlightDetailPanelProps {
   flight: Flight | null
@@ -24,13 +24,16 @@ interface FlightDetailPanelProps {
   onAddPlayer?: () => void
   onViewPlayerProfile?: (player: Player) => void
   onRemovePlayer?: (player: Player) => void
-  // Cart/Caddy assignment props
+  // Cart/Caddy assignment props (flight-level)
   availableCarts?: Cart[]
   availableCaddies?: Caddy[]
   onAssignCart?: (cartId: string) => void
   onAssignCaddy?: (caddyId: string) => void
   onUnassignCart?: () => void
   onUnassignCaddy?: () => void
+  // Per-player rental status
+  onPlayerCartStatusChange?: (player: Player, status: RentalStatus) => void
+  onPlayerCaddyStatusChange?: (player: Player, status: RentalStatus) => void
 }
 
 function getActionButtons(
@@ -128,6 +131,8 @@ export function FlightDetailPanel({
   onAssignCaddy,
   onUnassignCart,
   onUnassignCaddy,
+  onPlayerCartStatusChange,
+  onPlayerCaddyStatusChange,
 }: FlightDetailPanelProps) {
   const panelRef = useRef<HTMLDivElement>(null)
   const [notesExpanded, setNotesExpanded] = useState(false)
@@ -278,6 +283,9 @@ export function FlightDetailPanel({
                             : undefined
                         }
                         onRemove={() => onRemovePlayer?.(player)}
+                        showRentalControls={!!(onPlayerCartStatusChange || onPlayerCaddyStatusChange)}
+                        onCartStatusChange={(status) => onPlayerCartStatusChange?.(player, status)}
+                        onCaddyStatusChange={(status) => onPlayerCaddyStatusChange?.(player, status)}
                       />
                     ))}
                     {/* Only show Add Player button when viewing all groups */}

@@ -53,7 +53,7 @@ export function validateSlotForPlacement(
   // Check for player conflicts (same player already in target slot)
   if (sourceBooking.playerIds && sourceBooking.playerIds.length > 0) {
     const targetPlayerIds = targetFlight.players
-      .filter(Boolean)
+      .filter((p): p is NonNullable<typeof p> => p !== null)
       .map((p) => p.id)
     const hasConflict = sourceBooking.playerIds.some((id) =>
       targetPlayerIds.includes(id)

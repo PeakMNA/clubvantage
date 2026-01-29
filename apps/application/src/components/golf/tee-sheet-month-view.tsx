@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { cn } from '@clubvantage/ui'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Users } from 'lucide-react'
 import type { DayAvailability, AvailabilityLevel } from './types'
 
 interface TeeSheetMonthViewProps {
@@ -28,20 +28,37 @@ function formatDateKey(date: Date): string {
   return date.toISOString().split('T')[0] as string
 }
 
-function getAvailabilityLabel(level: AvailabilityLevel): string {
-  switch (level) {
-    case 'open': return 'Open'
-    case 'limited': return 'Limited'
-    case 'full': return 'Full'
-    case 'blocked': return 'Blocked'
-    default: return ''
+function getOccupancyColor(bookedSlots: number, totalSlots: number): {
+  bg: string
+  text: string
+  label: string
+} {
+  if (totalSlots === 0) {
+    return { bg: 'bg-stone-100', text: 'text-stone-500', label: 'No data' }
   }
+  const percent = (bookedSlots / totalSlots) * 100
+  if (percent === 0) {
+    return { bg: 'bg-stone-50', text: 'text-stone-400', label: 'Empty' }
+  }
+  if (percent < 30) {
+    return { bg: 'bg-emerald-50', text: 'text-emerald-700', label: 'Low' }
+  }
+  if (percent < 60) {
+    return { bg: 'bg-blue-50', text: 'text-blue-700', label: 'Moderate' }
+  }
+  if (percent < 85) {
+    return { bg: 'bg-amber-50', text: 'text-amber-700', label: 'Busy' }
+  }
+  return { bg: 'bg-red-50', text: 'text-red-700', label: 'Full' }
 }
 
-function getProgressColor(available: number, total: number): string {
-  const percent = total > 0 ? ((total - available) / total) * 100 : 0
-  if (percent < 50) return 'bg-emerald-500'
-  if (percent < 80) return 'bg-amber-500'
+function getProgressColor(bookedSlots: number, totalSlots: number): string {
+  if (totalSlots === 0) return 'bg-stone-300'
+  const percent = (bookedSlots / totalSlots) * 100
+  if (percent === 0) return 'bg-stone-200'
+  if (percent < 30) return 'bg-emerald-500'
+  if (percent < 60) return 'bg-blue-500'
+  if (percent < 85) return 'bg-amber-500'
   return 'bg-red-500'
 }
 
@@ -140,12 +157,16 @@ export function TeeSheetMonthView({
       {/* Calendar Grid */}
       <div className="grid grid-cols-7">
         {calendarDays.map((date, index) => {
-          if (!date) return <div key={index} className="h-20 border-b border-r" />
+          if (!date) return <div key={index} className="h-24 border-b border-r" />
 
           const dateKey = formatDateKey(date)
           const data = availabilityMap.get(dateKey)
           const isBlockedDay = data?.level === 'blocked'
-          const occupancyPercent = data ? ((data.totalSlots - data.availableSlots) / data.totalSlots) * 100 : 0
+          const bookedSlots = data?.bookedSlots || 0
+          const totalSlots = data?.totalSlots || 0
+          const playerCount = data?.playerCount || 0
+          const occupancyPercent = totalSlots > 0 ? (bookedSlots / totalSlots) * 100 : 0
+          const occupancyStyle = getOccupancyColor(bookedSlots, totalSlots)
 
           return (
             <button
@@ -153,63 +174,100 @@ export function TeeSheetMonthView({
               onClick={() => onDayClick(date)}
               disabled={isBlockedDay}
               className={cn(
-                'h-20 p-2 border-b border-r text-left transition-colors flex flex-col',
-                !isCurrentMonth(date) && 'bg-muted/50 text-muted-foreground/60',
+                'h-24 p-2 border-b border-r text-left transition-colors flex flex-col',
+                !isCurrentMonth(date) && 'bg-muted/30 text-muted-foreground/50',
                 isCurrentMonth(date) && !isBlockedDay && 'hover:bg-muted/50',
-                isToday(date) && 'ring-2 ring-inset ring-blue-500',
-                isBlockedDay && 'bg-muted/50 cursor-not-allowed'
+                isToday(date) && 'ring-2 ring-inset ring-amber-500',
+                isBlockedDay && 'bg-stone-100 cursor-not-allowed'
               )}
             >
               {/* Day Number */}
-              <span className="text-sm font-medium">
-                {date.getDate()}
-              </span>
+              <div className="flex items-center justify-between">
+                <span className={cn(
+                  'text-sm font-semibold',
+                  isToday(date) && 'text-amber-600'
+                )}>
+                  {date.getDate()}
+                </span>
+                {isToday(date) && (
+                  <span className="text-[10px] font-medium text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded">
+                    Today
+                  </span>
+                )}
+              </div>
 
-              {isLoading ? (
-                <div className="mt-auto space-y-1">
-                  <div className="h-3 w-12 bg-muted rounded animate-pulse" />
+              {isLoading && isCurrentMonth(date) ? (
+                <div className="mt-auto space-y-1.5">
+                  <div className="h-3 w-16 bg-muted rounded animate-pulse" />
                   <div className="h-1.5 w-full bg-muted/50 rounded animate-pulse" />
                 </div>
-              ) : data ? (
+              ) : data && data.totalSlots > 0 && isCurrentMonth(date) ? (
                 <div className="mt-auto space-y-1">
-                  {/* Status Label */}
-                  <span className={cn(
-                    'text-xs',
-                    isBlockedDay ? 'text-muted-foreground' : 'text-muted-foreground'
-                  )}>
-                    {getAvailabilityLabel(data.level)}
-                  </span>
+                  {/* Booking Stats */}
+                  {isBlockedDay ? (
+                    <span className="text-xs text-stone-500 font-medium">Blocked</span>
+                  ) : (
+                    <>
+                      {/* Show player count prominently */}
+                      <div className="flex items-center gap-1">
+                        <Users className="h-3 w-3 text-stone-400" />
+                        <span className={cn('text-xs font-medium', occupancyStyle.text)}>
+                          {playerCount > 0 ? `${playerCount} players` : 'No bookings'}
+                        </span>
+                      </div>
 
-                  {/* Progress Bar */}
-                  {!isBlockedDay && (
-                    <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                      <div
-                        className={cn('h-full rounded-full transition-all', getProgressColor(data.availableSlots, data.totalSlots))}
-                        style={{ width: `${occupancyPercent}%` }}
-                      />
-                    </div>
+                      {/* Slots info */}
+                      <div className="flex items-center justify-between text-[10px] text-stone-500">
+                        <span>{bookedSlots}/{totalSlots} slots</span>
+                        <span>{Math.round(occupancyPercent)}%</span>
+                      </div>
+
+                      {/* Progress Bar */}
+                      <div className="h-1.5 w-full bg-stone-100 rounded-full overflow-hidden">
+                        <div
+                          className={cn('h-full rounded-full transition-all', getProgressColor(bookedSlots, totalSlots))}
+                          style={{ width: `${Math.max(occupancyPercent, bookedSlots > 0 ? 5 : 0)}%` }}
+                        />
+                      </div>
+                    </>
                   )}
                 </div>
-              ) : null}
+              ) : isCurrentMonth(date) ? (
+                <div className="mt-auto">
+                  <span className="text-[10px] text-stone-400">No data</span>
+                </div>
+              ) : (
+                <div className="mt-auto">
+                  <span className="text-[10px] text-stone-400">—</span>
+                </div>
+              )}
             </button>
           )
         })}
       </div>
 
       {/* Legend */}
-      <div className="border-t px-4 py-3 flex flex-wrap items-center gap-4 text-sm">
-        <span className="text-muted-foreground font-medium">Occupancy:</span>
-        <div className="flex items-center gap-2">
-          <span className="w-8 h-1.5 rounded bg-emerald-500" />
-          <span>&lt; 50%</span>
+      <div className="border-t px-4 py-3 flex flex-wrap items-center gap-6 text-xs">
+        <span className="text-stone-600 font-medium">Occupancy:</span>
+        <div className="flex items-center gap-1.5">
+          <span className="w-6 h-1.5 rounded bg-stone-200" />
+          <span className="text-stone-500">Empty</span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="w-8 h-1.5 rounded bg-amber-500" />
-          <span>50-80%</span>
+        <div className="flex items-center gap-1.5">
+          <span className="w-6 h-1.5 rounded bg-emerald-500" />
+          <span className="text-stone-500">&lt; 30%</span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="w-8 h-1.5 rounded bg-red-500" />
-          <span>&gt; 80%</span>
+        <div className="flex items-center gap-1.5">
+          <span className="w-6 h-1.5 rounded bg-blue-500" />
+          <span className="text-stone-500">30-60%</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-6 h-1.5 rounded bg-amber-500" />
+          <span className="text-stone-500">60-85%</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-6 h-1.5 rounded bg-red-500" />
+          <span className="text-stone-500">&gt; 85%</span>
         </div>
       </div>
     </div>

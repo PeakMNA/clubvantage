@@ -3,15 +3,15 @@
 import { cn } from '@clubvantage/ui'
 import { Lock } from 'lucide-react'
 
-type AgingStatus = 'current' | '30' | '60' | '90' | 'suspended'
+export type AgingStatus = 'current' | '30' | '60' | '90' | 'suspended'
 
-interface AgingBarData {
+export interface AgingBarData {
   status: AgingStatus
   value: number
   percentage: number
 }
 
-interface AgingBarProps {
+export interface AgingBarProps {
   data: AgingBarData[]
   onSegmentClick?: (status: AgingStatus) => void
   showLabels?: boolean

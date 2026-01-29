@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { DrillDownLink } from './drill-down-link'
 import { FilterBar } from './filter-bar'
-import { AgingBar } from './charts'
+import { DynamicAgingBar as AgingBar } from './charts'
 import { Card, CardContent, CardHeader, CardTitle } from '@clubvantage/ui'
 import { Lock, AlertTriangle, Search, MoreHorizontal } from 'lucide-react'
 import { cn } from '@clubvantage/ui'

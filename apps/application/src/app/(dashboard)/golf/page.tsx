@@ -809,9 +809,6 @@ export default function GolfPage() {
   // BOOKING-CENTRIC STATE
   // =========================================================================
 
-  // Placement mode for move/copy operations
-  const placementMode = usePlacementMode()
-
   // Bookings tab state
   const [bookingsSearchQuery, setBookingsSearchQuery] = useState('')
   const [bookingsFilters, setBookingsFilters] = useState<BookingFilters>({
@@ -1007,6 +1004,9 @@ export default function GolfPage() {
 
   // Flights state - generated from schedule config
   const [flights, setFlights] = useState<Flight[]>([])
+
+  // Placement mode for move/copy operations (pass flights for smart validation)
+  const placementMode = usePlacementMode(flights)
 
   // Generate flights from schedule config when config or date changes
   useEffect(() => {
@@ -2742,7 +2742,7 @@ export default function GolfPage() {
           }
         } : undefined}
         onMove={selectedBooking ? () => {
-          // Start placement mode for move
+          // Start placement mode for move with smart validation
           placementMode.startMove({
             id: selectedBooking.id,
             bookingNumber: selectedBooking.bookingNumber,
@@ -2750,12 +2750,13 @@ export default function GolfPage() {
             playerCount: selectedBooking.playerCount,
             sourceTeeTime: selectedBooking.teeTime,
             sourceDate: selectedBooking.teeDate,
+            playerIds: selectedBooking.players.map(p => p.id),
           })
           setIsBookingModalOpen(false)
           setActiveTab('tee-sheet')
         } : undefined}
         onCopy={selectedBooking ? () => {
-          // Start placement mode for copy
+          // Start placement mode for copy with smart validation
           placementMode.startCopy({
             id: selectedBooking.id,
             bookingNumber: selectedBooking.bookingNumber,
@@ -2763,6 +2764,7 @@ export default function GolfPage() {
             playerCount: selectedBooking.playerCount,
             sourceTeeTime: selectedBooking.teeTime,
             sourceDate: selectedBooking.teeDate,
+            playerIds: selectedBooking.players.map(p => p.id),
           })
           setIsBookingModalOpen(false)
           setActiveTab('tee-sheet')

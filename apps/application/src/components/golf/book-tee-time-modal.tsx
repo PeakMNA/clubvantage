@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { cn } from '@clubvantage/ui'
 import { Loader2, X, AlertCircle } from 'lucide-react'
 import { Modal } from './modal'
@@ -8,6 +8,24 @@ import { PersonSearch } from './person-search'
 import { PlayerTypeBadge, type PlayerType } from './player-type-badge'
 import { BookingTypeSelector, type BookingType } from './booking-type-selector'
 import type { BookingGroup, Player, HoleChoice, Course } from './types'
+
+// GraphQL query for searching members
+const SEARCH_MEMBERS_QUERY = `
+  query SearchMembers($search: String, $first: Int) {
+    members(search: $search, first: $first) {
+      edges {
+        node {
+          id
+          memberId
+          firstName
+          lastName
+          email
+          phone
+        }
+      }
+    }
+  }
+`
 
 interface TimeSlot {
   time: string
@@ -21,7 +39,7 @@ interface SelectedPlayer {
   memberId?: string
 }
 
-interface BookTeeTimeModalProps {
+export interface BookTeeTimeModalProps {
   isOpen: boolean
   onClose: () => void
   courseName: string
@@ -72,6 +90,45 @@ export function BookTeeTimeModal({
   // 18-hole booking state
   const [holeChoice, setHoleChoice] = useState<HoleChoice>('9-hole')
   const [startingNine, setStartingNine] = useState<'front9' | 'back9'>('front9')
+
+  // Member search function using real API with authenticated fetch
+  const searchMembers = useCallback(async (query: string): Promise<{ id: string; name: string; type: PlayerType; phone?: string; email?: string; memberId?: string }[]> => {
+    if (query.length < 2) return []
+
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+      const response = await fetch(`${apiUrl}/graphql`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Include cookies for authentication
+        body: JSON.stringify({
+          query: SEARCH_MEMBERS_QUERY,
+          variables: { search: query, first: 10 },
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.errors) {
+        console.error('GraphQL errors:', data.errors)
+        return []
+      }
+
+      return data.data.members.edges.map(({ node }: { node: { id: string; memberId: string; firstName: string; lastName: string; email: string | null; phone: string | null } }) => ({
+        id: node.id, // This is the actual UUID
+        name: `${node.firstName} ${node.lastName}`,
+        type: 'member' as PlayerType,
+        phone: node.phone || undefined,
+        email: node.email || undefined,
+        memberId: node.memberId, // This is the member number like M-0001 (for display)
+      }))
+    } catch (error) {
+      console.error('Failed to search members:', error)
+      return []
+    }
+  }, [])
 
   // Calculate projected time for second 9 based on pace of play
   const getProjectedSecond9Time = () => {
@@ -462,6 +519,7 @@ export function BookTeeTimeModal({
               <PersonSearch
                 onSelect={handleAddPlayer}
                 onWalkup={() => setShowWalkupForm(true)}
+                searchFn={searchMembers}
               />
             )
           )}

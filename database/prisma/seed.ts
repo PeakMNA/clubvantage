@@ -393,6 +393,152 @@ async function main() {
   console.log(`✅ Created golf course: ${golfCourse.name}`);
 
   // ============================================================================
+  // CLUB GOLF SETTINGS
+  // ============================================================================
+  console.log('Creating club golf settings...');
+
+  const golfSettings = await prisma.clubGolfSettings.upsert({
+    where: { clubId: demoClub.id },
+    update: {},
+    create: {
+      clubId: demoClub.id,
+      cartPolicy: 'OPTIONAL',
+      rentalPolicy: 'OPTIONAL',
+      caddyDrivesCart: true, // Asian mode default
+      maxGuestsPerMember: 3,
+      requireGuestContact: false,
+    },
+  });
+
+  console.log(`✅ Created golf settings for club: ${demoClub.name}`);
+
+  // ============================================================================
+  // GOLF SCHEDULE CONFIGURATION
+  // ============================================================================
+  console.log('Creating golf schedule configuration...');
+
+  const scheduleConfig = await prisma.golfScheduleConfig.upsert({
+    where: { courseId: golfCourse.id },
+    update: {},
+    create: {
+      courseId: golfCourse.id,
+      weekdayFirstTee: '06:00',
+      weekdayLastTee: '17:00',
+      weekendFirstTee: '05:30',
+      weekendLastTee: '17:30',
+      twilightMode: 'FIXED',
+      twilightMinutesBeforeSunset: 90,
+      twilightFixedDefault: '16:00',
+      defaultBookingWindowDays: 7,
+      timePeriods: {
+        create: [
+          {
+            name: 'Early Bird',
+            startTime: '05:30',
+            endTime: '07:00',
+            intervalMinutes: 8,
+            isPrimeTime: false,
+            applicableDays: 'ALL',
+            sortOrder: 0,
+          },
+          {
+            name: 'Prime Morning',
+            startTime: '07:00',
+            endTime: '10:00',
+            intervalMinutes: 10,
+            isPrimeTime: true,
+            applicableDays: 'ALL',
+            sortOrder: 1,
+          },
+          {
+            name: 'Midday',
+            startTime: '10:00',
+            endTime: '14:00',
+            intervalMinutes: 8,
+            isPrimeTime: false,
+            applicableDays: 'ALL',
+            sortOrder: 2,
+          },
+          {
+            name: 'Prime Afternoon',
+            startTime: '14:00',
+            endTime: '16:00',
+            intervalMinutes: 10,
+            isPrimeTime: true,
+            applicableDays: 'WEEKEND',
+            sortOrder: 3,
+          },
+          {
+            name: 'Twilight',
+            startTime: '16:00',
+            endTime: null,
+            intervalMinutes: 8,
+            isPrimeTime: false,
+            applicableDays: 'ALL',
+            sortOrder: 4,
+          },
+        ],
+      },
+      seasons: {
+        create: [
+          {
+            name: 'High Season',
+            startMonth: 11,
+            startDay: 1,
+            endMonth: 2,
+            endDay: 28,
+            isRecurring: true,
+            priority: 2,
+            overrideFirstTee: '05:30',
+            overrideLastTee: '18:00',
+            overrideTimePeriods: false,
+          },
+          {
+            name: 'Low Season',
+            startMonth: 5,
+            startDay: 1,
+            endMonth: 9,
+            endDay: 30,
+            isRecurring: true,
+            priority: 1,
+            overrideFirstTee: '06:30',
+            overrideLastTee: '16:30',
+            overrideTimePeriods: false,
+          },
+        ],
+      },
+      specialDays: {
+        create: [
+          {
+            name: 'New Year\'s Day',
+            startDate: '01-01',
+            endDate: '01-01',
+            isRecurring: true,
+            type: 'HOLIDAY',
+          },
+          {
+            name: 'Songkran',
+            startDate: '04-13',
+            endDate: '04-15',
+            isRecurring: true,
+            type: 'HOLIDAY',
+          },
+          {
+            name: 'Course Maintenance',
+            startDate: '2025-03-15',
+            endDate: '2025-03-16',
+            isRecurring: false,
+            type: 'CLOSED',
+            notes: 'Annual aeration and overseeding',
+          },
+        ],
+      },
+    },
+  });
+
+  console.log(`✅ Created schedule config with ${scheduleConfig.id}`);
+
+  // ============================================================================
   // CADDIES
   // ============================================================================
   console.log('Creating caddies...');
@@ -1189,6 +1335,653 @@ async function main() {
   ]);
 
   console.log(`✅ Created ${applications.length} membership applications`);
+
+  // ============================================================================
+  // COMPREHENSIVE TEE TIME TEST DATA (Jan 19 - Feb 7, 2026)
+  // ============================================================================
+  console.log('Creating comprehensive tee time test data...');
+
+  // Helper to create date at specific time
+  const createDateTime = (year: number, month: number, day: number, time: string): Date => {
+    const [hours, minutes] = time.split(':').map(Number);
+    return new Date(year, month - 1, day, hours, minutes, 0, 0);
+  };
+
+  // Get active members for bookings
+  const activeMembers = members.filter(m =>
+    ['ACTIVE'].includes((m as any).status)
+  );
+
+  // Helper to generate tee time number
+  let teeTimeCounter = 100;
+  const getNextTeeTimeNumber = () => `TT-2026-${String(++teeTimeCounter).padStart(4, '0')}`;
+
+  // ============================================================================
+  // TEE TIME BLOCKS (Maintenance, Tournaments, etc.)
+  // ============================================================================
+  console.log('Creating tee time blocks...');
+
+  const blocks = [
+    // Monday Jan 20 - Morning course maintenance
+    {
+      startTime: createDateTime(2026, 1, 20, '06:00'),
+      endTime: createDateTime(2026, 1, 20, '07:00'),
+      blockType: 'MAINTENANCE' as const,
+      reason: 'Morning greens maintenance - aerating greens 1-9',
+    },
+    // Wednesday Jan 22 - Ladies Tournament (morning)
+    {
+      startTime: createDateTime(2026, 1, 22, '07:00'),
+      endTime: createDateTime(2026, 1, 22, '11:00'),
+      blockType: 'TOURNAMENT' as const,
+      reason: 'Ladies Monthly Medal Tournament',
+    },
+    // Friday Jan 24 - Corporate event
+    {
+      startTime: createDateTime(2026, 1, 24, '12:00'),
+      endTime: createDateTime(2026, 1, 24, '14:00'),
+      blockType: 'PRIVATE' as const,
+      reason: 'Corporate Golf Day - ABC Company',
+    },
+    // Saturday Jan 25 - Club Championship
+    {
+      startTime: createDateTime(2026, 1, 25, '06:30'),
+      endTime: createDateTime(2026, 1, 25, '09:00'),
+      blockType: 'TOURNAMENT' as const,
+      reason: 'Club Championship - Round 1 (Shotgun Start)',
+    },
+    // Sunday Jan 26 - Reserved for members event
+    {
+      startTime: createDateTime(2026, 1, 26, '14:00'),
+      endTime: createDateTime(2026, 1, 26, '16:00'),
+      blockType: 'PRIVATE' as const,
+      reason: 'Member-Guest Invitational Tee Times Reserved',
+    },
+    // Tuesday Jan 28 - Cart path maintenance
+    {
+      startTime: createDateTime(2026, 1, 28, '10:00'),
+      endTime: createDateTime(2026, 1, 28, '11:00'),
+      blockType: 'MAINTENANCE' as const,
+      reason: 'Cart path repair - Hole 7 and 8 area',
+    },
+    // Saturday Feb 1 - New Year Tournament
+    {
+      startTime: createDateTime(2026, 2, 1, '07:00'),
+      endTime: createDateTime(2026, 2, 1, '10:00'),
+      blockType: 'TOURNAMENT' as const,
+      reason: 'Chinese New Year Celebration Tournament',
+    },
+    // Monday Feb 3 - Course closed for maintenance
+    {
+      startTime: createDateTime(2026, 2, 3, '06:00'),
+      endTime: createDateTime(2026, 2, 3, '18:00'),
+      blockType: 'MAINTENANCE' as const,
+      reason: 'Full course maintenance - Annual overseeding (Course Closed)',
+    },
+    // Thursday Feb 6 - Twilight blocked for private party
+    {
+      startTime: createDateTime(2026, 2, 6, '15:00'),
+      endTime: createDateTime(2026, 2, 6, '17:00'),
+      blockType: 'PRIVATE' as const,
+      reason: 'Private event - Smith Birthday Celebration',
+    },
+  ];
+
+  const createdBlocks = await Promise.all(
+    blocks.map(async (b) => {
+      const existing = await prisma.teeTimeBlock.findFirst({
+        where: {
+          courseId: golfCourse.id,
+          startTime: b.startTime,
+        }
+      });
+      if (existing) return existing;
+
+      return prisma.teeTimeBlock.create({
+        data: {
+          courseId: golfCourse.id,
+          startTime: b.startTime,
+          endTime: b.endTime,
+          blockType: b.blockType,
+          reason: b.reason,
+          createdBy: adminUser.id,
+        }
+      });
+    })
+  );
+
+  console.log(`✅ Created ${createdBlocks.length} tee time blocks`);
+
+  // ============================================================================
+  // TEE TIME BOOKINGS WITH PLAYERS
+  // ============================================================================
+  console.log('Creating tee time bookings with players...');
+
+  // Define test scenarios for various dates
+  const bookingScenarios = [
+    // ===========================================
+    // Monday Jan 20, 2026 - Normal weekday
+    // ===========================================
+    // Early morning bookings
+    { date: [2026, 1, 20], time: '07:08', status: BookingStatus.COMPLETED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 0, pos: 1, checkedIn: true },
+      { type: PlayerType.MEMBER, memberIdx: 1, pos: 2, checkedIn: true },
+      { type: PlayerType.GUEST, guestName: 'David Wilson', pos: 3, checkedIn: true },
+      { type: PlayerType.GUEST, guestName: 'Tom Anderson', pos: 4, checkedIn: true },
+    ]},
+    { date: [2026, 1, 20], time: '07:16', status: BookingStatus.COMPLETED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 2, pos: 1, checkedIn: true },
+      { type: PlayerType.MEMBER, memberIdx: 3, pos: 2, checkedIn: true },
+    ]},
+    { date: [2026, 1, 20], time: '07:24', status: BookingStatus.CHECKED_IN, players: [
+      { type: PlayerType.MEMBER, memberIdx: 4, pos: 1, checkedIn: true },
+      { type: PlayerType.GUEST, guestName: 'Michael Brown', pos: 2, checkedIn: true },
+      { type: PlayerType.GUEST, guestName: 'Robert Davis', pos: 3, checkedIn: true },
+    ]},
+    { date: [2026, 1, 20], time: '07:32', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 5, pos: 1 },
+      { type: PlayerType.MEMBER, memberIdx: 6, pos: 2 },
+      { type: PlayerType.MEMBER, memberIdx: 7, pos: 3 },
+      { type: PlayerType.MEMBER, memberIdx: 8, pos: 4 },
+    ]},
+    { date: [2026, 1, 20], time: '09:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 9, pos: 1 },
+      { type: PlayerType.DEPENDENT, guestName: 'Junior Player', pos: 2 },
+    ]},
+    { date: [2026, 1, 20], time: '14:00', status: BookingStatus.PENDING, players: [
+      { type: PlayerType.WALK_UP, guestName: 'Walk-in Guest 1', pos: 1 },
+    ]},
+
+    // ===========================================
+    // Tuesday Jan 21, 2026
+    // ===========================================
+    { date: [2026, 1, 21], time: '06:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 0, pos: 1 },
+      { type: PlayerType.MEMBER, memberIdx: 1, pos: 2 },
+      { type: PlayerType.MEMBER, memberIdx: 2, pos: 3 },
+      { type: PlayerType.MEMBER, memberIdx: 3, pos: 4 },
+    ]},
+    { date: [2026, 1, 21], time: '06:08', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 4, pos: 1 },
+      { type: PlayerType.GUEST, guestName: 'James Miller', pos: 2 },
+    ]},
+    { date: [2026, 1, 21], time: '08:00', status: BookingStatus.CANCELLED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 5, pos: 1 },
+    ], cancelReason: 'Weather forecast - heavy rain expected' },
+    { date: [2026, 1, 21], time: '10:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 6, pos: 1 },
+      { type: PlayerType.MEMBER, memberIdx: 7, pos: 2 },
+      { type: PlayerType.GUEST, guestName: 'Chris Taylor', pos: 3 },
+    ]},
+    { date: [2026, 1, 21], time: '15:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.WALK_UP, guestName: 'Evening Walker', pos: 1 },
+      { type: PlayerType.WALK_UP, guestName: 'Twilight Player', pos: 2 },
+    ]},
+
+    // ===========================================
+    // Wednesday Jan 22, 2026 (Ladies Tournament morning)
+    // ===========================================
+    // Tournament players would be handled separately - only afternoon slots available
+    { date: [2026, 1, 22], time: '12:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 8, pos: 1 },
+      { type: PlayerType.GUEST, guestName: 'Post-Tournament Guest', pos: 2 },
+    ]},
+    { date: [2026, 1, 22], time: '14:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 9, pos: 1 },
+      { type: PlayerType.MEMBER, memberIdx: 10, pos: 2 },
+      { type: PlayerType.MEMBER, memberIdx: 11, pos: 3 },
+    ]},
+
+    // ===========================================
+    // Thursday Jan 23, 2026 - Busy day
+    // ===========================================
+    { date: [2026, 1, 23], time: '06:00', status: BookingStatus.COMPLETED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 0, pos: 1, checkedIn: true },
+      { type: PlayerType.MEMBER, memberIdx: 1, pos: 2, checkedIn: true },
+      { type: PlayerType.MEMBER, memberIdx: 2, pos: 3, checkedIn: true },
+      { type: PlayerType.MEMBER, memberIdx: 3, pos: 4, checkedIn: true },
+    ]},
+    { date: [2026, 1, 23], time: '06:08', status: BookingStatus.COMPLETED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 4, pos: 1, checkedIn: true },
+      { type: PlayerType.MEMBER, memberIdx: 5, pos: 2, checkedIn: true },
+    ]},
+    { date: [2026, 1, 23], time: '06:16', status: BookingStatus.CHECKED_IN, players: [
+      { type: PlayerType.MEMBER, memberIdx: 6, pos: 1, checkedIn: true },
+      { type: PlayerType.GUEST, guestName: 'Morning Guest A', pos: 2, checkedIn: true },
+      { type: PlayerType.GUEST, guestName: 'Morning Guest B', pos: 3, checkedIn: true },
+      { type: PlayerType.GUEST, guestName: 'Morning Guest C', pos: 4, checkedIn: true },
+    ]},
+    { date: [2026, 1, 23], time: '06:24', status: BookingStatus.CHECKED_IN, players: [
+      { type: PlayerType.MEMBER, memberIdx: 7, pos: 1, checkedIn: true },
+    ]},
+    { date: [2026, 1, 23], time: '07:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 8, pos: 1 },
+      { type: PlayerType.MEMBER, memberIdx: 9, pos: 2 },
+    ]},
+    { date: [2026, 1, 23], time: '08:00', status: BookingStatus.NO_SHOW, players: [
+      { type: PlayerType.MEMBER, memberIdx: 10, pos: 1 },
+      { type: PlayerType.GUEST, guestName: 'No Show Guest', pos: 2 },
+    ]},
+    { date: [2026, 1, 23], time: '09:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 11, pos: 1 },
+      { type: PlayerType.MEMBER, memberIdx: 12, pos: 2 },
+      { type: PlayerType.GUEST, guestName: 'Business Partner', pos: 3 },
+    ]},
+    { date: [2026, 1, 23], time: '10:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 13, pos: 1 },
+    ]},
+    { date: [2026, 1, 23], time: '14:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 0, pos: 1 },
+      { type: PlayerType.GUEST, guestName: 'Afternoon Guest', pos: 2 },
+      { type: PlayerType.GUEST, guestName: 'Afternoon Guest 2', pos: 3 },
+      { type: PlayerType.GUEST, guestName: 'Afternoon Guest 3', pos: 4 },
+    ]},
+    { date: [2026, 1, 23], time: '16:00', status: BookingStatus.PENDING, players: [
+      { type: PlayerType.WALK_UP, guestName: 'Twilight Walker', pos: 1 },
+    ]},
+
+    // ===========================================
+    // Friday Jan 24, 2026 (Corporate event midday)
+    // ===========================================
+    { date: [2026, 1, 24], time: '06:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 0, pos: 1 },
+      { type: PlayerType.MEMBER, memberIdx: 1, pos: 2 },
+    ]},
+    { date: [2026, 1, 24], time: '07:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 2, pos: 1 },
+      { type: PlayerType.MEMBER, memberIdx: 3, pos: 2 },
+      { type: PlayerType.MEMBER, memberIdx: 4, pos: 3 },
+    ]},
+    { date: [2026, 1, 24], time: '08:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 5, pos: 1 },
+      { type: PlayerType.GUEST, guestName: 'VIP Guest', pos: 2 },
+    ]},
+    { date: [2026, 1, 24], time: '15:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 6, pos: 1 },
+    ]},
+
+    // ===========================================
+    // Saturday Jan 25, 2026 (Club Championship morning)
+    // ===========================================
+    // After tournament ends at 9am
+    { date: [2026, 1, 25], time: '10:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 7, pos: 1 },
+      { type: PlayerType.GUEST, guestName: 'Weekend Guest 1', pos: 2 },
+      { type: PlayerType.GUEST, guestName: 'Weekend Guest 2', pos: 3 },
+      { type: PlayerType.GUEST, guestName: 'Weekend Guest 3', pos: 4 },
+    ]},
+    { date: [2026, 1, 25], time: '10:08', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 8, pos: 1 },
+      { type: PlayerType.MEMBER, memberIdx: 9, pos: 2 },
+    ]},
+    { date: [2026, 1, 25], time: '12:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 10, pos: 1 },
+      { type: PlayerType.DEPENDENT, guestName: 'Junior Smith', pos: 2 },
+    ]},
+    { date: [2026, 1, 25], time: '14:00', status: BookingStatus.PENDING, players: [
+      { type: PlayerType.MEMBER, memberIdx: 11, pos: 1 },
+      { type: PlayerType.MEMBER, memberIdx: 12, pos: 2 },
+      { type: PlayerType.MEMBER, memberIdx: 13, pos: 3 },
+    ]},
+
+    // ===========================================
+    // Sunday Jan 26, 2026 (Member-Guest afternoon reserved)
+    // ===========================================
+    { date: [2026, 1, 26], time: '06:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 0, pos: 1 },
+      { type: PlayerType.MEMBER, memberIdx: 1, pos: 2 },
+      { type: PlayerType.MEMBER, memberIdx: 2, pos: 3 },
+      { type: PlayerType.MEMBER, memberIdx: 3, pos: 4 },
+    ]},
+    { date: [2026, 1, 26], time: '07:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 4, pos: 1 },
+      { type: PlayerType.GUEST, guestName: 'Sunday Guest', pos: 2 },
+    ]},
+    { date: [2026, 1, 26], time: '08:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 5, pos: 1 },
+      { type: PlayerType.MEMBER, memberIdx: 6, pos: 2 },
+      { type: PlayerType.MEMBER, memberIdx: 7, pos: 3 },
+    ]},
+    { date: [2026, 1, 26], time: '10:00', status: BookingStatus.CANCELLED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 8, pos: 1 },
+    ], cancelReason: 'Personal emergency' },
+
+    // ===========================================
+    // Monday Jan 27, 2026
+    // ===========================================
+    { date: [2026, 1, 27], time: '06:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 0, pos: 1 },
+      { type: PlayerType.MEMBER, memberIdx: 1, pos: 2 },
+    ]},
+    { date: [2026, 1, 27], time: '08:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 2, pos: 1 },
+      { type: PlayerType.GUEST, guestName: 'Monday Guest', pos: 2 },
+      { type: PlayerType.GUEST, guestName: 'Monday Guest 2', pos: 3 },
+    ]},
+
+    // ===========================================
+    // Tuesday Jan 28, 2026 (Cart path maintenance 10-11)
+    // ===========================================
+    { date: [2026, 1, 28], time: '06:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 3, pos: 1 },
+      { type: PlayerType.MEMBER, memberIdx: 4, pos: 2 },
+    ]},
+    { date: [2026, 1, 28], time: '12:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 5, pos: 1 },
+    ]},
+
+    // ===========================================
+    // Wednesday Jan 29, 2026
+    // ===========================================
+    { date: [2026, 1, 29], time: '06:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 6, pos: 1 },
+      { type: PlayerType.MEMBER, memberIdx: 7, pos: 2 },
+      { type: PlayerType.MEMBER, memberIdx: 8, pos: 3 },
+      { type: PlayerType.MEMBER, memberIdx: 9, pos: 4 },
+    ]},
+    { date: [2026, 1, 29], time: '07:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 10, pos: 1 },
+      { type: PlayerType.DEPENDENT, guestName: 'Junior Player Wed', pos: 2 },
+    ]},
+
+    // ===========================================
+    // Thursday Jan 30, 2026
+    // ===========================================
+    { date: [2026, 1, 30], time: '06:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 0, pos: 1 },
+      { type: PlayerType.GUEST, guestName: 'Thursday AM Guest', pos: 2 },
+    ]},
+    { date: [2026, 1, 30], time: '09:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 1, pos: 1 },
+      { type: PlayerType.MEMBER, memberIdx: 2, pos: 2 },
+      { type: PlayerType.MEMBER, memberIdx: 3, pos: 3 },
+    ]},
+
+    // ===========================================
+    // Friday Jan 31, 2026
+    // ===========================================
+    { date: [2026, 1, 31], time: '06:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 4, pos: 1 },
+      { type: PlayerType.MEMBER, memberIdx: 5, pos: 2 },
+    ]},
+    { date: [2026, 1, 31], time: '08:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 6, pos: 1 },
+      { type: PlayerType.GUEST, guestName: 'End of Month Guest', pos: 2 },
+      { type: PlayerType.GUEST, guestName: 'End of Month Guest 2', pos: 3 },
+      { type: PlayerType.GUEST, guestName: 'End of Month Guest 3', pos: 4 },
+    ]},
+    { date: [2026, 1, 31], time: '14:00', status: BookingStatus.PENDING, players: [
+      { type: PlayerType.WALK_UP, guestName: 'Friday Walk-up', pos: 1 },
+    ]},
+
+    // ===========================================
+    // Saturday Feb 1, 2026 (Chinese NY Tournament morning)
+    // ===========================================
+    // After tournament at 10am
+    { date: [2026, 2, 1], time: '11:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 7, pos: 1 },
+      { type: PlayerType.MEMBER, memberIdx: 8, pos: 2 },
+      { type: PlayerType.GUEST, guestName: 'Feb Saturday Guest', pos: 3 },
+    ]},
+    { date: [2026, 2, 1], time: '14:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 9, pos: 1 },
+      { type: PlayerType.MEMBER, memberIdx: 10, pos: 2 },
+    ]},
+
+    // ===========================================
+    // Sunday Feb 2, 2026
+    // ===========================================
+    { date: [2026, 2, 2], time: '06:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 0, pos: 1 },
+      { type: PlayerType.MEMBER, memberIdx: 1, pos: 2 },
+      { type: PlayerType.MEMBER, memberIdx: 2, pos: 3 },
+      { type: PlayerType.MEMBER, memberIdx: 3, pos: 4 },
+    ]},
+    { date: [2026, 2, 2], time: '06:08', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 4, pos: 1 },
+      { type: PlayerType.MEMBER, memberIdx: 5, pos: 2 },
+    ]},
+    { date: [2026, 2, 2], time: '08:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 6, pos: 1 },
+      { type: PlayerType.GUEST, guestName: 'Sunday Feb Guest', pos: 2 },
+    ]},
+    { date: [2026, 2, 2], time: '10:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 7, pos: 1 },
+      { type: PlayerType.DEPENDENT, guestName: 'Sunday Junior', pos: 2 },
+      { type: PlayerType.DEPENDENT, guestName: 'Sunday Junior 2', pos: 3 },
+    ]},
+
+    // ===========================================
+    // Monday Feb 3, 2026 - CLOSED for maintenance
+    // ===========================================
+    // No bookings - entire day blocked
+
+    // ===========================================
+    // Tuesday Feb 4, 2026
+    // ===========================================
+    { date: [2026, 2, 4], time: '06:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 8, pos: 1 },
+      { type: PlayerType.MEMBER, memberIdx: 9, pos: 2 },
+    ]},
+    { date: [2026, 2, 4], time: '07:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 10, pos: 1 },
+      { type: PlayerType.GUEST, guestName: 'Tuesday Morning Guest', pos: 2 },
+      { type: PlayerType.GUEST, guestName: 'Tuesday Morning Guest 2', pos: 3 },
+    ]},
+    { date: [2026, 2, 4], time: '14:00', status: BookingStatus.CANCELLED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 11, pos: 1 },
+    ], cancelReason: 'Work conflict' },
+
+    // ===========================================
+    // Wednesday Feb 5, 2026
+    // ===========================================
+    { date: [2026, 2, 5], time: '06:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 0, pos: 1 },
+      { type: PlayerType.MEMBER, memberIdx: 1, pos: 2 },
+      { type: PlayerType.MEMBER, memberIdx: 2, pos: 3 },
+    ]},
+    { date: [2026, 2, 5], time: '08:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 3, pos: 1 },
+      { type: PlayerType.GUEST, guestName: 'Midweek Guest', pos: 2 },
+    ]},
+    { date: [2026, 2, 5], time: '10:00', status: BookingStatus.PENDING, players: [
+      { type: PlayerType.MEMBER, memberIdx: 4, pos: 1 },
+    ]},
+
+    // ===========================================
+    // Thursday Feb 6, 2026 (Private event twilight)
+    // ===========================================
+    { date: [2026, 2, 6], time: '06:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 5, pos: 1 },
+      { type: PlayerType.MEMBER, memberIdx: 6, pos: 2 },
+    ]},
+    { date: [2026, 2, 6], time: '07:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 7, pos: 1 },
+      { type: PlayerType.MEMBER, memberIdx: 8, pos: 2 },
+      { type: PlayerType.MEMBER, memberIdx: 9, pos: 3 },
+      { type: PlayerType.MEMBER, memberIdx: 10, pos: 4 },
+    ]},
+    { date: [2026, 2, 6], time: '08:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 11, pos: 1 },
+      { type: PlayerType.GUEST, guestName: 'Thursday Guest', pos: 2 },
+    ]},
+    { date: [2026, 2, 6], time: '10:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 12, pos: 1 },
+      { type: PlayerType.MEMBER, memberIdx: 13, pos: 2 },
+    ]},
+    // No bookings after 15:00 due to private event
+
+    // ===========================================
+    // Friday Feb 7, 2026
+    // ===========================================
+    { date: [2026, 2, 7], time: '06:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 0, pos: 1 },
+      { type: PlayerType.MEMBER, memberIdx: 1, pos: 2 },
+      { type: PlayerType.MEMBER, memberIdx: 2, pos: 3 },
+      { type: PlayerType.MEMBER, memberIdx: 3, pos: 4 },
+    ]},
+    { date: [2026, 2, 7], time: '06:08', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 4, pos: 1 },
+      { type: PlayerType.GUEST, guestName: 'Friday Early Guest', pos: 2 },
+    ]},
+    { date: [2026, 2, 7], time: '08:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 5, pos: 1 },
+      { type: PlayerType.MEMBER, memberIdx: 6, pos: 2 },
+    ]},
+    { date: [2026, 2, 7], time: '10:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 7, pos: 1 },
+      { type: PlayerType.GUEST, guestName: 'Friday Mid Guest', pos: 2 },
+      { type: PlayerType.GUEST, guestName: 'Friday Mid Guest 2', pos: 3 },
+    ]},
+    { date: [2026, 2, 7], time: '14:00', status: BookingStatus.CONFIRMED, players: [
+      { type: PlayerType.MEMBER, memberIdx: 8, pos: 1 },
+      { type: PlayerType.MEMBER, memberIdx: 9, pos: 2 },
+      { type: PlayerType.MEMBER, memberIdx: 10, pos: 3 },
+      { type: PlayerType.GUEST, guestName: 'Weekend Prep Guest', pos: 4 },
+    ]},
+    { date: [2026, 2, 7], time: '16:00', status: BookingStatus.PENDING, players: [
+      { type: PlayerType.WALK_UP, guestName: 'Friday Twilight Walker', pos: 1 },
+      { type: PlayerType.WALK_UP, guestName: 'Friday Twilight Walker 2', pos: 2 },
+    ]},
+
+    // ===========================================
+    // MULTI-BOOKING SCENARIOS (2-3 bookings per flight)
+    // These test the booking-centric tee sheet display
+    // ===========================================
+
+    // Jan 29, 2026 - Two separate 2-player bookings at 09:00
+    { date: [2026, 1, 29], time: '09:00', status: BookingStatus.CONFIRMED, allowDuplicate: true, players: [
+      { type: PlayerType.MEMBER, memberIdx: 0, pos: 1 },
+      { type: PlayerType.MEMBER, memberIdx: 1, pos: 2 },
+    ]},
+    { date: [2026, 1, 29], time: '09:00', status: BookingStatus.CONFIRMED, allowDuplicate: true, players: [
+      { type: PlayerType.GUEST, guestName: 'Walk-in Guest A', pos: 3 },
+      { type: PlayerType.GUEST, guestName: 'Walk-in Guest B', pos: 4 },
+    ]},
+
+    // Jan 29, 2026 - Three separate bookings at 11:00 (1+1+2)
+    { date: [2026, 1, 29], time: '11:00', status: BookingStatus.CONFIRMED, allowDuplicate: true, players: [
+      { type: PlayerType.MEMBER, memberIdx: 2, pos: 1 },
+    ]},
+    { date: [2026, 1, 29], time: '11:00', status: BookingStatus.CONFIRMED, allowDuplicate: true, players: [
+      { type: PlayerType.MEMBER, memberIdx: 3, pos: 2 },
+    ]},
+    { date: [2026, 1, 29], time: '11:00', status: BookingStatus.PENDING, allowDuplicate: true, players: [
+      { type: PlayerType.GUEST, guestName: 'Paired Guest 1', pos: 3 },
+      { type: PlayerType.GUEST, guestName: 'Paired Guest 2', pos: 4 },
+    ]},
+
+    // Jan 30, 2026 - Two bookings at 08:00 (3+1)
+    { date: [2026, 1, 30], time: '08:00', status: BookingStatus.CONFIRMED, allowDuplicate: true, players: [
+      { type: PlayerType.MEMBER, memberIdx: 4, pos: 1 },
+      { type: PlayerType.MEMBER, memberIdx: 5, pos: 2 },
+      { type: PlayerType.DEPENDENT, guestName: 'Family Member', pos: 3 },
+    ]},
+    { date: [2026, 1, 30], time: '08:00', status: BookingStatus.CONFIRMED, allowDuplicate: true, players: [
+      { type: PlayerType.WALK_UP, guestName: 'Joined Single', pos: 4 },
+    ]},
+
+    // Jan 31, 2026 - Two bookings at 10:00 with different statuses
+    { date: [2026, 1, 31], time: '10:00', status: BookingStatus.CHECKED_IN, allowDuplicate: true, players: [
+      { type: PlayerType.MEMBER, memberIdx: 6, pos: 1, checkedIn: true },
+      { type: PlayerType.MEMBER, memberIdx: 7, pos: 2, checkedIn: true },
+    ]},
+    { date: [2026, 1, 31], time: '10:00', status: BookingStatus.CONFIRMED, allowDuplicate: true, players: [
+      { type: PlayerType.GUEST, guestName: 'Late Arrival Guest 1', pos: 3 },
+      { type: PlayerType.GUEST, guestName: 'Late Arrival Guest 2', pos: 4 },
+    ]},
+
+    // Feb 1, 2026 - Weekend multi-booking at 07:00 (2+2)
+    { date: [2026, 2, 1], time: '07:00', status: BookingStatus.CONFIRMED, allowDuplicate: true, players: [
+      { type: PlayerType.MEMBER, memberIdx: 8, pos: 1 },
+      { type: PlayerType.MEMBER, memberIdx: 9, pos: 2 },
+    ]},
+    { date: [2026, 2, 1], time: '07:00', status: BookingStatus.CONFIRMED, allowDuplicate: true, players: [
+      { type: PlayerType.MEMBER, memberIdx: 10, pos: 3 },
+      { type: PlayerType.GUEST, guestName: 'Weekend Guest', pos: 4 },
+    ]},
+  ];
+
+  // Create all bookings
+  let createdTeeTimeCount = 0;
+  let createdPlayerCount = 0;
+
+  for (const scenario of bookingScenarios) {
+    const [year, month, day] = scenario.date;
+    const teeDate = new Date(year, month - 1, day);
+    teeDate.setHours(0, 0, 0, 0);
+
+    // Check if tee time already exists (skip for multi-booking scenarios)
+    if (!(scenario as any).allowDuplicate) {
+      const existingTeeTime = await prisma.teeTime.findFirst({
+        where: {
+          courseId: golfCourse.id,
+          teeDate,
+          teeTime: scenario.time,
+        }
+      });
+
+      if (existingTeeTime) continue;
+    }
+
+    const teeTimeNumber = getNextTeeTimeNumber();
+
+    // Determine timestamps based on status
+    const confirmedAt = [BookingStatus.CONFIRMED, BookingStatus.CHECKED_IN, BookingStatus.COMPLETED, BookingStatus.NO_SHOW].includes(scenario.status)
+      ? new Date() : null;
+    const checkedInAt = [BookingStatus.CHECKED_IN, BookingStatus.COMPLETED].includes(scenario.status)
+      ? new Date() : null;
+    const completedAt = scenario.status === BookingStatus.COMPLETED ? new Date() : null;
+    const cancelledAt = scenario.status === BookingStatus.CANCELLED ? new Date() : null;
+
+    // Create tee time with players
+    const teeTime = await prisma.teeTime.create({
+      data: {
+        clubId: demoClub.id,
+        courseId: golfCourse.id,
+        teeTimeNumber,
+        teeDate,
+        teeTime: scenario.time,
+        holes: 18,
+        status: scenario.status,
+        confirmedAt,
+        checkedInAt,
+        completedAt,
+        cancelledAt,
+        cancelReason: (scenario as any).cancelReason || null,
+        players: {
+          create: scenario.players.map((p: any) => {
+            const basePlayer = {
+              position: p.pos,
+              playerType: p.type,
+              checkedIn: p.checkedIn || false,
+              checkedInAt: p.checkedIn ? new Date() : null,
+            };
+
+            if (p.type === PlayerType.MEMBER && p.memberIdx !== undefined) {
+              const member = activeMembers[p.memberIdx % activeMembers.length];
+              return {
+                ...basePlayer,
+                memberId: member.id,
+              };
+            } else {
+              return {
+                ...basePlayer,
+                guestName: p.guestName || 'Guest Player',
+                guestEmail: p.guestName ? `${p.guestName.toLowerCase().replace(/\s+/g, '.')}@guest.com` : null,
+                guestPhone: '+66 99 999 9999',
+              };
+            }
+          }),
+        },
+      },
+    });
+
+    createdTeeTimeCount++;
+    createdPlayerCount += scenario.players.length;
+  }
+
+  console.log(`✅ Created ${createdTeeTimeCount} tee times with ${createdPlayerCount} players`);
 
   console.log('');
   console.log('🎉 Database seed completed successfully!');

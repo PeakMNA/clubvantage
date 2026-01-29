@@ -191,6 +191,8 @@
   .delay-4 { animation-delay: 400ms; }
   .delay-5 { animation-delay: 500ms; }
   .delay-6 { animation-delay: 600ms; }
+  .delay-7 { animation-delay: 700ms; }
+  .delay-8 { animation-delay: 800ms; }
 
   /* Fill mode for animations */
   .fill-forwards {
@@ -209,6 +211,16 @@
 
   .hover-lift:hover {
     @apply -translate-y-1 shadow-lg;
+  }
+
+  /* Enhanced hover lift with glow */
+  .hover-lift-glow {
+    @apply transition-all duration-500;
+  }
+
+  .hover-lift-glow:hover {
+    @apply -translate-y-2;
+    box-shadow: 0 20px 40px -12px rgba(27, 67, 50, 0.25);
   }
 
   /* Subtle shine effect on hover */
@@ -243,6 +255,98 @@
   .corner-brackets::after {
     @apply bottom-0 right-0 border-b-2 border-r-2;
   }
+
+  /* Magnetic button effect base */
+  .btn-magnetic {
+    @apply relative transition-transform duration-200 ease-out;
+  }
+
+  /* Text gradient effect */
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, rgb(var(--color-primary)) 0%, rgb(var(--color-accent)) 100%);
+  }
+
+  /* Animated underline for links */
+  .animated-underline {
+    @apply relative;
+  }
+
+  .animated-underline::after {
+    @apply content-[''] absolute left-0 bottom-0 w-0 h-[2px] transition-all duration-300;
+    background: linear-gradient(90deg, rgb(var(--color-accent)), rgb(var(--color-primary)));
+  }
+
+  .animated-underline:hover::after {
+    @apply w-full;
+  }
+
+  /* Scroll-triggered fade in (use with IntersectionObserver) */
+  .scroll-fade-in {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .scroll-fade-in.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Parallax effect helper */
+  .parallax-slow {
+    will-change: transform;
+  }
+
+  /* Card with hover border animation */
+  .card-hover-border {
+    @apply relative overflow-hidden;
+  }
+
+  .card-hover-border::before {
+    @apply content-[''] absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-500;
+    background: linear-gradient(135deg,
+      rgba(184, 134, 11, 0.3) 0%,
+      transparent 50%,
+      rgba(27, 67, 50, 0.3) 100%);
+    padding: 2px;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+  }
+
+  .card-hover-border:hover::before {
+    @apply opacity-100;
+  }
+
+  /* Floating animation for decorative elements */
+  .float-gentle {
+    animation: floatGentle 8s ease-in-out infinite;
+  }
+
+  /* Pulse glow for CTAs */
+  .pulse-glow {
+    animation: pulseGlow 3s ease-in-out infinite;
+  }
+
+  /* Number counter style */
+  .number-display {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+}
+
+/* Additional keyframes */
+@keyframes floatGentle {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-8px) rotate(1deg); }
+  50% { transform: translateY(-4px) rotate(0deg); }
+  75% { transform: translateY(-12px) rotate(-1deg); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 20px rgba(184, 134, 11, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(184, 134, 11, 0.5); }
 }
 
 /* Playfair Display - Editorial Serif */

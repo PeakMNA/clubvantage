@@ -24,7 +24,7 @@ interface MaintenanceItem {
   cost?: number
 }
 
-interface CartMaintenanceModalProps {
+export interface CartMaintenanceModalProps {
   isOpen: boolean
   onClose: () => void
   cart: Cart

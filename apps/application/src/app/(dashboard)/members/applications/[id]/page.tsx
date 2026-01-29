@@ -23,14 +23,11 @@ import {
   AvatarFallback,
 } from '@clubvantage/ui';
 
-import {
-  mockApplications,
-  ApplicationTimeline,
-  ConfirmationDialog,
-  type MembershipApplication,
-  type ApplicationStatus,
-  type DocumentStatus,
-} from '@/components/members';
+// Direct imports to optimize bundle size (avoid barrel imports)
+import { mockApplications } from '@/components/members/mock-data';
+import { ApplicationTimeline } from '@/components/members/application-timeline';
+import { ConfirmationDialog } from '@/components/members/confirmation-dialog';
+import type { MembershipApplication, ApplicationStatus, DocumentStatus } from '@/components/members/types';
 
 // Document status configuration
 const docStatusConfig: Record<

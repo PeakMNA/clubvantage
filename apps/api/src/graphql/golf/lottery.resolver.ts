@@ -711,7 +711,7 @@ export class LotteryResolver {
             description: lottery.course.description,
             holes: lottery.course.holes,
             par: lottery.course.par,
-            slope: lottery.course.slope?.toNumber(),
+            slope: lottery.course.slope,
             rating: lottery.course.rating?.toNumber(),
             firstTeeTime: lottery.course.firstTeeTime,
             lastTeeTime: lottery.course.lastTeeTime,

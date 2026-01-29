@@ -80,18 +80,26 @@ export class GqlAuthGuard implements CanActivate {
   }
 
   private extractToken(request: any): string | null {
+    // Debug: log all cookies received
+    this.logger.debug('Cookies received:', JSON.stringify(request.cookies || {}));
+    this.logger.debug('Headers:', JSON.stringify(request.headers || {}));
+
     // Try HttpOnly cookie first
     const accessCookieName = this.configService.get<string>('supabase.cookie.accessName') || 'sb-access-token';
+    this.logger.debug(`Looking for cookie: ${accessCookieName}`);
     if (request.cookies && request.cookies[accessCookieName]) {
+      this.logger.debug('Found access token in cookie');
       return request.cookies[accessCookieName];
     }
 
     // Fallback to Authorization header
     const authHeader = request.headers?.authorization;
     if (authHeader && authHeader.startsWith('Bearer ')) {
+      this.logger.debug('Found access token in Authorization header');
       return authHeader.slice(7);
     }
 
+    this.logger.debug('No access token found');
     return null;
   }
 

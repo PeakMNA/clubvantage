@@ -5,14 +5,18 @@
 
 ## Overview
 
-Add configurable booking mode (18-hole vs Cross) to the tee sheet. Cross mode enables dual starting tees (Hole 1 + Hole 10) with 9 or 18-hole booking options.
+Add configurable tee sheet mode (18 vs Cross) and always allow 9 or 18-hole booking selection.
+
+- **Tee sheet mode** controls display: single column (18) or dual column with Hole 1 + Hole 10 starts (Cross)
+- **Hole selection** (9 or 18) is ALWAYS available when booking, regardless of tee sheet mode
 
 ## Goals
 
-1. **Flexible scheduling** - Different modes for weekdays vs weekends
-2. **Season-aware** - Winter/summer can have different defaults
-3. **Holiday overrides** - Special days can force a specific mode
-4. **Capacity optimization** - Cross mode doubles tee time capacity
+1. **Flexible booking** - Players can always choose 9 or 18 holes
+2. **Flexible scheduling** - Different tee sheet modes for weekdays vs weekends
+3. **Season-aware** - Winter/summer can have different defaults
+4. **Holiday overrides** - Special days can force a specific mode
+5. **Capacity optimization** - Cross mode doubles tee time capacity with dual starts
 
 ---
 
@@ -29,9 +33,10 @@ model GolfScheduleConfig {
 }
 
 enum BookingMode {
-  EIGHTEEN  // Single start (Hole 1), 18-hole bookings only
-  CROSS     // Dual start (Hole 1 + Hole 10), 9 or 18-hole bookings
+  EIGHTEEN  // Tee sheet: Single column (Hole 1 start only)
+  CROSS     // Tee sheet: Dual columns (Hole 1 + Hole 10 starts)
 }
+// Note: 9 or 18-hole booking is ALWAYS available regardless of mode
 ```
 
 ### GolfScheduleSeason (modified)
@@ -133,9 +138,9 @@ Single column (current behavior), Hole 1 start only.
 
 ## Booking Modal Changes
 
-### Hole Selector (Cross Mode Only)
+### Hole Selector (Always Available)
 
-When tee sheet is in Cross mode, show hole selector before golfer count:
+The booking modal ALWAYS shows a hole selector, regardless of tee sheet mode:
 
 ```
 How many holes?
@@ -145,9 +150,10 @@ How many holes?
 ```
 
 **Behaviors:**
-- Only appears when current tee sheet mode is Cross
+- **Always visible** in booking modal for both 18 and Cross modes
 - Default selection: 18 holes
-- Hidden entirely in 18 mode
+- In Cross mode: 9-hole bookings start from either Hole 1 or Hole 10
+- In 18 mode: 9-hole bookings still allowed, but only Hole 1 start available
 
 ### Header Update
 
@@ -199,11 +205,11 @@ interface BookingPayload {
 
 ## Implementation Order
 
-1. **Schema** - Add BookingMode enum and fields to Prisma
-2. **Migration** - Create and run database migration
-3. **Backend** - Update GraphQL types and resolvers
-4. **Operating Hours UI** - Add mode dropdown to config
-5. **Season/Special Day UI** - Add mode override fields
-6. **Tee Sheet Grid** - Implement two-column Cross layout
-7. **Booking Modal** - Add hole selector and starting tee
+1. **Schema** - Add BookingMode enum and fields to Prisma ✅
+2. **Migration** - Create and run database migration ✅
+3. **Backend** - Update GraphQL types and resolvers ✅
+4. **Operating Hours UI** - Add mode dropdown to config ✅
+5. **Season/Special Day UI** - Add mode override fields ✅
+6. **Tee Sheet Grid** - Implement two-column Cross layout ✅
+7. **Booking Modal** - Add hole selector and starting tee ✅
 8. **Conflict Prevention** - Calculate 9-hole finish times for crossover

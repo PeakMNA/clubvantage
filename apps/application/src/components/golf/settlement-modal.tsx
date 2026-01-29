@@ -15,7 +15,7 @@ interface Charge {
   amount: number
 }
 
-interface SettlementModalProps {
+export interface SettlementModalProps {
   isOpen: boolean
   onClose: () => void
   flight: Flight

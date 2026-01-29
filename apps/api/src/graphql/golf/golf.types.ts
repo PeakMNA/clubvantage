@@ -1,4 +1,4 @@
-import { ObjectType, Field, ID, registerEnumType, Int } from '@nestjs/graphql';
+import { ObjectType, Field, ID, registerEnumType, Int, InputType } from '@nestjs/graphql';
 import { Paginated } from '../common/pagination';
 import {
   BookingStatus,
@@ -23,6 +23,65 @@ registerEnumType(PlayerType, {
   name: 'PlayerType',
   description: 'Type of player in a tee time',
 });
+
+// ============================================================================
+// CLUB GOLF SETTINGS TYPES (Task #6)
+// ============================================================================
+
+export enum CartPolicy {
+  OPTIONAL = 'OPTIONAL',
+  REQUIRED = 'REQUIRED',
+}
+
+export enum RentalPolicy {
+  OPTIONAL = 'OPTIONAL',
+  REQUIRED = 'REQUIRED',
+}
+
+registerEnumType(CartPolicy, {
+  name: 'CartPolicy',
+  description: 'Cart policy for golf bookings',
+});
+
+registerEnumType(RentalPolicy, {
+  name: 'RentalPolicy',
+  description: 'Rental club policy for golf bookings',
+});
+
+// Rental status tracking for carts and caddies
+export enum RentalStatus {
+  NONE = 'NONE',
+  REQUESTED = 'REQUESTED',
+  PAID = 'PAID',
+  ASSIGNED = 'ASSIGNED',
+  RETURNED = 'RETURNED',
+}
+
+registerEnumType(RentalStatus, {
+  name: 'RentalStatus',
+  description: 'Status of rental item (cart/caddy) for a player',
+});
+
+@ObjectType()
+export class ClubGolfSettingsType {
+  @Field(() => ID)
+  id: string;
+
+  @Field(() => CartPolicy)
+  cartPolicy: CartPolicy;
+
+  @Field(() => RentalPolicy)
+  rentalPolicy: RentalPolicy;
+
+  @Field()
+  caddyDrivesCart: boolean;
+
+  @Field(() => Int)
+  maxGuestsPerMember: number;
+
+  @Field()
+  requireGuestContact: boolean;
+}
 
 @ObjectType()
 export class GolfCourseType {
@@ -100,6 +159,24 @@ export class PlayerMemberType {
 }
 
 @ObjectType()
+export class PlayerDependentType {
+  @Field(() => ID)
+  id: string;
+
+  @Field()
+  firstName: string;
+
+  @Field()
+  lastName: string;
+
+  @Field()
+  relationship: string;
+
+  @Field(() => ID, { nullable: true, description: 'Parent member UUID' })
+  memberId?: string;
+}
+
+@ObjectType()
 export class TeeTimePlayerType {
   @Field(() => ID)
   id: string;
@@ -112,6 +189,9 @@ export class TeeTimePlayerType {
 
   @Field(() => PlayerMemberType, { nullable: true })
   member?: PlayerMemberType;
+
+  @Field(() => PlayerDependentType, { nullable: true })
+  dependent?: PlayerDependentType;
 
   @Field({ nullable: true })
   guestName?: string;
@@ -131,8 +211,51 @@ export class TeeTimePlayerType {
   @Field(() => CaddyType, { nullable: true })
   caddy?: CaddyType;
 
+  // Per-player booking options (Task #6)
+  @Field({ nullable: true })
+  caddyRequest?: string;
+
+  @Field({ nullable: true })
+  cartRequest?: string;
+
+  @Field({ nullable: true })
+  rentalRequest?: string;
+
+  @Field(() => RentalStatus, { nullable: true, defaultValue: RentalStatus.NONE })
+  cartStatus?: RentalStatus;
+
+  @Field(() => RentalStatus, { nullable: true, defaultValue: RentalStatus.NONE })
+  caddyStatus?: RentalStatus;
+
   @Field({ nullable: true })
   checkedInAt?: Date;
+}
+
+@ObjectType()
+export class BookingGroupBookedByType {
+  @Field(() => ID)
+  id: string;
+
+  @Field()
+  name: string;
+
+  @Field({ nullable: true })
+  memberId?: string;
+}
+
+@ObjectType()
+export class BookingGroupType {
+  @Field(() => ID)
+  id: string;
+
+  @Field(() => Int)
+  groupNumber: number;
+
+  @Field(() => BookingGroupBookedByType)
+  bookedBy: BookingGroupBookedByType;
+
+  @Field(() => [String])
+  playerIds: string[];
 }
 
 @ObjectType()
@@ -152,6 +275,9 @@ export class TeeTimeType {
   @Field(() => Int)
   holes: number;
 
+  @Field(() => Int)
+  startingHole: number;
+
   @Field(() => BookingStatus)
   status: BookingStatus;
 
@@ -169,6 +295,9 @@ export class TeeTimeType {
 
   @Field(() => [TeeTimePlayerType])
   players: TeeTimePlayerType[];
+
+  @Field(() => [BookingGroupType], { nullable: true })
+  bookingGroups?: BookingGroupType[];
 }
 
 @ObjectType()
@@ -915,4 +1044,98 @@ export class TeeTicketValidationResult {
 
   @Field({ nullable: true })
   message?: string;
+}
+
+// ============================================================================
+// WEEK VIEW OCCUPANCY TYPES
+// ============================================================================
+
+export enum NineType {
+  FRONT = 'FRONT',
+  BACK = 'BACK',
+}
+
+registerEnumType(NineType, {
+  name: 'NineType',
+  description: 'Which nine holes (front or back) for crossover mode',
+});
+
+export enum PositionStatus {
+  AVAILABLE = 'AVAILABLE',
+  BOOKED = 'BOOKED',
+  BLOCKED = 'BLOCKED',
+}
+
+registerEnumType(PositionStatus, {
+  name: 'PositionStatus',
+  description: 'Status of a player position in a tee time slot',
+});
+
+@ObjectType()
+export class WeekViewPlayerType {
+  @Field(() => ID)
+  id: string;
+
+  @Field()
+  name: string;
+
+  @Field(() => PlayerType)
+  type: PlayerType;
+
+  @Field({ nullable: true })
+  memberId?: string;
+}
+
+@ObjectType()
+export class WeekViewPositionType {
+  @Field(() => Int)
+  position: number;
+
+  @Field(() => PositionStatus)
+  status: PositionStatus;
+
+  @Field(() => WeekViewPlayerType, { nullable: true })
+  player?: WeekViewPlayerType;
+}
+
+@ObjectType()
+export class WeekViewSlotType {
+  @Field()
+  date: string;
+
+  @Field()
+  time: string;
+
+  @Field(() => NineType)
+  nine: NineType;
+
+  @Field()
+  isBlocked: boolean;
+
+  @Field(() => [WeekViewPositionType])
+  positions: WeekViewPositionType[];
+}
+
+@InputType()
+export class WeekViewOccupancyInput {
+  @Field(() => ID)
+  courseId: string;
+
+  @Field()
+  startDate: string;
+
+  @Field()
+  endDate: string;
+
+  @Field({ nullable: true, description: 'Optional start time filter (HH:MM format, e.g., "06:00")' })
+  startTime?: string;
+
+  @Field({ nullable: true, description: 'Optional end time filter (HH:MM format, e.g., "12:00")' })
+  endTime?: string;
+}
+
+@ObjectType()
+export class WeekViewOccupancyResponse {
+  @Field(() => [WeekViewSlotType])
+  slots: WeekViewSlotType[];
 }

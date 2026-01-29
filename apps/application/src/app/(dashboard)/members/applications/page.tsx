@@ -24,7 +24,7 @@ import {
   type MembershipApplicationType,
 } from '@clubvantage/api-client';
 
-import { ApplicationsEmpty } from '@/components/members';
+import { ApplicationsEmpty } from '@/components/members/empty-states';
 
 // Status badge configuration
 const statusConfig: Record<

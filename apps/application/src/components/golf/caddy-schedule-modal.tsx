@@ -17,7 +17,7 @@ interface CaddyAssignment {
   flightId: string
 }
 
-interface CaddyScheduleModalProps {
+export interface CaddyScheduleModalProps {
   isOpen: boolean
   onClose: () => void
   caddy: Caddy

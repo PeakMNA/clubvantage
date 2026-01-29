@@ -3,13 +3,13 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts'
 import { cn } from '@clubvantage/ui'
 
-interface DonutChartData {
+export interface DonutChartData {
   name: string
   value: number
   color?: string
 }
 
-interface DonutChartProps {
+export interface DonutChartProps {
   data: DonutChartData[]
   centerLabel?: string | number
   showLegend?: boolean

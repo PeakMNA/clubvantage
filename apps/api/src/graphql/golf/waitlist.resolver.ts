@@ -482,7 +482,7 @@ export class WaitlistResolver {
             description: entry.course.description,
             holes: entry.course.holes,
             par: entry.course.par,
-            slope: entry.course.slope?.toNumber(),
+            slope: entry.course.slope,
             rating: entry.course.rating?.toNumber(),
             firstTeeTime: entry.course.firstTeeTime,
             lastTeeTime: entry.course.lastTeeTime,

@@ -2,7 +2,7 @@
 
 import { cn } from '@clubvantage/ui'
 
-interface SparklineProps {
+export interface SparklineProps {
   data: number[]
   width?: number
   height?: number

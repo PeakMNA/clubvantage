@@ -592,7 +592,7 @@ export class GroupBookingResolver {
             description: booking.course.description,
             holes: booking.course.holes,
             par: booking.course.par,
-            slope: booking.course.slope?.toNumber(),
+            slope: booking.course.slope,
             rating: booking.course.rating?.toNumber(),
             firstTeeTime: booking.course.firstTeeTime,
             lastTeeTime: booking.course.lastTeeTime,

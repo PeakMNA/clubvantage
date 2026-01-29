@@ -47,8 +47,24 @@ Championship Course • 6:00 AM • Jan 27
 ### New Booking Flow
 
 1. User selects golfer count (1-4)
-2. Slots auto-populate:
-   - Position 1: Booker (from logged-in user or member search)
+2. Slots behavior depends on context:
+
+**Staff Application (`context: 'staff'`):**
+   - All positions: Empty "Add Player" - staff can select Member, Guest, Dependent, or Walk-up for any slot
+   - Remaining: Grayed "Available" (not in this booking)
+
+```
+How many golfers?
+[1] [2] [3] [4]
+
+1. + Add Player          ─────────   ─────────  ─────────
+2. + Add Player          ─────────   ─────────  ─────────
+3. ░░░░ Available ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+4. ░░░░ Available ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+```
+
+**Member Portal (`context: 'member-portal'`):**
+   - Position 1: Auto-populated with logged-in member
    - Positions 2-N: Empty "Add Player" placeholders
    - Remaining: Grayed "Available" (not in this booking)
 

@@ -17,7 +17,9 @@ import {
   CheckCircle,
   Award,
 } from 'lucide-react'
-import { VoidReceiptDialog, WhtStatusBadge, type WhtStatus } from '@/components/billing'
+// Direct imports to optimize bundle size (avoid barrel imports)
+import { VoidReceiptDialog } from '@/components/billing/billing-dialogs'
+import { WhtStatusBadge, type WhtStatus } from '@/components/billing/wht-status-badge'
 
 // Mock receipt detail data
 const getMockReceipt = (id: string) => ({
@@ -97,10 +99,10 @@ export default function ReceiptDetailPage() {
 
   const receipt = getMockReceipt(params.id as string)
 
-  const handleVoid = (reason: string) => {
+  const handleVoid = (_reason: string) => {
     setIsVoiding(true)
+    // TODO: Replace with real API call
     setTimeout(() => {
-      console.log('Void receipt:', receipt.id, 'Reason:', reason)
       setIsVoiding(false)
       setShowVoidDialog(false)
       router.push('/billing')

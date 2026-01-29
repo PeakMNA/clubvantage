@@ -14,10 +14,11 @@ import {
   queryKeys,
 } from '@clubvantage/api-client';
 import { useQueryClient } from '@tanstack/react-query';
+// Direct imports to optimize bundle size (avoid barrel imports)
 import type {
   InvoiceRegisterItem,
   InvoiceRegisterSummary,
-} from '@/components/billing';
+} from '@/components/billing/invoice-register';
 
 // Map API invoice status to frontend status
 function mapInvoiceStatus(apiStatus: string): InvoiceRegisterItem['status'] {

@@ -17,8 +17,12 @@ export function initializeClient(config: ApiClientConfig): void {
   currentConfig = config;
 
   graphqlClient = new GraphQLClient(config.endpoint, {
-    credentials: 'include', // Required for HttpOnly cookies
-    mode: 'cors',
+    // In graphql-request v7+, fetch options must be passed via the fetch property
+    fetch: (url, options) => fetch(url, {
+      ...options,
+      credentials: 'include', // Required for HttpOnly cookies
+      mode: 'cors',
+    }),
   });
 
   // Initialize WebSocket client for subscriptions if wsEndpoint provided

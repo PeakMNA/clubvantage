@@ -53,7 +53,7 @@ export interface ReinstatedMember {
 type AgingFilter = 'all' | '30+' | '60+' | '90+' | 'suspended'
 type SortOption = 'balance-desc' | 'days-desc' | 'name-asc'
 
-interface AgingDashboardTabProps {
+export interface AgingDashboardTabProps {
   /** Aging bucket data */
   buckets: AgingBucket[]
   /** Member aging list */

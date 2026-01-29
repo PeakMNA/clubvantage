@@ -20,13 +20,10 @@ import {
   XCircle,
   AlertTriangle,
 } from 'lucide-react'
-import {
-  InvoiceStatusBadge,
-  AgingBadge,
-  VoidInvoiceDialog,
-  type InvoiceStatus,
-  type AgingStatus,
-} from '@/components/billing'
+// Direct imports to optimize bundle size (avoid barrel imports)
+import { InvoiceStatusBadge, type InvoiceStatus } from '@/components/billing/invoice-status-badge'
+import { AgingBadge, type AgingStatus } from '@/components/billing/aging-badge'
+import { VoidInvoiceDialog } from '@/components/billing/billing-dialogs'
 
 // Mock invoice detail data
 const getMockInvoice = (id: string) => ({
@@ -84,11 +81,10 @@ export default function InvoiceDetailPage() {
 
   const invoice = getMockInvoice(params.id as string)
 
-  const handleVoid = (reason: string) => {
+  const handleVoid = (_reason: string) => {
     setIsVoiding(true)
-    // Simulate API call
+    // TODO: Replace with real API call
     setTimeout(() => {
-      console.log('Void invoice:', invoice.id, 'Reason:', reason)
       setIsVoiding(false)
       setShowVoidDialog(false)
       router.push('/billing')

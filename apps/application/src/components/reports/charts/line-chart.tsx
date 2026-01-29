@@ -16,22 +16,22 @@ import {
 import { format } from 'date-fns'
 import { cn } from '@clubvantage/ui'
 
-interface LineChartData {
+export interface LineChartData {
   date: Date | string
   value: number
   previousValue?: number
 }
 
-interface ReferenceLine {
+export interface ReferenceLineData {
   value: number
   label: string
 }
 
-interface LineChartProps {
+export interface LineChartProps {
   data: LineChartData[]
   showArea?: boolean
   showComparison?: boolean
-  referenceLines?: ReferenceLine[]
+  referenceLines?: ReferenceLineData[]
   valueFormatter?: (value: number) => string
   dateFormatter?: (date: Date) => string
   onPointClick?: (data: LineChartData) => void

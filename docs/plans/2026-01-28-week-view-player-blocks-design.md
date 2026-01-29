@@ -224,7 +224,7 @@ enum PlayerType {
 
 ### Service Implementation
 
-**File:** `apps/api/src/modules/golf/week-view.service.ts`
+**File:** `apps/api/src/modules/golf/golf.service.ts` (added `getWeekViewOccupancy` method)
 
 ```typescript
 async getWeekViewOccupancy(
@@ -293,49 +293,60 @@ async weekViewOccupancy(
 
 ## Files to Create/Modify
 
-### New Files
-| File | Purpose |
-|------|---------|
-| `apps/application/src/components/golf/player-block.tsx` | Clickable position block |
-| `apps/application/src/components/golf/player-block-popover.tsx` | Player details popover |
-| `apps/api/src/modules/golf/week-view.service.ts` | Week view data service |
-| `apps/api/src/graphql/golf/week-view.types.ts` | GraphQL types |
+### New Files (✅ Created)
+| File | Purpose | Status |
+|------|---------|--------|
+| `apps/application/src/components/golf/player-block.tsx` | Clickable position block | ✅ Done |
+| `apps/application/src/components/golf/player-block-popover.tsx` | Player details popover | ✅ Done |
 
 ### Modified Files
-| File | Changes |
-|------|---------|
-| `apps/application/src/components/golf/tee-sheet-week-view.tsx` | New grid structure with player blocks |
-| `apps/application/src/components/golf/unified-booking-modal.tsx` | Add highlight position support |
-| `apps/application/src/app/(dashboard)/golf/page.tsx` | Pass new props, handle week view booking |
-| `apps/api/src/graphql/golf/golf.resolver.ts` | Add weekViewOccupancy query |
-| `database/prisma/schema.prisma` | No changes needed (uses existing models) |
+| File | Changes | Status |
+|------|---------|--------|
+| `apps/api/src/graphql/golf/golf.types.ts` | Added NineType, PositionStatus enums and WeekView* types | ✅ Done |
+| `apps/api/src/modules/golf/golf.service.ts` | Added `getWeekViewOccupancy` method | ✅ Done |
+| `apps/api/src/graphql/golf/golf.resolver.ts` | Added weekViewOccupancy query resolver | ✅ Done |
+| `apps/application/src/components/golf/tee-sheet-week-view.tsx` | New grid structure with player blocks | ✅ Done |
+| `apps/application/src/components/golf/unified-booking-modal.tsx` | Add highlight position support | ✅ Done |
+| `apps/application/src/components/golf/player-slot.tsx` | Add isHighlighted prop for position highlighting | ✅ Done |
+| `apps/application/src/components/golf/types.ts` | Added WeekView* types for frontend | ✅ Done |
+| `apps/application/src/hooks/use-golf.ts` | Added useWeekViewOccupancy hook | ✅ Done |
+| `packages/api-client/src/operations/golf.graphql` | Added GetWeekViewOccupancy query | ✅ Done |
+| `packages/api-client/src/index.ts` | Export week view occupancy hooks | ✅ Done |
+| `apps/application/src/app/(dashboard)/golf/page.tsx` | Wire up week view with real data | ✅ Done |
+| `database/prisma/schema.prisma` | No changes needed (uses existing models) | N/A |
 
 ---
 
 ## Testing
 
-### E2E Test Cases
+### E2E Test Cases (✅ Implemented in `e2e/week-view-player-blocks.spec.ts`)
 
-1. **Week view displays player blocks**
+1. **Week view displays player blocks** ✅
    - Navigate to Week view
    - Verify 4 blocks per cell
    - Verify crossover shows 2 rows when enabled
 
-2. **Click empty block opens booking modal**
+2. **Click empty block opens booking modal** ✅
    - Click available position
    - Verify modal opens with correct date/time/nine
    - Verify clicked position is highlighted
 
-3. **Click booked block shows popover**
+3. **Click booked block shows popover** ✅
    - Click booked position
    - Verify popover shows player name and type
    - Verify Edit/View/Remove actions work
 
-4. **Complete booking from Week view**
+4. **Complete booking from Week view** ✅
    - Click empty block
    - Add player
    - Confirm booking
    - Verify block updates to show booked status
+
+5. **Display legend with player type badges** ✅
+6. **Navigate to Day view when clicking day header** ✅
+7. **Popover Edit action opens booking modal** ✅
+8. **View Member button for member players** ✅
+9. **Remove button with confirmation** ✅
 
 ---
 

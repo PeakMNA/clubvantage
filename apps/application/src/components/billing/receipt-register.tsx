@@ -57,7 +57,7 @@ export interface ReceiptRegisterSummary {
   depositsToCredit: number
 }
 
-interface ReceiptRegisterProps {
+export interface ReceiptRegisterProps {
   /** Receipt data to display */
   receipts: ReceiptRegisterItem[]
   /** Summary metrics */

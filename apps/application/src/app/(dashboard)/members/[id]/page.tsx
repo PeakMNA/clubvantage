@@ -25,21 +25,16 @@ import {
 } from '@clubvantage/api-client';
 import { useQueryClient } from '@tanstack/react-query';
 
-import {
-  MemberDetailHeader,
-  ProfileTab,
-  ContractTab,
-  DependentsTab,
-  ARHistoryTab,
-  DependentModal,
-  ChargeModal,
-  StatusChangeDialog,
-  ConfirmationDialog,
-  Dependent,
-  Charge,
-  MemberStatus,
-  Member,
-} from '@/components/members';
+// Direct imports to optimize bundle size (avoid barrel imports)
+import { MemberDetailHeader } from '@/components/members/member-detail-header';
+import { ProfileTab } from '@/components/members/profile-tab';
+import { ContractTab } from '@/components/members/contract-tab';
+import { DependentsTab } from '@/components/members/dependents-tab';
+import { ARHistoryTab } from '@/components/members/ar-history-tab';
+import { DependentModal } from '@/components/members/dependent-modal';
+import { ChargeModal } from '@/components/members/charge-modal';
+import { StatusChangeDialog, ConfirmationDialog } from '@/components/members/confirmation-dialog';
+import type { Dependent, Charge, MemberStatus, Member } from '@/components/members/types';
 
 export default function MemberDetailPage() {
   const params = useParams();

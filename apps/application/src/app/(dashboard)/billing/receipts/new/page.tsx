@@ -4,13 +4,10 @@ import { useState, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@clubvantage/ui'
 import { ArrowLeft } from 'lucide-react'
-import {
-  ReceiptForm,
-  ConfirmPaymentDialog,
-  type ReceiptFormData,
-  type MemberSearchResult,
-  type AgingStatus,
-} from '@/components/billing'
+// Direct imports to optimize bundle size (avoid barrel imports)
+import { ReceiptForm, type ReceiptFormData, type MemberSearchResult } from '@/components/billing/receipt-form'
+import { ConfirmPaymentDialog } from '@/components/billing/billing-dialogs'
+import { type AgingStatus } from '@/components/billing/aging-badge'
 import { type MemberSelectionData } from '@/components/billing/member-selection-card'
 import { type AllocationInvoice } from '@/components/billing/allocation-table-row'
 
@@ -181,9 +178,8 @@ export default function NewReceiptPage() {
     if (!pendingData) return
 
     setIsLoading(true)
-    // Simulate API call
+    // TODO: Replace with real API call
     setTimeout(() => {
-      console.log('Receipt saved:', pendingData)
       setIsLoading(false)
       setShowConfirmDialog(false)
       router.push('/billing')
