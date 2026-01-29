@@ -204,26 +204,26 @@ interface BookedBySectionProps {
 function BookedBySection({ bookerName, bookerMemberId, createdAt }: BookedBySectionProps) {
   return (
     <div>
-      <h3 className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-stone-500">
+      <h3 className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-stone-500 dark:text-stone-400">
         Booked By
       </h3>
-      <div className="rounded-xl border border-stone-200 bg-gradient-to-b from-white to-stone-50/50 p-4">
+      <div className="rounded-xl border border-stone-200 dark:border-stone-700 bg-gradient-to-b from-white to-stone-50/50 dark:from-stone-800 dark:to-stone-800/50 p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100">
-              <User className="h-5 w-5 text-emerald-600" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30">
+              <User className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
-              <span className="font-semibold text-stone-900">{bookerName}</span>
+              <span className="font-semibold text-stone-900 dark:text-stone-100">{bookerName}</span>
               {bookerMemberId && (
-                <span className="ml-2 text-sm text-stone-500">({bookerMemberId})</span>
+                <span className="ml-2 text-sm text-stone-500 dark:text-stone-400">({bookerMemberId})</span>
               )}
-              <div className="text-xs text-stone-500">
+              <div className="text-xs text-stone-500 dark:text-stone-400">
                 Created {formatTimestamp(createdAt)}
               </div>
             </div>
           </div>
-          <button className="rounded-lg bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-700 transition-colors hover:bg-emerald-100">
+          <button className="rounded-lg bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1.5 text-sm font-medium text-emerald-700 dark:text-emerald-400 transition-colors hover:bg-emerald-100 dark:hover:bg-emerald-900/50">
             View Profile
           </button>
         </div>
@@ -303,7 +303,7 @@ function WorkflowActions({
               onClick={onMove}
               disabled={isProcessing}
               aria-label="Move booking to different time"
-              className="px-3 py-2 border border-stone-200 rounded-lg text-sm font-medium hover:bg-stone-50 transition-colors disabled:opacity-50"
+              className="px-3 py-2 border border-stone-200 dark:border-stone-600 rounded-lg text-sm font-medium hover:bg-stone-50 dark:hover:bg-stone-700 dark:text-stone-200 transition-colors disabled:opacity-50"
             >
               Move
             </button>
@@ -314,7 +314,7 @@ function WorkflowActions({
               onClick={onCopy}
               disabled={isProcessing}
               aria-label="Copy booking to new time"
-              className="px-3 py-2 border border-stone-200 rounded-lg text-sm font-medium hover:bg-stone-50 transition-colors disabled:opacity-50"
+              className="px-3 py-2 border border-stone-200 dark:border-stone-600 rounded-lg text-sm font-medium hover:bg-stone-50 dark:hover:bg-stone-700 dark:text-stone-200 transition-colors disabled:opacity-50"
             >
               Copy
             </button>
@@ -342,7 +342,7 @@ function WorkflowActions({
               onClick={onSettle}
               disabled={isProcessing}
               aria-label="Settle charges"
-              className="px-3 py-2 border border-stone-200 rounded-lg text-sm font-medium hover:bg-stone-50 transition-colors disabled:opacity-50"
+              className="px-3 py-2 border border-stone-200 dark:border-stone-600 rounded-lg text-sm font-medium hover:bg-stone-50 dark:hover:bg-stone-700 dark:text-stone-200 transition-colors disabled:opacity-50"
             >
               Settle
             </button>
@@ -370,7 +370,7 @@ function WorkflowActions({
               onClick={onSettle}
               disabled={isProcessing}
               aria-label="Settle charges"
-              className="px-3 py-2 border border-stone-200 rounded-lg text-sm font-medium hover:bg-stone-50 transition-colors disabled:opacity-50"
+              className="px-3 py-2 border border-stone-200 dark:border-stone-600 rounded-lg text-sm font-medium hover:bg-stone-50 dark:hover:bg-stone-700 dark:text-stone-200 transition-colors disabled:opacity-50"
             >
               Settle
             </button>
@@ -384,7 +384,7 @@ function WorkflowActions({
           onClick={onSettle}
           disabled={isProcessing}
           aria-label="View receipt"
-          className="px-3 py-2 border border-stone-200 rounded-lg text-sm font-medium hover:bg-stone-50 transition-colors disabled:opacity-50"
+          className="px-3 py-2 border border-stone-200 dark:border-stone-600 rounded-lg text-sm font-medium hover:bg-stone-50 dark:hover:bg-stone-700 dark:text-stone-200 transition-colors disabled:opacity-50"
         >
           View Receipt
         </button>
@@ -759,7 +759,7 @@ export function BookingModal({
               type="button"
               onClick={handleClose}
               disabled={isSubmitting}
-              className="px-4 py-2 border border-stone-200 rounded-lg font-medium hover:bg-stone-50 transition-colors"
+              className="px-4 py-2 border border-stone-200 dark:border-stone-600 rounded-lg font-medium hover:bg-stone-50 dark:hover:bg-stone-700 dark:text-stone-200 transition-colors"
             >
               Cancel
             </button>
@@ -779,7 +779,7 @@ export function BookingModal({
               type="button"
               onClick={handleDiscard}
               disabled={isSubmitting}
-              className="px-4 py-2 border border-stone-200 rounded-lg font-medium hover:bg-stone-50 transition-colors"
+              className="px-4 py-2 border border-stone-200 dark:border-stone-600 rounded-lg font-medium hover:bg-stone-50 dark:hover:bg-stone-700 dark:text-stone-200 transition-colors"
             >
               Discard
             </button>

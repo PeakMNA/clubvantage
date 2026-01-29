@@ -84,19 +84,19 @@ function OptionButton({
   const isActive = value === activeValue
   const colors = {
     blue: {
-      active: 'bg-blue-50 text-blue-700 ring-1 ring-blue-200',
-      inactive: 'bg-stone-100 text-stone-600 hover:bg-stone-200',
-      icon: 'bg-blue-100 text-blue-600',
+      active: 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 ring-1 ring-blue-200 dark:ring-blue-700',
+      inactive: 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700',
+      icon: 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400',
     },
     emerald: {
-      active: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200',
-      inactive: 'bg-stone-100 text-stone-600 hover:bg-stone-200',
-      icon: 'bg-emerald-100 text-emerald-600',
+      active: 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 ring-1 ring-emerald-200 dark:ring-emerald-700',
+      inactive: 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700',
+      icon: 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400',
     },
     amber: {
-      active: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200',
-      inactive: 'bg-stone-100 text-stone-600 hover:bg-stone-200',
-      icon: 'bg-amber-100 text-amber-600',
+      active: 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 ring-1 ring-amber-200 dark:ring-amber-700',
+      inactive: 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700',
+      icon: 'bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400',
     },
   }
 
@@ -141,24 +141,24 @@ function CartAssignmentDropdown({
           'h-9 pl-3 pr-8 rounded-lg border text-sm font-medium appearance-none cursor-pointer',
           'focus:outline-none focus:ring-2 focus:ring-blue-500',
           assignedCartId
-            ? 'bg-blue-50 border-blue-200 text-blue-700'
-            : 'bg-stone-100 border-stone-200 text-stone-600',
+            ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-300'
+            : 'bg-stone-100 dark:bg-stone-800 border-stone-200 dark:border-stone-600 text-stone-600 dark:text-stone-300',
           disabled && 'opacity-50 cursor-not-allowed'
         )}
         aria-label="Assign cart"
       >
-        <option value="">Not assigned</option>
+        <option value="" className="dark:bg-stone-800">Not assigned</option>
         {availableCarts.length === 0 ? (
-          <option disabled>No carts available</option>
+          <option disabled className="dark:bg-stone-800">No carts available</option>
         ) : (
           availableCarts.map((cart) => (
-            <option key={cart.id} value={cart.id}>
+            <option key={cart.id} value={cart.id} className="dark:bg-stone-800">
               Cart #{cart.number} ({cart.type})
             </option>
           ))
         )}
       </select>
-      <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400 pointer-events-none" />
+      <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400 dark:text-stone-500 pointer-events-none" />
     </div>
   )
 }
@@ -227,16 +227,16 @@ function CartSelector({
         className={cn(
           'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all',
           isActive
-            ? 'bg-blue-50 text-blue-700 ring-1 ring-blue-200'
-            : 'bg-stone-100 text-stone-500 hover:bg-stone-200 hover:text-stone-700',
+            ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 ring-1 ring-blue-200 dark:ring-blue-700'
+            : 'bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700 hover:text-stone-700 dark:hover:text-stone-200',
           disabled && 'opacity-50 cursor-not-allowed'
         )}
       >
         <div className={cn(
           'flex h-6 w-6 items-center justify-center rounded-md transition-colors',
-          isActive ? 'bg-blue-100' : 'bg-stone-200'
+          isActive ? 'bg-blue-100 dark:bg-blue-900/50' : 'bg-stone-200 dark:bg-stone-700'
         )}>
-          <Car className={cn('h-3.5 w-3.5', isActive ? 'text-blue-600' : 'text-stone-500')} />
+          <Car className={cn('h-3.5 w-3.5', isActive ? 'text-blue-600 dark:text-blue-400' : 'text-stone-500 dark:text-stone-400')} />
         </div>
         <span>{isActive ? 'Cart' : 'Walking'}</span>
       </button>
@@ -286,16 +286,16 @@ function RentalSelector({
       className={cn(
         'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all',
         isActive
-          ? 'bg-amber-50 text-amber-700 ring-1 ring-amber-200'
-          : 'bg-stone-100 text-stone-500 hover:bg-stone-200 hover:text-stone-700',
+          ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 ring-1 ring-amber-200 dark:ring-amber-700'
+          : 'bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700 hover:text-stone-700 dark:hover:text-stone-200',
         disabled && 'opacity-50 cursor-not-allowed'
       )}
     >
       <div className={cn(
         'flex h-6 w-6 items-center justify-center rounded-md transition-colors',
-        isActive ? 'bg-amber-100' : 'bg-stone-200'
+        isActive ? 'bg-amber-100 dark:bg-amber-900/50' : 'bg-stone-200 dark:bg-stone-700'
       )}>
-        <ShoppingBag className={cn('h-3.5 w-3.5', isActive ? 'text-amber-600' : 'text-stone-500')} />
+        <ShoppingBag className={cn('h-3.5 w-3.5', isActive ? 'text-amber-600 dark:text-amber-400' : 'text-stone-500 dark:text-stone-400')} />
       </div>
       <span>{isActive ? 'Rental' : 'No Rental'}</span>
     </button>
@@ -362,16 +362,16 @@ export function PlayerSlot({
     return (
       <div
         className={cn(
-          'rounded-xl border-2 border-dashed border-stone-200 bg-stone-50/50 p-4',
+          'rounded-xl border-2 border-dashed border-stone-200 dark:border-stone-700 bg-stone-50/50 dark:bg-stone-800/30 p-4',
           isHighlighted && 'ring-2 ring-amber-400 ring-offset-2',
           className
         )}
       >
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-stone-100 text-sm font-semibold text-stone-400">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-stone-100 dark:bg-stone-800 text-sm font-semibold text-stone-400 dark:text-stone-500">
             {position}
           </div>
-          <div className="flex items-center gap-2 text-stone-400">
+          <div className="flex items-center gap-2 text-stone-400 dark:text-stone-500">
             <User className="h-4 w-4" />
             <span className="text-sm">Available</span>
           </div>
@@ -385,22 +385,22 @@ export function PlayerSlot({
     return (
       <div
         className={cn(
-          'group rounded-xl border-2 border-dashed border-stone-300 bg-white p-4 transition-all',
-          'hover:border-emerald-400 hover:bg-emerald-50/30',
+          'group rounded-xl border-2 border-dashed border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800/50 p-4 transition-all',
+          'hover:border-emerald-400 dark:hover:border-emerald-500 hover:bg-emerald-50/30 dark:hover:bg-emerald-900/20',
           disabled && 'opacity-50 pointer-events-none',
-          isHighlighted && 'ring-2 ring-amber-400 ring-offset-2 border-amber-400 bg-amber-50/30',
+          isHighlighted && 'ring-2 ring-amber-400 ring-offset-2 border-amber-400 bg-amber-50/30 dark:bg-amber-900/20',
           className
         )}
       >
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-stone-100 text-sm font-semibold text-stone-500 transition-colors group-hover:bg-emerald-100 group-hover:text-emerald-600">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-stone-100 dark:bg-stone-700 text-sm font-semibold text-stone-500 dark:text-stone-400 transition-colors group-hover:bg-emerald-100 dark:group-hover:bg-emerald-900/50 group-hover:text-emerald-600 dark:group-hover:text-emerald-400">
             {position}
           </div>
           <button
             type="button"
             onClick={onAddPlayer}
             disabled={disabled}
-            className="flex flex-1 items-center gap-2 text-stone-500 transition-colors group-hover:text-emerald-600"
+            className="flex flex-1 items-center gap-2 text-stone-500 dark:text-stone-400 transition-colors group-hover:text-emerald-600 dark:group-hover:text-emerald-400"
           >
             <Plus className="h-4 w-4" />
             <span className="text-sm font-medium">Add Player</span>
@@ -414,8 +414,8 @@ export function PlayerSlot({
   return (
     <div
       className={cn(
-        'group rounded-xl border bg-gradient-to-b from-white to-stone-50/50 p-4 transition-all',
-        'border-stone-200 hover:border-stone-300 hover:shadow-sm',
+        'group rounded-xl border bg-gradient-to-b from-white to-stone-50/50 dark:from-stone-800 dark:to-stone-800/50 p-4 transition-all',
+        'border-stone-200 dark:border-stone-700 hover:border-stone-300 dark:hover:border-stone-600 hover:shadow-sm',
         disabled && 'opacity-50',
         isHighlighted && 'ring-2 ring-amber-400 ring-offset-2',
         className
@@ -424,13 +424,13 @@ export function PlayerSlot({
       {/* Player Header Row */}
       <div className="flex items-center gap-3">
         {/* Position Number */}
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-stone-100 text-sm font-semibold text-stone-600">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-stone-100 dark:bg-stone-700 text-sm font-semibold text-stone-600 dark:text-stone-300">
           {position}
         </div>
 
         {/* Name & Badge */}
         <div className="flex flex-1 items-center gap-2.5 min-w-0">
-          <span className="font-medium text-stone-900 truncate">{player?.name}</span>
+          <span className="font-medium text-stone-900 dark:text-stone-100 truncate">{player?.name}</span>
           {player && <PlayerTypeBadge type={player.type} size="sm" />}
         </div>
 
@@ -439,7 +439,7 @@ export function PlayerSlot({
           type="button"
           onClick={onRemovePlayer}
           disabled={disabled}
-          className="rounded-md p-1.5 text-stone-400 opacity-0 transition-all hover:bg-red-50 hover:text-red-500 group-hover:opacity-100"
+          className="rounded-md p-1.5 text-stone-400 dark:text-stone-500 opacity-0 transition-all hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-500 dark:hover:text-red-400 group-hover:opacity-100"
           aria-label={`Remove ${player?.name}`}
         >
           <X className="h-4 w-4" />
@@ -447,7 +447,7 @@ export function PlayerSlot({
       </div>
 
       {/* Options Row */}
-      <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-stone-100 pt-3">
+      <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-stone-100 dark:border-stone-700 pt-3">
         {/* Caddy */}
         <CaddySelector
           value={caddyValue}
