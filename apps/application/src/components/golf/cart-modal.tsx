@@ -6,7 +6,7 @@ import { Loader2, AlertCircle, Trash2 } from 'lucide-react'
 import { Modal } from './modal'
 import type { Cart } from './types'
 
-interface CartModalProps {
+export interface CartModalProps {
   isOpen: boolean
   onClose: () => void
   cart?: Cart | null
@@ -161,7 +161,7 @@ export function CartModal({
       <div className="space-y-6">
         {/* Error Banner */}
         {error && (
-          <div className="flex items-center gap-2 p-3 bg-red-50 text-red-700 rounded-lg">
+          <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 rounded-lg">
             <AlertCircle className="h-5 w-5 flex-shrink-0" />
             <span className="text-sm">{error}</span>
           </div>

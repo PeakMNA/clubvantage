@@ -9,7 +9,7 @@ import { FlightStatusBadge } from './flight-status-badge'
 import { PlayerTypeBadge, type PlayerType } from './player-type-badge'
 import type { Flight, Player, Cart, Caddy } from './types'
 
-interface CheckInModalProps {
+export interface CheckInModalProps {
   isOpen: boolean
   onClose: () => void
   flight: Flight
@@ -159,14 +159,14 @@ export function CheckInModal({
 
         {/* Error/Warning Banners */}
         {error && (
-          <div className="flex items-center gap-2 p-3 bg-red-50 text-red-700 rounded-lg">
+          <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 rounded-lg">
             <AlertCircle className="h-5 w-5 flex-shrink-0" />
             <span className="text-sm">{error}</span>
           </div>
         )}
 
         {hasSuspendedMember && (
-          <div className="flex items-center gap-2 p-3 bg-red-50 text-red-700 rounded-lg">
+          <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 rounded-lg">
             <AlertCircle className="h-5 w-5 flex-shrink-0" />
             <span className="text-sm">
               Cannot check in: One or more players have suspended accounts.

@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import { cn } from '@clubvantage/ui'
-import { Loader2, AlertCircle, Trash2 } from 'lucide-react'
+import { Loader2, AlertCircle, Trash2, Settings2 } from 'lucide-react'
 import { Modal } from './modal'
 import type { Course } from './types'
 
-interface CourseModalProps {
+export interface CourseModalProps {
   isOpen: boolean
   onClose: () => void
   course?: Course | null
@@ -31,9 +31,6 @@ export function CourseModal({
     par: 72,
     rating: 72.0,
     slope: 113,
-    interval: 8,
-    firstTeeTime: '06:00',
-    lastTeeTime: '18:00',
     status: 'active' as Course['status'],
     condition: '',
   })
@@ -51,9 +48,6 @@ export function CourseModal({
         par: course.par,
         rating: course.rating,
         slope: course.slope,
-        interval: course.interval,
-        firstTeeTime: course.firstTeeTime,
-        lastTeeTime: course.lastTeeTime,
         status: course.status,
         condition: course.condition || '',
       })
@@ -64,9 +58,6 @@ export function CourseModal({
         par: 72,
         rating: 72.0,
         slope: 113,
-        interval: 8,
-        firstTeeTime: '06:00',
-        lastTeeTime: '18:00',
         status: 'active',
         condition: '',
       })
@@ -76,11 +67,6 @@ export function CourseModal({
   const handleSave = async () => {
     if (!formData.name.trim()) {
       setError('Course name is required')
-      return
-    }
-
-    if (formData.firstTeeTime >= formData.lastTeeTime) {
-      setError('First tee time must be before last tee time')
       return
     }
 
@@ -176,7 +162,7 @@ export function CourseModal({
       <div className="space-y-6">
         {/* Error Banner */}
         {error && (
-          <div className="flex items-center gap-2 p-3 bg-red-50 text-red-700 rounded-lg">
+          <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 rounded-lg">
             <AlertCircle className="h-5 w-5 flex-shrink-0" />
             <span className="text-sm">{error}</span>
           </div>
@@ -291,54 +277,19 @@ export function CourseModal({
           </div>
         </div>
 
-        {/* Tee Time Configuration */}
+        {/* Tee Time Configuration Note */}
         <div className="space-y-4">
           <h3 className="font-medium text-foreground">Tee Time Configuration</h3>
 
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-1">
-                First Tee Time
-              </label>
-              <input
-                type="time"
-                value={formData.firstTeeTime}
-                onChange={(e) =>
-                  setFormData({ ...formData, firstTeeTime: e.target.value })
-                }
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-1">
-                Last Tee Time
-              </label>
-              <input
-                type="time"
-                value={formData.lastTeeTime}
-                onChange={(e) =>
-                  setFormData({ ...formData, lastTeeTime: e.target.value })
-                }
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-1">
-                Interval (minutes)
-              </label>
-              <input
-                type="number"
-                value={formData.interval}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    interval: parseInt(e.target.value) || 8,
-                  })
-                }
-                min={1}
-                max={30}
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-              />
+          <div className="flex items-center gap-3 p-4 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-lg">
+            <Settings2 className="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm text-amber-900 dark:text-amber-200 font-medium">
+                Schedule settings are configured in the Settings tab
+              </p>
+              <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">
+                Configure operating hours, intervals, seasons, and holidays from Golf → Settings → Schedule Configuration
+              </p>
             </div>
           </div>
         </div>
@@ -356,10 +307,10 @@ export function CourseModal({
                   'flex-1 py-2 px-3 text-sm rounded-md border transition-colors capitalize',
                   formData.status === status
                     ? status === 'active'
-                      ? 'bg-emerald-100 text-emerald-700 border-emerald-300'
+                      ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/30'
                       : status === 'maintenance'
-                      ? 'bg-amber-100 text-amber-700 border-amber-300'
-                      : 'bg-red-100 text-red-700 border-red-300'
+                      ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-500/30'
+                      : 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-300 border-red-300 dark:border-red-500/30'
                     : 'hover:border-border'
                 )}
               >

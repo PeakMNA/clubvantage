@@ -6,7 +6,7 @@ import { Loader2, AlertCircle, Trash2, Star } from 'lucide-react'
 import { Modal } from './modal'
 import type { Caddy } from './types'
 
-interface CaddyModalProps {
+export interface CaddyModalProps {
   isOpen: boolean
   onClose: () => void
   caddy?: Caddy | null
@@ -173,7 +173,7 @@ export function CaddyModal({
       <div className="space-y-6">
         {/* Error Banner */}
         {error && (
-          <div className="flex items-center gap-2 p-3 bg-red-50 text-red-700 rounded-lg">
+          <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 rounded-lg">
             <AlertCircle className="h-5 w-5 flex-shrink-0" />
             <span className="text-sm">{error}</span>
           </div>
@@ -209,12 +209,12 @@ export function CaddyModal({
                     'py-2 px-3 text-sm rounded-md border transition-colors flex items-center justify-center gap-2',
                     formData.skillLevel === level.id
                       ? level.id === 'beginner'
-                        ? 'bg-gray-100 text-muted-foreground border-border'
+                        ? 'bg-gray-100 dark:bg-gray-500/20 text-muted-foreground border-border'
                         : level.id === 'intermediate'
-                        ? 'bg-blue-100 text-blue-700 border-blue-300'
+                        ? 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-500/30'
                         : level.id === 'advanced'
-                        ? 'bg-purple-100 text-purple-700 border-purple-300'
-                        : 'bg-amber-100 text-amber-700 border-amber-300'
+                        ? 'bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-500/30'
+                        : 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-500/30'
                       : 'hover:border-border'
                   )}
                 >

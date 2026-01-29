@@ -512,7 +512,7 @@ export function AddPlayerFlow({
             <PlayerTypeButton
               type="walkup"
               label="Walk-up"
-              icon={<User className="h-5 w-5 text-stone-500" />}
+              icon={<User className="h-5 w-5 text-stone-500 dark:text-stone-400" />}
               selected={selectedType === 'walkup'}
               onClick={() => handleTypeSelect('walkup')}
             />
