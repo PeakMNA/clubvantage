@@ -33,14 +33,12 @@ import {
   DynamicBookTeeTimeModal as BookTeeTimeModal,
   DynamicCheckInModal as CheckInModal,
   DynamicSettlementModal as SettlementModal,
-  DynamicUnifiedBookingModal as UnifiedBookingModal,
   DynamicCourseModal as CourseModal,
   DynamicCartModal as CartModal,
   DynamicCartMaintenanceModal as CartMaintenanceModal,
   DynamicCaddyModal as CaddyModal,
   DynamicCaddyScheduleModal as CaddyScheduleModal,
 } from '@/components/golf/dynamic-modals'
-import type { BookingPayload, ClubSettings, CurrentUser, ExistingBooking, PlayerData } from '@/components/golf/unified-booking-modal'
 import { request, useSearchCaddiesQuery } from '@clubvantage/api-client'
 import { CoursesTab } from '@/components/golf/courses-tab'
 import { CartsTab } from '@/components/golf/carts-tab'
@@ -50,6 +48,7 @@ import { BlockTeeTimeModal, type BlockFormData } from '@/components/golf/block-t
 // Booking-centric components
 import { BookingsTab } from '@/components/golf/bookings-tab'
 import { BookingModal, type BookingPayload as NewBookingPayload, type ClubSettings as NewClubSettings } from '@/components/golf/booking-modal'
+import { type PlayerData } from '@/components/golf/add-player-flow'
 import { PlacementModeOverlay, usePlacementMode } from '@/components/golf/placement-mode-overlay'
 import type { Flight, Course, Cart, Caddy, TeeSheetDay, DayAvailability, Player, BookingGroup, TeeSheetSideBySide, NineHoleType, NineType, Booking, BookingPlayer, BookingFilters, WeekViewSlot, WeekViewPosition, BackendPlayerType, RentalStatus } from '@/components/golf/types'
 import type { FlightStatus } from '@/components/golf/flight-status-badge'
@@ -981,12 +980,6 @@ export default function GolfPage() {
   const [showCheckInModal, setShowCheckInModal] = useState(false)
   const [showSettlementModal, setShowSettlementModal] = useState(false)
 
-  // Unified Booking Modal state (Task #5)
-  const [isUnifiedBookingModalOpen, setIsUnifiedBookingModalOpen] = useState(false)
-  const [unifiedBookingMode, setUnifiedBookingMode] = useState<'new' | 'edit'>('new')
-  const [unifiedBookingSlot, setUnifiedBookingSlot] = useState<{ time: string; flightId: string } | null>(null)
-  const [unifiedBookingExisting, setUnifiedBookingExisting] = useState<ExistingBooking | undefined>(undefined)
-
   // Course modal state
   const [showCourseModal, setShowCourseModal] = useState(false)
   const [editingCourse, setEditingCourse] = useState<Course | null>(null)
@@ -1309,7 +1302,7 @@ export default function GolfPage() {
       setSelectedFlight(null)
       // Always open new booking modal - multiple bookings can share a flight
       // To edit an existing booking, user clicks on a booked player instead
-      openUnifiedBookingNew(flight)
+      openBookingModal('new', convertTo24Hour(flight.time), selectedCourse || '')
     }
   }
 
@@ -1373,15 +1366,7 @@ export default function GolfPage() {
   // Helper to generate unique booking ID
   const generateBookingId = () => `booking-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 
-  // Mock club settings for UnifiedBookingModal (TODO: fetch from clubGolfSettings API when available)
-  const clubSettings: ClubSettings = {
-    cartPolicy: 'OPTIONAL',
-    rentalPolicy: 'OPTIONAL',
-    maxGuestsPerMember: 3,
-    requireGuestContact: false,
-  }
-
-  // Mock club settings for new BookingModal (same structure)
+  // Mock club settings for BookingModal (TODO: fetch from clubGolfSettings API when available)
   const mockClubSettings: NewClubSettings = {
     cartPolicy: 'OPTIONAL',
     rentalPolicy: 'OPTIONAL',
@@ -1399,14 +1384,7 @@ export default function GolfPage() {
     setIsBookingModalOpen(true)
   }, [])
 
-  // Mock current user for UnifiedBookingModal (TODO: get from auth context)
-  const mockCurrentUser: CurrentUser = {
-    id: 'user-staff-1',
-    name: 'Staff User',
-    memberId: 'STAFF-001',
-  }
-
-  // Search members for UnifiedBookingModal
+  // Search members for BookingModal
   const handleSearchMembers = useCallback(async (query: string): Promise<PlayerData[]> => {
     const SearchMembersQuery = `
       query SearchMembers($search: String!, $first: Int) {
@@ -1455,27 +1433,6 @@ export default function GolfPage() {
     }
   }, [])
 
-  // Convert flight to ExistingBooking format for edit mode
-  const flightToExistingBooking = (flight: Flight): ExistingBooking | undefined => {
-    const hasPlayers = flight.players.some(p => p !== null)
-    if (!hasPlayers) return undefined
-
-    return {
-      id: flight.id,
-      players: flight.players.map(p => p ? {
-        id: p.id,
-        name: p.name,
-        type: p.type as 'member' | 'guest' | 'dependent' | 'walkup',
-        memberId: p.memberId,
-        caddyRequest: p.caddyRequest || 'NONE',
-        cartRequest: p.cartRequest || 'NONE',
-        rentalRequest: p.rentalRequest || 'NONE',
-      } : null),
-      holes: flight.holes as 9 | 18,
-      notes: flight.notes,
-    }
-  }
-
   // Convert time from "7:00 AM" format to "07:00" 24-hour format
   const convertTo24Hour = (time12h: string): string => {
     const parts = time12h.split(' ')
@@ -1490,89 +1447,6 @@ export default function GolfPage() {
     }
     return `${hours.padStart(2, '0')}:${minutes}`
   }
-
-  // Open unified booking modal for new booking
-  const openUnifiedBookingNew = useCallback((flight: Flight) => {
-    setUnifiedBookingMode('new')
-    setUnifiedBookingSlot({ time: convertTo24Hour(flight.time), flightId: flight.id })
-    setUnifiedBookingExisting(undefined)
-    setIsUnifiedBookingModalOpen(true)
-  }, [])
-
-  // Open unified booking modal for edit booking
-  const openUnifiedBookingEdit = useCallback((flight: Flight) => {
-    setUnifiedBookingMode('edit')
-    setUnifiedBookingSlot({ time: convertTo24Hour(flight.time), flightId: flight.id })
-    setUnifiedBookingExisting(flightToExistingBooking(flight))
-    setIsUnifiedBookingModalOpen(true)
-  }, [])
-
-  // Handle unified booking modal confirm
-  const handleUnifiedBookingConfirm = useCallback(async (booking: BookingPayload) => {
-    try {
-      // Format tee date for API
-      const dateOnly = currentDate.toISOString().split('T')[0] || ''
-      const teeDate = `${dateOnly}T00:00:00.000Z`
-
-      // Transform booking payload to API format
-      const apiPlayers = booking.players.map(p => ({
-        position: p.position,
-        playerType: p.playerType,
-        memberId: p.memberId,
-        guestName: p.guestName,
-        guestEmail: p.guestEmail,
-        guestPhone: p.guestPhone,
-        caddyRequest: p.caddyRequest,
-        cartRequest: p.cartRequest,
-        rentalRequest: p.rentalRequest,
-        cartStatus: p.cartStatus,
-        caddyStatus: p.caddyStatus,
-      }))
-
-      // Check if we're editing an existing booking
-      if (unifiedBookingExisting?.id) {
-        // Update existing booking - first update holes/notes, then players
-        // This ensures all fields from the edit modal are saved
-        await updateTeeTime(unifiedBookingExisting.id, {
-          holes: booking.holes,
-          notes: booking.notes,
-        })
-        // Then update players using the proper mutation that excludes current booking from capacity check
-        await updateTeeTimePlayers(unifiedBookingExisting.id, apiPlayers)
-      } else {
-        // Create new booking
-        await createTeeTime({
-          courseId: selectedCourse,
-          teeDate,
-          teeTime: booking.teeTime,
-          holes: booking.holes,
-          players: apiPlayers,
-        })
-      }
-
-      // Refetch tee sheet to get updated data
-      refetchTeeSheet()
-      setIsUnifiedBookingModalOpen(false)
-    } catch (error: any) {
-      console.error('Failed to create/update tee time:', error)
-      if (error.response?.errors) {
-        console.error('GraphQL errors:', JSON.stringify(error.response.errors, null, 2))
-      }
-      throw error // Let the modal handle the error display
-    }
-  }, [currentDate, selectedCourse, createTeeTime, updateTeeTime, updateTeeTimePlayers, unifiedBookingExisting, refetchTeeSheet])
-
-  // Handle unified booking modal cancel
-  const handleUnifiedBookingCancel = useCallback(async (bookingId: string, reason?: string) => {
-    try {
-      await cancelTeeTime(bookingId, reason)
-      refetchTeeSheet()
-      setIsUnifiedBookingModalOpen(false)
-    } catch (error: any) {
-      console.error('Failed to cancel tee time:', error)
-      throw error // Let the modal handle the error display
-    }
-  }, [cancelTeeTime, refetchTeeSheet])
 
   // Flight action handlers
   const handleBookTeeTime = useCallback(async (data: {
@@ -1914,14 +1788,16 @@ export default function GolfPage() {
   }, [])
 
   const handleEditFlight = useCallback((flight: Flight) => {
-    // Open unified booking modal in edit mode for booked flights
+    // Open BookingModal in edit mode for booked flights
     const hasPlayers = flight.players.some(p => p !== null)
     if (hasPlayers) {
-      openUnifiedBookingEdit(flight)
+      const courseName = courses.find(c => c.id === selectedCourse)?.name || 'Main Course'
+      const booking = flightToBooking(flight, courseName, selectedCourse)
+      openBookingModal('existing', convertTo24Hour(flight.time), selectedCourse, booking)
     } else {
       setSelectedFlight(flight)
     }
-  }, [openUnifiedBookingEdit])
+  }, [courses, selectedCourse, openBookingModal, convertTo24Hour])
 
   const handleMoveFlight = useCallback((flight: Flight) => {
     // For now, open the detail panel - in production would open a move modal
@@ -2063,27 +1939,40 @@ export default function GolfPage() {
       case 'edit':
         // Open edit modal with only players from this booking
         if (bookingPlayers.length > 0) {
-          const existingBooking = {
+          const dateStr = currentDate.toISOString().split('T')[0] || ''
+          const firstPlayer = bookingPlayers[0]
+          const booking: Booking = {
             id: bookingId,
-            players: bookingPlayers.map(p => ({
-              // For member/dependent types, use memberUuid (Member.id) so the API gets the correct UUID
-              // For guests/walkups, use the TeeTimePlayer.id
-              id: (p.type === 'member' || p.type === 'dependent') && p.memberUuid
-                ? p.memberUuid
-                : p.id,
+            bookingNumber: `BK-${bookingId.slice(-4)}`,
+            status: (flight.status === 'available' ? 'booked' : flight.status === 'finished' ? 'completed' : flight.status) as import('@/components/golf/types').BookingStatus,
+            flightId: flight.id,
+            teeTime: convertTo24Hour(flight.time),
+            teeDate: dateStr,
+            courseId: selectedCourse,
+            courseName: courses.find(c => c.id === selectedCourse)?.name || 'Main Course',
+            bookerId: firstPlayer?.id || 'unknown',
+            bookerName: firstPlayer?.name || 'Unknown',
+            bookerMemberId: firstPlayer?.memberId,
+            bookerType: firstPlayer?.type === 'member' ? 'member' : 'staff',
+            players: bookingPlayers.map((p, i) => ({
+              id: `player-${p.id}`,
+              playerId: (p.type === 'member' || p.type === 'dependent') && p.memberUuid ? p.memberUuid : p.id,
+              playerType: p.type as import('@/components/golf/player-type-badge').PlayerType,
+              position: (i + 1) as 1 | 2 | 3 | 4,
               name: p.name,
-              type: p.type as 'member' | 'guest' | 'dependent' | 'walkup',
-              memberId: p.memberId, // Display ID (M-0005) - for UI display only
-              caddyRequest: p.caddyRequest || 'NONE',
-              cartRequest: p.cartRequest || 'NONE',
-              rentalRequest: p.rentalRequest || 'NONE',
+              memberId: p.memberId,
+              memberUuid: p.memberUuid,
+              cartStatus: p.cartStatus,
+              caddyStatus: p.caddyStatus,
             })),
+            playerCount: bookingPlayers.length,
             notes: flight.notes,
+            createdAt: new Date().toISOString(),
+            createdBy: 'system',
+            modifiedAt: new Date().toISOString(),
+            modifiedBy: 'system',
           }
-          setUnifiedBookingMode('edit')
-          setUnifiedBookingSlot({ time: convertTo24Hour(flight.time), flightId: flight.id })
-          setUnifiedBookingExisting(existingBooking)
-          setIsUnifiedBookingModalOpen(true)
+          openBookingModal('existing', convertTo24Hour(flight.time), selectedCourse, booking)
         }
         break
       case 'resend_confirm':
@@ -2312,10 +2201,7 @@ export default function GolfPage() {
                   // Open new booking modal - multiple bookings can share a flight
                   // Backend validates total players ≤ 4
                   setCurrentDate(date)
-                  setUnifiedBookingMode('new')
-                  setUnifiedBookingSlot({ time, flightId: `week-${date.toISOString().split('T')[0]}-${time}-${nine}` })
-                  setUnifiedBookingExisting(undefined)
-                  setIsUnifiedBookingModalOpen(true)
+                  openBookingModal('new', time, selectedCourse || '')
                 }}
                 onPlayerEdit={(playerId, date, time, nine) => {
                   // Switch to day view for full editing experience
@@ -2474,7 +2360,7 @@ export default function GolfPage() {
               // Find the first available slot to pre-select a time for new booking
               const firstAvailable = flights.find(f => f.status === 'available')
               if (firstAvailable) {
-                openUnifiedBookingNew(firstAvailable)
+                openBookingModal('new', convertTo24Hour(firstAvailable.time), selectedCourse || '')
               } else {
                 // Fallback to old modal if no available slots (should rarely happen)
                 setBookingModalFlight(null)
@@ -2505,8 +2391,10 @@ export default function GolfPage() {
           onCheckIn={handleCheckIn}
           onSettle={handleSettle}
           onAddPlayer={() => {
-            // Open unified booking modal in edit mode to add players
-            openUnifiedBookingEdit(selectedFlight)
+            // Open BookingModal in edit mode to add players
+            const courseName = courses.find(c => c.id === selectedCourse)?.name || 'Main Course'
+            const booking = flightToBooking(selectedFlight, courseName, selectedCourse)
+            openBookingModal('existing', convertTo24Hour(selectedFlight.time), selectedCourse, booking)
           }}
           onRemovePlayer={(player: Player) => handleRemovePlayer(player.id)}
           availableCarts={carts.filter((c: Cart) => c.status === 'available')}
@@ -2671,50 +2559,6 @@ export default function GolfPage() {
         />
       )}
 
-      {/* Unified Booking Modal */}
-      {unifiedBookingSlot && (
-        <UnifiedBookingModal
-          isOpen={isUnifiedBookingModalOpen}
-          onClose={() => {
-            setIsUnifiedBookingModalOpen(false)
-            setUnifiedBookingSlot(null)
-            setUnifiedBookingExisting(undefined)
-          }}
-          mode={unifiedBookingMode}
-          courseName={courses.find(c => c.id === selectedCourse)?.name || 'Main Course'}
-          courseId={selectedCourse}
-          date={currentDate}
-          time={unifiedBookingSlot.time}
-          existingBooking={unifiedBookingExisting}
-          availableCaddies={caddies.filter(c => c.status === 'available').map(c => {
-            // Extract first and last name from caddy name
-            const nameParts = c.name.split(' ')
-            const firstName = nameParts[0] || c.name
-            const lastName = nameParts.slice(1).join(' ') || ''
-            // Map skill level to CaddyPicker expected type
-            const skillLevelMap: Record<string, 'beginner' | 'intermediate' | 'advanced'> = {
-              'expert': 'advanced',
-              'advanced': 'advanced',
-              'intermediate': 'intermediate',
-              'beginner': 'beginner',
-            }
-            return {
-              id: c.id,
-              caddyNumber: c.id.split('-')[1] || '00', // Extract number from id or use default
-              firstName,
-              lastName,
-              skillLevel: skillLevelMap[c.skillLevel] || 'intermediate',
-              status: c.status as 'available' | 'assigned' | 'off-duty',
-            }
-          })}
-          clubSettings={clubSettings}
-          currentUser={mockCurrentUser}
-          onSearchMembers={handleSearchMembers}
-          onConfirm={handleUnifiedBookingConfirm}
-          onCancel={handleUnifiedBookingCancel}
-        />
-      )}
-
       {/* Course Modal */}
       <CourseModal
         isOpen={showCourseModal}
@@ -2823,6 +2667,7 @@ export default function GolfPage() {
           }
         })}
         clubSettings={mockClubSettings}
+        onSearchMembers={handleSearchMembers}
         onSave={async (payload) => {
           // Handle save - create or update based on mode
           try {
