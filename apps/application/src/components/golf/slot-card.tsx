@@ -2,9 +2,11 @@
 
 import { useState } from 'react'
 import { cn } from '@clubvantage/ui'
-import { Check, ChevronDown, ChevronUp, DollarSign, ArrowRightLeft, AlertCircle } from 'lucide-react'
+import { Check, ChevronDown, ChevronUp, DollarSign, ArrowRightLeft, AlertCircle, Trash2 } from 'lucide-react'
 import { PlayerTypeBadge } from './player-type-badge'
 import { CheckInStatusBadge } from './check-in-status-badge'
+import { QuantityStepper } from './quantity-stepper'
+import { RemoveConfirmation } from './remove-confirmation'
 import type { BookingLineItemType, PaymentStatus } from '@clubvantage/api-client'
 import type { PlayerType } from './player-type-badge'
 
@@ -103,6 +105,8 @@ export function SlotCard({
 }: SlotCardProps) {
   // Expand by default if there are line items to show
   const [expanded, setExpanded] = useState(slot.lineItems.length > 0)
+  // Track which item is showing remove confirmation
+  const [removingItemId, setRemovingItemId] = useState<string | null>(null)
 
   // Get payment status for badge
   const getPaymentStatus = (): 'PREPAID' | 'PARTIAL' | 'UNPAID' | 'NO_CHARGES' => {
@@ -225,53 +229,132 @@ export function SlotCard({
         {expanded && (
           <div className="mt-3 space-y-2">
             {/* Line items */}
-            {slot.lineItems.map(item => (
-              <div
-                key={item.id}
-                className={cn(
-                  'flex items-center justify-between py-1.5 px-2 rounded text-sm',
-                  item.isPaid
-                    ? 'bg-emerald-50 dark:bg-emerald-500/10'
-                    : item.isTransferred
-                      ? 'bg-purple-50 dark:bg-purple-500/10'
-                      : 'bg-muted/50'
-                )}
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="truncate">{item.description}</span>
-                    {item.isPaid && (
-                      <span className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5">
-                        <Check className="h-3 w-3" />
-                        Paid
-                      </span>
-                    )}
-                    {item.isTransferred && item.transferredFromPlayerName && (
-                      <span className="text-xs text-purple-600 dark:text-purple-400 flex items-center gap-0.5">
-                        <ArrowRightLeft className="h-3 w-3" />
-                        from {item.transferredFromPlayerName}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="font-medium">${item.totalAmount.toFixed(2)}</span>
-                  {!item.isPaid && onTransferItem && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onTransferItem(item.id)
+            {slot.lineItems.map(item => {
+              const isRemoving = removingItemId === item.id
+              const isItemSelected = selectedItemIds?.has(item.id) ?? false
+              const lineTotal = item.totalAmount * item.quantity
+              const canModify = !item.isPaid && !item.isTransferred
+
+              return (
+                <div
+                  key={item.id}
+                  className={cn(
+                    'flex flex-col gap-2 py-2 px-2 rounded text-sm',
+                    item.isPaid
+                      ? 'bg-emerald-50 dark:bg-emerald-500/10'
+                      : item.isTransferred
+                        ? 'bg-purple-50 dark:bg-purple-500/10'
+                        : isItemSelected
+                          ? 'bg-primary/10 ring-1 ring-primary'
+                          : 'bg-muted/50'
+                  )}
+                >
+                  {isRemoving ? (
+                    <RemoveConfirmation
+                      onConfirm={() => {
+                        onRemoveItem?.(item.id)
+                        setRemovingItemId(null)
                       }}
-                      className="p-1 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded transition-colors"
-                      title="Transfer to another player"
-                    >
-                      <ArrowRightLeft className="h-3.5 w-3.5" />
-                    </button>
+                      onCancel={() => setRemovingItemId(null)}
+                    />
+                  ) : (
+                    <>
+                      {/* Row 1: Checkbox, Description, Price */}
+                      <div className="flex items-center gap-2">
+                        {canModify && onSelectItem && (
+                          <input
+                            type="checkbox"
+                            checked={isItemSelected}
+                            onChange={(e) => onSelectItem(item.id, e.target.checked)}
+                            className="h-4 w-4 rounded border-muted-foreground/30"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <span className="truncate">{item.description}</span>
+                        </div>
+                        <div className="text-right font-medium tabular-nums">
+                          {item.quantity > 1 ? (
+                            <span>
+                              <span className="text-muted-foreground text-xs">฿{item.totalAmount.toFixed(0)} × {item.quantity} = </span>
+                              ฿{lineTotal.toFixed(2)}
+                            </span>
+                          ) : (
+                            <span>฿{lineTotal.toFixed(2)}</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Row 2: Quantity stepper + Badges + Actions */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {canModify && onUpdateQuantity ? (
+                            <QuantityStepper
+                              value={item.quantity}
+                              onChange={(qty) => {
+                                if (qty < 1) {
+                                  setRemovingItemId(item.id)
+                                } else {
+                                  onUpdateQuantity(item.id, qty)
+                                }
+                              }}
+                              min={0}
+                              max={99}
+                            />
+                          ) : (
+                            <>
+                              {item.isPaid && (
+                                <span className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5">
+                                  <Check className="h-3 w-3" />
+                                  Paid
+                                </span>
+                              )}
+                              {item.isTransferred && item.transferredFromPlayerName && (
+                                <span className="text-xs text-purple-600 dark:text-purple-400 flex items-center gap-0.5">
+                                  <ArrowRightLeft className="h-3 w-3" />
+                                  from {item.transferredFromPlayerName}
+                                </span>
+                              )}
+                            </>
+                          )}
+                        </div>
+
+                        {canModify && (
+                          <div className="flex items-center gap-1">
+                            {onTransferItem && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  onTransferItem(item.id)
+                                }}
+                                className="p-1 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded transition-colors"
+                                title="Transfer to another player"
+                              >
+                                <ArrowRightLeft className="h-3.5 w-3.5" />
+                              </button>
+                            )}
+                            {onRemoveItem && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setRemovingItemId(item.id)
+                                }}
+                                className="p-1 text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                                title="Remove item"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </>
                   )}
                 </div>
-              </div>
-            ))}
+              )
+            })}
 
             {/* Transferred out items */}
             {slot.transferredOutItems.length > 0 && (
