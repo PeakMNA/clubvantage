@@ -33,6 +33,7 @@ export interface SlotCart {
     taxRate: number;
     taxAmount: number;
     totalAmount: number;
+    quantity: number;
     isPaid: boolean;
     paidAt?: Date;
     paymentMethod?: string;
@@ -241,6 +242,7 @@ export class CartService {
       taxRate: Number(item.taxRate),
       taxAmount: Number(item.taxAmount),
       totalAmount: Number(item.totalAmount),
+      quantity: item.quantity,
       isPaid: item.isPaid,
       paidAt: item.paidAt ?? undefined,
       paymentMethod: item.paymentMethod?.name,
@@ -276,13 +278,13 @@ export class CartService {
         : item.teeTimePlayer.guestName || 'Player',
     }));
 
-    // Calculate totals
-    const subtotal = lineItems.reduce((sum, item) => sum + item.baseAmount, 0);
-    const taxTotal = lineItems.reduce((sum, item) => sum + item.taxAmount, 0);
-    const grandTotal = lineItems.reduce((sum, item) => sum + item.totalAmount, 0);
+    // Calculate totals (multiply by quantity)
+    const subtotal = lineItems.reduce((sum, item) => sum + item.baseAmount * item.quantity, 0);
+    const taxTotal = lineItems.reduce((sum, item) => sum + item.taxAmount * item.quantity, 0);
+    const grandTotal = lineItems.reduce((sum, item) => sum + item.totalAmount * item.quantity, 0);
     const paidAmount = lineItems
       .filter(item => item.isPaid)
-      .reduce((sum, item) => sum + item.totalAmount, 0);
+      .reduce((sum, item) => sum + item.totalAmount * item.quantity, 0);
     const balanceDue = grandTotal - paidAmount;
 
     return {
