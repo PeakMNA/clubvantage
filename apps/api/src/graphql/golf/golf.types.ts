@@ -2280,6 +2280,75 @@ export class TransferResultType {
 }
 
 @ObjectType()
+export class UpdateQuantityResultType {
+  @Field()
+  success: boolean;
+
+  @Field({ nullable: true })
+  error?: string;
+
+  @Field(() => SlotLineItemType, { nullable: true })
+  lineItem?: SlotLineItemType;
+}
+
+@ObjectType()
+export class RemoveLineItemResultType {
+  @Field()
+  success: boolean;
+
+  @Field({ nullable: true })
+  error?: string;
+
+  @Field(() => SlotLineItemType, { nullable: true })
+  removedItem?: SlotLineItemType;
+}
+
+@ObjectType()
+export class BulkRemoveResultType {
+  @Field()
+  success: boolean;
+
+  @Field({ nullable: true })
+  error?: string;
+
+  @Field(() => Int)
+  removedCount: number;
+
+  @Field(() => [SlotLineItemType])
+  removedItems: SlotLineItemType[];
+}
+
+@ObjectType()
+export class BulkTransferResultType {
+  @Field()
+  success: boolean;
+
+  @Field({ nullable: true })
+  error?: string;
+
+  @Field(() => Int)
+  transferredCount: number;
+}
+
+@ObjectType()
+export class PayLineItemsResultType {
+  @Field()
+  success: boolean;
+
+  @Field({ nullable: true })
+  error?: string;
+
+  @Field({ nullable: true })
+  transactionId?: string;
+
+  @Field(() => Int)
+  paidCount: number;
+
+  @Field()
+  totalPaid: number;
+}
+
+@ObjectType()
 export class CartDraftType {
   @Field(() => ID)
   id: string;
