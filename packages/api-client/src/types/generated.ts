@@ -33,6 +33,17 @@ export type AddGroupPlayersInput = {
   players: Array<GroupPlayerInput>;
 };
 
+export type AddLineItemInput = {
+  baseAmount: Scalars['Float']['input'];
+  description: Scalars['String']['input'];
+  playerId: Scalars['ID']['input'];
+  productId?: InputMaybe<Scalars['ID']['input']>;
+  taxRate?: InputMaybe<Scalars['Float']['input']>;
+  taxType?: InputMaybe<TaxType>;
+  type: LineItemType;
+  variantId?: InputMaybe<Scalars['ID']['input']>;
+};
+
 /** Days to which a configuration applies */
 export type ApplicableDays =
   | 'ALL'
@@ -89,6 +100,35 @@ export type ApplicationStatus =
   | 'UNDER_REVIEW'
   | 'WITHDRAWN';
 
+export type BatchPaymentInput = {
+  /** For member account charges */
+  chargeToMemberId?: InputMaybe<Scalars['ID']['input']>;
+  lineItemIds?: InputMaybe<Array<Scalars['ID']['input']>>;
+  paymentMethodId: Scalars['ID']['input'];
+  playerIds: Array<Scalars['ID']['input']>;
+  reference?: InputMaybe<Scalars['String']['input']>;
+  teeTimeId: Scalars['ID']['input'];
+};
+
+export type BatchPaymentResultType = {
+  __typename?: 'BatchPaymentResultType';
+  error?: Maybe<Scalars['String']['output']>;
+  processedSlots?: Maybe<Array<SlotPaymentResultType>>;
+  success: Scalars['Boolean']['output'];
+  transactionId?: Maybe<Scalars['String']['output']>;
+};
+
+export type BatchTotalType = {
+  __typename?: 'BatchTotalType';
+  balanceDue: Scalars['Float']['output'];
+  grandTotal: Scalars['Float']['output'];
+  lineItemCount: Scalars['Int']['output'];
+  paidAmount: Scalars['Float']['output'];
+  playerIds: Array<Scalars['ID']['output']>;
+  subtotal: Scalars['Float']['output'];
+  taxTotal: Scalars['Float']['output'];
+};
+
 export type BillingStatsType = {
   __typename?: 'BillingStatsType';
   invoiceCount: Scalars['Float']['output'];
@@ -140,6 +180,24 @@ export type BookingGroupType = {
   groupNumber: Scalars['Int']['output'];
   id: Scalars['ID']['output'];
   playerIds: Array<Scalars['String']['output']>;
+};
+
+export type BookingLineItemType = {
+  __typename?: 'BookingLineItemType';
+  baseAmount: Scalars['Float']['output'];
+  description: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  isPaid: Scalars['Boolean']['output'];
+  paidAt?: Maybe<Scalars['DateTime']['output']>;
+  paymentMethod?: Maybe<Scalars['String']['output']>;
+  productId?: Maybe<Scalars['ID']['output']>;
+  reference?: Maybe<Scalars['String']['output']>;
+  taxAmount: Scalars['Float']['output'];
+  taxRate: Scalars['Float']['output'];
+  taxType: TaxType;
+  totalAmount: Scalars['Float']['output'];
+  type: LineItemType;
+  variantId?: Maybe<Scalars['ID']['output']>;
 };
 
 export type BookingMemberType = {
@@ -215,12 +273,60 @@ export type BookingTypeEnum =
   | 'FACILITY'
   | 'SERVICE';
 
+export type BulkRemoveLineItemsInput = {
+  lineItemIds: Array<Scalars['ID']['input']>;
+};
+
+export type BulkRemoveResultType = {
+  __typename?: 'BulkRemoveResultType';
+  error?: Maybe<Scalars['String']['output']>;
+  removedCount: Scalars['Int']['output'];
+  removedItems: Array<SlotLineItemType>;
+  success: Scalars['Boolean']['output'];
+};
+
+export type BulkTransferLineItemsInput = {
+  lineItemIds: Array<Scalars['ID']['input']>;
+  toPlayerId: Scalars['ID']['input'];
+};
+
+export type BulkTransferResultType = {
+  __typename?: 'BulkTransferResultType';
+  error?: Maybe<Scalars['String']['output']>;
+  success: Scalars['Boolean']['output'];
+  transferredCount: Scalars['Int']['output'];
+};
+
+export type BulkUpdateProShopProductInput = {
+  categoryId?: InputMaybe<Scalars['ID']['input']>;
+  isActive?: InputMaybe<Scalars['Boolean']['input']>;
+  isQuickAdd?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
 export type CsvPlayerRow = {
   email?: InputMaybe<Scalars['String']['input']>;
   handicap?: InputMaybe<Scalars['Int']['input']>;
   memberId?: InputMaybe<Scalars['String']['input']>;
   name: Scalars['String']['input'];
   phone?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type CaddyRateMutationResponse = {
+  __typename?: 'CaddyRateMutationResponse';
+  caddyRate?: Maybe<CaddyRateType>;
+  message?: Maybe<Scalars['String']['output']>;
+  success: Scalars['Boolean']['output'];
+};
+
+export type CaddyRateType = {
+  __typename?: 'CaddyRateType';
+  amount: Scalars['Float']['output'];
+  caddyType: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  taxRate: Scalars['Float']['output'];
+  taxType: Scalars['String']['output'];
+  updatedAt: Scalars['DateTime']['output'];
 };
 
 export type CaddyType = {
@@ -280,10 +386,38 @@ export type CancelResponseType = {
   message: Scalars['String']['output'];
 };
 
+export type CartDraftType = {
+  __typename?: 'CartDraftType';
+  createdBy: Scalars['String']['output'];
+  /** JSON stringified draft data */
+  draftData: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  teeTimeId: Scalars['ID']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+};
+
 /** Cart policy for golf bookings */
 export type CartPolicy =
   | 'OPTIONAL'
   | 'REQUIRED';
+
+export type CartRateMutationResponse = {
+  __typename?: 'CartRateMutationResponse';
+  cartRate?: Maybe<CartRateType>;
+  message?: Maybe<Scalars['String']['output']>;
+  success: Scalars['Boolean']['output'];
+};
+
+export type CartRateType = {
+  __typename?: 'CartRateType';
+  amount: Scalars['Float']['output'];
+  cartType: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  taxRate: Scalars['Float']['output'];
+  taxType: Scalars['String']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+};
 
 /** Golf cart type */
 export type CartType =
@@ -310,9 +444,102 @@ export type ChargeTypeType = {
   name: Scalars['String']['output'];
 };
 
+export type CheckInAllPlayersInput = {
+  cartNumber?: InputMaybe<Scalars['String']['input']>;
+  notes?: InputMaybe<Scalars['String']['input']>;
+  skipPaymentValidation?: InputMaybe<Scalars['Boolean']['input']>;
+  teeTimeId: Scalars['ID']['input'];
+};
+
+export type CheckInAuditEntryType = {
+  __typename?: 'CheckInAuditEntryType';
+  action: Scalars['String']['output'];
+  amount?: Maybe<Scalars['Float']['output']>;
+  details?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  performedAt: Scalars['DateTime']['output'];
+  performedBy: Scalars['String']['output'];
+  playerId?: Maybe<Scalars['ID']['output']>;
+  playerName?: Maybe<Scalars['String']['output']>;
+  teeTimeId: Scalars['ID']['output'];
+};
+
+export type CheckInFlightInput = {
+  cartNumber?: InputMaybe<Scalars['String']['input']>;
+  generateTicket?: InputMaybe<Scalars['Boolean']['input']>;
+  notes?: InputMaybe<Scalars['String']['input']>;
+  players: Array<CheckInPlayerInput>;
+  teeTimeId: Scalars['ID']['input'];
+};
+
+export type CheckInHistoryFilterInput = {
+  action?: InputMaybe<Scalars['String']['input']>;
+  endDate?: InputMaybe<Scalars['DateTime']['input']>;
+  limit?: InputMaybe<Scalars['Float']['input']>;
+  playerId?: InputMaybe<Scalars['ID']['input']>;
+  startDate?: InputMaybe<Scalars['DateTime']['input']>;
+  teeTimeId?: InputMaybe<Scalars['ID']['input']>;
+};
+
 export type CheckInInput = {
   bookingId: Scalars['ID']['input'];
   outletId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+export type CheckInPaymentMethodType = {
+  __typename?: 'CheckInPaymentMethodType';
+  icon: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  isEnabled: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  opensPOS: Scalars['Boolean']['output'];
+  requiresRef: Scalars['Boolean']['output'];
+  sortOrder: Scalars['Int']['output'];
+  type: PaymentMethodTypeEnum;
+};
+
+export type CheckInPlayerInfoType = {
+  __typename?: 'CheckInPlayerInfoType';
+  balanceDue: Scalars['Float']['output'];
+  checkedInAt?: Maybe<Scalars['DateTime']['output']>;
+  id: Scalars['ID']['output'];
+  isCheckedIn: Scalars['Boolean']['output'];
+  isSuspended: Scalars['Boolean']['output'];
+  lineItems: Array<BookingLineItemType>;
+  memberNumber?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  paymentStatus: PaymentStatus;
+  suspensionReason?: Maybe<Scalars['String']['output']>;
+  totalDue: Scalars['Float']['output'];
+  totalPaid: Scalars['Float']['output'];
+  type: CheckInPlayerType;
+};
+
+export type CheckInPlayerInput = {
+  playerId: Scalars['ID']['input'];
+  skipPaymentValidation?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+/** Player type for check-in (more granular than PlayerType) */
+export type CheckInPlayerType =
+  | 'DEPENDENT'
+  | 'GUEST'
+  | 'MEMBER'
+  | 'WALKUP';
+
+export type CheckInPolicyInput = {
+  allowPartialPayment?: InputMaybe<Scalars['Boolean']['input']>;
+  blockSuspendedMembers?: InputMaybe<Scalars['Boolean']['input']>;
+  requireAllItemsPaid?: InputMaybe<Scalars['Boolean']['input']>;
+  showSuspensionReason?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+export type CheckInPolicyType = {
+  __typename?: 'CheckInPolicyType';
+  allowPartialPayment: Scalars['Boolean']['output'];
+  blockSuspendedMembers: Scalars['Boolean']['output'];
+  requireAllItemsPaid: Scalars['Boolean']['output'];
+  showSuspensionReason: Scalars['Boolean']['output'];
 };
 
 export type CheckInResponseType = {
@@ -321,6 +548,41 @@ export type CheckInResponseType = {
   checkedInAt: Scalars['DateTime']['output'];
   error?: Maybe<Scalars['String']['output']>;
   success: Scalars['Boolean']['output'];
+};
+
+export type CheckInResultType = {
+  __typename?: 'CheckInResultType';
+  checkedInAt: Scalars['DateTime']['output'];
+  checkedInBy: Scalars['String']['output'];
+  players: Array<PlayerCheckInResultType>;
+  success: Scalars['Boolean']['output'];
+  ticketId?: Maybe<Scalars['ID']['output']>;
+  ticketNumber?: Maybe<Scalars['String']['output']>;
+};
+
+export type CheckInSettingsType = {
+  __typename?: 'CheckInSettingsType';
+  paymentMethods: Array<CheckInPaymentMethodType>;
+  policy: CheckInPolicyType;
+  pos: PosConfigType;
+  proShop: ProShopConfigType;
+  starterTicket: StarterTicketConfigType;
+  tax: TaxConfigType;
+};
+
+export type CheckInSlotsInput = {
+  notes?: InputMaybe<Scalars['String']['input']>;
+  playerIds: Array<Scalars['ID']['input']>;
+  teeTimeId: Scalars['ID']['input'];
+};
+
+export type CheckInSlotsResultType = {
+  __typename?: 'CheckInSlotsResultType';
+  checkedInSlots?: Maybe<Array<SlotCheckInResultType>>;
+  error?: Maybe<Scalars['String']['output']>;
+  success: Scalars['Boolean']['output'];
+  ticketId?: Maybe<Scalars['ID']['output']>;
+  ticketNumber?: Maybe<Scalars['String']['output']>;
 };
 
 export type ClubGolfSettingsType = {
@@ -382,6 +644,22 @@ export type CreateBookingResponseType = {
   success: Scalars['Boolean']['output'];
 };
 
+export type CreateCaddyRateInput = {
+  amount: Scalars['Float']['input'];
+  caddyType: Scalars['String']['input'];
+  rateConfigId: Scalars['ID']['input'];
+  taxRate?: Scalars['Float']['input'];
+  taxType?: Scalars['String']['input'];
+};
+
+export type CreateCartRateInput = {
+  amount: Scalars['Float']['input'];
+  cartType: Scalars['String']['input'];
+  rateConfigId: Scalars['ID']['input'];
+  taxRate?: Scalars['Float']['input'];
+  taxType?: Scalars['String']['input'];
+};
+
 export type CreateDependentInput = {
   dateOfBirth?: InputMaybe<Scalars['DateTime']['input']>;
   email?: InputMaybe<Scalars['String']['input']>;
@@ -403,6 +681,16 @@ export type CreateFacilityInput = {
   outletId?: InputMaybe<Scalars['ID']['input']>;
   revenueCenterId?: InputMaybe<Scalars['ID']['input']>;
   type: ResourceTypeEnum;
+};
+
+export type CreateGreenFeeRateInput = {
+  amount: Scalars['Float']['input'];
+  holes: Scalars['Int']['input'];
+  playerType: Scalars['String']['input'];
+  rateConfigId: Scalars['ID']['input'];
+  taxRate?: Scalars['Float']['input'];
+  taxType?: Scalars['String']['input'];
+  timeCategory?: Scalars['String']['input'];
 };
 
 export type CreateGroupBookingInput = {
@@ -480,6 +768,50 @@ export type CreatePaymentInput = {
   notes?: InputMaybe<Scalars['String']['input']>;
   paymentDate?: InputMaybe<Scalars['DateTime']['input']>;
   referenceNumber?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type CreatePaymentMethodInput = {
+  icon: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+  opensPOS?: InputMaybe<Scalars['Boolean']['input']>;
+  requiresRef?: InputMaybe<Scalars['Boolean']['input']>;
+  type: PaymentMethodTypeEnum;
+};
+
+export type CreateProShopCategoryInput = {
+  defaultTaxRate: Scalars['Float']['input'];
+  defaultTaxType: TaxType;
+  description?: InputMaybe<Scalars['String']['input']>;
+  isActive?: InputMaybe<Scalars['Boolean']['input']>;
+  name: Scalars['String']['input'];
+};
+
+export type CreateProShopProductInput = {
+  categoryId: Scalars['ID']['input'];
+  description?: InputMaybe<Scalars['String']['input']>;
+  isActive?: InputMaybe<Scalars['Boolean']['input']>;
+  isQuickAdd?: InputMaybe<Scalars['Boolean']['input']>;
+  name: Scalars['String']['input'];
+  price: Scalars['Float']['input'];
+  sku?: InputMaybe<Scalars['String']['input']>;
+  taxRate?: InputMaybe<Scalars['Float']['input']>;
+  taxType?: InputMaybe<TaxType>;
+  useCategoryDefaults?: InputMaybe<Scalars['Boolean']['input']>;
+  variants?: InputMaybe<Array<CreateProShopVariantInput>>;
+};
+
+export type CreateProShopVariantInput = {
+  name: Scalars['String']['input'];
+  priceAdjustment?: InputMaybe<Scalars['Float']['input']>;
+  sku?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type CreateRateConfigInput = {
+  courseId: Scalars['ID']['input'];
+  description?: InputMaybe<Scalars['String']['input']>;
+  effectiveFrom: Scalars['DateTime']['input'];
+  effectiveTo?: InputMaybe<Scalars['DateTime']['input']>;
+  name: Scalars['String']['input'];
 };
 
 export type CreateScheduleInput = {
@@ -585,6 +917,27 @@ export type CreateWaitlistEntryInput = {
   timeRangeStart: Scalars['String']['input'];
 };
 
+export type DailyCheckInReportType = {
+  __typename?: 'DailyCheckInReportType';
+  checkedInPlayers: Scalars['Int']['output'];
+  course: Scalars['String']['output'];
+  date: Scalars['DateTime']['output'];
+  flights: Array<FlightPaymentSummaryType>;
+  noShowPlayers: Scalars['Int']['output'];
+  totalAccount: Scalars['Float']['output'];
+  totalCard: Scalars['Float']['output'];
+  totalCash: Scalars['Float']['output'];
+  totalFlights: Scalars['Int']['output'];
+  totalPlayers: Scalars['Int']['output'];
+  totalRevenue: Scalars['Float']['output'];
+  totalTransfer: Scalars['Float']['output'];
+};
+
+export type DailyReportInput = {
+  courseId: Scalars['ID']['input'];
+  date: Scalars['DateTime']['input'];
+};
+
 export type DayHoursInput = {
   closeTime?: InputMaybe<Scalars['String']['input']>;
   dayOfWeek: Scalars['String']['input'];
@@ -618,6 +971,12 @@ export type DeleteMemberResponseType = {
 
 export type DeleteMutationResponse = {
   __typename?: 'DeleteMutationResponse';
+  message?: Maybe<Scalars['String']['output']>;
+  success: Scalars['Boolean']['output'];
+};
+
+export type DeleteRateMutationResponse = {
+  __typename?: 'DeleteRateMutationResponse';
   message?: Maybe<Scalars['String']['output']>;
   success: Scalars['Boolean']['output'];
 };
@@ -721,11 +1080,42 @@ export type FlightAssignment = {
   teeTime: Scalars['String']['output'];
 };
 
+export type FlightCheckInInfoType = {
+  __typename?: 'FlightCheckInInfoType';
+  caddyAssignment?: Maybe<Scalars['String']['output']>;
+  cartNumber?: Maybe<Scalars['String']['output']>;
+  course: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  players: Array<CheckInPlayerInfoType>;
+  startingHole: Scalars['Int']['output'];
+  teeTime: Scalars['DateTime']['output'];
+};
+
 export type FlightCheckInResponseType = {
   __typename?: 'FlightCheckInResponseType';
   checkedInAt: Scalars['DateTime']['output'];
   success: Scalars['Boolean']['output'];
   teeTime: TeeTimeType;
+};
+
+export type FlightPaymentSummaryType = {
+  __typename?: 'FlightPaymentSummaryType';
+  checkedInCount: Scalars['Int']['output'];
+  course: Scalars['String']['output'];
+  isFullyCheckedIn: Scalars['Boolean']['output'];
+  isFullySettled: Scalars['Boolean']['output'];
+  settledCount: Scalars['Int']['output'];
+  teeTime: Scalars['DateTime']['output'];
+  teeTimeId: Scalars['ID']['output'];
+  totalBalance: Scalars['Float']['output'];
+  totalDue: Scalars['Float']['output'];
+  totalPaid: Scalars['Float']['output'];
+  totalPlayers: Scalars['Int']['output'];
+};
+
+export type GenerateTicketInput = {
+  forceRegenerate?: InputMaybe<Scalars['Boolean']['input']>;
+  teeTimeId: Scalars['ID']['input'];
 };
 
 export type GolfCourseIntervalType = {
@@ -938,6 +1328,26 @@ export type GolfWaitlistType = {
   updatedAt: Scalars['DateTime']['output'];
 };
 
+export type GreenFeeRateMutationResponse = {
+  __typename?: 'GreenFeeRateMutationResponse';
+  greenFeeRate?: Maybe<GreenFeeRateType>;
+  message?: Maybe<Scalars['String']['output']>;
+  success: Scalars['Boolean']['output'];
+};
+
+export type GreenFeeRateType = {
+  __typename?: 'GreenFeeRateType';
+  amount: Scalars['Float']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  holes: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  playerType: Scalars['String']['output'];
+  taxRate: Scalars['Float']['output'];
+  taxType: Scalars['String']['output'];
+  timeCategory: Scalars['String']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+};
+
 export type GroupBookingFlightsResponse = {
   __typename?: 'GroupBookingFlightsResponse';
   flights: Array<FlightAssignment>;
@@ -1062,6 +1472,22 @@ export type JoinWaitlistInput = {
   requestedTime: Scalars['String']['input'];
   serviceId?: InputMaybe<Scalars['ID']['input']>;
 };
+
+export type LineItemPaymentType = {
+  __typename?: 'LineItemPaymentType';
+  amount: Scalars['Float']['output'];
+  description?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  lineItemId: Scalars['ID']['output'];
+};
+
+/** Type of booking line item */
+export type LineItemType =
+  | 'CADDY'
+  | 'CART'
+  | 'GREEN_FEE'
+  | 'PROSHOP'
+  | 'RENTAL';
 
 export type LotteryDrawResult = {
   __typename?: 'LotteryDrawResult';
@@ -1277,8 +1703,16 @@ export type Mutation = {
   acceptWaitlistOffer: WaitlistResponseType;
   /** Add players to a group booking */
   addGroupPlayers: GroupBookingMutationResponse;
+  /** Add a line item to a player */
+  addLineItem: BookingLineItemType;
   /** Auto-assign players to flights */
   assignFlights: GroupBookingFlightsResponse;
+  /** Remove multiple line items */
+  bulkRemoveLineItems: BulkRemoveResultType;
+  /** Transfer multiple line items to another player */
+  bulkTransferLineItems: BulkTransferResultType;
+  /** Bulk update multiple pro shop products */
+  bulkUpdateProShopProducts: Array<ProShopProductType>;
   /** Cancel a booking */
   cancelBooking: CancelBookingResponseType;
   /** Cancel a group booking */
@@ -1295,6 +1729,14 @@ export type Mutation = {
   changeMemberStatus: MemberType;
   /** Check in a booking */
   checkIn: CheckInResponseType;
+  /** Check in all players in a flight at once */
+  checkInAllPlayers: CheckInResultType;
+  /** Check in multiple players for a flight */
+  checkInFlight: CheckInResultType;
+  /** Check in multiple players at once */
+  checkInSlots: CheckInSlotsResultType;
+  /** Clear cart draft for a tee time */
+  clearCartDraft: Scalars['Boolean']['output'];
   /** Close a lottery to new requests */
   closeLottery: LotteryMutationResponse;
   /** Confirm group booking and create tee times */
@@ -1305,6 +1747,12 @@ export type Mutation = {
   createApplication: MembershipApplicationType;
   /** Create a new booking */
   createBooking: CreateBookingResponseType;
+  /** Create a caddy rate */
+  createCaddyRate: CaddyRateMutationResponse;
+  /** Create a cart rate */
+  createCartRate: CartRateMutationResponse;
+  /** Create a new payment method for check-in */
+  createCheckInPaymentMethod: CheckInPaymentMethodType;
   /** Create a course schedule */
   createCourseSchedule: ScheduleMutationResponse;
   /** Create default schedule configuration for a course */
@@ -1313,6 +1761,8 @@ export type Mutation = {
   createDependent: DependentType;
   /** Create a new facility */
   createFacility: FacilityResponseType;
+  /** Create a green fee rate */
+  createGreenFeeRate: GreenFeeRateMutationResponse;
   /** Create a group booking */
   createGroupBooking: GroupBookingMutationResponse;
   /** Create a new invoice */
@@ -1321,6 +1771,12 @@ export type Mutation = {
   createLottery: LotteryMutationResponse;
   /** Create a new member */
   createMember: MemberType;
+  /** Create a new pro shop category */
+  createProShopCategory: ProShopCategoryType;
+  /** Create a new pro shop product */
+  createProShopProduct: ProShopProductType;
+  /** Create a rate configuration */
+  createRateConfig: RateConfigMutationResponse;
   /** Create a season */
   createSeason: SeasonMutationResponse;
   /** Create a new service */
@@ -1339,18 +1795,32 @@ export type Mutation = {
   createWaitlistEntry: WaitlistMutationResponse;
   /** Decline a waitlist offer */
   declineWaitlistOffer: WaitlistResponseType;
+  /** Delete a caddy rate */
+  deleteCaddyRate: DeleteRateMutationResponse;
+  /** Delete a cart rate */
+  deleteCartRate: DeleteRateMutationResponse;
+  /** Delete a payment method */
+  deleteCheckInPaymentMethod: Scalars['Boolean']['output'];
   /** Delete a course schedule */
   deleteCourseSchedule: ScheduleMutationResponse;
   /** Delete a dependent */
   deleteDependent: DeleteDependentResponseType;
   /** Delete a facility */
   deleteFacility: DeleteResponseType;
+  /** Delete a green fee rate */
+  deleteGreenFeeRate: DeleteRateMutationResponse;
   /** Delete a draft group booking */
   deleteGroupBooking: GroupBookingMutationResponse;
   /** Delete a draft lottery */
   deleteLottery: LotteryMutationResponse;
   /** Soft delete a member */
   deleteMember: DeleteMemberResponseType;
+  /** Delete a pro shop category. If category has products, provide moveProductsTo. */
+  deleteProShopCategory: Scalars['Boolean']['output'];
+  /** Delete a pro shop product */
+  deleteProShopProduct: Scalars['Boolean']['output'];
+  /** Delete a rate configuration */
+  deleteRateConfig: DeleteRateMutationResponse;
   /** Delete a season */
   deleteSeason: DeleteMutationResponse;
   /** Delete a service */
@@ -1369,6 +1839,8 @@ export type Mutation = {
   executeLotteryDraw: LotteryDrawResult;
   /** Mark expired waitlist entries */
   expireOldWaitlistEntries: WaitlistMutationResponse;
+  /** Generate or regenerate a starter ticket for a tee time */
+  generateStarterTicket: StarterTicketResponseType;
   /** Import players from CSV data */
   importPlayersFromCSV: GroupBookingMutationResponse;
   /** Join a waitlist */
@@ -1379,38 +1851,92 @@ export type Mutation = {
   notifyWaitlistForCancellation: WaitlistNotificationResult;
   /** Open a lottery for requests */
   openLottery: LotteryMutationResponse;
+  /** Pay specific line items */
+  payLineItems: PayLineItemsResultType;
+  /** Mark a starter ticket as printed */
+  printStarterTicket: StarterTicketResponseType;
+  /** Process payment for multiple players at once */
+  processBatchPayment: BatchPaymentResultType;
+  /** Process payment settlement for players */
+  processSettlement: SettlementResultType;
   /** Publish lottery results and create tee times */
   publishLotteryResults: LotteryMutationResponse;
   /** Record a payment */
   recordPayment: PaymentType;
+  /** Manually regenerate line items for a tee time */
+  regenerateLineItems: Scalars['Boolean']['output'];
   /** Remove entry from waitlist */
   removeFromWaitlist: WaitlistResponseType;
   /** Remove a player from a group booking */
   removeGroupPlayer: GroupBookingMutationResponse;
+  /** Remove a line item from cart */
+  removeLineItem: RemoveLineItemResultType;
+  /** Reorder payment methods by providing ordered IDs */
+  reorderCheckInPaymentMethods: Array<CheckInPaymentMethodType>;
+  /** Reorder pro shop categories by providing ordered IDs */
+  reorderProShopCategories: Array<ProShopCategoryType>;
   /** Reschedule a booking */
   rescheduleBooking: CreateBookingResponseType;
+  /** Reset all check-in settings to defaults */
+  resetCheckInSettings: CheckInSettingsType;
+  /** Save cart draft for a tee time */
+  saveCartDraft: CartDraftType;
   /** Send an invoice */
   sendInvoice: InvoiceType;
   /** Send offer to waitlist entry */
   sendWaitlistOffer: WaitlistResponseType;
+  /** Settle all players in a flight at once */
+  settleAllPlayers: SettlementResultType;
   /** Submit a lottery request (member) */
   submitLotteryRequest: LotteryRequestMutationResponse;
+  /** Enable or disable a payment method */
+  toggleCheckInPaymentMethod: CheckInPaymentMethodType;
+  /** Toggle quick add status for a product */
+  toggleProductQuickAdd: ProShopProductType;
+  /** Transfer a line item from one player to another */
+  transferLineItem: TransferResultType;
+  /** Undo a player check-in */
+  undoCheckIn: Scalars['Boolean']['output'];
+  /** Undo a line item transfer */
+  undoTransfer: TransferResultType;
   /** Update an existing membership application */
   updateApplication: MembershipApplicationType;
+  /** Update a caddy rate */
+  updateCaddyRate: CaddyRateMutationResponse;
+  /** Update a cart rate */
+  updateCartRate: CartRateMutationResponse;
+  /** Update an existing payment method */
+  updateCheckInPaymentMethod: CheckInPaymentMethodType;
+  /** Update check-in policy settings */
+  updateCheckInPolicy: CheckInSettingsType;
   /** Update a course schedule */
   updateCourseSchedule: ScheduleMutationResponse;
   /** Update a dependent */
   updateDependent: DependentType;
   /** Update an existing facility */
   updateFacility: FacilityResponseType;
+  /** Update a green fee rate */
+  updateGreenFeeRate: GreenFeeRateMutationResponse;
   /** Update a group booking */
   updateGroupBooking: GroupBookingMutationResponse;
+  /** Update line item quantity */
+  updateLineItemQuantity: UpdateQuantityResultType;
   /** Update a lottery */
   updateLottery: LotteryMutationResponse;
   /** Update an existing member */
   updateMember: MemberType;
+  /** Update POS integration settings */
+  updatePOSConfig: CheckInSettingsType;
   /** Update a single player rental status (cart/caddy) */
   updatePlayerRentalStatus: TeeTimePlayerType;
+  /** Update an existing pro shop category */
+  updateProShopCategory: ProShopCategoryType;
+  /** Update pro shop integration settings */
+  updateProShopConfig: CheckInSettingsType;
+  /** Update an existing pro shop product */
+  updateProShopProduct: ProShopProductType;
+  /** Update a rate configuration */
+  updateRateConfig: RateConfigMutationResponse;
   /** Update schedule configuration */
   updateScheduleConfig: ScheduleConfigMutationResponse;
   /** Update a season */
@@ -1421,6 +1947,10 @@ export type Mutation = {
   updateSpecialDay: SpecialDayMutationResponse;
   /** Update a staff member */
   updateStaffMember: StaffResponseType;
+  /** Update starter ticket configuration */
+  updateStarterTicketConfig: CheckInSettingsType;
+  /** Update tax configuration including overrides */
+  updateTaxConfig: CheckInSettingsType;
   /** Update an existing tee time */
   updateTeeTime: TeeTimeType;
   /** Update a tee time block */
@@ -1447,9 +1977,30 @@ export type MutationAddGroupPlayersArgs = {
 };
 
 
+export type MutationAddLineItemArgs = {
+  input: AddLineItemInput;
+};
+
+
 export type MutationAssignFlightsArgs = {
   id: Scalars['ID']['input'];
   interval?: Scalars['Float']['input'];
+};
+
+
+export type MutationBulkRemoveLineItemsArgs = {
+  input: BulkRemoveLineItemsInput;
+};
+
+
+export type MutationBulkTransferLineItemsArgs = {
+  input: BulkTransferLineItemsInput;
+};
+
+
+export type MutationBulkUpdateProShopProductsArgs = {
+  ids: Array<Scalars['ID']['input']>;
+  input: BulkUpdateProShopProductInput;
 };
 
 
@@ -1496,6 +2047,26 @@ export type MutationCheckInArgs = {
 };
 
 
+export type MutationCheckInAllPlayersArgs = {
+  input: CheckInAllPlayersInput;
+};
+
+
+export type MutationCheckInFlightArgs = {
+  input: CheckInFlightInput;
+};
+
+
+export type MutationCheckInSlotsArgs = {
+  input: CheckInSlotsInput;
+};
+
+
+export type MutationClearCartDraftArgs = {
+  teeTimeId: Scalars['ID']['input'];
+};
+
+
 export type MutationCloseLotteryArgs = {
   id: Scalars['ID']['input'];
 };
@@ -1522,6 +2093,21 @@ export type MutationCreateBookingArgs = {
 };
 
 
+export type MutationCreateCaddyRateArgs = {
+  input: CreateCaddyRateInput;
+};
+
+
+export type MutationCreateCartRateArgs = {
+  input: CreateCartRateInput;
+};
+
+
+export type MutationCreateCheckInPaymentMethodArgs = {
+  input: CreatePaymentMethodInput;
+};
+
+
 export type MutationCreateCourseScheduleArgs = {
   input: CreateScheduleInput;
 };
@@ -1542,6 +2128,11 @@ export type MutationCreateFacilityArgs = {
 };
 
 
+export type MutationCreateGreenFeeRateArgs = {
+  input: CreateGreenFeeRateInput;
+};
+
+
 export type MutationCreateGroupBookingArgs = {
   input: CreateGroupBookingInput;
 };
@@ -1559,6 +2150,21 @@ export type MutationCreateLotteryArgs = {
 
 export type MutationCreateMemberArgs = {
   input: CreateMemberInput;
+};
+
+
+export type MutationCreateProShopCategoryArgs = {
+  input: CreateProShopCategoryInput;
+};
+
+
+export type MutationCreateProShopProductArgs = {
+  input: CreateProShopProductInput;
+};
+
+
+export type MutationCreateRateConfigArgs = {
+  input: CreateRateConfigInput;
 };
 
 
@@ -1610,6 +2216,21 @@ export type MutationDeclineWaitlistOfferArgs = {
 };
 
 
+export type MutationDeleteCaddyRateArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteCartRateArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteCheckInPaymentMethodArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteCourseScheduleArgs = {
   id: Scalars['ID']['input'];
 };
@@ -1625,6 +2246,11 @@ export type MutationDeleteFacilityArgs = {
 };
 
 
+export type MutationDeleteGreenFeeRateArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteGroupBookingArgs = {
   id: Scalars['ID']['input'];
 };
@@ -1636,6 +2262,22 @@ export type MutationDeleteLotteryArgs = {
 
 
 export type MutationDeleteMemberArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteProShopCategoryArgs = {
+  id: Scalars['ID']['input'];
+  moveProductsTo?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
+export type MutationDeleteProShopProductArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteRateConfigArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -1680,6 +2322,11 @@ export type MutationExecuteLotteryDrawArgs = {
 };
 
 
+export type MutationGenerateStarterTicketArgs = {
+  input: GenerateTicketInput;
+};
+
+
 export type MutationImportPlayersFromCsvArgs = {
   id: Scalars['ID']['input'];
   input: ImportPlayersFromCsvInput;
@@ -1710,6 +2357,26 @@ export type MutationOpenLotteryArgs = {
 };
 
 
+export type MutationPayLineItemsArgs = {
+  input: PayLineItemsInput;
+};
+
+
+export type MutationPrintStarterTicketArgs = {
+  input: PrintTicketInput;
+};
+
+
+export type MutationProcessBatchPaymentArgs = {
+  input: BatchPaymentInput;
+};
+
+
+export type MutationProcessSettlementArgs = {
+  input: ProcessSettlementInput;
+};
+
+
 export type MutationPublishLotteryResultsArgs = {
   id: Scalars['ID']['input'];
 };
@@ -1717,6 +2384,11 @@ export type MutationPublishLotteryResultsArgs = {
 
 export type MutationRecordPaymentArgs = {
   input: CreatePaymentInput;
+};
+
+
+export type MutationRegenerateLineItemsArgs = {
+  teeTimeId: Scalars['ID']['input'];
 };
 
 
@@ -1731,8 +2403,28 @@ export type MutationRemoveGroupPlayerArgs = {
 };
 
 
+export type MutationRemoveLineItemArgs = {
+  input: RemoveLineItemInput;
+};
+
+
+export type MutationReorderCheckInPaymentMethodsArgs = {
+  orderedIds: Array<Scalars['ID']['input']>;
+};
+
+
+export type MutationReorderProShopCategoriesArgs = {
+  orderedIds: Array<Scalars['ID']['input']>;
+};
+
+
 export type MutationRescheduleBookingArgs = {
   input: RescheduleBookingInput;
+};
+
+
+export type MutationSaveCartDraftArgs = {
+  input: SaveCartDraftInput;
 };
 
 
@@ -1746,14 +2438,69 @@ export type MutationSendWaitlistOfferArgs = {
 };
 
 
+export type MutationSettleAllPlayersArgs = {
+  input: SettleAllPlayersInput;
+};
+
+
 export type MutationSubmitLotteryRequestArgs = {
   input: CreateLotteryRequestInput;
+};
+
+
+export type MutationToggleCheckInPaymentMethodArgs = {
+  id: Scalars['ID']['input'];
+  isEnabled: Scalars['Boolean']['input'];
+};
+
+
+export type MutationToggleProductQuickAddArgs = {
+  id: Scalars['ID']['input'];
+  isQuickAdd: Scalars['Boolean']['input'];
+};
+
+
+export type MutationTransferLineItemArgs = {
+  input: TransferLineItemInput;
+};
+
+
+export type MutationUndoCheckInArgs = {
+  input: UndoCheckInInput;
+};
+
+
+export type MutationUndoTransferArgs = {
+  input: UndoTransferInput;
 };
 
 
 export type MutationUpdateApplicationArgs = {
   id: Scalars['ID']['input'];
   input: UpdateApplicationInput;
+};
+
+
+export type MutationUpdateCaddyRateArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateCaddyRateInput;
+};
+
+
+export type MutationUpdateCartRateArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateCartRateInput;
+};
+
+
+export type MutationUpdateCheckInPaymentMethodArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdatePaymentMethodInput;
+};
+
+
+export type MutationUpdateCheckInPolicyArgs = {
+  input: CheckInPolicyInput;
 };
 
 
@@ -1774,9 +2521,20 @@ export type MutationUpdateFacilityArgs = {
 };
 
 
+export type MutationUpdateGreenFeeRateArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateGreenFeeRateInput;
+};
+
+
 export type MutationUpdateGroupBookingArgs = {
   id: Scalars['ID']['input'];
   input: UpdateGroupBookingInput;
+};
+
+
+export type MutationUpdateLineItemQuantityArgs = {
+  input: UpdateLineItemQuantityInput;
 };
 
 
@@ -1792,9 +2550,37 @@ export type MutationUpdateMemberArgs = {
 };
 
 
+export type MutationUpdatePosConfigArgs = {
+  input: PosConfigInput;
+};
+
+
 export type MutationUpdatePlayerRentalStatusArgs = {
   input: UpdatePlayerRentalStatusInput;
   playerId: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdateProShopCategoryArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateProShopCategoryInput;
+};
+
+
+export type MutationUpdateProShopConfigArgs = {
+  input: ProShopConfigInput;
+};
+
+
+export type MutationUpdateProShopProductArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateProShopProductInput;
+};
+
+
+export type MutationUpdateRateConfigArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateRateConfigInput;
 };
 
 
@@ -1823,6 +2609,16 @@ export type MutationUpdateSpecialDayArgs = {
 
 export type MutationUpdateStaffMemberArgs = {
   input: UpdateStaffMemberInput;
+};
+
+
+export type MutationUpdateStarterTicketConfigArgs = {
+  input: StarterTicketConfigInput;
+};
+
+
+export type MutationUpdateTaxConfigArgs = {
+  input: TaxConfigInput;
 };
 
 
@@ -1866,12 +2662,40 @@ export type NineType =
   | 'BACK'
   | 'FRONT';
 
+export type PosConfigInput = {
+  isConnected?: InputMaybe<Scalars['Boolean']['input']>;
+  provider?: InputMaybe<Scalars['String']['input']>;
+  terminalId?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type PosConfigType = {
+  __typename?: 'POSConfigType';
+  isConnected: Scalars['Boolean']['output'];
+  provider?: Maybe<Scalars['String']['output']>;
+  terminalId?: Maybe<Scalars['String']['output']>;
+};
+
 export type PageInfo = {
   __typename?: 'PageInfo';
   endCursor?: Maybe<Scalars['String']['output']>;
   hasNextPage: Scalars['Boolean']['output'];
   hasPreviousPage: Scalars['Boolean']['output'];
   startCursor?: Maybe<Scalars['String']['output']>;
+};
+
+export type PayLineItemsInput = {
+  lineItemIds: Array<Scalars['ID']['input']>;
+  paymentMethodId: Scalars['ID']['input'];
+  reference?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type PayLineItemsResultType = {
+  __typename?: 'PayLineItemsResultType';
+  error?: Maybe<Scalars['String']['output']>;
+  paidCount: Scalars['Int']['output'];
+  success: Scalars['Boolean']['output'];
+  totalPaid: Scalars['Float']['output'];
+  transactionId?: Maybe<Scalars['String']['output']>;
 };
 
 export type PaymentAllocationInput = {
@@ -1896,6 +2720,21 @@ export type PaymentMethod =
   | 'MOBILE_PAYMENT'
   | 'OTHER';
 
+/** Type of payment method */
+export type PaymentMethodTypeEnum =
+  | 'ACCOUNT'
+  | 'CARD'
+  | 'CASH'
+  | 'CUSTOM'
+  | 'TRANSFER';
+
+/** Payment status for player check-in */
+export type PaymentStatus =
+  | 'NO_CHARGES'
+  | 'PARTIAL'
+  | 'PREPAID'
+  | 'UNPAID';
+
 export type PaymentSummaryType = {
   __typename?: 'PaymentSummaryType';
   amount: Scalars['String']['output'];
@@ -1903,6 +2742,33 @@ export type PaymentSummaryType = {
   method: PaymentMethod;
   paymentDate: Scalars['DateTime']['output'];
   receiptNumber: Scalars['String']['output'];
+};
+
+export type PaymentTransactionType = {
+  __typename?: 'PaymentTransactionType';
+  allocatedAt?: Maybe<Scalars['DateTime']['output']>;
+  allocatedToRevenue: Scalars['Boolean']['output'];
+  amount: Scalars['Float']['output'];
+  clubId: Scalars['ID']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  lineItemPayments?: Maybe<Array<LineItemPaymentType>>;
+  paidAt: Scalars['DateTime']['output'];
+  paidBy: Scalars['String']['output'];
+  paymentMethodId: Scalars['ID']['output'];
+  paymentMethodName?: Maybe<Scalars['String']['output']>;
+  reference?: Maybe<Scalars['String']['output']>;
+  refundAmount?: Maybe<Scalars['Float']['output']>;
+  refundReason?: Maybe<Scalars['String']['output']>;
+  refundedAt?: Maybe<Scalars['DateTime']['output']>;
+  refundedBy?: Maybe<Scalars['String']['output']>;
+  status: TransactionStatus;
+  teeTimeId?: Maybe<Scalars['ID']['output']>;
+  transactionNumber: Scalars['String']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+  voidReason?: Maybe<Scalars['String']['output']>;
+  voidedAt?: Maybe<Scalars['DateTime']['output']>;
+  voidedBy?: Maybe<Scalars['String']['output']>;
 };
 
 export type PaymentType = {
@@ -1931,6 +2797,13 @@ export type PlayFormat =
   | 'CROSS_TEE'
   | 'EIGHTEEN_HOLE';
 
+export type PlayerCheckInResultType = {
+  __typename?: 'PlayerCheckInResultType';
+  checkedIn: Scalars['Boolean']['output'];
+  error?: Maybe<Scalars['String']['output']>;
+  playerId: Scalars['ID']['output'];
+};
+
 export type PlayerDependentType = {
   __typename?: 'PlayerDependentType';
   firstName: Scalars['String']['output'];
@@ -1947,6 +2820,39 @@ export type PlayerMemberType = {
   id: Scalars['ID']['output'];
   lastName: Scalars['String']['output'];
   memberId: Scalars['String']['output'];
+};
+
+export type PlayerPaymentInfoType = {
+  __typename?: 'PlayerPaymentInfoType';
+  balanceDue: Scalars['Float']['output'];
+  grandTotal: Scalars['Float']['output'];
+  isSettled: Scalars['Boolean']['output'];
+  lineItems: Array<BookingLineItemType>;
+  memberNumber?: Maybe<Scalars['String']['output']>;
+  paidOnline: Scalars['Float']['output'];
+  playerId: Scalars['ID']['output'];
+  playerName: Scalars['String']['output'];
+  playerType: CheckInPlayerType;
+  settledAt?: Maybe<Scalars['DateTime']['output']>;
+  settledBy?: Maybe<Scalars['String']['output']>;
+  settledVia?: Maybe<Scalars['String']['output']>;
+  subtotal: Scalars['Float']['output'];
+  totalTax: Scalars['Float']['output'];
+};
+
+export type PlayerPaymentInput = {
+  amount: Scalars['Float']['input'];
+  /** Specific line item IDs to mark as paid */
+  lineItemIds?: InputMaybe<Array<Scalars['ID']['input']>>;
+  playerId: Scalars['ID']['input'];
+};
+
+export type PlayerSettlementResultType = {
+  __typename?: 'PlayerSettlementResultType';
+  amountPaid: Scalars['Float']['output'];
+  error?: Maybe<Scalars['String']['output']>;
+  playerId: Scalars['ID']['output'];
+  success: Scalars['Boolean']['output'];
 };
 
 /** Type of player in a tee time */
@@ -1969,6 +2875,97 @@ export type PriceModifierType = {
   label: Scalars['String']['output'];
 };
 
+/** Print output options for starter ticket */
+export type PrintOption =
+  | 'COMBINED'
+  | 'NONE'
+  | 'RECEIPT'
+  | 'TICKET';
+
+export type PrintTicketInput = {
+  copies?: InputMaybe<Scalars['Float']['input']>;
+  ticketId: Scalars['ID']['input'];
+};
+
+export type ProShopCategoryType = {
+  __typename?: 'ProShopCategoryType';
+  defaultTaxRate: Scalars['Float']['output'];
+  defaultTaxType: TaxType;
+  description?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  isActive: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  productCount?: Maybe<Scalars['Int']['output']>;
+  sortOrder: Scalars['Int']['output'];
+};
+
+export type ProShopConfigInput = {
+  allowAddAtCheckIn?: InputMaybe<Scalars['Boolean']['input']>;
+  quickAddProductIds?: InputMaybe<Array<Scalars['ID']['input']>>;
+  showQuickAddItems?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+export type ProShopConfigType = {
+  __typename?: 'ProShopConfigType';
+  allowAddAtCheckIn: Scalars['Boolean']['output'];
+  quickAddProductIds: Array<Scalars['ID']['output']>;
+  showQuickAddItems: Scalars['Boolean']['output'];
+};
+
+export type ProShopProductConnectionType = {
+  __typename?: 'ProShopProductConnectionType';
+  hasMore: Scalars['Boolean']['output'];
+  items: Array<ProShopProductType>;
+  limit: Scalars['Int']['output'];
+  page: Scalars['Int']['output'];
+  total: Scalars['Int']['output'];
+};
+
+export type ProShopProductFilterInput = {
+  categoryId?: InputMaybe<Scalars['ID']['input']>;
+  isActive?: InputMaybe<Scalars['Boolean']['input']>;
+  isQuickAdd?: InputMaybe<Scalars['Boolean']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type ProShopProductType = {
+  __typename?: 'ProShopProductType';
+  category?: Maybe<ProShopCategoryType>;
+  categoryId: Scalars['ID']['output'];
+  description?: Maybe<Scalars['String']['output']>;
+  effectiveTaxRate: Scalars['Float']['output'];
+  effectiveTaxType: TaxType;
+  id: Scalars['ID']['output'];
+  isActive: Scalars['Boolean']['output'];
+  isQuickAdd: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  price: Scalars['Float']['output'];
+  sku?: Maybe<Scalars['String']['output']>;
+  taxRate: Scalars['Float']['output'];
+  taxType: TaxType;
+  useCategoryDefaults: Scalars['Boolean']['output'];
+  variants: Array<ProShopVariantType>;
+};
+
+export type ProShopVariantType = {
+  __typename?: 'ProShopVariantType';
+  finalPrice: Scalars['Float']['output'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  priceAdjustment: Scalars['Float']['output'];
+  sku?: Maybe<Scalars['String']['output']>;
+};
+
+export type ProcessSettlementInput = {
+  notes?: InputMaybe<Scalars['String']['input']>;
+  paymentMethodId: Scalars['ID']['input'];
+  payments: Array<PlayerPaymentInput>;
+  reference?: InputMaybe<Scalars['String']['input']>;
+  teeTimeId: Scalars['ID']['input'];
+};
+
 export type Query = {
   __typename?: 'Query';
   /** Get active schedule for a course and date */
@@ -1979,6 +2976,8 @@ export type Query = {
   applicationStats: ApplicationStatsType;
   /** Get paginated list of membership applications */
   applications: ApplicationConnection;
+  /** Calculate totals for multiple players (for batch payment) */
+  batchTotal: BatchTotalType;
   /** Get billing statistics for the current month */
   billingStats: BillingStatsType;
   /** Get a single booking by ID */
@@ -1991,28 +2990,50 @@ export type Query = {
   bookings: BookingConnection;
   /** Get calendar data for a specific day */
   calendarDay: CalendarDayType;
+  /** Get cart draft for a tee time */
+  cartDraft?: Maybe<CartDraftType>;
+  /** Get check-in audit history */
+  checkInHistory: Array<CheckInAuditEntryType>;
+  /** Get a single payment method by ID */
+  checkInPaymentMethod?: Maybe<CheckInPaymentMethodType>;
+  /** Get all payment methods for check-in */
+  checkInPaymentMethods: Array<CheckInPaymentMethodType>;
   /** Get club golf settings including cart, rental, and caddy policies */
   clubGolfSettings?: Maybe<ClubGolfSettingsType>;
   /** Get schedules for a course */
   courseSchedules: Array<GolfCourseScheduleType>;
   /** Get all golf courses */
   courses: Array<GolfCourseType>;
+  /** Get daily check-in report for a course */
+  dailyCheckInReport: DailyCheckInReportType;
   /** Get list of facilities */
   facilities: Array<FacilityType>;
+  /** Get check-in info for all players in a tee time */
+  flightCheckInInfo: FlightCheckInInfoType;
+  /** Get payment summary for a flight */
+  flightPaymentSummary: FlightPaymentSummaryType;
   /** Generate a tee ticket for a tee time */
   generateTeeTicket?: Maybe<TeeTicketType>;
   /** Get the effective schedule for a specific date (with season/special day overrides applied) */
   getEffectiveScheduleForDate: EffectiveScheduleType;
   /** Get schedule configuration for a course. Creates default config if autoCreate is true. */
   getScheduleConfig?: Maybe<GolfScheduleConfigType>;
+  /** Get complete golf check-in settings for the current club */
+  golfCheckInSettings: CheckInSettingsType;
+  /** Get rate configurations for a course */
+  golfRates: Array<RateConfigType>;
   /** Get a single group booking */
   groupBooking: GolfGroupBookingType;
   /** Get group bookings */
   groupBookings: Array<GolfGroupBookingType>;
+  /** Check if a tee time has a cart draft */
+  hasDraft: Scalars['Boolean']['output'];
   /** Get a single invoice by ID */
   invoice: InvoiceType;
   /** Get paginated list of invoices */
   invoices: InvoiceConnection;
+  /** Check if all players in a tee time are settled */
+  isTeeTimeFullySettled: Scalars['Boolean']['output'];
   /** Get lotteries */
   lotteries: Array<GolfLotteryType>;
   /** Get a single lottery */
@@ -2039,20 +3060,52 @@ export type Query = {
   myWaitlistEntries: Array<GolfWaitlistType>;
   /** Get open lotteries for member portal */
   openLotteries: Array<GolfLotteryType>;
+  /** Get detailed payment info for a single player */
+  playerPaymentInfo: PlayerPaymentInfoType;
+  /** Get all pro shop categories for the current club */
+  proShopCategories: Array<ProShopCategoryType>;
+  /** Get a single pro shop category by ID */
+  proShopCategory?: Maybe<ProShopCategoryType>;
+  /** Get a single pro shop product by ID */
+  proShopProduct?: Maybe<ProShopProductType>;
+  /** Get pro shop products with filtering and pagination */
+  proShopProducts: ProShopProductConnectionType;
+  /** Get products marked as quick add for check-in */
+  quickAddProducts: Array<ProShopProductType>;
+  /** Get a single rate configuration by ID */
+  rateConfig: RateConfigType;
+  /** Get HTML template for a receipt */
+  receiptHTML: Scalars['String']['output'];
   /** Search for caddies by name or caddy number */
   searchCaddies: Array<CaddyType>;
   /** Get list of services */
   services: Array<ServiceType>;
+  /** Get cart for a specific player/slot */
+  slotCart?: Maybe<SlotCartType>;
+  /** Get starter ticket by ID */
+  starterTicket?: Maybe<StarterTicketResponseType>;
+  /** Get starter ticket for a tee time */
+  starterTicketByTeeTime?: Maybe<StarterTicketResponseType>;
   /** Get tee sheet for a course and date */
   teeSheet: Array<TeeSheetSlotType>;
   /** Get a single tee time by ID */
   teeTime: TeeTimeType;
   /** Get tee time blocks for a course */
   teeTimeBlocks: Array<TeeTimeBlockType>;
+  /** Get all carts for a tee time with context info */
+  teeTimeCarts: TeeTimeCartsType;
   /** Get paginated list of tee times */
   teeTimes: TeeTimeConnection;
+  /** Get all tee time IDs with drafts for a specific date */
+  teeTimesWithDrafts: Array<Scalars['ID']['output']>;
+  /** Get HTML template for a starter ticket */
+  ticketHTML: Scalars['String']['output'];
+  /** Get payment transaction history for a tee time */
+  transactionHistory: Array<PaymentTransactionType>;
   /** Validate a tee ticket by barcode */
   validateTeeTicket: TeeTicketValidationResult;
+  /** Validate a ticket by QR code data */
+  validateTicket: TicketValidationResultType;
   /** Get waitlist entries */
   waitlist: WaitlistConnection;
   /** Get waitlist entries */
@@ -2083,6 +3136,11 @@ export type QueryApplicationsArgs = {
   search?: InputMaybe<Scalars['String']['input']>;
   skip?: InputMaybe<Scalars['Int']['input']>;
   status?: InputMaybe<ApplicationStatus>;
+};
+
+
+export type QueryBatchTotalArgs = {
+  playerIds: Array<Scalars['ID']['input']>;
 };
 
 
@@ -2119,13 +3177,43 @@ export type QueryCalendarDayArgs = {
 };
 
 
+export type QueryCartDraftArgs = {
+  teeTimeId: Scalars['ID']['input'];
+};
+
+
+export type QueryCheckInHistoryArgs = {
+  filter?: InputMaybe<CheckInHistoryFilterInput>;
+};
+
+
+export type QueryCheckInPaymentMethodArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type QueryCourseSchedulesArgs = {
   courseId: Scalars['ID']['input'];
 };
 
 
+export type QueryDailyCheckInReportArgs = {
+  input: DailyReportInput;
+};
+
+
 export type QueryFacilitiesArgs = {
   filter?: InputMaybe<FacilityFilterInput>;
+};
+
+
+export type QueryFlightCheckInInfoArgs = {
+  teeTimeId: Scalars['ID']['input'];
+};
+
+
+export type QueryFlightPaymentSummaryArgs = {
+  teeTimeId: Scalars['ID']['input'];
 };
 
 
@@ -2146,6 +3234,12 @@ export type QueryGetScheduleConfigArgs = {
 };
 
 
+export type QueryGolfRatesArgs = {
+  activeOnly?: InputMaybe<Scalars['Boolean']['input']>;
+  courseId: Scalars['ID']['input'];
+};
+
+
 export type QueryGroupBookingArgs = {
   id: Scalars['ID']['input'];
 };
@@ -2156,6 +3250,11 @@ export type QueryGroupBookingsArgs = {
   endDate?: InputMaybe<Scalars['DateTime']['input']>;
   startDate?: InputMaybe<Scalars['DateTime']['input']>;
   status?: InputMaybe<GroupBookingStatus>;
+};
+
+
+export type QueryHasDraftArgs = {
+  teeTimeId: Scalars['ID']['input'];
 };
 
 
@@ -2175,6 +3274,11 @@ export type QueryInvoicesArgs = {
   sortOrder?: InputMaybe<Scalars['String']['input']>;
   startDate?: InputMaybe<Scalars['DateTime']['input']>;
   status?: InputMaybe<InvoiceStatus>;
+};
+
+
+export type QueryIsTeeTimeFullySettledArgs = {
+  teeTimeId: Scalars['ID']['input'];
 };
 
 
@@ -2233,6 +3337,37 @@ export type QueryMyInvoicesArgs = {
 };
 
 
+export type QueryPlayerPaymentInfoArgs = {
+  playerId: Scalars['ID']['input'];
+};
+
+
+export type QueryProShopCategoryArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryProShopProductArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryProShopProductsArgs = {
+  filter?: InputMaybe<ProShopProductFilterInput>;
+};
+
+
+export type QueryRateConfigArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryReceiptHtmlArgs = {
+  playerId: Scalars['ID']['input'];
+  teeTimeId: Scalars['ID']['input'];
+};
+
+
 export type QuerySearchCaddiesArgs = {
   courseId?: InputMaybe<Scalars['ID']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
@@ -2241,6 +3376,21 @@ export type QuerySearchCaddiesArgs = {
 
 export type QueryServicesArgs = {
   filter?: InputMaybe<ServiceFilterInput>;
+};
+
+
+export type QuerySlotCartArgs = {
+  playerId: Scalars['ID']['input'];
+};
+
+
+export type QueryStarterTicketArgs = {
+  ticketId: Scalars['ID']['input'];
+};
+
+
+export type QueryStarterTicketByTeeTimeArgs = {
+  teeTimeId: Scalars['ID']['input'];
 };
 
 
@@ -2263,6 +3413,11 @@ export type QueryTeeTimeBlocksArgs = {
 };
 
 
+export type QueryTeeTimeCartsArgs = {
+  teeTimeId: Scalars['ID']['input'];
+};
+
+
 export type QueryTeeTimesArgs = {
   courseId?: InputMaybe<Scalars['ID']['input']>;
   endDate?: InputMaybe<Scalars['DateTime']['input']>;
@@ -2274,8 +3429,28 @@ export type QueryTeeTimesArgs = {
 };
 
 
+export type QueryTeeTimesWithDraftsArgs = {
+  date: Scalars['DateTime']['input'];
+};
+
+
+export type QueryTicketHtmlArgs = {
+  teeTimeId: Scalars['ID']['input'];
+};
+
+
+export type QueryTransactionHistoryArgs = {
+  teeTimeId: Scalars['ID']['input'];
+};
+
+
 export type QueryValidateTeeTicketArgs = {
   barcode: Scalars['String']['input'];
+};
+
+
+export type QueryValidateTicketArgs = {
+  qrCodeData: Scalars['String']['input'];
 };
 
 
@@ -2309,6 +3484,40 @@ export type QueryWaitlistForDateArgs = {
 
 export type QueryWeekViewOccupancyArgs = {
   input: WeekViewOccupancyInput;
+};
+
+export type RateConfigMutationResponse = {
+  __typename?: 'RateConfigMutationResponse';
+  message?: Maybe<Scalars['String']['output']>;
+  rateConfig?: Maybe<RateConfigType>;
+  success: Scalars['Boolean']['output'];
+};
+
+export type RateConfigType = {
+  __typename?: 'RateConfigType';
+  caddyRates: Array<CaddyRateType>;
+  cartRates: Array<CartRateType>;
+  courseId: Scalars['ID']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  description?: Maybe<Scalars['String']['output']>;
+  effectiveFrom: Scalars['DateTime']['output'];
+  effectiveTo?: Maybe<Scalars['DateTime']['output']>;
+  greenFeeRates: Array<GreenFeeRateType>;
+  id: Scalars['ID']['output'];
+  isActive: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+export type RemoveLineItemInput = {
+  lineItemId: Scalars['ID']['input'];
+};
+
+export type RemoveLineItemResultType = {
+  __typename?: 'RemoveLineItemResultType';
+  error?: Maybe<Scalars['String']['output']>;
+  removedItem?: Maybe<SlotLineItemType>;
+  success: Scalars['Boolean']['output'];
 };
 
 /** Rental club policy for golf bookings */
@@ -2345,6 +3554,12 @@ export type ResourceTypeEnum =
   | 'ROOM'
   | 'SPA'
   | 'STUDIO';
+
+export type SaveCartDraftInput = {
+  /** JSON stringified draft data */
+  draftData: Scalars['String']['input'];
+  teeTimeId: Scalars['ID']['input'];
+};
 
 export type ScheduleConfigMutationResponse = {
   __typename?: 'ScheduleConfigMutationResponse';
@@ -2408,6 +3623,75 @@ export type ServiceVariationType = {
   name: Scalars['String']['output'];
   priceModifier: Scalars['Float']['output'];
   priceType: Scalars['String']['output'];
+};
+
+export type SettleAllPlayersInput = {
+  paymentMethodId: Scalars['ID']['input'];
+  reference?: InputMaybe<Scalars['String']['input']>;
+  teeTimeId: Scalars['ID']['input'];
+};
+
+export type SettlementResultType = {
+  __typename?: 'SettlementResultType';
+  error?: Maybe<Scalars['String']['output']>;
+  players: Array<PlayerSettlementResultType>;
+  settledAt: Scalars['DateTime']['output'];
+  settledBy: Scalars['String']['output'];
+  success: Scalars['Boolean']['output'];
+  transactionId?: Maybe<Scalars['String']['output']>;
+};
+
+export type SlotCartType = {
+  __typename?: 'SlotCartType';
+  balanceDue: Scalars['Float']['output'];
+  checkedInAt?: Maybe<Scalars['DateTime']['output']>;
+  grandTotal: Scalars['Float']['output'];
+  isCheckedIn: Scalars['Boolean']['output'];
+  isSettled: Scalars['Boolean']['output'];
+  lineItems: Array<SlotLineItemType>;
+  memberId?: Maybe<Scalars['ID']['output']>;
+  memberNumber?: Maybe<Scalars['String']['output']>;
+  paidAmount: Scalars['Float']['output'];
+  playerId: Scalars['ID']['output'];
+  playerName: Scalars['String']['output'];
+  playerType: Scalars['String']['output'];
+  subtotal: Scalars['Float']['output'];
+  taxTotal: Scalars['Float']['output'];
+  transferredInItems: Array<TransferredItemType>;
+  transferredOutItems: Array<TransferredItemType>;
+};
+
+export type SlotCheckInResultType = {
+  __typename?: 'SlotCheckInResultType';
+  checkedInAt?: Maybe<Scalars['DateTime']['output']>;
+  error?: Maybe<Scalars['String']['output']>;
+  playerId: Scalars['ID']['output'];
+};
+
+export type SlotLineItemType = {
+  __typename?: 'SlotLineItemType';
+  baseAmount: Scalars['Float']['output'];
+  description: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  isPaid: Scalars['Boolean']['output'];
+  isTransferred: Scalars['Boolean']['output'];
+  paidAt?: Maybe<Scalars['DateTime']['output']>;
+  paymentMethod?: Maybe<Scalars['String']['output']>;
+  quantity: Scalars['Int']['output'];
+  taxAmount: Scalars['Float']['output'];
+  taxRate: Scalars['Float']['output'];
+  taxType: Scalars['String']['output'];
+  totalAmount: Scalars['Float']['output'];
+  transferredFromPlayerName?: Maybe<Scalars['String']['output']>;
+  type: Scalars['String']['output'];
+};
+
+export type SlotPaymentResultType = {
+  __typename?: 'SlotPaymentResultType';
+  amountPaid: Scalars['Float']['output'];
+  isSettled: Scalars['Boolean']['output'];
+  newBalance: Scalars['Float']['output'];
+  playerId: Scalars['ID']['output'];
 };
 
 export type SpecialDayMutationResponse = {
@@ -2478,6 +3762,47 @@ export type StartFormat =
   | 'SEQUENTIAL'
   | 'SHOTGUN';
 
+export type StarterTicketConfigInput = {
+  autoGenerate?: InputMaybe<Scalars['Boolean']['input']>;
+  content?: InputMaybe<TicketContentInput>;
+  defaultPrintOption?: InputMaybe<PrintOption>;
+  generateOn?: InputMaybe<TicketGenerateOn>;
+};
+
+export type StarterTicketConfigType = {
+  __typename?: 'StarterTicketConfigType';
+  autoGenerate: Scalars['Boolean']['output'];
+  content: TicketContentConfigType;
+  defaultPrintOption: PrintOption;
+  generateOn: TicketGenerateOn;
+};
+
+export type StarterTicketPlayerType = {
+  __typename?: 'StarterTicketPlayerType';
+  memberNumber?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  type: CheckInPlayerType;
+};
+
+export type StarterTicketResponseType = {
+  __typename?: 'StarterTicketResponseType';
+  caddyName?: Maybe<Scalars['String']['output']>;
+  cartNumber?: Maybe<Scalars['String']['output']>;
+  course: Scalars['String']['output'];
+  generatedAt: Scalars['DateTime']['output'];
+  generatedBy: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  players: Array<StarterTicketPlayerType>;
+  printedAt?: Maybe<Scalars['DateTime']['output']>;
+  qrCodeData?: Maybe<Scalars['String']['output']>;
+  rentalItems: Array<Scalars['String']['output']>;
+  reprintCount: Scalars['Int']['output'];
+  specialRequests?: Maybe<Scalars['String']['output']>;
+  startingHole: Scalars['Int']['output'];
+  teeTime: Scalars['DateTime']['output'];
+  ticketNumber: Scalars['String']['output'];
+};
+
 export type Subscription = {
   __typename?: 'Subscription';
   /** Subscribe to tee time cancellations */
@@ -2500,6 +3825,44 @@ export type SubscriptionTeeTimeUpdatedArgs = {
   courseId?: InputMaybe<Scalars['ID']['input']>;
   date?: InputMaybe<Scalars['DateTime']['input']>;
 };
+
+export type TaxConfigInput = {
+  defaultRate?: InputMaybe<Scalars['Float']['input']>;
+  defaultType?: InputMaybe<TaxType>;
+  overrides?: InputMaybe<Array<TaxOverrideInput>>;
+  showBreakdown?: InputMaybe<Scalars['Boolean']['input']>;
+  showTypeIndicator?: InputMaybe<Scalars['Boolean']['input']>;
+  taxLabel?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type TaxConfigType = {
+  __typename?: 'TaxConfigType';
+  defaultRate: Scalars['Float']['output'];
+  defaultType: TaxType;
+  overrides: Array<TaxOverrideType>;
+  showBreakdown: Scalars['Boolean']['output'];
+  showTypeIndicator: Scalars['Boolean']['output'];
+  taxLabel: Scalars['String']['output'];
+};
+
+export type TaxOverrideInput = {
+  itemType: LineItemType;
+  rate: Scalars['Float']['input'];
+  taxType: TaxType;
+};
+
+export type TaxOverrideType = {
+  __typename?: 'TaxOverrideType';
+  itemType: LineItemType;
+  rate: Scalars['Float']['output'];
+  taxType: TaxType;
+};
+
+/** Tax calculation type: ADD (on top), INCLUDE (in price), NONE */
+export type TaxType =
+  | 'ADD'
+  | 'INCLUDE'
+  | 'NONE';
 
 export type TeeSheetBlockInfoType = {
   __typename?: 'TeeSheetBlockInfoType';
@@ -2570,6 +3933,18 @@ export type TeeTimeBlockType = {
   recurringPattern?: Maybe<Scalars['String']['output']>;
   startTime: Scalars['DateTime']['output'];
   updatedAt: Scalars['DateTime']['output'];
+};
+
+export type TeeTimeCartsType = {
+  __typename?: 'TeeTimeCartsType';
+  courseId: Scalars['ID']['output'];
+  courseName: Scalars['String']['output'];
+  date: Scalars['DateTime']['output'];
+  isFullyCheckedIn: Scalars['Boolean']['output'];
+  isFullySettled: Scalars['Boolean']['output'];
+  slots: Array<SlotCartType>;
+  teeTime: Scalars['String']['output'];
+  teeTimeId: Scalars['ID']['output'];
 };
 
 export type TeeTimeConnection = {
@@ -2655,6 +4030,47 @@ export type TeeTimeTypeEdge = {
   node: TeeTimeType;
 };
 
+export type TicketContentConfigType = {
+  __typename?: 'TicketContentConfigType';
+  showCaddyName: Scalars['Boolean']['output'];
+  showCartNumber: Scalars['Boolean']['output'];
+  showCourse: Scalars['Boolean']['output'];
+  showMemberNumbers: Scalars['Boolean']['output'];
+  showPlayerNames: Scalars['Boolean']['output'];
+  showQRCode: Scalars['Boolean']['output'];
+  showRentalItems: Scalars['Boolean']['output'];
+  showSpecialRequests: Scalars['Boolean']['output'];
+  showStartingHole: Scalars['Boolean']['output'];
+  showTeeTime: Scalars['Boolean']['output'];
+};
+
+export type TicketContentInput = {
+  showCaddyName?: InputMaybe<Scalars['Boolean']['input']>;
+  showCartNumber?: InputMaybe<Scalars['Boolean']['input']>;
+  showCourse?: InputMaybe<Scalars['Boolean']['input']>;
+  showMemberNumbers?: InputMaybe<Scalars['Boolean']['input']>;
+  showPlayerNames?: InputMaybe<Scalars['Boolean']['input']>;
+  showQRCode?: InputMaybe<Scalars['Boolean']['input']>;
+  showRentalItems?: InputMaybe<Scalars['Boolean']['input']>;
+  showSpecialRequests?: InputMaybe<Scalars['Boolean']['input']>;
+  showStartingHole?: InputMaybe<Scalars['Boolean']['input']>;
+  showTeeTime?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+/** When to generate starter ticket */
+export type TicketGenerateOn =
+  | 'CHECK_IN'
+  | 'MANUAL'
+  | 'SETTLEMENT';
+
+export type TicketValidationResultType = {
+  __typename?: 'TicketValidationResultType';
+  message?: Maybe<Scalars['String']['output']>;
+  teeTimeId?: Maybe<Scalars['ID']['output']>;
+  ticketId?: Maybe<Scalars['ID']['output']>;
+  valid: Scalars['Boolean']['output'];
+};
+
 export type TierDiscountInput = {
   discountPercent: Scalars['Float']['input'];
   tierName: Scalars['String']['input'];
@@ -2673,10 +4089,52 @@ export type TimePeriodMutationResponse = {
   timePeriod?: Maybe<GolfTimePeriodType>;
 };
 
+/** Payment transaction status */
+export type TransactionStatus =
+  | 'COMPLETED'
+  | 'PENDING'
+  | 'REFUNDED'
+  | 'VOIDED';
+
+export type TransferLineItemInput = {
+  fromPlayerId: Scalars['ID']['input'];
+  lineItemId: Scalars['ID']['input'];
+  toPlayerId: Scalars['ID']['input'];
+};
+
+export type TransferResultType = {
+  __typename?: 'TransferResultType';
+  error?: Maybe<Scalars['String']['output']>;
+  isTransferred?: Maybe<Scalars['Boolean']['output']>;
+  lineItemId?: Maybe<Scalars['ID']['output']>;
+  success: Scalars['Boolean']['output'];
+  transferredToPlayerId?: Maybe<Scalars['ID']['output']>;
+};
+
+export type TransferredItemType = {
+  __typename?: 'TransferredItemType';
+  amount: Scalars['Float']['output'];
+  description: Scalars['String']['output'];
+  fromPlayerId: Scalars['ID']['output'];
+  fromPlayerName: Scalars['String']['output'];
+  lineItemId: Scalars['ID']['output'];
+  toPlayerId?: Maybe<Scalars['ID']['output']>;
+  toPlayerName?: Maybe<Scalars['String']['output']>;
+};
+
 /** Twilight calculation mode */
 export type TwilightMode =
   | 'FIXED'
   | 'SUNSET';
+
+export type UndoCheckInInput = {
+  playerId: Scalars['ID']['input'];
+  reason?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UndoTransferInput = {
+  lineItemId: Scalars['ID']['input'];
+};
 
 export type UpdateApplicationInput = {
   email?: InputMaybe<Scalars['String']['input']>;
@@ -2695,6 +4153,20 @@ export type UpdateBlockInput = {
   reason?: InputMaybe<Scalars['String']['input']>;
   recurringPattern?: InputMaybe<Scalars['String']['input']>;
   startTime?: InputMaybe<Scalars['DateTime']['input']>;
+};
+
+export type UpdateCaddyRateInput = {
+  amount?: InputMaybe<Scalars['Float']['input']>;
+  caddyType?: InputMaybe<Scalars['String']['input']>;
+  taxRate?: InputMaybe<Scalars['Float']['input']>;
+  taxType?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateCartRateInput = {
+  amount?: InputMaybe<Scalars['Float']['input']>;
+  cartType?: InputMaybe<Scalars['String']['input']>;
+  taxRate?: InputMaybe<Scalars['Float']['input']>;
+  taxType?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type UpdateDependentInput = {
@@ -2721,6 +4193,15 @@ export type UpdateFacilityInput = {
   type?: InputMaybe<ResourceTypeEnum>;
 };
 
+export type UpdateGreenFeeRateInput = {
+  amount?: InputMaybe<Scalars['Float']['input']>;
+  holes?: InputMaybe<Scalars['Int']['input']>;
+  playerType?: InputMaybe<Scalars['String']['input']>;
+  taxRate?: InputMaybe<Scalars['Float']['input']>;
+  taxType?: InputMaybe<Scalars['String']['input']>;
+  timeCategory?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type UpdateGroupBookingInput = {
   eventDate?: InputMaybe<Scalars['DateTime']['input']>;
   groupName?: InputMaybe<Scalars['String']['input']>;
@@ -2728,6 +4209,11 @@ export type UpdateGroupBookingInput = {
   startFormat?: InputMaybe<StartFormat>;
   startTime?: InputMaybe<Scalars['String']['input']>;
   status?: InputMaybe<GroupBookingStatus>;
+};
+
+export type UpdateLineItemQuantityInput = {
+  lineItemId: Scalars['ID']['input'];
+  quantity: Scalars['Int']['input'];
 };
 
 export type UpdateLotteryInput = {
@@ -2763,10 +4249,66 @@ export type UpdateMemberInput = {
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
+export type UpdatePaymentMethodInput = {
+  icon?: InputMaybe<Scalars['String']['input']>;
+  isEnabled?: InputMaybe<Scalars['Boolean']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  opensPOS?: InputMaybe<Scalars['Boolean']['input']>;
+  requiresRef?: InputMaybe<Scalars['Boolean']['input']>;
+  type?: InputMaybe<PaymentMethodTypeEnum>;
+};
+
 export type UpdatePlayerRentalStatusInput = {
   caddyId?: InputMaybe<Scalars['ID']['input']>;
   caddyStatus?: InputMaybe<RentalStatus>;
   cartStatus?: InputMaybe<RentalStatus>;
+};
+
+export type UpdateProShopCategoryInput = {
+  defaultTaxRate?: InputMaybe<Scalars['Float']['input']>;
+  defaultTaxType?: InputMaybe<TaxType>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  isActive?: InputMaybe<Scalars['Boolean']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateProShopProductInput = {
+  categoryId?: InputMaybe<Scalars['ID']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  isActive?: InputMaybe<Scalars['Boolean']['input']>;
+  isQuickAdd?: InputMaybe<Scalars['Boolean']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  price?: InputMaybe<Scalars['Float']['input']>;
+  sku?: InputMaybe<Scalars['String']['input']>;
+  taxRate?: InputMaybe<Scalars['Float']['input']>;
+  taxType?: InputMaybe<TaxType>;
+  useCategoryDefaults?: InputMaybe<Scalars['Boolean']['input']>;
+  variants?: InputMaybe<Array<UpdateProShopVariantInput>>;
+};
+
+export type UpdateProShopVariantInput = {
+  /** Set to true to delete this variant */
+  _delete?: InputMaybe<Scalars['Boolean']['input']>;
+  /** ID for existing variant, omit for new variant */
+  id?: InputMaybe<Scalars['ID']['input']>;
+  name: Scalars['String']['input'];
+  priceAdjustment?: InputMaybe<Scalars['Float']['input']>;
+  sku?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateQuantityResultType = {
+  __typename?: 'UpdateQuantityResultType';
+  error?: Maybe<Scalars['String']['output']>;
+  lineItem?: Maybe<SlotLineItemType>;
+  success: Scalars['Boolean']['output'];
+};
+
+export type UpdateRateConfigInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  effectiveFrom?: InputMaybe<Scalars['DateTime']['input']>;
+  effectiveTo?: InputMaybe<Scalars['DateTime']['input']>;
+  isActive?: InputMaybe<Scalars['Boolean']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type UpdateScheduleConfigInput = {
@@ -3386,6 +4928,13 @@ export type UpdatePlayerRentalStatusMutationVariables = Exact<{
 
 export type UpdatePlayerRentalStatusMutation = { __typename?: 'Mutation', updatePlayerRentalStatus: { __typename?: 'TeeTimePlayerType', id: string, position: number, playerType: PlayerType, cartStatus?: RentalStatus | null | undefined, caddyStatus?: RentalStatus | null | undefined, caddy?: { __typename?: 'CaddyType', id: string, caddyNumber: string, firstName: string, lastName: string } | null | undefined } };
 
+export type RegenerateLineItemsMutationVariables = Exact<{
+  teeTimeId: Scalars['ID']['input'];
+}>;
+
+
+export type RegenerateLineItemsMutation = { __typename?: 'Mutation', regenerateLineItems: boolean };
+
 export type GetWeekViewOccupancyQueryVariables = Exact<{
   input: WeekViewOccupancyInput;
 }>;
@@ -3400,6 +4949,427 @@ export type SearchCaddiesQueryVariables = Exact<{
 
 
 export type SearchCaddiesQuery = { __typename?: 'Query', searchCaddies: Array<{ __typename?: 'CaddyType', id: string, caddyNumber: string, firstName: string, lastName: string, phone?: string | null | undefined, isActive: boolean }> };
+
+export type GetFlightCheckInInfoQueryVariables = Exact<{
+  teeTimeId: Scalars['ID']['input'];
+}>;
+
+
+export type GetFlightCheckInInfoQuery = { __typename?: 'Query', flightCheckInInfo: { __typename?: 'FlightCheckInInfoType', id: string, teeTime: string, course: string, startingHole: number, cartNumber?: string | null | undefined, caddyAssignment?: string | null | undefined, players: Array<{ __typename?: 'CheckInPlayerInfoType', id: string, name: string, type: CheckInPlayerType, memberNumber?: string | null | undefined, paymentStatus: PaymentStatus, isCheckedIn: boolean, checkedInAt?: string | null | undefined, isSuspended: boolean, suspensionReason?: string | null | undefined, totalDue: number, totalPaid: number, balanceDue: number, lineItems: Array<{ __typename?: 'BookingLineItemType', id: string, type: LineItemType, description: string, baseAmount: number, taxType: TaxType, taxRate: number, taxAmount: number, totalAmount: number, isPaid: boolean, paidAt?: string | null | undefined, paymentMethod?: string | null | undefined }> }> } };
+
+export type GetPlayerPaymentInfoQueryVariables = Exact<{
+  playerId: Scalars['ID']['input'];
+}>;
+
+
+export type GetPlayerPaymentInfoQuery = { __typename?: 'Query', playerPaymentInfo: { __typename?: 'PlayerPaymentInfoType', playerId: string, playerName: string, playerType: CheckInPlayerType, memberNumber?: string | null | undefined, subtotal: number, totalTax: number, grandTotal: number, paidOnline: number, balanceDue: number, isSettled: boolean, settledAt?: string | null | undefined, settledVia?: string | null | undefined, settledBy?: string | null | undefined, lineItems: Array<{ __typename?: 'BookingLineItemType', id: string, type: LineItemType, description: string, baseAmount: number, taxType: TaxType, taxRate: number, taxAmount: number, totalAmount: number, isPaid: boolean, paidAt?: string | null | undefined, paymentMethod?: string | null | undefined }> } };
+
+export type GetFlightPaymentSummaryQueryVariables = Exact<{
+  teeTimeId: Scalars['ID']['input'];
+}>;
+
+
+export type GetFlightPaymentSummaryQuery = { __typename?: 'Query', flightPaymentSummary: { __typename?: 'FlightPaymentSummaryType', teeTimeId: string, teeTime: string, course: string, totalPlayers: number, checkedInCount: number, settledCount: number, totalDue: number, totalPaid: number, totalBalance: number, isFullyCheckedIn: boolean, isFullySettled: boolean } };
+
+export type GetStarterTicketQueryVariables = Exact<{
+  ticketId: Scalars['ID']['input'];
+}>;
+
+
+export type GetStarterTicketQuery = { __typename?: 'Query', starterTicket?: { __typename?: 'StarterTicketResponseType', id: string, ticketNumber: string, teeTime: string, course: string, startingHole: number, cartNumber?: string | null | undefined, caddyName?: string | null | undefined, rentalItems: Array<string>, specialRequests?: string | null | undefined, qrCodeData?: string | null | undefined, generatedAt: string, generatedBy: string, printedAt?: string | null | undefined, reprintCount: number, players: Array<{ __typename?: 'StarterTicketPlayerType', name: string, memberNumber?: string | null | undefined, type: CheckInPlayerType }> } | null | undefined };
+
+export type GetStarterTicketByTeeTimeQueryVariables = Exact<{
+  teeTimeId: Scalars['ID']['input'];
+}>;
+
+
+export type GetStarterTicketByTeeTimeQuery = { __typename?: 'Query', starterTicketByTeeTime?: { __typename?: 'StarterTicketResponseType', id: string, ticketNumber: string, teeTime: string, course: string, startingHole: number, cartNumber?: string | null | undefined, caddyName?: string | null | undefined, rentalItems: Array<string>, specialRequests?: string | null | undefined, qrCodeData?: string | null | undefined, generatedAt: string, generatedBy: string, printedAt?: string | null | undefined, reprintCount: number, players: Array<{ __typename?: 'StarterTicketPlayerType', name: string, memberNumber?: string | null | undefined, type: CheckInPlayerType }> } | null | undefined };
+
+export type GetTicketHtmlQueryVariables = Exact<{
+  teeTimeId: Scalars['ID']['input'];
+}>;
+
+
+export type GetTicketHtmlQuery = { __typename?: 'Query', ticketHTML: string };
+
+export type GetReceiptHtmlQueryVariables = Exact<{
+  teeTimeId: Scalars['ID']['input'];
+  playerId: Scalars['ID']['input'];
+}>;
+
+
+export type GetReceiptHtmlQuery = { __typename?: 'Query', receiptHTML: string };
+
+export type ValidateTicketQueryVariables = Exact<{
+  qrCodeData: Scalars['String']['input'];
+}>;
+
+
+export type ValidateTicketQuery = { __typename?: 'Query', validateTicket: { __typename?: 'TicketValidationResultType', valid: boolean, ticketId?: string | null | undefined, teeTimeId?: string | null | undefined, message?: string | null | undefined } };
+
+export type GetCheckInHistoryQueryVariables = Exact<{
+  filter?: InputMaybe<CheckInHistoryFilterInput>;
+}>;
+
+
+export type GetCheckInHistoryQuery = { __typename?: 'Query', checkInHistory: Array<{ __typename?: 'CheckInAuditEntryType', id: string, teeTimeId: string, playerId?: string | null | undefined, playerName?: string | null | undefined, action: string, amount?: number | null | undefined, details?: string | null | undefined, performedBy: string, performedAt: string }> };
+
+export type GetDailyCheckInReportQueryVariables = Exact<{
+  input: DailyReportInput;
+}>;
+
+
+export type GetDailyCheckInReportQuery = { __typename?: 'Query', dailyCheckInReport: { __typename?: 'DailyCheckInReportType', date: string, course: string, totalFlights: number, totalPlayers: number, checkedInPlayers: number, noShowPlayers: number, totalRevenue: number, totalCash: number, totalCard: number, totalTransfer: number, totalAccount: number, flights: Array<{ __typename?: 'FlightPaymentSummaryType', teeTimeId: string, teeTime: string, course: string, totalPlayers: number, checkedInCount: number, settledCount: number, totalDue: number, totalPaid: number, totalBalance: number, isFullyCheckedIn: boolean, isFullySettled: boolean }> } };
+
+export type GetCheckInPaymentMethodsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetCheckInPaymentMethodsQuery = { __typename?: 'Query', checkInPaymentMethods: Array<{ __typename?: 'CheckInPaymentMethodType', id: string, name: string, type: PaymentMethodTypeEnum, icon: string, isEnabled: boolean, requiresRef: boolean, opensPOS: boolean, sortOrder: number }> };
+
+export type GetGolfCheckInSettingsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetGolfCheckInSettingsQuery = { __typename?: 'Query', golfCheckInSettings: { __typename?: 'CheckInSettingsType', policy: { __typename?: 'CheckInPolicyType', allowPartialPayment: boolean, blockSuspendedMembers: boolean, showSuspensionReason: boolean, requireAllItemsPaid: boolean }, tax: { __typename?: 'TaxConfigType', defaultRate: number, defaultType: TaxType, taxLabel: string, showBreakdown: boolean, showTypeIndicator: boolean }, starterTicket: { __typename?: 'StarterTicketConfigType', generateOn: TicketGenerateOn, autoGenerate: boolean, defaultPrintOption: PrintOption, content: { __typename?: 'TicketContentConfigType', showTeeTime: boolean, showCourse: boolean, showStartingHole: boolean, showPlayerNames: boolean, showMemberNumbers: boolean, showCartNumber: boolean, showCaddyName: boolean, showRentalItems: boolean, showSpecialRequests: boolean, showQRCode: boolean } }, proShop: { __typename?: 'ProShopConfigType', allowAddAtCheckIn: boolean, showQuickAddItems: boolean, quickAddProductIds: Array<string> }, pos: { __typename?: 'POSConfigType', isConnected: boolean, provider?: string | null | undefined, terminalId?: string | null | undefined }, paymentMethods: Array<{ __typename?: 'CheckInPaymentMethodType', id: string, name: string, type: PaymentMethodTypeEnum, icon: string, isEnabled: boolean, requiresRef: boolean, opensPOS: boolean, sortOrder: number }> } };
+
+export type GetProShopCategoriesQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetProShopCategoriesQuery = { __typename?: 'Query', proShopCategories: Array<{ __typename?: 'ProShopCategoryType', id: string, name: string, description?: string | null | undefined, defaultTaxRate: number, defaultTaxType: TaxType, sortOrder: number, isActive: boolean, productCount?: number | null | undefined }> };
+
+export type GetProShopProductsQueryVariables = Exact<{
+  filter?: InputMaybe<ProShopProductFilterInput>;
+}>;
+
+
+export type GetProShopProductsQuery = { __typename?: 'Query', proShopProducts: { __typename?: 'ProShopProductConnectionType', total: number, page: number, limit: number, hasMore: boolean, items: Array<{ __typename?: 'ProShopProductType', id: string, name: string, sku?: string | null | undefined, description?: string | null | undefined, categoryId: string, price: number, taxRate: number, taxType: TaxType, useCategoryDefaults: boolean, effectiveTaxRate: number, effectiveTaxType: TaxType, isActive: boolean, isQuickAdd: boolean, category?: { __typename?: 'ProShopCategoryType', id: string, name: string } | null | undefined, variants: Array<{ __typename?: 'ProShopVariantType', id: string, name: string, sku?: string | null | undefined, priceAdjustment: number, finalPrice: number }> }> } };
+
+export type AddLineItemMutationVariables = Exact<{
+  input: AddLineItemInput;
+}>;
+
+
+export type AddLineItemMutation = { __typename?: 'Mutation', addLineItem: { __typename?: 'BookingLineItemType', id: string, type: LineItemType, description: string, baseAmount: number, taxType: TaxType, taxRate: number, taxAmount: number, totalAmount: number, isPaid: boolean, paidAt?: string | null | undefined, paymentMethod?: string | null | undefined, reference?: string | null | undefined, productId?: string | null | undefined, variantId?: string | null | undefined } };
+
+export type RemoveLineItemMutationVariables = Exact<{
+  input: RemoveLineItemInput;
+}>;
+
+
+export type RemoveLineItemMutation = { __typename?: 'Mutation', removeLineItem: { __typename?: 'RemoveLineItemResultType', success: boolean, error?: string | null | undefined, removedItem?: { __typename?: 'SlotLineItemType', id: string, type: string, description: string, baseAmount: number, totalAmount: number, quantity: number } | null | undefined } };
+
+export type ProcessSettlementMutationVariables = Exact<{
+  input: ProcessSettlementInput;
+}>;
+
+
+export type ProcessSettlementMutation = { __typename?: 'Mutation', processSettlement: { __typename?: 'SettlementResultType', success: boolean, transactionId?: string | null | undefined, settledAt: string, settledBy: string, error?: string | null | undefined, players: Array<{ __typename?: 'PlayerSettlementResultType', playerId: string, amountPaid: number, success: boolean, error?: string | null | undefined }> } };
+
+export type CheckInFlightMutationVariables = Exact<{
+  input: CheckInFlightInput;
+}>;
+
+
+export type CheckInFlightMutation = { __typename?: 'Mutation', checkInFlight: { __typename?: 'CheckInResultType', success: boolean, checkedInAt: string, checkedInBy: string, ticketId?: string | null | undefined, ticketNumber?: string | null | undefined, players: Array<{ __typename?: 'PlayerCheckInResultType', playerId: string, checkedIn: boolean, error?: string | null | undefined }> } };
+
+export type CheckInAllPlayersMutationVariables = Exact<{
+  input: CheckInAllPlayersInput;
+}>;
+
+
+export type CheckInAllPlayersMutation = { __typename?: 'Mutation', checkInAllPlayers: { __typename?: 'CheckInResultType', success: boolean, checkedInAt: string, checkedInBy: string, ticketId?: string | null | undefined, ticketNumber?: string | null | undefined, players: Array<{ __typename?: 'PlayerCheckInResultType', playerId: string, checkedIn: boolean, error?: string | null | undefined }> } };
+
+export type SettleAllPlayersMutationVariables = Exact<{
+  input: SettleAllPlayersInput;
+}>;
+
+
+export type SettleAllPlayersMutation = { __typename?: 'Mutation', settleAllPlayers: { __typename?: 'SettlementResultType', success: boolean, transactionId?: string | null | undefined, settledAt: string, settledBy: string, error?: string | null | undefined, players: Array<{ __typename?: 'PlayerSettlementResultType', playerId: string, amountPaid: number, success: boolean, error?: string | null | undefined }> } };
+
+export type UndoCheckInMutationVariables = Exact<{
+  input: UndoCheckInInput;
+}>;
+
+
+export type UndoCheckInMutation = { __typename?: 'Mutation', undoCheckIn: boolean };
+
+export type GenerateStarterTicketMutationVariables = Exact<{
+  input: GenerateTicketInput;
+}>;
+
+
+export type GenerateStarterTicketMutation = { __typename?: 'Mutation', generateStarterTicket: { __typename?: 'StarterTicketResponseType', id: string, ticketNumber: string, teeTime: string, course: string, startingHole: number, cartNumber?: string | null | undefined, caddyName?: string | null | undefined, qrCodeData?: string | null | undefined, generatedAt: string, generatedBy: string, players: Array<{ __typename?: 'StarterTicketPlayerType', name: string, memberNumber?: string | null | undefined, type: CheckInPlayerType }> } };
+
+export type PrintStarterTicketMutationVariables = Exact<{
+  input: PrintTicketInput;
+}>;
+
+
+export type PrintStarterTicketMutation = { __typename?: 'Mutation', printStarterTicket: { __typename?: 'StarterTicketResponseType', id: string, ticketNumber: string, teeTime: string, course: string, startingHole: number, cartNumber?: string | null | undefined, caddyName?: string | null | undefined, rentalItems: Array<string>, specialRequests?: string | null | undefined, qrCodeData?: string | null | undefined, generatedAt: string, generatedBy: string, printedAt?: string | null | undefined, reprintCount: number, players: Array<{ __typename?: 'StarterTicketPlayerType', name: string, memberNumber?: string | null | undefined, type: CheckInPlayerType }> } };
+
+export type CreateProShopCategoryMutationVariables = Exact<{
+  input: CreateProShopCategoryInput;
+}>;
+
+
+export type CreateProShopCategoryMutation = { __typename?: 'Mutation', createProShopCategory: { __typename?: 'ProShopCategoryType', id: string, name: string, description?: string | null | undefined, defaultTaxRate: number, defaultTaxType: TaxType, sortOrder: number, isActive: boolean } };
+
+export type UpdateProShopCategoryMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  input: UpdateProShopCategoryInput;
+}>;
+
+
+export type UpdateProShopCategoryMutation = { __typename?: 'Mutation', updateProShopCategory: { __typename?: 'ProShopCategoryType', id: string, name: string, description?: string | null | undefined, defaultTaxRate: number, defaultTaxType: TaxType, sortOrder: number, isActive: boolean } };
+
+export type DeleteProShopCategoryMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type DeleteProShopCategoryMutation = { __typename?: 'Mutation', deleteProShopCategory: boolean };
+
+export type CreateProShopProductMutationVariables = Exact<{
+  input: CreateProShopProductInput;
+}>;
+
+
+export type CreateProShopProductMutation = { __typename?: 'Mutation', createProShopProduct: { __typename?: 'ProShopProductType', id: string, name: string, sku?: string | null | undefined, description?: string | null | undefined, categoryId: string, price: number, taxRate: number, taxType: TaxType, isActive: boolean, isQuickAdd: boolean, variants: Array<{ __typename?: 'ProShopVariantType', id: string, name: string, sku?: string | null | undefined, priceAdjustment: number }> } };
+
+export type UpdateProShopProductMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  input: UpdateProShopProductInput;
+}>;
+
+
+export type UpdateProShopProductMutation = { __typename?: 'Mutation', updateProShopProduct: { __typename?: 'ProShopProductType', id: string, name: string, sku?: string | null | undefined, description?: string | null | undefined, categoryId: string, price: number, taxRate: number, taxType: TaxType, isActive: boolean, isQuickAdd: boolean, variants: Array<{ __typename?: 'ProShopVariantType', id: string, name: string, sku?: string | null | undefined, priceAdjustment: number }> } };
+
+export type DeleteProShopProductMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type DeleteProShopProductMutation = { __typename?: 'Mutation', deleteProShopProduct: boolean };
+
+export type GetGolfRatesQueryVariables = Exact<{
+  courseId: Scalars['ID']['input'];
+  activeOnly?: InputMaybe<Scalars['Boolean']['input']>;
+}>;
+
+
+export type GetGolfRatesQuery = { __typename?: 'Query', golfRates: Array<{ __typename?: 'RateConfigType', id: string, courseId: string, name: string, description?: string | null | undefined, isActive: boolean, effectiveFrom: string, effectiveTo?: string | null | undefined, createdAt: string, updatedAt: string, greenFeeRates: Array<{ __typename?: 'GreenFeeRateType', id: string, playerType: string, holes: number, timeCategory: string, amount: number, taxType: string, taxRate: number, createdAt: string, updatedAt: string }>, cartRates: Array<{ __typename?: 'CartRateType', id: string, cartType: string, amount: number, taxType: string, taxRate: number, createdAt: string, updatedAt: string }>, caddyRates: Array<{ __typename?: 'CaddyRateType', id: string, caddyType: string, amount: number, taxType: string, taxRate: number, createdAt: string, updatedAt: string }> }> };
+
+export type GetRateConfigQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetRateConfigQuery = { __typename?: 'Query', rateConfig: { __typename?: 'RateConfigType', id: string, courseId: string, name: string, description?: string | null | undefined, isActive: boolean, effectiveFrom: string, effectiveTo?: string | null | undefined, createdAt: string, updatedAt: string, greenFeeRates: Array<{ __typename?: 'GreenFeeRateType', id: string, playerType: string, holes: number, timeCategory: string, amount: number, taxType: string, taxRate: number, createdAt: string, updatedAt: string }>, cartRates: Array<{ __typename?: 'CartRateType', id: string, cartType: string, amount: number, taxType: string, taxRate: number, createdAt: string, updatedAt: string }>, caddyRates: Array<{ __typename?: 'CaddyRateType', id: string, caddyType: string, amount: number, taxType: string, taxRate: number, createdAt: string, updatedAt: string }> } };
+
+export type CreateRateConfigMutationVariables = Exact<{
+  input: CreateRateConfigInput;
+}>;
+
+
+export type CreateRateConfigMutation = { __typename?: 'Mutation', createRateConfig: { __typename?: 'RateConfigMutationResponse', success: boolean, message?: string | null | undefined, rateConfig?: { __typename?: 'RateConfigType', id: string, courseId: string, name: string, description?: string | null | undefined, isActive: boolean, effectiveFrom: string, effectiveTo?: string | null | undefined, createdAt: string, updatedAt: string } | null | undefined } };
+
+export type UpdateRateConfigMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  input: UpdateRateConfigInput;
+}>;
+
+
+export type UpdateRateConfigMutation = { __typename?: 'Mutation', updateRateConfig: { __typename?: 'RateConfigMutationResponse', success: boolean, message?: string | null | undefined, rateConfig?: { __typename?: 'RateConfigType', id: string, courseId: string, name: string, description?: string | null | undefined, isActive: boolean, effectiveFrom: string, effectiveTo?: string | null | undefined, createdAt: string, updatedAt: string } | null | undefined } };
+
+export type DeleteRateConfigMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type DeleteRateConfigMutation = { __typename?: 'Mutation', deleteRateConfig: { __typename?: 'DeleteRateMutationResponse', success: boolean, message?: string | null | undefined } };
+
+export type CreateGreenFeeRateMutationVariables = Exact<{
+  input: CreateGreenFeeRateInput;
+}>;
+
+
+export type CreateGreenFeeRateMutation = { __typename?: 'Mutation', createGreenFeeRate: { __typename?: 'GreenFeeRateMutationResponse', success: boolean, message?: string | null | undefined, greenFeeRate?: { __typename?: 'GreenFeeRateType', id: string, playerType: string, holes: number, timeCategory: string, amount: number, taxType: string, taxRate: number, createdAt: string, updatedAt: string } | null | undefined } };
+
+export type UpdateGreenFeeRateMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  input: UpdateGreenFeeRateInput;
+}>;
+
+
+export type UpdateGreenFeeRateMutation = { __typename?: 'Mutation', updateGreenFeeRate: { __typename?: 'GreenFeeRateMutationResponse', success: boolean, message?: string | null | undefined, greenFeeRate?: { __typename?: 'GreenFeeRateType', id: string, playerType: string, holes: number, timeCategory: string, amount: number, taxType: string, taxRate: number, createdAt: string, updatedAt: string } | null | undefined } };
+
+export type DeleteGreenFeeRateMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type DeleteGreenFeeRateMutation = { __typename?: 'Mutation', deleteGreenFeeRate: { __typename?: 'DeleteRateMutationResponse', success: boolean, message?: string | null | undefined } };
+
+export type CreateCartRateMutationVariables = Exact<{
+  input: CreateCartRateInput;
+}>;
+
+
+export type CreateCartRateMutation = { __typename?: 'Mutation', createCartRate: { __typename?: 'CartRateMutationResponse', success: boolean, message?: string | null | undefined, cartRate?: { __typename?: 'CartRateType', id: string, cartType: string, amount: number, taxType: string, taxRate: number, createdAt: string, updatedAt: string } | null | undefined } };
+
+export type UpdateCartRateMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  input: UpdateCartRateInput;
+}>;
+
+
+export type UpdateCartRateMutation = { __typename?: 'Mutation', updateCartRate: { __typename?: 'CartRateMutationResponse', success: boolean, message?: string | null | undefined, cartRate?: { __typename?: 'CartRateType', id: string, cartType: string, amount: number, taxType: string, taxRate: number, createdAt: string, updatedAt: string } | null | undefined } };
+
+export type DeleteCartRateMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type DeleteCartRateMutation = { __typename?: 'Mutation', deleteCartRate: { __typename?: 'DeleteRateMutationResponse', success: boolean, message?: string | null | undefined } };
+
+export type CreateCaddyRateMutationVariables = Exact<{
+  input: CreateCaddyRateInput;
+}>;
+
+
+export type CreateCaddyRateMutation = { __typename?: 'Mutation', createCaddyRate: { __typename?: 'CaddyRateMutationResponse', success: boolean, message?: string | null | undefined, caddyRate?: { __typename?: 'CaddyRateType', id: string, caddyType: string, amount: number, taxType: string, taxRate: number, createdAt: string, updatedAt: string } | null | undefined } };
+
+export type UpdateCaddyRateMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  input: UpdateCaddyRateInput;
+}>;
+
+
+export type UpdateCaddyRateMutation = { __typename?: 'Mutation', updateCaddyRate: { __typename?: 'CaddyRateMutationResponse', success: boolean, message?: string | null | undefined, caddyRate?: { __typename?: 'CaddyRateType', id: string, caddyType: string, amount: number, taxType: string, taxRate: number, createdAt: string, updatedAt: string } | null | undefined } };
+
+export type DeleteCaddyRateMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type DeleteCaddyRateMutation = { __typename?: 'Mutation', deleteCaddyRate: { __typename?: 'DeleteRateMutationResponse', success: boolean, message?: string | null | undefined } };
+
+export type SlotLineItemFieldsFragment = { __typename?: 'SlotLineItemType', id: string, type: string, description: string, baseAmount: number, taxType: string, taxRate: number, taxAmount: number, totalAmount: number, quantity: number, isPaid: boolean, paidAt?: string | null | undefined, paymentMethod?: string | null | undefined, isTransferred: boolean, transferredFromPlayerName?: string | null | undefined };
+
+export type TransferredItemFieldsFragment = { __typename?: 'TransferredItemType', lineItemId: string, description: string, amount: number, fromPlayerId: string, fromPlayerName: string, toPlayerId?: string | null | undefined, toPlayerName?: string | null | undefined };
+
+export type SlotCartFieldsFragment = { __typename?: 'SlotCartType', playerId: string, playerName: string, playerType: string, memberId?: string | null | undefined, memberNumber?: string | null | undefined, subtotal: number, taxTotal: number, grandTotal: number, paidAmount: number, balanceDue: number, isCheckedIn: boolean, checkedInAt?: string | null | undefined, isSettled: boolean, lineItems: Array<{ __typename?: 'SlotLineItemType', id: string, type: string, description: string, baseAmount: number, taxType: string, taxRate: number, taxAmount: number, totalAmount: number, quantity: number, isPaid: boolean, paidAt?: string | null | undefined, paymentMethod?: string | null | undefined, isTransferred: boolean, transferredFromPlayerName?: string | null | undefined }>, transferredInItems: Array<{ __typename?: 'TransferredItemType', lineItemId: string, description: string, amount: number, fromPlayerId: string, fromPlayerName: string, toPlayerId?: string | null | undefined, toPlayerName?: string | null | undefined }>, transferredOutItems: Array<{ __typename?: 'TransferredItemType', lineItemId: string, description: string, amount: number, fromPlayerId: string, fromPlayerName: string, toPlayerId?: string | null | undefined, toPlayerName?: string | null | undefined }> };
+
+export type GetTeeTimeCartsQueryVariables = Exact<{
+  teeTimeId: Scalars['ID']['input'];
+}>;
+
+
+export type GetTeeTimeCartsQuery = { __typename?: 'Query', teeTimeCarts: { __typename?: 'TeeTimeCartsType', teeTimeId: string, teeTime: string, courseName: string, courseId: string, date: string, isFullySettled: boolean, isFullyCheckedIn: boolean, slots: Array<{ __typename?: 'SlotCartType', playerId: string, playerName: string, playerType: string, memberId?: string | null | undefined, memberNumber?: string | null | undefined, subtotal: number, taxTotal: number, grandTotal: number, paidAmount: number, balanceDue: number, isCheckedIn: boolean, checkedInAt?: string | null | undefined, isSettled: boolean, lineItems: Array<{ __typename?: 'SlotLineItemType', id: string, type: string, description: string, baseAmount: number, taxType: string, taxRate: number, taxAmount: number, totalAmount: number, quantity: number, isPaid: boolean, paidAt?: string | null | undefined, paymentMethod?: string | null | undefined, isTransferred: boolean, transferredFromPlayerName?: string | null | undefined }>, transferredInItems: Array<{ __typename?: 'TransferredItemType', lineItemId: string, description: string, amount: number, fromPlayerId: string, fromPlayerName: string, toPlayerId?: string | null | undefined, toPlayerName?: string | null | undefined }>, transferredOutItems: Array<{ __typename?: 'TransferredItemType', lineItemId: string, description: string, amount: number, fromPlayerId: string, fromPlayerName: string, toPlayerId?: string | null | undefined, toPlayerName?: string | null | undefined }> }> } };
+
+export type GetSlotCartQueryVariables = Exact<{
+  playerId: Scalars['ID']['input'];
+}>;
+
+
+export type GetSlotCartQuery = { __typename?: 'Query', slotCart?: { __typename?: 'SlotCartType', playerId: string, playerName: string, playerType: string, memberId?: string | null | undefined, memberNumber?: string | null | undefined, subtotal: number, taxTotal: number, grandTotal: number, paidAmount: number, balanceDue: number, isCheckedIn: boolean, checkedInAt?: string | null | undefined, isSettled: boolean, lineItems: Array<{ __typename?: 'SlotLineItemType', id: string, type: string, description: string, baseAmount: number, taxType: string, taxRate: number, taxAmount: number, totalAmount: number, quantity: number, isPaid: boolean, paidAt?: string | null | undefined, paymentMethod?: string | null | undefined, isTransferred: boolean, transferredFromPlayerName?: string | null | undefined }>, transferredInItems: Array<{ __typename?: 'TransferredItemType', lineItemId: string, description: string, amount: number, fromPlayerId: string, fromPlayerName: string, toPlayerId?: string | null | undefined, toPlayerName?: string | null | undefined }>, transferredOutItems: Array<{ __typename?: 'TransferredItemType', lineItemId: string, description: string, amount: number, fromPlayerId: string, fromPlayerName: string, toPlayerId?: string | null | undefined, toPlayerName?: string | null | undefined }> } | null | undefined };
+
+export type GetBatchTotalQueryVariables = Exact<{
+  playerIds: Array<Scalars['ID']['input']> | Scalars['ID']['input'];
+}>;
+
+
+export type GetBatchTotalQuery = { __typename?: 'Query', batchTotal: { __typename?: 'BatchTotalType', playerIds: Array<string>, subtotal: number, taxTotal: number, grandTotal: number, paidAmount: number, balanceDue: number, lineItemCount: number } };
+
+export type IsTeeTimeFullySettledQueryVariables = Exact<{
+  teeTimeId: Scalars['ID']['input'];
+}>;
+
+
+export type IsTeeTimeFullySettledQuery = { __typename?: 'Query', isTeeTimeFullySettled: boolean };
+
+export type GetCartDraftQueryVariables = Exact<{
+  teeTimeId: Scalars['ID']['input'];
+}>;
+
+
+export type GetCartDraftQuery = { __typename?: 'Query', cartDraft?: { __typename?: 'CartDraftType', id: string, teeTimeId: string, draftData: string, updatedAt: string, createdBy: string } | null | undefined };
+
+export type HasDraftQueryVariables = Exact<{
+  teeTimeId: Scalars['ID']['input'];
+}>;
+
+
+export type HasDraftQuery = { __typename?: 'Query', hasDraft: boolean };
+
+export type TransferLineItemMutationVariables = Exact<{
+  input: TransferLineItemInput;
+}>;
+
+
+export type TransferLineItemMutation = { __typename?: 'Mutation', transferLineItem: { __typename?: 'TransferResultType', success: boolean, error?: string | null | undefined, lineItemId?: string | null | undefined, isTransferred?: boolean | null | undefined, transferredToPlayerId?: string | null | undefined } };
+
+export type UndoTransferMutationVariables = Exact<{
+  input: UndoTransferInput;
+}>;
+
+
+export type UndoTransferMutation = { __typename?: 'Mutation', undoTransfer: { __typename?: 'TransferResultType', success: boolean, error?: string | null | undefined } };
+
+export type ProcessBatchPaymentMutationVariables = Exact<{
+  input: BatchPaymentInput;
+}>;
+
+
+export type ProcessBatchPaymentMutation = { __typename?: 'Mutation', processBatchPayment: { __typename?: 'BatchPaymentResultType', success: boolean, error?: string | null | undefined, transactionId?: string | null | undefined, processedSlots?: Array<{ __typename?: 'SlotPaymentResultType', playerId: string, amountPaid: number, newBalance: number, isSettled: boolean }> | null | undefined } };
+
+export type CheckInSlotsMutationVariables = Exact<{
+  input: CheckInSlotsInput;
+}>;
+
+
+export type CheckInSlotsMutation = { __typename?: 'Mutation', checkInSlots: { __typename?: 'CheckInSlotsResultType', success: boolean, error?: string | null | undefined, ticketId?: string | null | undefined, ticketNumber?: string | null | undefined, checkedInSlots?: Array<{ __typename?: 'SlotCheckInResultType', playerId: string, checkedInAt?: string | null | undefined, error?: string | null | undefined }> | null | undefined } };
+
+export type SaveCartDraftMutationVariables = Exact<{
+  input: SaveCartDraftInput;
+}>;
+
+
+export type SaveCartDraftMutation = { __typename?: 'Mutation', saveCartDraft: { __typename?: 'CartDraftType', id: string, teeTimeId: string, draftData: string, updatedAt: string, createdBy: string } };
+
+export type ClearCartDraftMutationVariables = Exact<{
+  teeTimeId: Scalars['ID']['input'];
+}>;
+
+
+export type ClearCartDraftMutation = { __typename?: 'Mutation', clearCartDraft: boolean };
+
+export type UpdateLineItemQuantityMutationVariables = Exact<{
+  input: UpdateLineItemQuantityInput;
+}>;
+
+
+export type UpdateLineItemQuantityMutation = { __typename?: 'Mutation', updateLineItemQuantity: { __typename?: 'UpdateQuantityResultType', success: boolean, error?: string | null | undefined, lineItem?: { __typename?: 'SlotLineItemType', id: string, type: string, description: string, baseAmount: number, taxType: string, taxRate: number, taxAmount: number, totalAmount: number, quantity: number, isPaid: boolean, isTransferred: boolean } | null | undefined } };
+
+export type BulkRemoveLineItemsMutationVariables = Exact<{
+  input: BulkRemoveLineItemsInput;
+}>;
+
+
+export type BulkRemoveLineItemsMutation = { __typename?: 'Mutation', bulkRemoveLineItems: { __typename?: 'BulkRemoveResultType', success: boolean, error?: string | null | undefined, removedCount: number, removedItems: Array<{ __typename?: 'SlotLineItemType', id: string, description: string, totalAmount: number, quantity: number }> } };
+
+export type BulkTransferLineItemsMutationVariables = Exact<{
+  input: BulkTransferLineItemsInput;
+}>;
+
+
+export type BulkTransferLineItemsMutation = { __typename?: 'Mutation', bulkTransferLineItems: { __typename?: 'BulkTransferResultType', success: boolean, error?: string | null | undefined, transferredCount: number } };
+
+export type PayLineItemsMutationVariables = Exact<{
+  input: PayLineItemsInput;
+}>;
+
+
+export type PayLineItemsMutation = { __typename?: 'Mutation', payLineItems: { __typename?: 'PayLineItemsResultType', success: boolean, error?: string | null | undefined, transactionId?: string | null | undefined, paidCount: number, totalPaid: number } };
 
 export type GetMyMemberQueryVariables = Exact<{ [key: string]: never; }>;
 

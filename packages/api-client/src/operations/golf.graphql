@@ -297,6 +297,10 @@ mutation UpdatePlayerRentalStatus($playerId: ID!, $input: UpdatePlayerRentalStat
   }
 }
 
+mutation RegenerateLineItems($teeTimeId: ID!) {
+  regenerateLineItems(teeTimeId: $teeTimeId)
+}
+
 # Week View Occupancy Query
 query GetWeekViewOccupancy($input: WeekViewOccupancyInput!) {
   weekViewOccupancy(input: $input) {
@@ -328,5 +332,1042 @@ query SearchCaddies($search: String, $courseId: ID) {
     lastName
     phone
     isActive
+  }
+}
+
+# =============================================================================
+# CHECK-IN QUERIES
+# =============================================================================
+
+query GetFlightCheckInInfo($teeTimeId: ID!) {
+  flightCheckInInfo(teeTimeId: $teeTimeId) {
+    id
+    teeTime
+    course
+    startingHole
+    cartNumber
+    caddyAssignment
+    players {
+      id
+      name
+      type
+      memberNumber
+      paymentStatus
+      isCheckedIn
+      checkedInAt
+      isSuspended
+      suspensionReason
+      totalDue
+      totalPaid
+      balanceDue
+      lineItems {
+        id
+        type
+        description
+        baseAmount
+        taxType
+        taxRate
+        taxAmount
+        totalAmount
+        isPaid
+        paidAt
+        paymentMethod
+      }
+    }
+  }
+}
+
+query GetPlayerPaymentInfo($playerId: ID!) {
+  playerPaymentInfo(playerId: $playerId) {
+    playerId
+    playerName
+    playerType
+    memberNumber
+    lineItems {
+      id
+      type
+      description
+      baseAmount
+      taxType
+      taxRate
+      taxAmount
+      totalAmount
+      isPaid
+      paidAt
+      paymentMethod
+    }
+    subtotal
+    totalTax
+    grandTotal
+    paidOnline
+    balanceDue
+    isSettled
+    settledAt
+    settledVia
+    settledBy
+  }
+}
+
+query GetFlightPaymentSummary($teeTimeId: ID!) {
+  flightPaymentSummary(teeTimeId: $teeTimeId) {
+    teeTimeId
+    teeTime
+    course
+    totalPlayers
+    checkedInCount
+    settledCount
+    totalDue
+    totalPaid
+    totalBalance
+    isFullyCheckedIn
+    isFullySettled
+  }
+}
+
+query GetStarterTicket($ticketId: ID!) {
+  starterTicket(ticketId: $ticketId) {
+    id
+    ticketNumber
+    teeTime
+    course
+    startingHole
+    players {
+      name
+      memberNumber
+      type
+    }
+    cartNumber
+    caddyName
+    rentalItems
+    specialRequests
+    qrCodeData
+    generatedAt
+    generatedBy
+    printedAt
+    reprintCount
+  }
+}
+
+query GetStarterTicketByTeeTime($teeTimeId: ID!) {
+  starterTicketByTeeTime(teeTimeId: $teeTimeId) {
+    id
+    ticketNumber
+    teeTime
+    course
+    startingHole
+    players {
+      name
+      memberNumber
+      type
+    }
+    cartNumber
+    caddyName
+    rentalItems
+    specialRequests
+    qrCodeData
+    generatedAt
+    generatedBy
+    printedAt
+    reprintCount
+  }
+}
+
+query GetTicketHTML($teeTimeId: ID!) {
+  ticketHTML(teeTimeId: $teeTimeId)
+}
+
+query GetReceiptHTML($teeTimeId: ID!, $playerId: ID!) {
+  receiptHTML(teeTimeId: $teeTimeId, playerId: $playerId)
+}
+
+query ValidateTicket($qrCodeData: String!) {
+  validateTicket(qrCodeData: $qrCodeData) {
+    valid
+    ticketId
+    teeTimeId
+    message
+  }
+}
+
+query GetCheckInHistory($filter: CheckInHistoryFilterInput) {
+  checkInHistory(filter: $filter) {
+    id
+    teeTimeId
+    playerId
+    playerName
+    action
+    amount
+    details
+    performedBy
+    performedAt
+  }
+}
+
+query GetDailyCheckInReport($input: DailyReportInput!) {
+  dailyCheckInReport(input: $input) {
+    date
+    course
+    totalFlights
+    totalPlayers
+    checkedInPlayers
+    noShowPlayers
+    totalRevenue
+    totalCash
+    totalCard
+    totalTransfer
+    totalAccount
+    flights {
+      teeTimeId
+      teeTime
+      course
+      totalPlayers
+      checkedInCount
+      settledCount
+      totalDue
+      totalPaid
+      totalBalance
+      isFullyCheckedIn
+      isFullySettled
+    }
+  }
+}
+
+query GetCheckInPaymentMethods {
+  checkInPaymentMethods {
+    id
+    name
+    type
+    icon
+    isEnabled
+    requiresRef
+    opensPOS
+    sortOrder
+  }
+}
+
+query GetGolfCheckInSettings {
+  golfCheckInSettings {
+    policy {
+      allowPartialPayment
+      blockSuspendedMembers
+      showSuspensionReason
+      requireAllItemsPaid
+    }
+    tax {
+      defaultRate
+      defaultType
+      taxLabel
+      showBreakdown
+      showTypeIndicator
+    }
+    starterTicket {
+      generateOn
+      autoGenerate
+      defaultPrintOption
+      content {
+        showTeeTime
+        showCourse
+        showStartingHole
+        showPlayerNames
+        showMemberNumbers
+        showCartNumber
+        showCaddyName
+        showRentalItems
+        showSpecialRequests
+        showQRCode
+      }
+    }
+    proShop {
+      allowAddAtCheckIn
+      showQuickAddItems
+      quickAddProductIds
+    }
+    pos {
+      isConnected
+      provider
+      terminalId
+    }
+    paymentMethods {
+      id
+      name
+      type
+      icon
+      isEnabled
+      requiresRef
+      opensPOS
+      sortOrder
+    }
+  }
+}
+
+query GetProShopCategories {
+  proShopCategories {
+    id
+    name
+    description
+    defaultTaxRate
+    defaultTaxType
+    sortOrder
+    isActive
+    productCount
+  }
+}
+
+query GetProShopProducts($filter: ProShopProductFilterInput) {
+  proShopProducts(filter: $filter) {
+    items {
+      id
+      name
+      sku
+      description
+      categoryId
+      category {
+        id
+        name
+      }
+      price
+      taxRate
+      taxType
+      useCategoryDefaults
+      effectiveTaxRate
+      effectiveTaxType
+      isActive
+      isQuickAdd
+      variants {
+        id
+        name
+        sku
+        priceAdjustment
+        finalPrice
+      }
+    }
+    total
+    page
+    limit
+    hasMore
+  }
+}
+
+# =============================================================================
+# CHECK-IN MUTATIONS
+# =============================================================================
+
+mutation AddLineItem($input: AddLineItemInput!) {
+  addLineItem(input: $input) {
+    id
+    type
+    description
+    baseAmount
+    taxType
+    taxRate
+    taxAmount
+    totalAmount
+    isPaid
+    paidAt
+    paymentMethod
+    reference
+    productId
+    variantId
+  }
+}
+
+mutation RemoveLineItem($input: RemoveLineItemInput!) {
+  removeLineItem(input: $input) {
+    success
+    error
+    removedItem {
+      id
+      type
+      description
+      baseAmount
+      totalAmount
+      quantity
+    }
+  }
+}
+
+mutation ProcessSettlement($input: ProcessSettlementInput!) {
+  processSettlement(input: $input) {
+    success
+    transactionId
+    settledAt
+    settledBy
+    error
+    players {
+      playerId
+      amountPaid
+      success
+      error
+    }
+  }
+}
+
+mutation CheckInFlight($input: CheckInFlightInput!) {
+  checkInFlight(input: $input) {
+    success
+    checkedInAt
+    checkedInBy
+    ticketId
+    ticketNumber
+    players {
+      playerId
+      checkedIn
+      error
+    }
+  }
+}
+
+mutation CheckInAllPlayers($input: CheckInAllPlayersInput!) {
+  checkInAllPlayers(input: $input) {
+    success
+    checkedInAt
+    checkedInBy
+    ticketId
+    ticketNumber
+    players {
+      playerId
+      checkedIn
+      error
+    }
+  }
+}
+
+mutation SettleAllPlayers($input: SettleAllPlayersInput!) {
+  settleAllPlayers(input: $input) {
+    success
+    transactionId
+    settledAt
+    settledBy
+    error
+    players {
+      playerId
+      amountPaid
+      success
+      error
+    }
+  }
+}
+
+mutation UndoCheckIn($input: UndoCheckInInput!) {
+  undoCheckIn(input: $input)
+}
+
+mutation GenerateStarterTicket($input: GenerateTicketInput!) {
+  generateStarterTicket(input: $input) {
+    id
+    ticketNumber
+    teeTime
+    course
+    startingHole
+    players {
+      name
+      memberNumber
+      type
+    }
+    cartNumber
+    caddyName
+    qrCodeData
+    generatedAt
+    generatedBy
+  }
+}
+
+mutation PrintStarterTicket($input: PrintTicketInput!) {
+  printStarterTicket(input: $input) {
+    id
+    ticketNumber
+    teeTime
+    course
+    startingHole
+    players {
+      name
+      memberNumber
+      type
+    }
+    cartNumber
+    caddyName
+    rentalItems
+    specialRequests
+    qrCodeData
+    generatedAt
+    generatedBy
+    printedAt
+    reprintCount
+  }
+}
+
+# =============================================================================
+# PRO SHOP MUTATIONS
+# =============================================================================
+
+mutation CreateProShopCategory($input: CreateProShopCategoryInput!) {
+  createProShopCategory(input: $input) {
+    id
+    name
+    description
+    defaultTaxRate
+    defaultTaxType
+    sortOrder
+    isActive
+  }
+}
+
+mutation UpdateProShopCategory($id: ID!, $input: UpdateProShopCategoryInput!) {
+  updateProShopCategory(id: $id, input: $input) {
+    id
+    name
+    description
+    defaultTaxRate
+    defaultTaxType
+    sortOrder
+    isActive
+  }
+}
+
+mutation DeleteProShopCategory($id: ID!) {
+  deleteProShopCategory(id: $id)
+}
+
+mutation CreateProShopProduct($input: CreateProShopProductInput!) {
+  createProShopProduct(input: $input) {
+    id
+    name
+    sku
+    description
+    categoryId
+    price
+    taxRate
+    taxType
+    isActive
+    isQuickAdd
+    variants {
+      id
+      name
+      sku
+      priceAdjustment
+    }
+  }
+}
+
+mutation UpdateProShopProduct($id: ID!, $input: UpdateProShopProductInput!) {
+  updateProShopProduct(id: $id, input: $input) {
+    id
+    name
+    sku
+    description
+    categoryId
+    price
+    taxRate
+    taxType
+    isActive
+    isQuickAdd
+    variants {
+      id
+      name
+      sku
+      priceAdjustment
+    }
+  }
+}
+
+mutation DeleteProShopProduct($id: ID!) {
+  deleteProShopProduct(id: $id)
+}
+
+# =============================================================================
+# RATE CONFIGURATION QUERIES (Task #17)
+# =============================================================================
+
+query GetGolfRates($courseId: ID!, $activeOnly: Boolean) {
+  golfRates(courseId: $courseId, activeOnly: $activeOnly) {
+    id
+    courseId
+    name
+    description
+    isActive
+    effectiveFrom
+    effectiveTo
+    createdAt
+    updatedAt
+    greenFeeRates {
+      id
+      playerType
+      holes
+      timeCategory
+      amount
+      taxType
+      taxRate
+      createdAt
+      updatedAt
+    }
+    cartRates {
+      id
+      cartType
+      amount
+      taxType
+      taxRate
+      createdAt
+      updatedAt
+    }
+    caddyRates {
+      id
+      caddyType
+      amount
+      taxType
+      taxRate
+      createdAt
+      updatedAt
+    }
+  }
+}
+
+query GetRateConfig($id: ID!) {
+  rateConfig(id: $id) {
+    id
+    courseId
+    name
+    description
+    isActive
+    effectiveFrom
+    effectiveTo
+    createdAt
+    updatedAt
+    greenFeeRates {
+      id
+      playerType
+      holes
+      timeCategory
+      amount
+      taxType
+      taxRate
+      createdAt
+      updatedAt
+    }
+    cartRates {
+      id
+      cartType
+      amount
+      taxType
+      taxRate
+      createdAt
+      updatedAt
+    }
+    caddyRates {
+      id
+      caddyType
+      amount
+      taxType
+      taxRate
+      createdAt
+      updatedAt
+    }
+  }
+}
+
+# =============================================================================
+# RATE CONFIGURATION MUTATIONS (Task #17)
+# =============================================================================
+
+mutation CreateRateConfig($input: CreateRateConfigInput!) {
+  createRateConfig(input: $input) {
+    success
+    message
+    rateConfig {
+      id
+      courseId
+      name
+      description
+      isActive
+      effectiveFrom
+      effectiveTo
+      createdAt
+      updatedAt
+    }
+  }
+}
+
+mutation UpdateRateConfig($id: ID!, $input: UpdateRateConfigInput!) {
+  updateRateConfig(id: $id, input: $input) {
+    success
+    message
+    rateConfig {
+      id
+      courseId
+      name
+      description
+      isActive
+      effectiveFrom
+      effectiveTo
+      createdAt
+      updatedAt
+    }
+  }
+}
+
+mutation DeleteRateConfig($id: ID!) {
+  deleteRateConfig(id: $id) {
+    success
+    message
+  }
+}
+
+# Green Fee Rate Mutations
+
+mutation CreateGreenFeeRate($input: CreateGreenFeeRateInput!) {
+  createGreenFeeRate(input: $input) {
+    success
+    message
+    greenFeeRate {
+      id
+      playerType
+      holes
+      timeCategory
+      amount
+      taxType
+      taxRate
+      createdAt
+      updatedAt
+    }
+  }
+}
+
+mutation UpdateGreenFeeRate($id: ID!, $input: UpdateGreenFeeRateInput!) {
+  updateGreenFeeRate(id: $id, input: $input) {
+    success
+    message
+    greenFeeRate {
+      id
+      playerType
+      holes
+      timeCategory
+      amount
+      taxType
+      taxRate
+      createdAt
+      updatedAt
+    }
+  }
+}
+
+mutation DeleteGreenFeeRate($id: ID!) {
+  deleteGreenFeeRate(id: $id) {
+    success
+    message
+  }
+}
+
+# Cart Rate Mutations
+
+mutation CreateCartRate($input: CreateCartRateInput!) {
+  createCartRate(input: $input) {
+    success
+    message
+    cartRate {
+      id
+      cartType
+      amount
+      taxType
+      taxRate
+      createdAt
+      updatedAt
+    }
+  }
+}
+
+mutation UpdateCartRate($id: ID!, $input: UpdateCartRateInput!) {
+  updateCartRate(id: $id, input: $input) {
+    success
+    message
+    cartRate {
+      id
+      cartType
+      amount
+      taxType
+      taxRate
+      createdAt
+      updatedAt
+    }
+  }
+}
+
+mutation DeleteCartRate($id: ID!) {
+  deleteCartRate(id: $id) {
+    success
+    message
+  }
+}
+
+# Caddy Rate Mutations
+
+mutation CreateCaddyRate($input: CreateCaddyRateInput!) {
+  createCaddyRate(input: $input) {
+    success
+    message
+    caddyRate {
+      id
+      caddyType
+      amount
+      taxType
+      taxRate
+      createdAt
+      updatedAt
+    }
+  }
+}
+
+mutation UpdateCaddyRate($id: ID!, $input: UpdateCaddyRateInput!) {
+  updateCaddyRate(id: $id, input: $input) {
+    success
+    message
+    caddyRate {
+      id
+      caddyType
+      amount
+      taxType
+      taxRate
+      createdAt
+      updatedAt
+    }
+  }
+}
+
+mutation DeleteCaddyRate($id: ID!) {
+  deleteCaddyRate(id: $id) {
+    success
+    message
+  }
+}
+
+# ============================================================================
+# Shopping Cart Operations
+# ============================================================================
+
+# Fragment for slot line items
+fragment SlotLineItemFields on SlotLineItemType {
+  id
+  type
+  description
+  baseAmount
+  taxType
+  taxRate
+  taxAmount
+  totalAmount
+  quantity
+  isPaid
+  paidAt
+  paymentMethod
+  isTransferred
+  transferredFromPlayerName
+}
+
+# Fragment for transferred items
+fragment TransferredItemFields on TransferredItemType {
+  lineItemId
+  description
+  amount
+  fromPlayerId
+  fromPlayerName
+  toPlayerId
+  toPlayerName
+}
+
+# Fragment for slot cart data
+fragment SlotCartFields on SlotCartType {
+  playerId
+  playerName
+  playerType
+  memberId
+  memberNumber
+  lineItems {
+    ...SlotLineItemFields
+  }
+  transferredInItems {
+    ...TransferredItemFields
+  }
+  transferredOutItems {
+    ...TransferredItemFields
+  }
+  subtotal
+  taxTotal
+  grandTotal
+  paidAmount
+  balanceDue
+  isCheckedIn
+  checkedInAt
+  isSettled
+}
+
+# Get all carts for a tee time with context
+query GetTeeTimeCarts($teeTimeId: ID!) {
+  teeTimeCarts(teeTimeId: $teeTimeId) {
+    teeTimeId
+    teeTime
+    courseName
+    courseId
+    date
+    isFullySettled
+    isFullyCheckedIn
+    slots {
+      ...SlotCartFields
+    }
+  }
+}
+
+# Get cart for a specific player
+query GetSlotCart($playerId: ID!) {
+  slotCart(playerId: $playerId) {
+    ...SlotCartFields
+  }
+}
+
+# Calculate batch total for selected players
+query GetBatchTotal($playerIds: [ID!]!) {
+  batchTotal(playerIds: $playerIds) {
+    playerIds
+    subtotal
+    taxTotal
+    grandTotal
+    paidAmount
+    balanceDue
+    lineItemCount
+  }
+}
+
+# Check if tee time is fully settled
+query IsTeeTimeFullySettled($teeTimeId: ID!) {
+  isTeeTimeFullySettled(teeTimeId: $teeTimeId)
+}
+
+# Get cart draft
+query GetCartDraft($teeTimeId: ID!) {
+  cartDraft(teeTimeId: $teeTimeId) {
+    id
+    teeTimeId
+    draftData
+    updatedAt
+    createdBy
+  }
+}
+
+# Check if draft exists
+query HasDraft($teeTimeId: ID!) {
+  hasDraft(teeTimeId: $teeTimeId)
+}
+
+# Transfer line item
+mutation TransferLineItem($input: TransferLineItemInput!) {
+  transferLineItem(input: $input) {
+    success
+    error
+    lineItemId
+    isTransferred
+    transferredToPlayerId
+  }
+}
+
+# Undo transfer
+mutation UndoTransfer($input: UndoTransferInput!) {
+  undoTransfer(input: $input) {
+    success
+    error
+  }
+}
+
+# Process batch payment
+mutation ProcessBatchPayment($input: BatchPaymentInput!) {
+  processBatchPayment(input: $input) {
+    success
+    error
+    transactionId
+    processedSlots {
+      playerId
+      amountPaid
+      newBalance
+      isSettled
+    }
+  }
+}
+
+# Check in multiple slots
+mutation CheckInSlots($input: CheckInSlotsInput!) {
+  checkInSlots(input: $input) {
+    success
+    error
+    checkedInSlots {
+      playerId
+      checkedInAt
+      error
+    }
+    ticketId
+    ticketNumber
+  }
+}
+
+# Save cart draft
+mutation SaveCartDraft($input: SaveCartDraftInput!) {
+  saveCartDraft(input: $input) {
+    id
+    teeTimeId
+    draftData
+    updatedAt
+    createdBy
+  }
+}
+
+# Clear cart draft
+mutation ClearCartDraft($teeTimeId: ID!) {
+  clearCartDraft(teeTimeId: $teeTimeId)
+}
+
+# Quantity and Remove Operations
+mutation UpdateLineItemQuantity($input: UpdateLineItemQuantityInput!) {
+  updateLineItemQuantity(input: $input) {
+    success
+    error
+    lineItem {
+      id
+      type
+      description
+      baseAmount
+      taxType
+      taxRate
+      taxAmount
+      totalAmount
+      quantity
+      isPaid
+      isTransferred
+    }
+  }
+}
+
+mutation BulkRemoveLineItems($input: BulkRemoveLineItemsInput!) {
+  bulkRemoveLineItems(input: $input) {
+    success
+    error
+    removedCount
+    removedItems {
+      id
+      description
+      totalAmount
+      quantity
+    }
+  }
+}
+
+mutation BulkTransferLineItems($input: BulkTransferLineItemsInput!) {
+  bulkTransferLineItems(input: $input) {
+    success
+    error
+    transferredCount
+  }
+}
+
+mutation PayLineItems($input: PayLineItemsInput!) {
+  payLineItems(input: $input) {
+    success
+    error
+    transactionId
+    paidCount
+    totalPaid
   }
 }
