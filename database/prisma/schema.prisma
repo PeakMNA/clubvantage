@@ -1,6 +1,3 @@
-// ClubVantage Database Schema
-// Multi-tenant club management ERP with Row-Level Security
-
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["multiSchema", "postgresqlExtensions"]
@@ -13,9 +10,1702 @@ datasource db {
   extensions = [pgcrypto, uuid_ossp(map: "uuid-ossp")]
 }
 
-// ============================================================================
-// ENUMS
-// ============================================================================
+/// Platform tenant/club
+model Club {
+  id                     String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                   String                  @db.VarChar(255)
+  slug                   String                  @unique @db.VarChar(100)
+  region                 Region                  @default(TH)
+  timezone               String                  @default("Asia/Bangkok") @db.VarChar(50)
+  currency               String                  @default("THB") @db.VarChar(3)
+  taxRate                Decimal                 @default(7) @db.Decimal(5, 2)
+  taxType                String                  @default("VAT") @db.VarChar(10)
+  logoUrl                String?                 @db.VarChar(500)
+  primaryColor           String?                 @db.VarChar(7)
+  address                String?
+  phone                  String?                 @db.VarChar(50)
+  email                  String?                 @db.VarChar(255)
+  website                String?                 @db.VarChar(500)
+  subscriptionTier       SubscriptionTier        @default(STARTER)
+  subscriptionStatus     String                  @default("active") @db.VarChar(20)
+  maxMembers             Int                     @default(500)
+  maxUsers               Int                     @default(10)
+  features               Json                    @default("{}")
+  settings               Json                    @default("{}")
+  isActive               Boolean                 @default(true)
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  deletedAt              DateTime?
+  auditLogs              AuditLog[]
+  bookings               Booking[]
+  caddies                Caddy[]
+  chargeTypes            ChargeType[]
+  checkInPaymentMethods  CheckInPaymentMethod[]
+  golfSettings           ClubGolfSettings?
+  consumables            Consumable[]
+  facilities             Facility[]
+  golfCourses            GolfCourse[]
+  rateConfigs            GolfRateConfig[]
+  households             Household[]
+  invoices               Invoice[]
+  leads                  Lead[]
+  members                Member[]
+  membershipApplications MembershipApplication[]
+  membershipTypes        MembershipType[]
+  notifications          Notification[]
+  paymentTransactions    PaymentTransaction[]
+  payments               Payment[]
+  proshopCategories      ProshopCategory[]
+  proshopProducts        ProshopProduct[]
+  resources              Resource[]
+  services               Service[]
+  staff                  Staff[]
+  starterTickets         StarterTicket[]
+  taxOverrides           TaxOverride[]
+  teeTimes               TeeTime[]
+  users                  User[]
+  waitlistEntries        WaitlistEntry[]
+
+  @@index([slug])
+  @@index([isActive])
+  @@map("clubs")
+}
+
+/// Club golf settings
+model ClubGolfSettings {
+  id                      String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId                  String           @unique @db.Uuid
+  cartPolicy              CartPolicy       @default(OPTIONAL)
+  rentalPolicy            RentalPolicy     @default(OPTIONAL)
+  caddyDrivesCart         Boolean          @default(true)
+  maxGuestsPerMember      Int              @default(3)
+  requireGuestContact     Boolean          @default(false)
+  allowPartialPayment     Boolean          @default(false)
+  blockSuspendedMembers   Boolean          @default(true)
+  showSuspensionReason    Boolean          @default(true)
+  requireAllItemsPaid     Boolean          @default(true)
+  defaultTaxRate          Decimal          @default(7) @db.Decimal(5, 2)
+  defaultTaxType          TaxType          @default(INCLUDE)
+  taxLabel                String           @default("Tax") @db.VarChar(20)
+  showTaxBreakdown        Boolean          @default(true)
+  showTaxTypeIndicator    Boolean          @default(true)
+  ticketGenerateOn        TicketGenerateOn @default(SETTLEMENT)
+  ticketAutoGenerate      Boolean          @default(true)
+  ticketDefaultPrint      PrintOption      @default(COMBINED)
+  ticketShowTeeTime       Boolean          @default(true)
+  ticketShowCourse        Boolean          @default(true)
+  ticketShowStartingHole  Boolean          @default(true)
+  ticketShowPlayerNames   Boolean          @default(true)
+  ticketShowMemberNumbers Boolean          @default(true)
+  ticketShowCartNumber    Boolean          @default(true)
+  ticketShowCaddyName     Boolean          @default(true)
+  ticketShowRentalItems   Boolean          @default(true)
+  ticketShowSpecialReqs   Boolean          @default(true)
+  ticketShowQRCode        Boolean          @default(true)
+  allowProShopAtCheckIn   Boolean          @default(true)
+  showQuickAddItems       Boolean          @default(true)
+  quickAddProductIds      String[]         @default([])
+  posIsConnected          Boolean          @default(false)
+  posProvider             String?          @db.VarChar(50)
+  posTerminalId           String?          @db.VarChar(100)
+  posConfig               Json?
+  createdAt               DateTime         @default(now())
+  updatedAt               DateTime         @updatedAt
+  club                    Club             @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  @@index([clubId])
+  @@map("club_golf_settings")
+}
+
+/// Membership type configuration
+model MembershipType {
+  id                  String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId              String                  @db.Uuid
+  name                String                  @db.VarChar(100)
+  code                String                  @db.VarChar(20)
+  description         String?
+  monthlyFee          Decimal                 @db.Decimal(12, 2)
+  annualFee           Decimal?                @db.Decimal(12, 2)
+  joiningFee          Decimal                 @default(0) @db.Decimal(12, 2)
+  maxMembers          Int?
+  minAge              Int?
+  maxAge              Int?
+  allowGuests         Boolean                 @default(true)
+  maxGuestsPerBooking Int                     @default(3)
+  allowFamilyMembers  Boolean                 @default(true)
+  maxFamilyMembers    Int                     @default(4)
+  bookingAdvanceDays  Int                     @default(7)
+  priorityBooking     Boolean                 @default(false)
+  isActive            Boolean                 @default(true)
+  sortOrder           Int                     @default(0)
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
+  members             Member[]
+  applications        MembershipApplication[]
+  tiers               MembershipTier[]
+  club                Club                    @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  @@unique([clubId, code])
+  @@index([clubId])
+  @@map("membership_types")
+}
+
+/// Membership tier within a type
+model MembershipTier {
+  id               String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  membershipTypeId String         @db.Uuid
+  name             String         @db.VarChar(100)
+  code             String         @db.VarChar(20)
+  description      String?
+  priceMultiplier  Decimal        @default(1.0) @db.Decimal(5, 2)
+  benefits         Json           @default("[]")
+  isActive         Boolean        @default(true)
+  sortOrder        Int            @default(0)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  members          Member[]
+  membershipType   MembershipType @relation(fields: [membershipTypeId], references: [id], onDelete: Cascade)
+
+  @@unique([membershipTypeId, code])
+  @@index([membershipTypeId])
+  @@map("membership_tiers")
+}
+
+/// Member household for family memberships
+model Household {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId    String   @db.Uuid
+  name      String   @db.VarChar(255)
+  address   String?
+  phone     String?  @db.VarChar(50)
+  email     String?  @db.VarChar(255)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  club      Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  members   Member[]
+
+  @@index([clubId])
+  @@map("households")
+}
+
+/// Club member
+model Member {
+  id                    String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId                String                  @db.Uuid
+  memberId              String                  @db.VarChar(20)
+  firstName             String                  @db.VarChar(100)
+  lastName              String                  @db.VarChar(100)
+  email                 String?                 @db.VarChar(255)
+  phone                 String?                 @db.VarChar(50)
+  dateOfBirth           DateTime?               @db.Date
+  gender                String?                 @db.VarChar(20)
+  avatarUrl             String?                 @db.VarChar(500)
+  address               String?
+  nationality           String?                 @db.VarChar(100)
+  idNumber              String?                 @db.VarChar(50)
+  emergencyContact      String?                 @db.VarChar(255)
+  emergencyPhone        String?                 @db.VarChar(50)
+  membershipTypeId      String                  @db.Uuid
+  membershipTierId      String?                 @db.Uuid
+  status                MemberStatus            @default(ACTIVE)
+  joinDate              DateTime                @default(now()) @db.Date
+  expiryDate            DateTime?               @db.Date
+  renewalDate           DateTime?               @db.Date
+  householdId           String?                 @db.Uuid
+  isPrimaryMember       Boolean                 @default(false)
+  referredById          String?                 @db.Uuid
+  referralSource        String?                 @db.VarChar(100)
+  creditBalance         Decimal                 @default(0) @db.Decimal(12, 2)
+  outstandingBalance    Decimal                 @default(0) @db.Decimal(12, 2)
+  notes                 String?
+  tags                  String[]                @default([])
+  customFields          Json                    @default("{}")
+  isActive              Boolean                 @default(true)
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  deletedAt             DateTime?
+  bookings              Booking[]
+  dependents            Dependent[]
+  guests                Guest[]
+  invoices              Invoice[]
+  club                  Club                    @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  household             Household?              @relation(fields: [householdId], references: [id])
+  membershipTier        MembershipTier?         @relation(fields: [membershipTierId], references: [id])
+  membershipType        MembershipType          @relation(fields: [membershipTypeId], references: [id])
+  referredBy            Member?                 @relation("MemberReferrals", fields: [referredById], references: [id])
+  referrals             Member[]                @relation("MemberReferrals")
+  sponsoredApplications MembershipApplication[] @relation("ApplicationSponsor")
+  notifications         Notification[]
+  payments              Payment[]
+  paidTransactions      PaymentTransaction[]  // Transactions where this member paid for others
+  teeTimePlayers        TeeTimePlayer[]
+  user                  User?
+  waitlistEntries       WaitlistEntry[]
+
+  @@unique([clubId, memberId])
+  @@unique([clubId, email])
+  @@index([clubId])
+  @@index([clubId, status])
+  @@index([membershipTypeId])
+  @@index([householdId])
+  @@map("members")
+}
+
+/// Dependent family member
+model Dependent {
+  id             String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  memberId       String          @db.Uuid
+  firstName      String          @db.VarChar(100)
+  lastName       String          @db.VarChar(100)
+  relationship   String          @db.VarChar(50)
+  dateOfBirth    DateTime?       @db.Date
+  email          String?         @db.VarChar(255)
+  phone          String?         @db.VarChar(50)
+  isActive       Boolean         @default(true)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  member         Member          @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  teeTimePlayers TeeTimePlayer[]
+
+  @@index([memberId])
+  @@map("dependents")
+}
+
+/// Charge type for billing categorization
+model ChargeType {
+  id           String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId       String            @db.Uuid
+  name         String            @db.VarChar(100)
+  code         String            @db.VarChar(20)
+  description  String?
+  defaultPrice Decimal?          @db.Decimal(12, 2)
+  taxable      Boolean           @default(true)
+  glCode       String?           @db.VarChar(20)
+  category     String?           @db.VarChar(50)
+  isActive     Boolean           @default(true)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  club         Club              @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  lineItems    InvoiceLineItem[]
+
+  @@unique([clubId, code])
+  @@index([clubId])
+  @@map("charge_types")
+}
+
+/// Invoice for member billing
+model Invoice {
+  id             String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId         String              @db.Uuid
+  invoiceNumber  String              @db.VarChar(30)
+  memberId       String              @db.Uuid
+  invoiceDate    DateTime            @db.Date
+  dueDate        DateTime            @db.Date
+  paidDate       DateTime?           @db.Date
+  subtotal       Decimal             @db.Decimal(12, 2)
+  taxAmount      Decimal             @default(0) @db.Decimal(12, 2)
+  discountAmount Decimal             @default(0) @db.Decimal(12, 2)
+  totalAmount    Decimal             @db.Decimal(12, 2)
+  paidAmount     Decimal             @default(0) @db.Decimal(12, 2)
+  balanceDue     Decimal             @db.Decimal(12, 2)
+  status         InvoiceStatus       @default(DRAFT)
+  notes          String?
+  internalNotes  String?
+  billingPeriod  String?             @db.VarChar(50)
+  sentAt         DateTime?
+  viewedAt       DateTime?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  deletedAt      DateTime?
+  lineItems      InvoiceLineItem[]
+  club           Club                @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  member         Member              @relation(fields: [memberId], references: [id])
+  payments       PaymentAllocation[]
+
+  @@unique([clubId, invoiceNumber])
+  @@index([clubId])
+  @@index([clubId, status])
+  @@index([memberId])
+  @@index([dueDate])
+  @@map("invoices")
+}
+
+/// Invoice line item
+model InvoiceLineItem {
+  id           String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  invoiceId    String      @db.Uuid
+  chargeTypeId String?     @db.Uuid
+  description  String      @db.VarChar(500)
+  quantity     Decimal     @default(1) @db.Decimal(10, 2)
+  unitPrice    Decimal     @db.Decimal(12, 2)
+  discountPct  Decimal     @default(0) @db.Decimal(5, 2)
+  taxType      String?     @db.VarChar(10)
+  taxRate      Decimal     @default(0) @db.Decimal(5, 2)
+  lineTotal    Decimal     @db.Decimal(12, 2)
+  sortOrder    Int         @default(0)
+  createdAt    DateTime    @default(now())
+  chargeType   ChargeType? @relation(fields: [chargeTypeId], references: [id])
+  invoice      Invoice     @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@map("invoice_line_items")
+}
+
+/// Payment received
+model Payment {
+  id              String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId          String              @db.Uuid
+  receiptNumber   String              @db.VarChar(30)
+  memberId        String              @db.Uuid
+  amount          Decimal             @db.Decimal(12, 2)
+  method          PaymentMethod
+  referenceNumber String?             @db.VarChar(100)
+  paymentDate     DateTime            @default(now()) @db.Date
+  bankName        String?             @db.VarChar(100)
+  accountLast4    String?             @db.VarChar(4)
+  gatewayId       String?             @db.VarChar(100)
+  status          String              @default("completed") @db.VarChar(20)
+  notes           String?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  allocations     PaymentAllocation[]
+  club            Club                @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  member          Member              @relation(fields: [memberId], references: [id])
+
+  @@unique([clubId, receiptNumber])
+  @@index([clubId])
+  @@index([memberId])
+  @@map("payments")
+}
+
+/// Payment allocation to invoices
+model PaymentAllocation {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  paymentId String   @db.Uuid
+  invoiceId String   @db.Uuid
+  amount    Decimal  @db.Decimal(12, 2)
+  createdAt DateTime @default(now())
+  invoice   Invoice  @relation(fields: [invoiceId], references: [id])
+  payment   Payment  @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@unique([paymentId, invoiceId])
+  @@index([paymentId])
+  @@index([invoiceId])
+  @@map("payment_allocations")
+}
+
+/// Facility (e.g., Tennis Court, Gym, Pool)
+model Facility {
+  id                 String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId             String     @db.Uuid
+  name               String     @db.VarChar(100)
+  code               String     @db.VarChar(20)
+  description        String?
+  category           String     @db.VarChar(50)
+  location           String?    @db.VarChar(255)
+  capacity           Int?
+  imageUrl           String?    @db.VarChar(500)
+  amenities          String[]   @default([])
+  rules              String?
+  bookingDuration    Int        @default(60)
+  minAdvanceHours    Int        @default(1)
+  maxAdvanceDays     Int        @default(14)
+  cancellationHours  Int        @default(24)
+  requiresApproval   Boolean    @default(false)
+  allowGuests        Boolean    @default(true)
+  maxGuests          Int        @default(3)
+  operatingHours     Json       @default("{}")
+  memberRate         Decimal?   @db.Decimal(12, 2)
+  guestRate          Decimal?   @db.Decimal(12, 2)
+  peakRateMultiplier Decimal    @default(1.0) @db.Decimal(5, 2)
+  peakHours          Json       @default("[]")
+  isActive           Boolean    @default(true)
+  sortOrder          Int        @default(0)
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+  bookings           Booking[]
+  club               Club       @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  resources          Resource[]
+  staff              Staff[]
+
+  @@unique([clubId, code])
+  @@index([clubId])
+  @@map("facilities")
+}
+
+/// Resource within a facility (e.g., Court 1, Treadmill #5)
+model Resource {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  facilityId  String    @db.Uuid
+  clubId      String    @db.Uuid
+  name        String    @db.VarChar(100)
+  code        String    @db.VarChar(20)
+  description String?
+  capacity    Int       @default(1)
+  equipment   String[]  @default([])
+  isActive    Boolean   @default(true)
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  bookings    Booking[]
+  club        Club      @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  facility    Facility  @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+
+  @@unique([facilityId, code])
+  @@index([facilityId])
+  @@index([clubId])
+  @@map("resources")
+}
+
+/// Facility booking
+model Booking {
+  id                   String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId               String               @db.Uuid
+  bookingNumber        String               @db.VarChar(30)
+  memberId             String               @db.Uuid
+  bookingType          BookingType          @default(FACILITY)
+  facilityId           String?              @db.Uuid
+  resourceId           String?              @db.Uuid
+  serviceId            String?              @db.Uuid
+  staffId              String?              @db.Uuid
+  startTime            DateTime
+  endTime              DateTime
+  durationMinutes      Int
+  status               BookingStatus        @default(PENDING)
+  checkedInAt          DateTime?
+  checkedOutAt         DateTime?
+  noShowMarkedAt       DateTime?
+  guestCount           Int                  @default(0)
+  guestInfo            Json?
+  sponsoringMemberId   String?
+  selectedVariations   Json?
+  basePrice            Decimal              @db.Decimal(10, 2)
+  tierDiscount         Decimal              @default(0) @db.Decimal(10, 2)
+  variationsTotal      Decimal              @default(0) @db.Decimal(10, 2)
+  totalAmount          Decimal?             @db.Decimal(12, 2)
+  bookingPaymentMethod BookingPaymentMethod @default(ON_ACCOUNT)
+  bookingPaymentStatus BookingPaymentStatus @default(PENDING)
+  creditsUsed          Decimal              @default(0) @db.Decimal(10, 2)
+  isPaid               Boolean              @default(false)
+  revenueCenterId      String?              @db.VarChar(50)
+  outletId             String?              @db.VarChar(50)
+  consumablesUsed      Json?
+  notes                String?
+  internalNotes        String?
+  cancelReason         String?              @db.VarChar(500)
+  cancelledAt          DateTime?
+  cancelledBy          String?              @db.Uuid
+  createdBy            String?
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  club                 Club                 @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  facility             Facility?            @relation(fields: [facilityId], references: [id])
+  member               Member               @relation(fields: [memberId], references: [id])
+  resource             Resource?            @relation(fields: [resourceId], references: [id])
+  service              Service?             @relation(fields: [serviceId], references: [id])
+  staff                Staff?               @relation(fields: [staffId], references: [id])
+  guests               Guest[]
+  waitlistEntry        WaitlistEntry?
+
+  @@unique([clubId, bookingNumber])
+  @@index([clubId])
+  @@index([memberId])
+  @@index([facilityId])
+  @@index([resourceId])
+  @@index([serviceId])
+  @@index([staffId])
+  @@index([clubId, startTime])
+  @@index([staffId, startTime])
+  @@index([startTime])
+  @@index([status])
+  @@map("bookings")
+}
+
+/// Guest for bookings
+model Guest {
+  id                String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  bookingId         String?        @db.Uuid
+  teeTimePlayerId   String?        @db.Uuid
+  invitedById       String         @db.Uuid
+  name              String         @db.VarChar(255)
+  email             String?        @db.VarChar(255)
+  phone             String?        @db.VarChar(50)
+  convertedToLeadId String?        @db.Uuid
+  createdAt         DateTime       @default(now())
+  booking           Booking?       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  convertedToLead   Lead?          @relation(fields: [convertedToLeadId], references: [id])
+  invitedBy         Member         @relation(fields: [invitedById], references: [id])
+  teeTimePlayer     TeeTimePlayer? @relation(fields: [teeTimePlayerId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
+  @@index([teeTimePlayerId])
+  @@index([invitedById])
+  @@map("guests")
+}
+
+/// Staff member (can optionally link to a User)
+model Staff {
+  id                String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId            String               @db.Uuid
+  firstName         String               @db.VarChar(100)
+  lastName          String               @db.VarChar(100)
+  email             String?              @db.VarChar(255)
+  phone             String?              @db.VarChar(50)
+  avatarUrl         String?              @db.VarChar(500)
+  userId            String?              @unique @db.Uuid
+  defaultFacilityId String?              @db.Uuid
+  workingSchedule   Json?
+  isActive          Boolean              @default(true)
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  bookings          Booking[]
+  club              Club                 @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  defaultFacility   Facility?            @relation(fields: [defaultFacilityId], references: [id])
+  user              User?                @relation(fields: [userId], references: [id])
+  capabilities      StaffCapability[]
+  certifications    StaffCertification[]
+
+  @@index([clubId])
+  @@index([userId])
+  @@map("staff")
+}
+
+/// Staff capability (e.g., massage, tennis coaching)
+model StaffCapability {
+  id         String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  staffId    String     @db.Uuid
+  capability String     @db.VarChar(100)
+  skillLevel SkillLevel @default(INTERMEDIATE)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  staff      Staff      @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@unique([staffId, capability])
+  @@index([staffId])
+  @@map("staff_capabilities")
+}
+
+/// Staff certification
+model StaffCertification {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  staffId     String    @db.Uuid
+  name        String    @db.VarChar(255)
+  issuedBy    String?   @db.VarChar(255)
+  issuedDate  DateTime? @db.Date
+  expiryDate  DateTime? @db.Date
+  documentUrl String?   @db.VarChar(500)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  staff       Staff     @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@index([staffId])
+  @@map("staff_certifications")
+}
+
+/// Service (e.g., massage, personal training)
+model Service {
+  id                   String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId               String             @db.Uuid
+  name                 String             @db.VarChar(255)
+  description          String?
+  category             String             @db.VarChar(100)
+  durationMinutes      Int
+  bufferMinutes        Int                @default(0)
+  basePrice            Decimal            @db.Decimal(10, 2)
+  tierDiscounts        Json?
+  requiredCapabilities String[]           @default([])
+  requiredFeatures     String[]           @default([])
+  equipmentNeeds       Json?
+  consumableNeeds      Json?
+  revenueCenterId      String?            @db.VarChar(50)
+  isActive             Boolean            @default(true)
+  sortOrder            Int                @default(0)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  bookings             Booking[]
+  variations           ServiceVariation[]
+  club                 Club               @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  waitlistEntries      WaitlistEntry[]
+
+  @@index([clubId])
+  @@index([category])
+  @@map("services")
+}
+
+/// Service variation (add-ons or modifications)
+model ServiceVariation {
+  id          String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  serviceId   String             @db.Uuid
+  name        String             @db.VarChar(255)
+  description String?
+  priceType   VariationPriceType @default(FIXED_ADD)
+  priceValue  Decimal            @db.Decimal(10, 2)
+  isActive    Boolean            @default(true)
+  sortOrder   Int                @default(0)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  service     Service            @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@index([serviceId])
+  @@map("service_variations")
+}
+
+/// Waitlist entry for fully booked slots
+model WaitlistEntry {
+  id             String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId         String         @db.Uuid
+  memberId       String         @db.Uuid
+  facilityId     String?        @db.Uuid
+  serviceId      String?        @db.Uuid
+  staffId        String?        @db.Uuid
+  preferredDate  DateTime
+  preferredTime  String?        @db.VarChar(50)
+  position       Int
+  status         WaitlistStatus @default(WAITING)
+  offeredAt      DateTime?
+  offerExpiresAt DateTime?
+  bookingId      String?        @unique @db.Uuid
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  booking        Booking?       @relation(fields: [bookingId], references: [id])
+  club           Club           @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  member         Member         @relation(fields: [memberId], references: [id])
+  service        Service?       @relation(fields: [serviceId], references: [id])
+
+  @@index([clubId, facilityId, preferredDate])
+  @@index([clubId, serviceId, preferredDate])
+  @@index([memberId])
+  @@map("waitlist_entries")
+}
+
+/// Consumable inventory item
+model Consumable {
+  id               String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId           String            @db.Uuid
+  name             String            @db.VarChar(255)
+  description      String?
+  category         String?           @db.VarChar(100)
+  unit             String            @db.VarChar(50)
+  currentStock     Int               @default(0)
+  reorderThreshold Int?
+  isActive         Boolean           @default(true)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  usageHistory     ConsumableUsage[]
+  club             Club              @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  @@index([clubId])
+  @@map("consumables")
+}
+
+/// Consumable usage tracking
+model ConsumableUsage {
+  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  consumableId String     @db.Uuid
+  bookingId    String?
+  quantity     Int
+  usedAt       DateTime   @default(now())
+  notes        String?
+  consumable   Consumable @relation(fields: [consumableId], references: [id], onDelete: Cascade)
+
+  @@index([consumableId])
+  @@index([bookingId])
+  @@map("consumable_usage")
+}
+
+/// Golf course
+model GolfCourse {
+  id                String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId            String               @db.Uuid
+  name              String               @db.VarChar(100)
+  code              String               @db.VarChar(20)
+  description       String?
+  holes             Int                  @default(18)
+  par               Int                  @default(72)
+  yardage           Int?
+  rating            Decimal?             @db.Decimal(4, 1)
+  slope             Int?
+  imageUrl          String?              @db.VarChar(500)
+  firstTeeTime      String               @default("06:00") @db.VarChar(5)
+  lastTeeTime       String               @default("16:00") @db.VarChar(5)
+  teeInterval       Int                  @default(8)
+  maxPlayers        Int                  @default(4)
+  memberAdvanceDays Int                  @default(7)
+  guestAdvanceDays  Int                  @default(3)
+  cancellationHours Int                  @default(24)
+  isActive          Boolean              @default(true)
+  sortOrder         Int                  @default(0)
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  holidays          GolfCourseHoliday[]
+  schedules         GolfCourseSchedule[]
+  club              Club                 @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  groupBookings     GolfGroupBooking[]
+  lotteries         GolfLottery[]
+  rateConfigs       GolfRateConfig[]
+  scheduleConfig    GolfScheduleConfig?
+  golfWaitlists     GolfWaitlist[]
+  greenFeeRates     GreenFeeRate[]
+  blocks            TeeTimeBlock[]
+  teeTimes          TeeTime[]
+
+  @@unique([clubId, code])
+  @@index([clubId])
+  @@map("golf_courses")
+}
+
+/// Green fee rate
+model GreenFeeRate {
+  id            String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  courseId      String     @db.Uuid
+  name          String     @db.VarChar(100)
+  playerType    PlayerType
+  holes         Int        @default(18)
+  dayType       String     @db.VarChar(20)
+  timeSlot      String?    @db.VarChar(20)
+  rate          Decimal    @db.Decimal(12, 2)
+  effectiveFrom DateTime   @db.Date
+  effectiveTo   DateTime?  @db.Date
+  isActive      Boolean    @default(true)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  course        GolfCourse @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([courseId])
+  @@map("green_fee_rates")
+}
+
+/// Golf course seasonal schedule (US-10)
+model GolfCourseSchedule {
+  id           String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  courseId     String               @db.Uuid
+  seasonName   String               @db.VarChar(50)
+  startDate    DateTime             @db.Date
+  endDate      DateTime             @db.Date
+  firstTeeTime String               @db.VarChar(5)
+  lastTeeTime  String               @db.VarChar(5)
+  playFormat   PlayFormat           @default(EIGHTEEN_HOLE)
+  paceOfPlay   Int?
+  isActive     Boolean              @default(true)
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  intervals    GolfCourseInterval[]
+  course       GolfCourse           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([courseId])
+  @@index([courseId, startDate, endDate])
+  @@map("golf_course_schedules")
+}
+
+/// Golf course interval configuration (US-10)
+model GolfCourseInterval {
+  id          String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  scheduleId  String             @db.Uuid
+  dayType     DayType
+  timeStart   String             @db.VarChar(5)
+  timeEnd     String             @db.VarChar(5)
+  intervalMin Int                @default(8)
+  isPrimeTime Boolean            @default(false)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  schedule    GolfCourseSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  @@index([scheduleId])
+  @@map("golf_course_intervals")
+}
+
+/// Golf course holiday configuration (legacy - see GolfSpecialDay for new implementation)
+model GolfCourseHoliday {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  courseId    String     @db.Uuid
+  name        String     @db.VarChar(100)
+  date        DateTime   @db.Date
+  isRecurring Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  course      GolfCourse @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([courseId])
+  @@index([courseId, date])
+  @@map("golf_course_holidays")
+}
+
+/// Golf course base schedule settings (one per course)
+model GolfScheduleConfig {
+  id                          String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  courseId                    String                   @unique @db.Uuid
+  weekdayFirstTee             String                   @default("06:00") @db.VarChar(5)
+  weekdayLastTee              String                   @default("17:00") @db.VarChar(5)
+  weekdayBookingMode          BookingMode              @default(EIGHTEEN)
+  weekendFirstTee             String                   @default("06:00") @db.VarChar(5)  // Same as weekday by default
+  weekendLastTee              String                   @default("17:30") @db.VarChar(5)
+  weekendBookingMode          BookingMode              @default(EIGHTEEN)
+  twilightMode                TwilightMode             @default(FIXED)
+  twilightMinutesBeforeSunset Int                      @default(90)
+  twilightFixedDefault        String                   @default("16:00") @db.VarChar(5)
+  clubLatitude                Decimal?                 @db.Decimal(10, 7)
+  clubLongitude               Decimal?                 @db.Decimal(10, 7)
+  defaultBookingWindowDays    Int                      @default(7)
+  createdAt                   DateTime                 @default(now())
+  updatedAt                   DateTime                 @updatedAt
+  course                      GolfCourse               @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  seasons                     GolfScheduleSeason[]
+  specialDays                 GolfScheduleSpecialDay[]
+  timePeriods                 GolfScheduleTimePeriod[]
+
+  @@index([courseId])
+  @@map("golf_schedule_configs")
+}
+
+/// Golf time periods (multiple per schedule config)
+model GolfScheduleTimePeriod {
+  id              String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  scheduleId      String             @db.Uuid
+  name            String             @db.VarChar(50)
+  startTime       String             @db.VarChar(5)
+  endTime         String?            @db.VarChar(5)
+  intervalMinutes Int                @default(10)
+  isPrimeTime     Boolean            @default(false)
+  applicableDays  ApplicableDays     @default(ALL)
+  sortOrder       Int                @default(0)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  schedule        GolfScheduleConfig @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  @@index([scheduleId])
+  @@map("golf_schedule_time_periods")
+}
+
+/// Golf seasons (date range overrides)
+model GolfScheduleSeason {
+  id                    String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  scheduleId            String                 @db.Uuid
+  name                  String                 @db.VarChar(100)
+  startMonth            Int
+  startDay              Int
+  endMonth              Int
+  endDay                Int
+  isRecurring           Boolean                @default(true)
+  priority              Int                    @default(0)
+  overrideFirstTee      String?                @db.VarChar(5)
+  overrideLastTee       String?                @db.VarChar(5)
+  overrideBookingWindow Int?
+  overrideTwilightTime  String?                @db.VarChar(5)
+  overrideTimePeriods   Boolean                @default(false)
+  weekdayBookingMode    BookingMode?
+  weekendBookingMode    BookingMode?
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  schedule              GolfScheduleConfig     @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  timePeriods           GolfSeasonTimePeriod[]
+
+  @@index([scheduleId])
+  @@map("golf_schedule_seasons")
+}
+
+/// Golf season time periods (overrides when overrideTimePeriods=true)
+model GolfSeasonTimePeriod {
+  id              String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  seasonId        String             @db.Uuid
+  name            String             @db.VarChar(50)
+  startTime       String             @db.VarChar(5)
+  endTime         String?            @db.VarChar(5)
+  intervalMinutes Int                @default(10)
+  isPrimeTime     Boolean            @default(false)
+  applicableDays  ApplicableDays     @default(ALL)
+  sortOrder       Int                @default(0)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  season          GolfScheduleSeason @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+
+  @@index([seasonId])
+  @@map("golf_season_time_periods")
+}
+
+/// Golf special days (holidays, closures, events)
+model GolfScheduleSpecialDay {
+  id                String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  scheduleId        String                     @db.Uuid
+  name              String                     @db.VarChar(100)
+  startDate         String                     @db.VarChar(10)
+  endDate           String                     @db.VarChar(10)
+  isRecurring       Boolean                    @default(true)
+  type              SpecialDayType             @default(WEEKEND)
+  customFirstTee    String?                    @db.VarChar(5)
+  customLastTee     String?                    @db.VarChar(5)
+  customTimePeriods Boolean                    @default(false)
+  bookingMode       BookingMode?
+  notes             String?
+  createdAt         DateTime                   @default(now())
+  updatedAt         DateTime                   @updatedAt
+  schedule          GolfScheduleConfig         @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  timePeriods       GolfSpecialDayTimePeriod[]
+
+  @@index([scheduleId])
+  @@map("golf_schedule_special_days")
+}
+
+/// Golf special day time periods (overrides when customTimePeriods=true)
+model GolfSpecialDayTimePeriod {
+  id              String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  specialDayId    String                 @db.Uuid
+  name            String                 @db.VarChar(50)
+  startTime       String                 @db.VarChar(5)
+  endTime         String?                @db.VarChar(5)
+  intervalMinutes Int                    @default(10)
+  isPrimeTime     Boolean                @default(false)
+  applicableDays  ApplicableDays         @default(ALL)
+  sortOrder       Int                    @default(0)
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+  specialDay      GolfScheduleSpecialDay @relation(fields: [specialDayId], references: [id], onDelete: Cascade)
+
+  @@index([specialDayId])
+  @@map("golf_special_day_time_periods")
+}
+
+/// Tee time block (US-2)
+model TeeTimeBlock {
+  id               String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  courseId         String     @db.Uuid
+  startTime        DateTime
+  endTime          DateTime
+  blockType        BlockType
+  reason           String?    @db.VarChar(500)
+  isRecurring      Boolean    @default(false)
+  recurringPattern String?    @db.VarChar(100)
+  createdBy        String     @db.Uuid
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  course           GolfCourse @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([courseId])
+  @@index([courseId, startTime, endTime])
+  @@map("tee_time_blocks")
+}
+
+/// Golf group/tournament booking (US-7)
+model GolfGroupBooking {
+  id           String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId       String             @db.Uuid
+  courseId     String             @db.Uuid
+  groupName    String             @db.VarChar(255)
+  eventDate    DateTime           @db.Date
+  startTime    String             @db.VarChar(5)
+  startFormat  StartFormat        @default(SEQUENTIAL)
+  totalPlayers Int
+  status       GroupBookingStatus @default(DRAFT)
+  notes        String?
+  createdBy    String             @db.Uuid
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  course       GolfCourse         @relation(fields: [courseId], references: [id])
+  players      GolfGroupPlayer[]
+
+  @@index([clubId])
+  @@index([courseId, eventDate])
+  @@map("golf_group_bookings")
+}
+
+/// Golf group player (US-7)
+model GolfGroupPlayer {
+  id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  groupBookingId   String           @db.Uuid
+  playerType       PlayerType
+  memberId         String?          @db.Uuid
+  guestName        String?          @db.VarChar(255)
+  guestEmail       String?          @db.VarChar(255)
+  guestPhone       String?          @db.VarChar(50)
+  handicap         Int?
+  assignedFlight   Int?
+  assignedPosition Int?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  groupBooking     GolfGroupBooking @relation(fields: [groupBookingId], references: [id], onDelete: Cascade)
+
+  @@index([groupBookingId])
+  @@map("golf_group_players")
+}
+
+/// Golf lottery (US-8)
+model GolfLottery {
+  id                   String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId               String               @db.Uuid
+  courseId             String               @db.Uuid
+  lotteryDate          DateTime             @db.Date
+  lotteryType          LotteryType          @default(PRIME_TIME)
+  requestWindowStart   DateTime
+  requestWindowEnd     DateTime
+  drawTime             DateTime
+  timeRangeStart       String               @db.VarChar(5)
+  timeRangeEnd         String               @db.VarChar(5)
+  status               LotteryStatus        @default(DRAFT)
+  maxRequestsPerMember Int                  @default(1)
+  createdBy            String               @db.Uuid
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  course               GolfCourse           @relation(fields: [courseId], references: [id])
+  requests             GolfLotteryRequest[]
+
+  @@index([clubId])
+  @@index([courseId, lotteryDate])
+  @@map("golf_lotteries")
+}
+
+/// Golf lottery request (US-8)
+model GolfLotteryRequest {
+  id           String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  lotteryId    String               @db.Uuid
+  memberId     String               @db.Uuid
+  preference1  String               @db.VarChar(5)
+  preference2  String?              @db.VarChar(5)
+  preference3  String?              @db.VarChar(5)
+  playerCount  Int                  @default(1)
+  status       LotteryRequestStatus @default(PENDING)
+  assignedTime String?              @db.VarChar(5)
+  drawOrder    Int?
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  lottery      GolfLottery          @relation(fields: [lotteryId], references: [id], onDelete: Cascade)
+
+  @@unique([lotteryId, memberId])
+  @@index([lotteryId])
+  @@index([memberId])
+  @@map("golf_lottery_requests")
+}
+
+/// Golf waitlist (US-9)
+model GolfWaitlist {
+  id              String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId          String             @db.Uuid
+  courseId        String             @db.Uuid
+  requestedDate   DateTime           @db.Date
+  timeRangeStart  String             @db.VarChar(5)
+  timeRangeEnd    String             @db.VarChar(5)
+  memberId        String?            @db.Uuid
+  requesterName   String             @db.VarChar(255)
+  requesterPhone  String             @db.VarChar(50)
+  requesterEmail  String?            @db.VarChar(255)
+  playerCount     Int                @default(1)
+  priority        Int                @default(0)
+  status          GolfWaitlistStatus @default(PENDING)
+  notifiedAt      DateTime?
+  expiresAt       DateTime?
+  bookedTeeTimeId String?            @db.Uuid
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  course          GolfCourse         @relation(fields: [courseId], references: [id])
+
+  @@index([clubId])
+  @@index([courseId, requestedDate])
+  @@index([status])
+  @@map("golf_waitlists")
+}
+
+/// Golf rate configuration - Main rate config linked to course
+model GolfRateConfig {
+  id            String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId        String      @db.Uuid
+  courseId      String      @db.Uuid
+  name          String      @db.VarChar(255)
+  description   String?
+  isActive      Boolean     @default(true)
+  effectiveFrom DateTime    @db.Date
+  effectiveTo   DateTime?   @db.Date
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  caddyRates    CaddyRate[]
+  cartRates     CartRate[]
+  club          Club        @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  course        GolfCourse  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  greenFeeRates GreenFee[]
+
+  @@index([clubId])
+  @@index([courseId])
+  @@index([clubId, isActive])
+  @@index([courseId, effectiveFrom, effectiveTo])
+  @@map("golf_rate_configs")
+}
+
+/// Green fee rate by player type, holes, and time category
+model GreenFee {
+  id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  rateConfigId String         @db.Uuid
+  playerType   String         @db.VarChar(20)
+  holes        Int
+  timeCategory String         @default("STANDARD") @db.VarChar(20)
+  amount       Decimal        @db.Decimal(10, 2)
+  taxType      String         @default("ADD") @db.VarChar(10)
+  taxRate      Decimal        @default(0) @db.Decimal(5, 2)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  rateConfig   GolfRateConfig @relation(fields: [rateConfigId], references: [id], onDelete: Cascade)
+
+  @@unique([rateConfigId, playerType, holes, timeCategory])
+  @@index([rateConfigId])
+  @@map("green_fees")
+}
+
+/// Cart rental rates
+model CartRate {
+  id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  rateConfigId String         @db.Uuid
+  cartType     String         @db.VarChar(20)
+  amount       Decimal        @db.Decimal(10, 2)
+  taxType      String         @default("ADD") @db.VarChar(10)
+  taxRate      Decimal        @default(0) @db.Decimal(5, 2)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  rateConfig   GolfRateConfig @relation(fields: [rateConfigId], references: [id], onDelete: Cascade)
+
+  @@unique([rateConfigId, cartType])
+  @@index([rateConfigId])
+  @@map("cart_rates")
+}
+
+/// Caddy fee rates
+model CaddyRate {
+  id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  rateConfigId String         @db.Uuid
+  caddyType    String         @db.VarChar(20)
+  amount       Decimal        @db.Decimal(10, 2)
+  taxType      String         @default("NONE") @db.VarChar(10)
+  taxRate      Decimal        @default(0) @db.Decimal(5, 2)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  rateConfig   GolfRateConfig @relation(fields: [rateConfigId], references: [id], onDelete: Cascade)
+
+  @@unique([rateConfigId, caddyType])
+  @@index([rateConfigId])
+  @@map("caddy_rates")
+}
+
+/// Caddy
+model Caddy {
+  id             String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId         String          @db.Uuid
+  caddyNumber    String          @db.VarChar(10)
+  firstName      String          @db.VarChar(100)
+  lastName       String          @db.VarChar(100)
+  phone          String?         @db.VarChar(50)
+  experience     Int             @default(0)
+  rating         Decimal?        @db.Decimal(3, 2)
+  isActive       Boolean         @default(true)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  club           Club            @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  teeTimePlayers TeeTimePlayer[]
+
+  @@unique([clubId, caddyNumber])
+  @@index([clubId])
+  @@map("caddies")
+}
+
+/// Tee time booking
+model TeeTime {
+  id              String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId          String               @db.Uuid
+  teeTimeNumber   String               @db.VarChar(30)
+  courseId        String               @db.Uuid
+  teeDate         DateTime             @db.Date
+  teeTime         String               @db.VarChar(5)
+  holes           Int                  @default(18)
+  startingHole    Int                  @default(1)
+  status          BookingStatus        @default(PENDING)
+  confirmedAt     DateTime?
+  checkedInAt     DateTime?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  notes           String?
+  internalNotes   String?
+  cancelReason    String?              @db.VarChar(500)
+  cancelledAt     DateTime?
+  cancelledBy     String?              @db.Uuid
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  cartDraft       CartDraft?
+  transactions    PaymentTransaction[]
+  starterTickets  StarterTicket[]
+  players         TeeTimePlayer[]
+  club            Club                 @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  course          GolfCourse           @relation(fields: [courseId], references: [id])
+
+  @@unique([clubId, teeTimeNumber])
+  @@index([courseId, teeDate, teeTime])
+  @@index([clubId])
+  @@index([courseId])
+  @@index([teeDate])
+  @@index([status])
+  @@map("tee_times")
+}
+
+/// Tee time player
+model TeeTimePlayer {
+  id                 String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  teeTimeId          String               @db.Uuid
+  position           Int
+  playerType         PlayerType
+  memberId           String?              @db.Uuid
+  dependentId        String?              @db.Uuid
+  guestName          String?              @db.VarChar(255)
+  guestEmail         String?              @db.VarChar(255)
+  guestPhone         String?              @db.VarChar(50)
+  cartType           CartType             @default(WALKING)
+  sharedWithPosition Int?
+  caddyId            String?              @db.Uuid
+  caddyRequest       String?              @db.VarChar(50)
+  cartRequest        String?              @db.VarChar(50)
+  cartId             String?              @db.Uuid
+  rentalRequest      String?              @db.VarChar(50)
+  cartStatus         RentalStatus         @default(NONE)
+  caddyStatus        RentalStatus         @default(NONE)
+  greenFee           Decimal?             @db.Decimal(12, 2)
+  cartFee            Decimal?             @db.Decimal(12, 2)
+  caddyFee           Decimal?             @db.Decimal(12, 2)
+  totalFee           Decimal?             @db.Decimal(12, 2)
+  checkedIn          Boolean              @default(false)
+  checkedInAt        DateTime?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  lineItems              BookingLineItem[]
+  guests                 Guest[]
+  checkInRecord          PlayerCheckInRecord?
+  caddy                  Caddy?               @relation(fields: [caddyId], references: [id])
+  dependent              Dependent?           @relation(fields: [dependentId], references: [id])
+  member                 Member?              @relation(fields: [memberId], references: [id])
+  teeTime                TeeTime              @relation(fields: [teeTimeId], references: [id], onDelete: Cascade)
+
+  // Transfer relations (shopping cart model)
+  itemsTransferredFrom   BookingLineItem[]    @relation("TransferredFromPlayer")
+  itemsTransferredTo     BookingLineItem[]    @relation("TransferredToPlayer")
+
+  @@unique([teeTimeId, position])
+  @@index([teeTimeId])
+  @@index([memberId])
+  @@index([dependentId])
+  @@map("tee_time_players")
+}
+
+/// Cart draft - persists shopping cart state for tee times
+model CartDraft {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  teeTimeId String   @unique @db.Uuid
+  draftData Json     // { slots: [...], pendingTransfers: [...] }
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String   @db.Uuid
+  teeTime   TeeTime  @relation(fields: [teeTimeId], references: [id], onDelete: Cascade)
+
+  @@index([teeTimeId])
+  @@map("cart_drafts")
+}
+
+/// Booking line item - tracks individual charges per player
+model BookingLineItem {
+  id                       String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  teeTimePlayerId          String                @db.Uuid
+  type                     LineItemType
+  description              String                @db.VarChar(200)
+  baseAmount               Decimal               @db.Decimal(10, 2)
+  taxType                  TaxType
+  taxRate                  Decimal               @db.Decimal(5, 2)
+  taxAmount                Decimal               @db.Decimal(10, 2)
+  totalAmount              Decimal               @db.Decimal(10, 2)
+  isPaid                   Boolean               @default(false)
+  paidAt                   DateTime?
+  paymentMethodId          String?               @map("paidViaId") @db.Uuid
+  reference                String?               @db.VarChar(100)
+  productId                String?               @db.Uuid
+  variantId                String?               @db.Uuid
+  quantity                 Int                   @default(1)
+
+  // Transfer tracking (shopping cart model)
+  isTransferred            Boolean               @default(false)
+  transferredFromPlayerId  String?               @db.Uuid
+  transferredToPlayerId    String?               @db.Uuid
+  transferredAt            DateTime?
+  originalPlayerId         String?               @db.Uuid
+
+  createdAt                DateTime              @default(now())
+  updatedAt                DateTime              @updatedAt
+  paymentMethod            CheckInPaymentMethod? @relation(fields: [paymentMethodId], references: [id])
+  product                  ProshopProduct?       @relation(fields: [productId], references: [id])
+  teeTimePlayer            TeeTimePlayer         @relation(fields: [teeTimePlayerId], references: [id], onDelete: Cascade)
+  variant                  ProshopVariant?       @relation(fields: [variantId], references: [id])
+  transactionItems         TransactionLineItem[]
+  transferredFromPlayer    TeeTimePlayer?        @relation("TransferredFromPlayer", fields: [transferredFromPlayerId], references: [id])
+  transferredToPlayer      TeeTimePlayer?        @relation("TransferredToPlayer", fields: [transferredToPlayerId], references: [id])
+
+  @@index([teeTimePlayerId])
+  @@index([teeTimePlayerId, isPaid])
+  @@index([isTransferred])
+  @@map("booking_line_items")
+}
+
+/// Player check-in record - tracks check-in and settlement
+model PlayerCheckInRecord {
+  id                       String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  teeTimePlayerId          String                @unique @db.Uuid
+  checkedInAt              DateTime              @default(now())
+  checkedInBy              String                @db.Uuid
+  settledAt                DateTime?
+  settledViaId             String?               @db.Uuid
+  settledBy                String?               @db.Uuid
+  totalPaid                Decimal               @default(0) @db.Decimal(10, 2)
+  notes                    String?
+  createdAt                DateTime              @default(now())
+  updatedAt                DateTime              @updatedAt
+  settledVia               CheckInPaymentMethod? @relation(fields: [settledViaId], references: [id])
+  teeTimePlayer            TeeTimePlayer         @relation(fields: [teeTimePlayerId], references: [id], onDelete: Cascade)
+
+  @@index([teeTimePlayerId])
+  @@map("player_check_in_records")
+}
+
+/// Check-in payment method configuration
+model CheckInPaymentMethod {
+  id                      String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId                  String                @db.Uuid
+  name                    String                @db.VarChar(50)
+  icon                    String                @db.VarChar(30)
+  type                    String                @db.VarChar(20)
+  isEnabled               Boolean               @default(true)
+  requiresRef             Boolean               @default(false)
+  opensPOS                Boolean               @default(false)
+  sortOrder               Int                   @default(0)
+  createdAt               DateTime              @default(now())
+  updatedAt               DateTime              @updatedAt
+  booking_line_items      BookingLineItem[]
+  club                    Club                  @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  transactions            PaymentTransaction[]
+  player_check_in_records PlayerCheckInRecord[]
+
+  @@index([clubId])
+  @@index([clubId, isEnabled])
+  @@map("check_in_payment_methods")
+}
+
+/// Payment transaction record
+model PaymentTransaction {
+  id                 String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId             String                @db.Uuid
+  transactionNumber  String                @unique
+  teeTimeId          String?               @db.Uuid
+  amount             Decimal               @db.Decimal(10, 2)
+  paymentMethodId    String                @db.Uuid
+  status             String                @default("COMPLETED")
+  reference          String?
+  paidAt             DateTime              @default(now())
+  paidBy             String
+  voidedAt           DateTime?
+  voidedBy           String?
+  voidReason         String?
+  refundedAt         DateTime?
+  refundedBy         String?
+  refundAmount       Decimal?              @db.Decimal(10, 2)
+  refundReason       String?
+  allocatedToRevenue Boolean               @default(false)
+  allocatedAt        DateTime?
+  metadata           Json?
+
+  // Batch payment support (shopping cart model)
+  isBatchPayment     Boolean               @default(false)
+  batchPlayerIds     String[]              @default([])  // Array of player IDs in batch
+  paidByMemberId     String?               @db.Uuid
+
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+  club               Club                  @relation(fields: [clubId], references: [id])
+  paymentMethod      CheckInPaymentMethod  @relation(fields: [paymentMethodId], references: [id])
+  paidByMember       Member?               @relation(fields: [paidByMemberId], references: [id])
+  teeTime            TeeTime?              @relation(fields: [teeTimeId], references: [id])
+  lineItemPayments   TransactionLineItem[]
+
+  @@index([teeTimeId])
+  @@index([clubId, paidAt])
+  @@index([transactionNumber])
+  @@index([paidByMemberId])
+  @@map("payment_transactions")
+}
+
+/// Links transactions to line items (many-to-many with amount)
+model TransactionLineItem {
+  id            String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  transactionId String             @db.Uuid
+  lineItemId    String             @db.Uuid
+  amount        Decimal            @db.Decimal(10, 2)
+  createdAt     DateTime           @default(now())
+  lineItem      BookingLineItem    @relation(fields: [lineItemId], references: [id], onDelete: Cascade)
+  transaction   PaymentTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+
+  @@unique([transactionId, lineItemId])
+  @@map("transaction_line_items")
+}
+
+/// Membership application
+model MembershipApplication {
+  id                  String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId              String            @db.Uuid
+  applicationNumber   String            @db.VarChar(30)
+  firstName           String            @db.VarChar(100)
+  lastName            String            @db.VarChar(100)
+  email               String            @db.VarChar(255)
+  phone               String?           @db.VarChar(50)
+  membershipTypeId    String            @db.Uuid
+  sponsorId           String?           @db.Uuid
+  status              ApplicationStatus @default(SUBMITTED)
+  submittedAt         DateTime          @default(now())
+  reviewedAt          DateTime?
+  reviewedBy          String?           @db.VarChar(255)
+  approvedAt          DateTime?
+  approvedBy          String?           @db.VarChar(255)
+  rejectedAt          DateTime?
+  rejectedBy          String?           @db.VarChar(255)
+  withdrawnAt         DateTime?
+  reviewNotes         String?
+  rejectionReason     String?
+  documents           Json              @default("[]")
+  convertedToMemberId String?           @db.Uuid
+  convertedAt         DateTime?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  club                Club              @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  membershipType      MembershipType    @relation(fields: [membershipTypeId], references: [id])
+  sponsor             Member?           @relation("ApplicationSponsor", fields: [sponsorId], references: [id])
+
+  @@unique([clubId, applicationNumber])
+  @@unique([clubId, email])
+  @@index([clubId])
+  @@index([clubId, status])
+  @@index([sponsorId])
+  @@map("membership_applications")
+}
+
+/// Sales lead
+model Lead {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId              String    @db.Uuid
+  leadNumber          String    @db.VarChar(20)
+  firstName           String    @db.VarChar(100)
+  lastName            String    @db.VarChar(100)
+  email               String?   @db.VarChar(255)
+  phone               String?   @db.VarChar(50)
+  source              String    @db.VarChar(100)
+  stage               LeadStage @default(NEW)
+  interestedIn        String[]  @default([])
+  assignedToId        String?   @db.Uuid
+  lastContactAt       DateTime?
+  nextFollowUp        DateTime?
+  notes               String?
+  convertedToMemberId String?   @db.Uuid
+  convertedAt         DateTime?
+  tags                String[]  @default([])
+  customFields        Json      @default("{}")
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  deletedAt           DateTime?
+  guests              Guest[]
+  assignedTo          User?     @relation(fields: [assignedToId], references: [id])
+  club                Club      @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  @@unique([clubId, leadNumber])
+  @@unique([clubId, email])
+  @@index([clubId])
+  @@index([clubId, stage])
+  @@index([assignedToId])
+  @@map("leads")
+}
+
+/// System user (staff, admin, member portal)
+model User {
+  id              String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId          String?    @db.Uuid
+  memberId        String?    @unique @db.Uuid
+  email           String     @db.VarChar(255)
+  passwordHash    String     @db.VarChar(255)
+  firstName       String     @db.VarChar(100)
+  lastName        String     @db.VarChar(100)
+  avatarUrl       String?    @db.VarChar(500)
+  phone           String?    @db.VarChar(50)
+  role            UserRole   @default(STAFF)
+  permissions     String[]   @default([])
+  isActive        Boolean    @default(true)
+  emailVerified   Boolean    @default(false)
+  emailVerifiedAt DateTime?
+  lastLoginAt     DateTime?
+  lastLoginIp     String?    @db.VarChar(45)
+  failedAttempts  Int        @default(0)
+  lockedUntil     DateTime?
+  refreshToken    String?    @db.VarChar(500)
+  resetToken      String?    @db.VarChar(255)
+  resetTokenExp   DateTime?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  deletedAt       DateTime?
+  auditLogs       AuditLog[]
+  leads           Lead[]
+  staff           Staff?
+  club            Club?      @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  member          Member?    @relation(fields: [memberId], references: [id])
+
+  @@unique([clubId, email])
+  @@index([clubId])
+  @@index([email])
+  @@index([role])
+  @@map("users")
+}
+
+/// Audit log for tracking changes
+model AuditLog {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId     String   @db.Uuid
+  userId     String?  @db.Uuid
+  action     String   @db.VarChar(50)
+  entityType String   @db.VarChar(50)
+  entityId   String?  @db.Uuid
+  oldValues  Json?
+  newValues  Json?
+  ipAddress  String?  @db.VarChar(45)
+  userAgent  String?  @db.VarChar(500)
+  createdAt  DateTime @default(now())
+  club       Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  user       User?    @relation(fields: [userId], references: [id])
+
+  @@index([clubId])
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+/// Notification
+model Notification {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId    String    @db.Uuid
+  memberId  String?   @db.Uuid
+  type      String    @db.VarChar(50)
+  title     String    @db.VarChar(255)
+  message   String
+  data      Json      @default("{}")
+  channel   String    @db.VarChar(20)
+  sentAt    DateTime?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+  club      Club      @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  member    Member?   @relation(fields: [memberId], references: [id])
+
+  @@index([clubId])
+  @@index([memberId])
+  @@index([type])
+  @@index([readAt])
+  @@map("notifications")
+}
+
+model ProshopCategory {
+  id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId           String           @db.Uuid
+  name             String           @db.VarChar(100)
+  description      String?          @db.VarChar(500)
+  defaultTaxRate   Decimal          @default(7) @db.Decimal(5, 2)
+  defaultTaxType   TaxType          @default(ADD)
+  sortOrder        Int              @default(0)
+  isActive         Boolean          @default(true)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  club             Club             @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  products         ProshopProduct[]
+
+  @@index([clubId])
+  @@index([clubId, isActive])
+  @@map("proshop_categories")
+}
+
+model ProshopProduct {
+  id                  String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId              String            @db.Uuid
+  categoryId          String            @db.Uuid
+  name                String            @db.VarChar(200)
+  description         String?           @db.VarChar(1000)
+  sku                 String?           @db.VarChar(50)
+  price               Decimal           @db.Decimal(10, 2)
+  taxRate             Decimal           @default(7) @db.Decimal(5, 2)
+  taxType             TaxType           @default(ADD)
+  useCategoryDefaults Boolean           @default(true)
+  isActive            Boolean           @default(true)
+  isQuickAdd          Boolean           @default(false)
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  lineItems           BookingLineItem[]
+  category            ProshopCategory   @relation(fields: [categoryId], references: [id])
+  club                Club              @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  variants            ProshopVariant[]
+
+  @@unique([clubId, sku])
+  @@index([clubId, categoryId])
+  @@index([clubId])
+  @@index([clubId, isActive])
+  @@index([clubId, isQuickAdd])
+  @@map("proshop_products")
+}
+
+model ProshopVariant {
+  id              String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productId       String            @db.Uuid
+  name            String            @db.VarChar(50)
+  sku             String?           @db.VarChar(50)
+  priceAdjustment Decimal           @default(0) @db.Decimal(10, 2)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  lineItems       BookingLineItem[]
+  product         ProshopProduct    @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@map("proshop_variants")
+}
+
+model StarterTicket {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId          String    @db.Uuid
+  teeTimeId       String    @db.Uuid
+  ticketNumber    String    @unique @db.VarChar(30)
+  teeTimeValue    DateTime
+  course          String    @db.VarChar(100)
+  startingHole    Int
+  players         Json
+  cartNumber      String?   @db.VarChar(20)
+  caddyName       String?   @db.VarChar(100)
+  rentalItems     String[]  @default([])
+  specialRequests String?
+  qrCodeData      String?   @db.VarChar(500)
+  generatedAt     DateTime  @default(now())
+  generatedBy     String    @db.Uuid
+  printedAt       DateTime?
+  reprintCount    Int       @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  club            Club      @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  teeTime         TeeTime   @relation(fields: [teeTimeId], references: [id])
+
+  @@index([clubId])
+  @@index([teeTimeId])
+  @@index([ticketNumber])
+  @@map("starter_tickets")
+}
+
+model TaxOverride {
+  id        String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId    String       @db.Uuid
+  itemType  LineItemType
+  rate      Decimal      @db.Decimal(5, 2)
+  taxType   TaxType
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  club      Club         @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  @@unique([clubId, itemType])
+  @@index([clubId])
+  @@map("tax_overrides")
+}
 
 enum MemberStatus {
   PROSPECT
@@ -153,7 +1843,6 @@ enum WaitlistStatus {
   CANCELLED
 }
 
-// Golf Course Configuration Enums
 enum PlayFormat {
   EIGHTEEN_HOLE
   CROSS_TEE
@@ -213,7 +1902,6 @@ enum GolfWaitlistStatus {
   CANCELLED
 }
 
-// Schedule Configuration Enums (New)
 enum TwilightMode {
   FIXED
   SUNSET
@@ -233,8 +1921,8 @@ enum ApplicableDays {
 }
 
 enum BookingMode {
-  EIGHTEEN // Tee sheet: Single column (Hole 1 start only)
-  CROSS    // Tee sheet: Dual columns (Hole 1 + Hole 10 starts)
+  EIGHTEEN
+  CROSS
 }
 
 enum CartPolicy {
@@ -247,1381 +1935,21 @@ enum RentalPolicy {
   REQUIRED
 }
 
-// ============================================================================
-// PLATFORM MODELS (Multi-tenant management)
-// ============================================================================
-
-/// Platform tenant/club
-model Club {
-  id                 String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name               String           @db.VarChar(255)
-  slug               String           @unique @db.VarChar(100)
-  region             Region           @default(TH)
-  timezone           String           @default("Asia/Bangkok") @db.VarChar(50)
-  currency           String           @default("THB") @db.VarChar(3)
-  taxRate            Decimal          @default(7) @db.Decimal(5, 2)
-  taxType            String           @default("VAT") @db.VarChar(10)
-  logoUrl            String?          @db.VarChar(500)
-  primaryColor       String?          @db.VarChar(7)
-  address            String?          @db.Text
-  phone              String?          @db.VarChar(50)
-  email              String?          @db.VarChar(255)
-  website            String?          @db.VarChar(500)
-  subscriptionTier   SubscriptionTier @default(STARTER)
-  subscriptionStatus String           @default("active") @db.VarChar(20)
-  maxMembers         Int              @default(500)
-  maxUsers           Int              @default(10)
-  features           Json             @default("{}")
-  settings           Json             @default("{}")
-  isActive           Boolean          @default(true)
-  createdAt          DateTime         @default(now())
-  updatedAt          DateTime         @updatedAt
-  deletedAt          DateTime?
-
-  // Relations
-  members                Member[]
-  membershipTypes        MembershipType[]
-  membershipApplications MembershipApplication[]
-  households             Household[]
-  invoices               Invoice[]
-  payments               Payment[]
-  chargeTypes            ChargeType[]
-  facilities             Facility[]
-  resources              Resource[]
-  bookings               Booking[]
-  golfCourses            GolfCourse[]
-  teeTimes               TeeTime[]
-  caddies                Caddy[]
-  leads                  Lead[]
-  users                  User[]
-  auditLogs              AuditLog[]
-  notifications          Notification[]
-  staff                  Staff[]
-  services               Service[]
-  waitlistEntries        WaitlistEntry[]
-  consumables            Consumable[]
-  golfSettings           ClubGolfSettings?
-
-  @@index([slug])
-  @@index([isActive])
-  @@map("clubs")
+/// Line item type for booking charges
+enum LineItemType {
+  GREEN_FEE
+  CART
+  CADDY
+  RENTAL
+  PROSHOP
 }
 
-/// Club golf settings
-model ClubGolfSettings {
-  id                   String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clubId               String       @unique @db.Uuid
-  club                 Club         @relation(fields: [clubId], references: [id], onDelete: Cascade)
-
-  cartPolicy           CartPolicy   @default(OPTIONAL)
-  rentalPolicy         RentalPolicy @default(OPTIONAL)
-  caddyDrivesCart      Boolean      @default(true) // Asian mode default
-  maxGuestsPerMember   Int          @default(3)
-  requireGuestContact  Boolean      @default(false)
-
-  createdAt            DateTime     @default(now())
-  updatedAt            DateTime     @updatedAt
-
-  @@index([clubId])
-  @@map("club_golf_settings")
+/// Tax handling type
+enum TaxType {
+  ADD
+  INCLUDE
+  NONE
 }
-
-// ============================================================================
-// MEMBERSHIP MODELS
-// ============================================================================
-
-/// Membership type configuration
-model MembershipType {
-  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clubId              String   @db.Uuid
-  club                Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  name                String   @db.VarChar(100)
-  code                String   @db.VarChar(20)
-  description         String?  @db.Text
-  monthlyFee          Decimal  @db.Decimal(12, 2)
-  annualFee           Decimal? @db.Decimal(12, 2)
-  joiningFee          Decimal  @default(0) @db.Decimal(12, 2)
-  maxMembers          Int?
-  minAge              Int?
-  maxAge              Int?
-  allowGuests         Boolean  @default(true)
-  maxGuestsPerBooking Int      @default(3)
-  allowFamilyMembers  Boolean  @default(true)
-  maxFamilyMembers    Int      @default(4)
-  bookingAdvanceDays  Int      @default(7)
-  priorityBooking     Boolean  @default(false)
-  isActive            Boolean  @default(true)
-  sortOrder           Int      @default(0)
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-
-  // Relations
-  tiers        MembershipTier[]
-  members      Member[]
-  applications MembershipApplication[]
-
-  @@unique([clubId, code])
-  @@index([clubId])
-  @@map("membership_types")
-}
-
-/// Membership tier within a type
-model MembershipTier {
-  id               String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  membershipTypeId String         @db.Uuid
-  membershipType   MembershipType @relation(fields: [membershipTypeId], references: [id], onDelete: Cascade)
-  name             String         @db.VarChar(100)
-  code             String         @db.VarChar(20)
-  description      String?        @db.Text
-  priceMultiplier  Decimal        @default(1.0) @db.Decimal(5, 2)
-  benefits         Json           @default("[]")
-  isActive         Boolean        @default(true)
-  sortOrder        Int            @default(0)
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
-
-  // Relations
-  members Member[]
-
-  @@unique([membershipTypeId, code])
-  @@index([membershipTypeId])
-  @@map("membership_tiers")
-}
-
-/// Member household for family memberships
-model Household {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clubId    String   @db.Uuid
-  club      Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  name      String   @db.VarChar(255)
-  address   String?  @db.Text
-  phone     String?  @db.VarChar(50)
-  email     String?  @db.VarChar(255)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  members Member[]
-
-  @@index([clubId])
-  @@map("households")
-}
-
-/// Club member
-model Member {
-  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clubId           String    @db.Uuid
-  club             Club      @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  memberId         String    @db.VarChar(20) // Display ID like M-0001
-  firstName        String    @db.VarChar(100)
-  lastName         String    @db.VarChar(100)
-  email            String?   @db.VarChar(255)
-  phone            String?   @db.VarChar(50)
-  dateOfBirth      DateTime? @db.Date
-  gender           String?   @db.VarChar(20)
-  avatarUrl        String?   @db.VarChar(500)
-  address          String?   @db.Text
-  nationality      String?   @db.VarChar(100)
-  idNumber         String?   @db.VarChar(50) // National ID or passport
-  emergencyContact String?   @db.VarChar(255)
-  emergencyPhone   String?   @db.VarChar(50)
-
-  // Membership details
-  membershipTypeId String          @db.Uuid
-  membershipType   MembershipType  @relation(fields: [membershipTypeId], references: [id])
-  membershipTierId String?         @db.Uuid
-  membershipTier   MembershipTier? @relation(fields: [membershipTierId], references: [id])
-  status           MemberStatus    @default(ACTIVE)
-  joinDate         DateTime        @default(now()) @db.Date
-  expiryDate       DateTime?       @db.Date
-  renewalDate      DateTime?       @db.Date
-
-  // Household
-  householdId     String?    @db.Uuid
-  household       Household? @relation(fields: [householdId], references: [id])
-  isPrimaryMember Boolean    @default(false)
-
-  // Referral tracking
-  referredById   String?  @db.Uuid
-  referredBy     Member?  @relation("MemberReferrals", fields: [referredById], references: [id])
-  referrals      Member[] @relation("MemberReferrals")
-  referralSource String?  @db.VarChar(100)
-
-  // Account balance
-  creditBalance      Decimal @default(0) @db.Decimal(12, 2)
-  outstandingBalance Decimal @default(0) @db.Decimal(12, 2)
-
-  // Metadata
-  notes        String?   @db.Text
-  tags         String[]  @default([])
-  customFields Json      @default("{}")
-  isActive     Boolean   @default(true)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  deletedAt    DateTime?
-
-  // Relations
-  user                  User?
-  invoices              Invoice[]
-  payments              Payment[]
-  bookings              Booking[]
-  teeTimePlayers        TeeTimePlayer[]
-  guests                Guest[]
-  notifications         Notification[]
-  dependents            Dependent[]
-  waitlistEntries       WaitlistEntry[]
-  sponsoredApplications MembershipApplication[] @relation("ApplicationSponsor")
-
-  @@unique([clubId, memberId])
-  @@unique([clubId, email])
-  @@index([clubId])
-  @@index([clubId, status])
-  @@index([membershipTypeId])
-  @@index([householdId])
-  @@map("members")
-}
-
-/// Dependent family member
-model Dependent {
-  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  memberId     String    @db.Uuid
-  member       Member    @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  firstName    String    @db.VarChar(100)
-  lastName     String    @db.VarChar(100)
-  relationship String    @db.VarChar(50) // spouse, child, parent
-  dateOfBirth  DateTime? @db.Date
-  email        String?   @db.VarChar(255)
-  phone        String?   @db.VarChar(50)
-  isActive     Boolean   @default(true)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-
-  // Relations
-  teeTimePlayers TeeTimePlayer[] // Golf bookings where this dependent is a player
-
-  @@index([memberId])
-  @@map("dependents")
-}
-
-// ============================================================================
-// BILLING MODELS
-// ============================================================================
-
-/// Charge type for billing categorization
-model ChargeType {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clubId       String   @db.Uuid
-  club         Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  name         String   @db.VarChar(100)
-  code         String   @db.VarChar(20)
-  description  String?  @db.Text
-  defaultPrice Decimal? @db.Decimal(12, 2)
-  taxable      Boolean  @default(true)
-  glCode       String?  @db.VarChar(20) // General ledger code
-  category     String?  @db.VarChar(50) // membership, facility, fb, golf, etc.
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  // Relations
-  lineItems InvoiceLineItem[]
-
-  @@unique([clubId, code])
-  @@index([clubId])
-  @@map("charge_types")
-}
-
-/// Invoice for member billing
-model Invoice {
-  id            String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clubId        String @db.Uuid
-  club          Club   @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  invoiceNumber String @db.VarChar(30) // INV-2024-0001
-  memberId      String @db.Uuid
-  member        Member @relation(fields: [memberId], references: [id])
-
-  // Dates
-  invoiceDate DateTime  @db.Date
-  dueDate     DateTime  @db.Date
-  paidDate    DateTime? @db.Date
-
-  // Amounts
-  subtotal       Decimal @db.Decimal(12, 2)
-  taxAmount      Decimal @default(0) @db.Decimal(12, 2)
-  discountAmount Decimal @default(0) @db.Decimal(12, 2)
-  totalAmount    Decimal @db.Decimal(12, 2)
-  paidAmount     Decimal @default(0) @db.Decimal(12, 2)
-  balanceDue     Decimal @db.Decimal(12, 2)
-
-  // Status and metadata
-  status        InvoiceStatus @default(DRAFT)
-  notes         String?       @db.Text
-  internalNotes String?       @db.Text
-  billingPeriod String?       @db.VarChar(50) // e.g., "January 2024"
-  sentAt        DateTime?
-  viewedAt      DateTime?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  deletedAt     DateTime?
-
-  // Relations
-  lineItems InvoiceLineItem[]
-  payments  PaymentAllocation[]
-
-  @@unique([clubId, invoiceNumber])
-  @@index([clubId])
-  @@index([clubId, status])
-  @@index([memberId])
-  @@index([dueDate])
-  @@map("invoices")
-}
-
-/// Invoice line item
-model InvoiceLineItem {
-  id           String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  invoiceId    String      @db.Uuid
-  invoice      Invoice     @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-  chargeTypeId String?     @db.Uuid
-  chargeType   ChargeType? @relation(fields: [chargeTypeId], references: [id])
-  description  String      @db.VarChar(500)
-  quantity     Decimal     @default(1) @db.Decimal(10, 2)
-  unitPrice    Decimal     @db.Decimal(12, 2)
-  discountPct  Decimal     @default(0) @db.Decimal(5, 2)
-  taxType      String?     @db.VarChar(10)
-  taxRate      Decimal     @default(0) @db.Decimal(5, 2)
-  lineTotal    Decimal     @db.Decimal(12, 2)
-  sortOrder    Int         @default(0)
-  createdAt    DateTime    @default(now())
-
-  @@index([invoiceId])
-  @@map("invoice_line_items")
-}
-
-/// Payment received
-model Payment {
-  id            String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clubId        String @db.Uuid
-  club          Club   @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  receiptNumber String @db.VarChar(30) // RCP-2024-0001
-  memberId      String @db.Uuid
-  member        Member @relation(fields: [memberId], references: [id])
-
-  // Payment details
-  amount          Decimal       @db.Decimal(12, 2)
-  method          PaymentMethod
-  referenceNumber String?       @db.VarChar(100)
-  paymentDate     DateTime      @default(now()) @db.Date
-
-  // Bank/gateway details
-  bankName     String? @db.VarChar(100)
-  accountLast4 String? @db.VarChar(4)
-  gatewayId    String? @db.VarChar(100) // Stripe/Omise transaction ID
-
-  // Status
-  status    String   @default("completed") @db.VarChar(20)
-  notes     String?  @db.Text
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  allocations PaymentAllocation[]
-
-  @@unique([clubId, receiptNumber])
-  @@index([clubId])
-  @@index([memberId])
-  @@map("payments")
-}
-
-/// Payment allocation to invoices
-model PaymentAllocation {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  paymentId String   @db.Uuid
-  payment   Payment  @relation(fields: [paymentId], references: [id], onDelete: Cascade)
-  invoiceId String   @db.Uuid
-  invoice   Invoice  @relation(fields: [invoiceId], references: [id])
-  amount    Decimal  @db.Decimal(12, 2)
-  createdAt DateTime @default(now())
-
-  @@unique([paymentId, invoiceId])
-  @@index([paymentId])
-  @@index([invoiceId])
-  @@map("payment_allocations")
-}
-
-// ============================================================================
-// FACILITY BOOKING MODELS
-// ============================================================================
-
-/// Facility (e.g., Tennis Court, Gym, Pool)
-model Facility {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clubId      String   @db.Uuid
-  club        Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  name        String   @db.VarChar(100)
-  code        String   @db.VarChar(20)
-  description String?  @db.Text
-  category    String   @db.VarChar(50) // sports, wellness, dining
-  location    String?  @db.VarChar(255)
-  capacity    Int?
-  imageUrl    String?  @db.VarChar(500)
-  amenities   String[] @default([])
-  rules       String?  @db.Text
-
-  // Booking configuration
-  bookingDuration   Int     @default(60) // minutes
-  minAdvanceHours   Int     @default(1)
-  maxAdvanceDays    Int     @default(14)
-  cancellationHours Int     @default(24)
-  requiresApproval  Boolean @default(false)
-  allowGuests       Boolean @default(true)
-  maxGuests         Int     @default(3)
-
-  // Operating hours (JSON: { "monday": { "open": "06:00", "close": "22:00" }, ... })
-  operatingHours Json @default("{}")
-
-  // Pricing
-  memberRate         Decimal? @db.Decimal(12, 2)
-  guestRate          Decimal? @db.Decimal(12, 2)
-  peakRateMultiplier Decimal  @default(1.0) @db.Decimal(5, 2)
-  peakHours          Json     @default("[]")
-
-  isActive  Boolean  @default(true)
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  resources Resource[]
-  bookings  Booking[]
-  staff     Staff[]
-
-  @@unique([clubId, code])
-  @@index([clubId])
-  @@map("facilities")
-}
-
-/// Resource within a facility (e.g., Court 1, Treadmill #5)
-model Resource {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  facilityId  String   @db.Uuid
-  facility    Facility @relation(fields: [facilityId], references: [id], onDelete: Cascade)
-  clubId      String   @db.Uuid
-  club        Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  name        String   @db.VarChar(100)
-  code        String   @db.VarChar(20)
-  description String?  @db.Text
-  capacity    Int      @default(1)
-  equipment   String[] @default([])
-  isActive    Boolean  @default(true)
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
-  bookings Booking[]
-
-  @@unique([facilityId, code])
-  @@index([facilityId])
-  @@index([clubId])
-  @@map("resources")
-}
-
-/// Facility booking
-model Booking {
-  id            String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clubId        String @db.Uuid
-  club          Club   @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  bookingNumber String @db.VarChar(30) // BK-2024-0001
-  memberId      String @db.Uuid
-  member        Member @relation(fields: [memberId], references: [id])
-
-  // Booking type and relations
-  bookingType BookingType @default(FACILITY)
-  facilityId  String?     @db.Uuid
-  facility    Facility?   @relation(fields: [facilityId], references: [id])
-  resourceId  String?     @db.Uuid
-  resource    Resource?   @relation(fields: [resourceId], references: [id])
-  serviceId   String?     @db.Uuid
-  service     Service?    @relation(fields: [serviceId], references: [id])
-  staffId     String?     @db.Uuid
-  staff       Staff?      @relation(fields: [staffId], references: [id])
-
-  // Timing
-  startTime       DateTime
-  endTime         DateTime
-  durationMinutes Int // minutes
-
-  // Status
-  status         BookingStatus @default(PENDING)
-  checkedInAt    DateTime?
-  checkedOutAt   DateTime?
-  noShowMarkedAt DateTime?
-
-  // Guest handling
-  guestCount         Int     @default(0)
-  guestInfo          Json? // For standalone guests
-  sponsoringMemberId String? // Member who sponsors the guest
-
-  // Service variations and pricing
-  selectedVariations Json? // Array of variation IDs selected
-  basePrice          Decimal  @db.Decimal(10, 2)
-  tierDiscount       Decimal  @default(0) @db.Decimal(10, 2)
-  variationsTotal    Decimal  @default(0) @db.Decimal(10, 2)
-  totalAmount        Decimal? @db.Decimal(12, 2)
-
-  // Payment
-  bookingPaymentMethod BookingPaymentMethod @default(ON_ACCOUNT)
-  bookingPaymentStatus BookingPaymentStatus @default(PENDING)
-  creditsUsed          Decimal              @default(0) @db.Decimal(10, 2)
-  isPaid               Boolean              @default(false)
-
-  // Revenue tracking
-  revenueCenterId String? @db.VarChar(50)
-  outletId        String? @db.VarChar(50)
-
-  // Consumables
-  consumablesUsed Json? // Array of {consumableId, quantity}
-
-  // Metadata
-  notes         String?   @db.Text
-  internalNotes String?   @db.Text
-  cancelReason  String?   @db.VarChar(500)
-  cancelledAt   DateTime?
-  cancelledBy   String?   @db.Uuid
-  createdBy     String? // User who created the booking
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  // Relations
-  guests        Guest[]
-  waitlistEntry WaitlistEntry?
-
-  @@unique([clubId, bookingNumber])
-  @@index([clubId])
-  @@index([memberId])
-  @@index([facilityId])
-  @@index([resourceId])
-  @@index([serviceId])
-  @@index([staffId])
-  @@index([clubId, startTime])
-  @@index([staffId, startTime])
-  @@index([startTime])
-  @@index([status])
-  @@map("bookings")
-}
-
-/// Guest for bookings
-model Guest {
-  id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  bookingId       String?        @db.Uuid
-  booking         Booking?       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  teeTimePlayerId String?        @db.Uuid
-  teeTimePlayer   TeeTimePlayer? @relation(fields: [teeTimePlayerId], references: [id], onDelete: Cascade)
-  invitedById     String         @db.Uuid
-  invitedBy       Member         @relation(fields: [invitedById], references: [id])
-
-  // Guest info
-  name  String  @db.VarChar(255)
-  email String? @db.VarChar(255)
-  phone String? @db.VarChar(50)
-
-  // Lead conversion
-  convertedToLeadId String? @db.Uuid
-  convertedToLead   Lead?   @relation(fields: [convertedToLeadId], references: [id])
-
-  createdAt DateTime @default(now())
-
-  @@index([bookingId])
-  @@index([teeTimePlayerId])
-  @@index([invitedById])
-  @@map("guests")
-}
-
-// ============================================================================
-// STAFF & SERVICES MODELS
-// ============================================================================
-
-/// Staff member (can optionally link to a User)
-model Staff {
-  id     String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clubId String @db.Uuid
-  club   Club   @relation(fields: [clubId], references: [id], onDelete: Cascade)
-
-  // Basic info
-  firstName String  @db.VarChar(100)
-  lastName  String  @db.VarChar(100)
-  email     String? @db.VarChar(255)
-  phone     String? @db.VarChar(50)
-  avatarUrl String? @db.VarChar(500)
-
-  // Optional link to User account
-  userId String? @unique @db.Uuid
-  user   User?   @relation(fields: [userId], references: [id])
-
-  // Default facility assignment
-  defaultFacilityId String?   @db.Uuid
-  defaultFacility   Facility? @relation(fields: [defaultFacilityId], references: [id])
-
-  // Work schedule (JSON: { "monday": { "start": "09:00", "end": "17:00" }, ... })
-  workingSchedule Json?
-
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  capabilities   StaffCapability[]
-  certifications StaffCertification[]
-  bookings       Booking[]
-
-  @@index([clubId])
-  @@index([userId])
-  @@map("staff")
-}
-
-/// Staff capability (e.g., massage, tennis coaching)
-model StaffCapability {
-  id         String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  staffId    String     @db.Uuid
-  staff      Staff      @relation(fields: [staffId], references: [id], onDelete: Cascade)
-  capability String     @db.VarChar(100) // e.g., "massage", "tennis_coaching"
-  skillLevel SkillLevel @default(INTERMEDIATE)
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
-
-  @@unique([staffId, capability])
-  @@index([staffId])
-  @@map("staff_capabilities")
-}
-
-/// Staff certification
-model StaffCertification {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  staffId     String    @db.Uuid
-  staff       Staff     @relation(fields: [staffId], references: [id], onDelete: Cascade)
-  name        String    @db.VarChar(255)
-  issuedBy    String?   @db.VarChar(255)
-  issuedDate  DateTime? @db.Date
-  expiryDate  DateTime? @db.Date
-  documentUrl String?   @db.VarChar(500)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  @@index([staffId])
-  @@map("staff_certifications")
-}
-
-/// Service (e.g., massage, personal training)
-model Service {
-  id     String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clubId String @db.Uuid
-  club   Club   @relation(fields: [clubId], references: [id], onDelete: Cascade)
-
-  name        String  @db.VarChar(255)
-  description String? @db.Text
-  category    String  @db.VarChar(100)
-
-  // Duration
-  durationMinutes Int
-  bufferMinutes   Int @default(0)
-
-  // Pricing
-  basePrice     Decimal @db.Decimal(10, 2)
-  tierDiscounts Json? // Mapping of tier codes to discount percentages
-
-  // Requirements
-  requiredCapabilities String[] @default([])
-  requiredFeatures     String[] @default([])
-  equipmentNeeds       Json?
-  consumableNeeds      Json?
-
-  // Revenue tracking
-  revenueCenterId String? @db.VarChar(50)
-
-  isActive  Boolean  @default(true)
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  variations      ServiceVariation[]
-  bookings        Booking[]
-  waitlistEntries WaitlistEntry[]
-
-  @@index([clubId])
-  @@index([category])
-  @@map("services")
-}
-
-/// Service variation (add-ons or modifications)
-model ServiceVariation {
-  id        String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  serviceId String  @db.Uuid
-  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-
-  name        String             @db.VarChar(255)
-  description String?            @db.Text
-  priceType   VariationPriceType @default(FIXED_ADD)
-  priceValue  Decimal            @db.Decimal(10, 2)
-
-  isActive  Boolean  @default(true)
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([serviceId])
-  @@map("service_variations")
-}
-
-/// Waitlist entry for fully booked slots
-model WaitlistEntry {
-  id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clubId   String @db.Uuid
-  club     Club   @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  memberId String @db.Uuid
-  member   Member @relation(fields: [memberId], references: [id])
-
-  // What they're waiting for
-  facilityId String?  @db.Uuid
-  serviceId  String?  @db.Uuid
-  service    Service? @relation(fields: [serviceId], references: [id])
-  staffId    String?  @db.Uuid
-
-  // Preferences
-  preferredDate DateTime
-  preferredTime String?  @db.VarChar(50) // e.g., "morning", "afternoon", or specific time
-
-  // Position and status
-  position       Int
-  status         WaitlistStatus @default(WAITING)
-  offeredAt      DateTime?
-  offerExpiresAt DateTime?
-
-  // Conversion to booking
-  bookingId String?  @unique @db.Uuid
-  booking   Booking? @relation(fields: [bookingId], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([clubId, facilityId, preferredDate])
-  @@index([clubId, serviceId, preferredDate])
-  @@index([memberId])
-  @@map("waitlist_entries")
-}
-
-/// Consumable inventory item
-model Consumable {
-  id     String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clubId String @db.Uuid
-  club   Club   @relation(fields: [clubId], references: [id], onDelete: Cascade)
-
-  name        String  @db.VarChar(255)
-  description String? @db.Text
-  category    String? @db.VarChar(100)
-  unit        String  @db.VarChar(50) // e.g., "piece", "bottle", "kg"
-
-  currentStock     Int  @default(0)
-  reorderThreshold Int?
-
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  usageHistory ConsumableUsage[]
-
-  @@index([clubId])
-  @@map("consumables")
-}
-
-/// Consumable usage tracking
-model ConsumableUsage {
-  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  consumableId String     @db.Uuid
-  consumable   Consumable @relation(fields: [consumableId], references: [id], onDelete: Cascade)
-  bookingId    String?
-  quantity     Int
-  usedAt       DateTime   @default(now())
-  notes        String?    @db.Text
-
-  @@index([consumableId])
-  @@index([bookingId])
-  @@map("consumable_usage")
-}
-
-// ============================================================================
-// GOLF BOOKING MODELS
-// ============================================================================
-
-/// Golf course
-model GolfCourse {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clubId      String   @db.Uuid
-  club        Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  name        String   @db.VarChar(100)
-  code        String   @db.VarChar(20)
-  description String?  @db.Text
-  holes       Int      @default(18)
-  par         Int      @default(72)
-  yardage     Int?
-  rating      Decimal? @db.Decimal(4, 1)
-  slope       Int?
-  imageUrl    String?  @db.VarChar(500)
-
-  // Tee time configuration
-  firstTeeTime String @default("06:00") @db.VarChar(5)
-  lastTeeTime  String @default("16:00") @db.VarChar(5)
-  teeInterval  Int    @default(8) // minutes between tee times
-  maxPlayers   Int    @default(4)
-
-  // Booking rules
-  memberAdvanceDays Int @default(7)
-  guestAdvanceDays  Int @default(3)
-  cancellationHours Int @default(24)
-
-  isActive  Boolean  @default(true)
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  teeTimes       TeeTime[]
-  greenFeeRates  GreenFeeRate[]
-  schedules      GolfCourseSchedule[]
-  holidays       GolfCourseHoliday[]
-  blocks         TeeTimeBlock[]
-  groupBookings  GolfGroupBooking[]
-  lotteries      GolfLottery[]
-  golfWaitlists  GolfWaitlist[]
-  scheduleConfig GolfScheduleConfig? // New schedule configuration
-
-  @@unique([clubId, code])
-  @@index([clubId])
-  @@map("golf_courses")
-}
-
-/// Green fee rate
-model GreenFeeRate {
-  id            String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  courseId      String     @db.Uuid
-  course        GolfCourse @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  name          String     @db.VarChar(100)
-  playerType    PlayerType
-  holes         Int        @default(18) // 9 or 18
-  dayType       String     @db.VarChar(20) // weekday, weekend, holiday
-  timeSlot      String?    @db.VarChar(20) // morning, afternoon, twilight
-  rate          Decimal    @db.Decimal(12, 2)
-  effectiveFrom DateTime   @db.Date
-  effectiveTo   DateTime?  @db.Date
-  isActive      Boolean    @default(true)
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-
-  @@index([courseId])
-  @@map("green_fee_rates")
-}
-
-/// Golf course seasonal schedule (US-10)
-model GolfCourseSchedule {
-  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  courseId     String     @db.Uuid
-  course       GolfCourse @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  seasonName   String     @db.VarChar(50)
-  startDate    DateTime   @db.Date
-  endDate      DateTime   @db.Date
-  firstTeeTime String     @db.VarChar(5)
-  lastTeeTime  String     @db.VarChar(5)
-  playFormat   PlayFormat @default(EIGHTEEN_HOLE)
-  paceOfPlay   Int? // Expected pace in minutes
-  isActive     Boolean    @default(true)
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-
-  // Relations
-  intervals GolfCourseInterval[]
-
-  @@index([courseId])
-  @@index([courseId, startDate, endDate])
-  @@map("golf_course_schedules")
-}
-
-/// Golf course interval configuration (US-10)
-model GolfCourseInterval {
-  id          String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  scheduleId  String             @db.Uuid
-  schedule    GolfCourseSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
-  dayType     DayType
-  timeStart   String             @db.VarChar(5)
-  timeEnd     String             @db.VarChar(5)
-  intervalMin Int                @default(8) // Tee time interval in minutes
-  isPrimeTime Boolean            @default(false)
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
-
-  @@index([scheduleId])
-  @@map("golf_course_intervals")
-}
-
-/// Golf course holiday configuration (legacy - see GolfSpecialDay for new implementation)
-model GolfCourseHoliday {
-  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  courseId    String     @db.Uuid
-  course      GolfCourse @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  name        String     @db.VarChar(100)
-  date        DateTime   @db.Date
-  isRecurring Boolean    @default(false) // If true, recurs yearly
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-
-  @@index([courseId])
-  @@index([courseId, date])
-  @@map("golf_course_holidays")
-}
-
-// ============================================================================
-// GOLF SCHEDULE CONFIGURATION (New - US-10 Enhanced)
-// ============================================================================
-
-/// Golf course base schedule settings (one per course)
-model GolfScheduleConfig {
-  id       String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  courseId String     @unique @db.Uuid
-  course   GolfCourse @relation(fields: [courseId], references: [id], onDelete: Cascade)
-
-  // Operating Hours - Weekday
-  weekdayFirstTee    String      @default("06:00") @db.VarChar(5)
-  weekdayLastTee     String      @default("17:00") @db.VarChar(5)
-  weekdayBookingMode BookingMode @default(EIGHTEEN)
-
-  // Operating Hours - Weekend
-  weekendFirstTee    String      @default("05:30") @db.VarChar(5)
-  weekendLastTee     String      @default("17:30") @db.VarChar(5)
-  weekendBookingMode BookingMode @default(EIGHTEEN)
-
-  // Twilight Settings
-  twilightMode                TwilightMode @default(FIXED)
-  twilightMinutesBeforeSunset Int          @default(90)
-  twilightFixedDefault        String       @default("16:00") @db.VarChar(5)
-  clubLatitude                Decimal?     @db.Decimal(10, 7)
-  clubLongitude               Decimal?     @db.Decimal(10, 7)
-
-  // Booking
-  defaultBookingWindowDays Int @default(7)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  timePeriods GolfScheduleTimePeriod[]
-  seasons     GolfScheduleSeason[]
-  specialDays GolfScheduleSpecialDay[]
-
-  @@index([courseId])
-  @@map("golf_schedule_configs")
-}
-
-/// Golf time periods (multiple per schedule config)
-model GolfScheduleTimePeriod {
-  id         String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  scheduleId String             @db.Uuid
-  schedule   GolfScheduleConfig @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
-
-  name            String         @db.VarChar(50)
-  startTime       String         @db.VarChar(5)
-  endTime         String?        @db.VarChar(5) // NULL means "close" (uses operating hours)
-  intervalMinutes Int            @default(10)
-  isPrimeTime     Boolean        @default(false)
-  applicableDays  ApplicableDays @default(ALL)
-  sortOrder       Int            @default(0)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([scheduleId])
-  @@map("golf_schedule_time_periods")
-}
-
-/// Golf seasons (date range overrides)
-model GolfScheduleSeason {
-  id         String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  scheduleId String             @db.Uuid
-  schedule   GolfScheduleConfig @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
-
-  name        String  @db.VarChar(100)
-  startMonth  Int // 1-12
-  startDay    Int // 1-31
-  endMonth    Int // 1-12
-  endDay      Int // 1-31
-  isRecurring Boolean @default(true)
-  priority    Int     @default(0) // Higher priority wins for overlaps
-
-  // Optional overrides (NULL = use default)
-  overrideFirstTee       String?      @db.VarChar(5)
-  overrideLastTee        String?      @db.VarChar(5)
-  overrideBookingWindow  Int?
-  overrideTwilightTime   String?      @db.VarChar(5) // Only for fixed twilight mode
-  overrideTimePeriods    Boolean      @default(false)
-  weekdayBookingMode     BookingMode? // Override base config
-  weekendBookingMode     BookingMode? // Override base config
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  timePeriods GolfSeasonTimePeriod[]
-
-  @@index([scheduleId])
-  @@map("golf_schedule_seasons")
-}
-
-/// Golf season time periods (overrides when overrideTimePeriods=true)
-model GolfSeasonTimePeriod {
-  id       String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  seasonId String             @db.Uuid
-  season   GolfScheduleSeason @relation(fields: [seasonId], references: [id], onDelete: Cascade)
-
-  name            String         @db.VarChar(50)
-  startTime       String         @db.VarChar(5)
-  endTime         String?        @db.VarChar(5)
-  intervalMinutes Int            @default(10)
-  isPrimeTime     Boolean        @default(false)
-  applicableDays  ApplicableDays @default(ALL)
-  sortOrder       Int            @default(0)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([seasonId])
-  @@map("golf_season_time_periods")
-}
-
-/// Golf special days (holidays, closures, events)
-model GolfScheduleSpecialDay {
-  id         String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  scheduleId String             @db.Uuid
-  schedule   GolfScheduleConfig @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
-
-  name        String         @db.VarChar(100)
-  startDate   String         @db.VarChar(10) // 'MM-DD' if recurring, 'YYYY-MM-DD' if not
-  endDate     String         @db.VarChar(10) // Same format as startDate
-  isRecurring Boolean        @default(true)
-  type        SpecialDayType @default(WEEKEND)
-
-  // Custom type fields (only used when type=CUSTOM)
-  customFirstTee    String?      @db.VarChar(5)
-  customLastTee     String?      @db.VarChar(5)
-  customTimePeriods Boolean      @default(false)
-  bookingMode       BookingMode? // Override everything for this day
-
-  notes String? @db.Text
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  timePeriods GolfSpecialDayTimePeriod[]
-
-  @@index([scheduleId])
-  @@map("golf_schedule_special_days")
-}
-
-/// Golf special day time periods (overrides when customTimePeriods=true)
-model GolfSpecialDayTimePeriod {
-  id           String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  specialDayId String                 @db.Uuid
-  specialDay   GolfScheduleSpecialDay @relation(fields: [specialDayId], references: [id], onDelete: Cascade)
-
-  name            String         @db.VarChar(50)
-  startTime       String         @db.VarChar(5)
-  endTime         String?        @db.VarChar(5)
-  intervalMinutes Int            @default(10)
-  isPrimeTime     Boolean        @default(false)
-  applicableDays  ApplicableDays @default(ALL)
-  sortOrder       Int            @default(0)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([specialDayId])
-  @@map("golf_special_day_time_periods")
-}
-
-/// Tee time block (US-2)
-model TeeTimeBlock {
-  id               String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  courseId         String     @db.Uuid
-  course           GolfCourse @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  startTime        DateTime
-  endTime          DateTime
-  blockType        BlockType
-  reason           String?    @db.VarChar(500)
-  isRecurring      Boolean    @default(false)
-  recurringPattern String?    @db.VarChar(100) // e.g., "WEEKLY:MON,WED,FRI"
-  createdBy        String     @db.Uuid
-  createdAt        DateTime   @default(now())
-  updatedAt        DateTime   @updatedAt
-
-  @@index([courseId])
-  @@index([courseId, startTime, endTime])
-  @@map("tee_time_blocks")
-}
-
-/// Golf group/tournament booking (US-7)
-model GolfGroupBooking {
-  id           String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clubId       String             @db.Uuid
-  courseId     String             @db.Uuid
-  course       GolfCourse         @relation(fields: [courseId], references: [id])
-  groupName    String             @db.VarChar(255)
-  eventDate    DateTime           @db.Date
-  startTime    String             @db.VarChar(5)
-  startFormat  StartFormat        @default(SEQUENTIAL)
-  totalPlayers Int
-  status       GroupBookingStatus @default(DRAFT)
-  notes        String?            @db.Text
-  createdBy    String             @db.Uuid
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
-
-  // Relations
-  players GolfGroupPlayer[]
-
-  @@index([clubId])
-  @@index([courseId, eventDate])
-  @@map("golf_group_bookings")
-}
-
-/// Golf group player (US-7)
-model GolfGroupPlayer {
-  id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  groupBookingId   String           @db.Uuid
-  groupBooking     GolfGroupBooking @relation(fields: [groupBookingId], references: [id], onDelete: Cascade)
-  playerType       PlayerType
-  memberId         String?          @db.Uuid
-  guestName        String?          @db.VarChar(255)
-  guestEmail       String?          @db.VarChar(255)
-  guestPhone       String?          @db.VarChar(50)
-  handicap         Int?
-  assignedFlight   Int?
-  assignedPosition Int?
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
-
-  @@index([groupBookingId])
-  @@map("golf_group_players")
-}
-
-/// Golf lottery (US-8)
-model GolfLottery {
-  id                   String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clubId               String        @db.Uuid
-  courseId             String        @db.Uuid
-  course               GolfCourse    @relation(fields: [courseId], references: [id])
-  lotteryDate          DateTime      @db.Date
-  lotteryType          LotteryType   @default(PRIME_TIME)
-  requestWindowStart   DateTime
-  requestWindowEnd     DateTime
-  drawTime             DateTime
-  timeRangeStart       String        @db.VarChar(5)
-  timeRangeEnd         String        @db.VarChar(5)
-  status               LotteryStatus @default(DRAFT)
-  maxRequestsPerMember Int           @default(1)
-  createdBy            String        @db.Uuid
-  createdAt            DateTime      @default(now())
-  updatedAt            DateTime      @updatedAt
-
-  // Relations
-  requests GolfLotteryRequest[]
-
-  @@index([clubId])
-  @@index([courseId, lotteryDate])
-  @@map("golf_lotteries")
-}
-
-/// Golf lottery request (US-8)
-model GolfLotteryRequest {
-  id           String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  lotteryId    String               @db.Uuid
-  lottery      GolfLottery          @relation(fields: [lotteryId], references: [id], onDelete: Cascade)
-  memberId     String               @db.Uuid
-  preference1  String               @db.VarChar(5) // Time preference 1
-  preference2  String?              @db.VarChar(5) // Time preference 2
-  preference3  String?              @db.VarChar(5) // Time preference 3
-  playerCount  Int                  @default(1)
-  status       LotteryRequestStatus @default(PENDING)
-  assignedTime String?              @db.VarChar(5)
-  drawOrder    Int? // Random order assigned during draw
-  createdAt    DateTime             @default(now())
-  updatedAt    DateTime             @updatedAt
-
-  @@unique([lotteryId, memberId])
-  @@index([lotteryId])
-  @@index([memberId])
-  @@map("golf_lottery_requests")
-}
-
-/// Golf waitlist (US-9)
-model GolfWaitlist {
-  id              String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clubId          String             @db.Uuid
-  courseId        String             @db.Uuid
-  course          GolfCourse         @relation(fields: [courseId], references: [id])
-  requestedDate   DateTime           @db.Date
-  timeRangeStart  String             @db.VarChar(5)
-  timeRangeEnd    String             @db.VarChar(5)
-  memberId        String?            @db.Uuid
-  requesterName   String             @db.VarChar(255)
-  requesterPhone  String             @db.VarChar(50)
-  requesterEmail  String?            @db.VarChar(255)
-  playerCount     Int                @default(1)
-  priority        Int                @default(0) // Lower = higher priority
-  status          GolfWaitlistStatus @default(PENDING)
-  notifiedAt      DateTime?
-  expiresAt       DateTime?
-  bookedTeeTimeId String?            @db.Uuid
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
-
-  @@index([clubId])
-  @@index([courseId, requestedDate])
-  @@index([status])
-  @@map("golf_waitlists")
-}
-
-/// Caddy
-model Caddy {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clubId      String   @db.Uuid
-  club        Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  caddyNumber String   @db.VarChar(10)
-  firstName   String   @db.VarChar(100)
-  lastName    String   @db.VarChar(100)
-  phone       String?  @db.VarChar(50)
-  experience  Int      @default(0) // years
-  rating      Decimal? @db.Decimal(3, 2) // 1.00 - 5.00
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
-  teeTimePlayers TeeTimePlayer[]
-
-  @@unique([clubId, caddyNumber])
-  @@index([clubId])
-  @@map("caddies")
-}
-
-/// Tee time booking
-model TeeTime {
-  id            String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clubId        String     @db.Uuid
-  club          Club       @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  teeTimeNumber String     @db.VarChar(30) // TT-2024-0001
-  courseId      String     @db.Uuid
-  course        GolfCourse @relation(fields: [courseId], references: [id])
-
-  // Timing
-  teeDate      DateTime @db.Date
-  teeTime      String   @db.VarChar(5) // HH:mm format
-  holes        Int      @default(18)
-  startingHole Int      @default(1) // 1 or 10 (for Cross mode)
-
-  // Status
-  status      BookingStatus @default(PENDING)
-  confirmedAt DateTime?
-  checkedInAt DateTime?
-  startedAt   DateTime?
-  completedAt DateTime?
-
-  // Notes
-  notes         String?   @db.Text
-  internalNotes String?   @db.Text
-  cancelReason  String?   @db.VarChar(500)
-  cancelledAt   DateTime?
-  cancelledBy   String?   @db.Uuid
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  players TeeTimePlayer[]
-
-  @@unique([clubId, teeTimeNumber])
-  // Removed unique constraint to allow multiple bookings per flight
-  // Total players across all bookings at same time validated in code (max 4)
-  @@index([courseId, teeDate, teeTime])
-  @@index([clubId])
-  @@index([courseId])
-  @@index([teeDate])
-  @@index([status])
-  @@map("tee_times")
-}
-
-/// Tee time player
-model TeeTimePlayer {
-  id         String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  teeTimeId  String     @db.Uuid
-  teeTime    TeeTime    @relation(fields: [teeTimeId], references: [id], onDelete: Cascade)
-  position   Int // 1-4
-  playerType PlayerType
-
-  // Member, dependent, or guest
-  // For MEMBER: memberId is set to the member's UUID
-  // For DEPENDENT: dependentId is set to the dependent's UUID (memberId can optionally track parent member)
-  // For GUEST/WALK_UP: guestName/Email/Phone are used instead
-  memberId    String?    @db.Uuid
-  member      Member?    @relation(fields: [memberId], references: [id])
-  dependentId String?    @db.Uuid
-  dependent   Dependent? @relation(fields: [dependentId], references: [id])
-  guestName   String?    @db.VarChar(255)
-  guestEmail  String?    @db.VarChar(255)
-  guestPhone  String?    @db.VarChar(50)
-
-  // Golf cart
-  cartType           CartType @default(WALKING)
-  sharedWithPosition Int? // For SHARED cart type
-
-  // Caddy
-  caddyId String? @db.Uuid
-  caddy   Caddy?  @relation(fields: [caddyId], references: [id])
-
-  // Per-player booking options (Task #6)
-  caddyRequest  String? @db.VarChar(50) // 'NONE', 'REQUEST', or caddyId
-  cartRequest   String? @db.VarChar(50) // 'NONE', 'REQUEST'
-  cartId        String? @db.Uuid // Assigned cart ID (future: FK to Cart model)
-  rentalRequest String? @db.VarChar(50) // 'NONE', 'REQUEST'
-
-  // Rental status tracking (workflow: none -> requested -> paid -> assigned -> returned)
-  cartStatus  RentalStatus @default(NONE)
-  caddyStatus RentalStatus @default(NONE)
-
-  // Fees
-  greenFee Decimal? @db.Decimal(12, 2)
-  cartFee  Decimal? @db.Decimal(12, 2)
-  caddyFee Decimal? @db.Decimal(12, 2)
-  totalFee Decimal? @db.Decimal(12, 2)
-
-  // Check-in
-  checkedIn   Boolean   @default(false)
-  checkedInAt DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  guests Guest[]
-
-  @@unique([teeTimeId, position])
-  @@index([teeTimeId])
-  @@index([memberId])
-  @@index([dependentId])
-  @@map("tee_time_players")
-}
-
-// ============================================================================
-// MEMBERSHIP APPLICATION MODELS
-// ============================================================================
 
 enum ApplicationStatus {
   SUBMITTED
@@ -1632,231 +1960,15 @@ enum ApplicationStatus {
   WITHDRAWN
 }
 
-/// Membership application
-model MembershipApplication {
-  id                String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clubId            String @db.Uuid
-  club              Club   @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  applicationNumber String @db.VarChar(30) // APP-2024-0001
-
-  // Applicant info
-  firstName String  @db.VarChar(100)
-  lastName  String  @db.VarChar(100)
-  email     String  @db.VarChar(255)
-  phone     String? @db.VarChar(50)
-
-  // Requested membership
-  membershipTypeId String         @db.Uuid
-  membershipType   MembershipType @relation(fields: [membershipTypeId], references: [id])
-
-  // Sponsor (optional - existing member who referred)
-  sponsorId String? @db.Uuid
-  sponsor   Member? @relation("ApplicationSponsor", fields: [sponsorId], references: [id])
-
-  // Status and workflow
-  status      ApplicationStatus @default(SUBMITTED)
-  submittedAt DateTime          @default(now())
-  reviewedAt  DateTime?
-  reviewedBy  String?           @db.VarChar(255)
-  approvedAt  DateTime?
-  approvedBy  String?           @db.VarChar(255)
-  rejectedAt  DateTime?
-  rejectedBy  String?           @db.VarChar(255)
-  withdrawnAt DateTime?
-
-  // Notes
-  reviewNotes     String? @db.Text
-  rejectionReason String? @db.Text
-
-  // Documents stored as JSON array
-  documents Json @default("[]")
-
-  // Conversion to member
-  convertedToMemberId String?   @db.Uuid
-  convertedAt         DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([clubId, applicationNumber])
-  @@unique([clubId, email])
-  @@index([clubId])
-  @@index([clubId, status])
-  @@index([sponsorId])
-  @@map("membership_applications")
+enum PrintOption {
+  TICKET
+  RECEIPT
+  COMBINED
+  NONE
 }
 
-// ============================================================================
-// LEAD MANAGEMENT MODELS
-// ============================================================================
-
-/// Sales lead
-model Lead {
-  id         String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clubId     String @db.Uuid
-  club       Club   @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  leadNumber String @db.VarChar(20) // L-0001
-
-  // Contact info
-  firstName String  @db.VarChar(100)
-  lastName  String  @db.VarChar(100)
-  email     String? @db.VarChar(255)
-  phone     String? @db.VarChar(50)
-
-  // Lead details
-  source       String    @db.VarChar(100) // guest, referral, website, event
-  stage        LeadStage @default(NEW)
-  interestedIn String[]  @default([]) // membership types
-
-  // Assignment
-  assignedToId String? @db.Uuid
-  assignedTo   User?   @relation(fields: [assignedToId], references: [id])
-
-  // Follow-up
-  lastContactAt DateTime?
-  nextFollowUp  DateTime?
-
-  // Notes
-  notes String? @db.Text
-
-  // Conversion
-  convertedToMemberId String?   @db.Uuid
-  convertedAt         DateTime?
-
-  // Metadata
-  tags         String[]  @default([])
-  customFields Json      @default("{}")
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  deletedAt    DateTime?
-
-  // Relations
-  guests Guest[]
-
-  @@unique([clubId, leadNumber])
-  @@unique([clubId, email])
-  @@index([clubId])
-  @@index([clubId, stage])
-  @@index([assignedToId])
-  @@map("leads")
-}
-
-// ============================================================================
-// USER & AUTHENTICATION MODELS
-// ============================================================================
-
-/// System user (staff, admin, member portal)
-model User {
-  id       String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clubId   String? @db.Uuid
-  club     Club?   @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  memberId String? @unique @db.Uuid
-  member   Member? @relation(fields: [memberId], references: [id])
-
-  // Credentials
-  email        String @db.VarChar(255)
-  passwordHash String @db.VarChar(255)
-
-  // Profile
-  firstName String  @db.VarChar(100)
-  lastName  String  @db.VarChar(100)
-  avatarUrl String? @db.VarChar(500)
-  phone     String? @db.VarChar(50)
-
-  // Role & permissions
-  role        UserRole @default(STAFF)
-  permissions String[] @default([])
-
-  // Status
-  isActive        Boolean   @default(true)
-  emailVerified   Boolean   @default(false)
-  emailVerifiedAt DateTime?
-
-  // Auth tracking
-  lastLoginAt    DateTime?
-  lastLoginIp    String?   @db.VarChar(45)
-  failedAttempts Int       @default(0)
-  lockedUntil    DateTime?
-
-  // Tokens
-  refreshToken  String?   @db.VarChar(500)
-  resetToken    String?   @db.VarChar(255)
-  resetTokenExp DateTime?
-
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-
-  // Relations
-  auditLogs AuditLog[]
-  leads     Lead[]
-  staff     Staff?
-
-  @@unique([clubId, email])
-  @@index([clubId])
-  @@index([email])
-  @@index([role])
-  @@map("users")
-}
-
-// ============================================================================
-// AUDIT & NOTIFICATION MODELS
-// ============================================================================
-
-/// Audit log for tracking changes
-model AuditLog {
-  id     String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clubId String  @db.Uuid
-  club   Club    @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  userId String? @db.Uuid
-  user   User?   @relation(fields: [userId], references: [id])
-
-  // What happened
-  action     String  @db.VarChar(50) // CREATE, UPDATE, DELETE, LOGIN, etc.
-  entityType String  @db.VarChar(50) // Member, Invoice, Booking, etc.
-  entityId   String? @db.Uuid
-
-  // Changes
-  oldValues Json?
-  newValues Json?
-
-  // Context
-  ipAddress String? @db.VarChar(45)
-  userAgent String? @db.VarChar(500)
-
-  createdAt DateTime @default(now())
-
-  @@index([clubId])
-  @@index([userId])
-  @@index([entityType, entityId])
-  @@index([createdAt])
-  @@map("audit_logs")
-}
-
-/// Notification
-model Notification {
-  id       String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clubId   String  @db.Uuid
-  club     Club    @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  memberId String? @db.Uuid
-  member   Member? @relation(fields: [memberId], references: [id])
-
-  // Content
-  type    String @db.VarChar(50) // invoice, booking, reminder, etc.
-  title   String @db.VarChar(255)
-  message String @db.Text
-  data    Json   @default("{}")
-
-  // Delivery
-  channel String    @db.VarChar(20) // in_app, email, sms, push
-  sentAt  DateTime?
-  readAt  DateTime?
-
-  createdAt DateTime @default(now())
-
-  @@index([clubId])
-  @@index([memberId])
-  @@index([type])
-  @@index([readAt])
-  @@map("notifications")
+enum TicketGenerateOn {
+  CHECK_IN
+  SETTLEMENT
+  MANUAL
 }
