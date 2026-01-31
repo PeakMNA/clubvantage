@@ -1139,3 +1139,1248 @@ export class WeekViewOccupancyResponse {
   @Field(() => [WeekViewSlotType])
   slots: WeekViewSlotType[];
 }
+
+// ============================================================================
+// GOLF CHECK-IN TYPES
+// ============================================================================
+
+// Tax calculation type
+export enum TaxType {
+  ADD = 'ADD',
+  INCLUDE = 'INCLUDE',
+  NONE = 'NONE',
+}
+
+registerEnumType(TaxType, {
+  name: 'TaxType',
+  description: 'Tax calculation type: ADD (on top), INCLUDE (in price), NONE',
+});
+
+// Line item category
+export enum LineItemType {
+  GREEN_FEE = 'GREEN_FEE',
+  CART = 'CART',
+  CADDY = 'CADDY',
+  RENTAL = 'RENTAL',
+  PROSHOP = 'PROSHOP',
+}
+
+registerEnumType(LineItemType, {
+  name: 'LineItemType',
+  description: 'Type of booking line item',
+});
+
+// Ticket generation timing
+export enum TicketGenerateOn {
+  CHECK_IN = 'CHECK_IN',
+  SETTLEMENT = 'SETTLEMENT',
+  MANUAL = 'MANUAL',
+}
+
+registerEnumType(TicketGenerateOn, {
+  name: 'TicketGenerateOn',
+  description: 'When to generate starter ticket',
+});
+
+// Print options
+export enum PrintOption {
+  TICKET = 'TICKET',
+  RECEIPT = 'RECEIPT',
+  COMBINED = 'COMBINED',
+  NONE = 'NONE',
+}
+
+registerEnumType(PrintOption, {
+  name: 'PrintOption',
+  description: 'Print output options for starter ticket',
+});
+
+// Payment status for check-in
+export enum PaymentStatus {
+  PREPAID = 'PREPAID',     // Has line items AND all are paid
+  PARTIAL = 'PARTIAL',     // Has line items AND some are paid
+  UNPAID = 'UNPAID',       // Has line items AND none are paid
+  NO_CHARGES = 'NO_CHARGES', // No line items - needs charges added
+}
+
+registerEnumType(PaymentStatus, {
+  name: 'PaymentStatus',
+  description: 'Payment status for player check-in',
+});
+
+// Extended player type for check-in
+export enum CheckInPlayerType {
+  MEMBER = 'MEMBER',
+  GUEST = 'GUEST',
+  DEPENDENT = 'DEPENDENT',
+  WALKUP = 'WALKUP',
+}
+
+registerEnumType(CheckInPlayerType, {
+  name: 'CheckInPlayerType',
+  description: 'Player type for check-in (more granular than PlayerType)',
+});
+
+// Payment method type
+export enum PaymentMethodTypeEnum {
+  CASH = 'CASH',
+  CARD = 'CARD',
+  TRANSFER = 'TRANSFER',
+  ACCOUNT = 'ACCOUNT',
+  CUSTOM = 'CUSTOM',
+}
+
+registerEnumType(PaymentMethodTypeEnum, {
+  name: 'PaymentMethodTypeEnum',
+  description: 'Type of payment method',
+});
+
+// ============================================================================
+// CHECK-IN PAYMENT METHOD
+// ============================================================================
+
+@ObjectType()
+export class CheckInPaymentMethodType {
+  @Field(() => ID)
+  id: string;
+
+  @Field()
+  name: string;
+
+  @Field()
+  icon: string;
+
+  @Field(() => PaymentMethodTypeEnum)
+  type: PaymentMethodTypeEnum;
+
+  @Field()
+  isEnabled: boolean;
+
+  @Field()
+  requiresRef: boolean;
+
+  @Field()
+  opensPOS: boolean;
+
+  @Field(() => Int)
+  sortOrder: number;
+}
+
+// ============================================================================
+// TAX CONFIGURATION
+// ============================================================================
+
+@ObjectType()
+export class TaxOverrideType {
+  @Field(() => LineItemType)
+  itemType: LineItemType;
+
+  @Field()
+  rate: number;
+
+  @Field(() => TaxType)
+  taxType: TaxType;
+}
+
+@ObjectType()
+export class TaxConfigType {
+  @Field()
+  defaultRate: number;
+
+  @Field(() => TaxType)
+  defaultType: TaxType;
+
+  @Field()
+  taxLabel: string;
+
+  @Field()
+  showBreakdown: boolean;
+
+  @Field()
+  showTypeIndicator: boolean;
+
+  @Field(() => [TaxOverrideType])
+  overrides: TaxOverrideType[];
+}
+
+// ============================================================================
+// STARTER TICKET CONFIGURATION
+// ============================================================================
+
+@ObjectType()
+export class TicketContentConfigType {
+  @Field()
+  showTeeTime: boolean;
+
+  @Field()
+  showCourse: boolean;
+
+  @Field()
+  showStartingHole: boolean;
+
+  @Field()
+  showPlayerNames: boolean;
+
+  @Field()
+  showMemberNumbers: boolean;
+
+  @Field()
+  showCartNumber: boolean;
+
+  @Field()
+  showCaddyName: boolean;
+
+  @Field()
+  showRentalItems: boolean;
+
+  @Field()
+  showSpecialRequests: boolean;
+
+  @Field()
+  showQRCode: boolean;
+}
+
+@ObjectType()
+export class StarterTicketConfigType {
+  @Field(() => TicketGenerateOn)
+  generateOn: TicketGenerateOn;
+
+  @Field()
+  autoGenerate: boolean;
+
+  @Field(() => PrintOption)
+  defaultPrintOption: PrintOption;
+
+  @Field(() => TicketContentConfigType)
+  content: TicketContentConfigType;
+}
+
+// ============================================================================
+// PRO SHOP CONFIGURATION
+// ============================================================================
+
+@ObjectType()
+export class ProShopConfigType {
+  @Field()
+  allowAddAtCheckIn: boolean;
+
+  @Field()
+  showQuickAddItems: boolean;
+
+  @Field(() => [ID])
+  quickAddProductIds: string[];
+}
+
+// ============================================================================
+// POS CONFIGURATION
+// ============================================================================
+
+@ObjectType()
+export class POSConfigType {
+  @Field()
+  isConnected: boolean;
+
+  @Field({ nullable: true })
+  provider?: string;
+
+  @Field({ nullable: true })
+  terminalId?: string;
+}
+
+// ============================================================================
+// CHECK-IN POLICY
+// ============================================================================
+
+@ObjectType()
+export class CheckInPolicyType {
+  @Field()
+  allowPartialPayment: boolean;
+
+  @Field()
+  blockSuspendedMembers: boolean;
+
+  @Field()
+  showSuspensionReason: boolean;
+
+  @Field()
+  requireAllItemsPaid: boolean;
+}
+
+// ============================================================================
+// CHECK-IN SETTINGS (COMPLETE)
+// ============================================================================
+
+@ObjectType()
+export class CheckInSettingsType {
+  @Field(() => CheckInPolicyType)
+  policy: CheckInPolicyType;
+
+  @Field(() => [CheckInPaymentMethodType])
+  paymentMethods: CheckInPaymentMethodType[];
+
+  @Field(() => TaxConfigType)
+  tax: TaxConfigType;
+
+  @Field(() => StarterTicketConfigType)
+  starterTicket: StarterTicketConfigType;
+
+  @Field(() => ProShopConfigType)
+  proShop: ProShopConfigType;
+
+  @Field(() => POSConfigType)
+  pos: POSConfigType;
+}
+
+// ============================================================================
+// PRO SHOP CATEGORY
+// ============================================================================
+
+@ObjectType()
+export class ProShopCategoryType {
+  @Field(() => ID)
+  id: string;
+
+  @Field()
+  name: string;
+
+  @Field({ nullable: true })
+  description?: string;
+
+  @Field()
+  defaultTaxRate: number;
+
+  @Field(() => TaxType)
+  defaultTaxType: TaxType;
+
+  @Field(() => Int)
+  sortOrder: number;
+
+  @Field()
+  isActive: boolean;
+
+  @Field(() => Int, { nullable: true })
+  productCount?: number;
+}
+
+// ============================================================================
+// PRO SHOP PRODUCT
+// ============================================================================
+
+@ObjectType()
+export class ProShopVariantType {
+  @Field(() => ID)
+  id: string;
+
+  @Field()
+  name: string;
+
+  @Field({ nullable: true })
+  sku?: string;
+
+  @Field()
+  priceAdjustment: number;
+
+  @Field()
+  finalPrice: number;
+}
+
+@ObjectType()
+export class ProShopProductType {
+  @Field(() => ID)
+  id: string;
+
+  @Field(() => ID)
+  categoryId: string;
+
+  @Field(() => ProShopCategoryType, { nullable: true })
+  category?: ProShopCategoryType;
+
+  @Field()
+  name: string;
+
+  @Field({ nullable: true })
+  description?: string;
+
+  @Field({ nullable: true })
+  sku?: string;
+
+  @Field()
+  price: number;
+
+  @Field()
+  taxRate: number;
+
+  @Field(() => TaxType)
+  taxType: TaxType;
+
+  @Field()
+  useCategoryDefaults: boolean;
+
+  @Field()
+  effectiveTaxRate: number;
+
+  @Field(() => TaxType)
+  effectiveTaxType: TaxType;
+
+  @Field(() => [ProShopVariantType])
+  variants: ProShopVariantType[];
+
+  @Field()
+  isActive: boolean;
+
+  @Field()
+  isQuickAdd: boolean;
+}
+
+@ObjectType()
+export class ProShopProductConnectionType {
+  @Field(() => [ProShopProductType])
+  items: ProShopProductType[];
+
+  @Field(() => Int)
+  total: number;
+
+  @Field(() => Int)
+  page: number;
+
+  @Field(() => Int)
+  limit: number;
+
+  @Field()
+  hasMore: boolean;
+}
+
+// ============================================================================
+// BOOKING LINE ITEM
+// ============================================================================
+
+@ObjectType()
+export class BookingLineItemType {
+  @Field(() => ID)
+  id: string;
+
+  @Field(() => LineItemType)
+  type: LineItemType;
+
+  @Field()
+  description: string;
+
+  @Field()
+  baseAmount: number;
+
+  @Field(() => TaxType)
+  taxType: TaxType;
+
+  @Field()
+  taxRate: number;
+
+  @Field()
+  taxAmount: number;
+
+  @Field()
+  totalAmount: number;
+
+  @Field()
+  isPaid: boolean;
+
+  @Field({ nullable: true })
+  paidAt?: Date;
+
+  @Field({ nullable: true })
+  paymentMethod?: string;
+
+  @Field({ nullable: true })
+  reference?: string;
+
+  @Field(() => ID, { nullable: true })
+  productId?: string;
+
+  @Field(() => ID, { nullable: true })
+  variantId?: string;
+}
+
+// ============================================================================
+// PLAYER PAYMENT INFO
+// ============================================================================
+
+@ObjectType()
+export class PlayerPaymentInfoType {
+  @Field(() => ID)
+  playerId: string;
+
+  @Field()
+  playerName: string;
+
+  @Field(() => CheckInPlayerType)
+  playerType: CheckInPlayerType;
+
+  @Field({ nullable: true })
+  memberNumber?: string;
+
+  @Field(() => [BookingLineItemType])
+  lineItems: BookingLineItemType[];
+
+  @Field()
+  subtotal: number;
+
+  @Field()
+  totalTax: number;
+
+  @Field()
+  grandTotal: number;
+
+  @Field()
+  paidOnline: number;
+
+  @Field()
+  balanceDue: number;
+
+  @Field()
+  isSettled: boolean;
+
+  @Field({ nullable: true })
+  settledAt?: Date;
+
+  @Field({ nullable: true })
+  settledVia?: string;
+
+  @Field({ nullable: true })
+  settledBy?: string;
+}
+
+// ============================================================================
+// CHECK-IN PLAYER INFO
+// ============================================================================
+
+@ObjectType()
+export class CheckInPlayerInfoType {
+  @Field(() => ID)
+  id: string;
+
+  @Field()
+  name: string;
+
+  @Field(() => CheckInPlayerType)
+  type: CheckInPlayerType;
+
+  @Field({ nullable: true })
+  memberNumber?: string;
+
+  @Field()
+  isCheckedIn: boolean;
+
+  @Field({ nullable: true })
+  checkedInAt?: Date;
+
+  @Field()
+  isSuspended: boolean;
+
+  @Field({ nullable: true })
+  suspensionReason?: string;
+
+  @Field(() => PaymentStatus)
+  paymentStatus: PaymentStatus;
+
+  @Field()
+  totalDue: number;
+
+  @Field()
+  totalPaid: number;
+
+  @Field()
+  balanceDue: number;
+
+  @Field(() => [BookingLineItemType])
+  lineItems: BookingLineItemType[];
+}
+
+// ============================================================================
+// FLIGHT CHECK-IN INFO
+// ============================================================================
+
+@ObjectType()
+export class FlightCheckInInfoType {
+  @Field(() => ID)
+  id: string;
+
+  @Field()
+  teeTime: Date;
+
+  @Field()
+  course: string;
+
+  @Field(() => Int)
+  startingHole: number;
+
+  @Field({ nullable: true })
+  cartNumber?: string;
+
+  @Field({ nullable: true })
+  caddyAssignment?: string;
+
+  @Field(() => [CheckInPlayerInfoType])
+  players: CheckInPlayerInfoType[];
+}
+
+// ============================================================================
+// SETTLEMENT RESULT
+// ============================================================================
+
+@ObjectType()
+export class PlayerSettlementResultType {
+  @Field(() => ID)
+  playerId: string;
+
+  @Field()
+  amountPaid: number;
+
+  @Field()
+  success: boolean;
+
+  @Field({ nullable: true })
+  error?: string;
+}
+
+@ObjectType()
+export class SettlementResultType {
+  @Field()
+  success: boolean;
+
+  @Field({ nullable: true })
+  transactionId?: string;
+
+  @Field()
+  settledAt: Date;
+
+  @Field()
+  settledBy: string;
+
+  @Field(() => [PlayerSettlementResultType])
+  players: PlayerSettlementResultType[];
+
+  @Field({ nullable: true })
+  error?: string;
+}
+
+// ============================================================================
+// CHECK-IN RESULT
+// ============================================================================
+
+@ObjectType()
+export class PlayerCheckInResultType {
+  @Field(() => ID)
+  playerId: string;
+
+  @Field()
+  checkedIn: boolean;
+
+  @Field({ nullable: true })
+  error?: string;
+}
+
+@ObjectType()
+export class CheckInResultType {
+  @Field()
+  success: boolean;
+
+  @Field()
+  checkedInAt: Date;
+
+  @Field()
+  checkedInBy: string;
+
+  @Field(() => [PlayerCheckInResultType])
+  players: PlayerCheckInResultType[];
+
+  @Field(() => ID, { nullable: true })
+  ticketId?: string;
+
+  @Field({ nullable: true })
+  ticketNumber?: string;
+}
+
+// ============================================================================
+// STARTER TICKET
+// ============================================================================
+
+@ObjectType()
+export class StarterTicketPlayerType {
+  @Field()
+  name: string;
+
+  @Field({ nullable: true })
+  memberNumber?: string;
+
+  @Field(() => CheckInPlayerType)
+  type: CheckInPlayerType;
+}
+
+@ObjectType()
+export class StarterTicketResponseType {
+  @Field(() => ID)
+  id: string;
+
+  @Field()
+  ticketNumber: string;
+
+  @Field()
+  teeTime: Date;
+
+  @Field()
+  course: string;
+
+  @Field(() => Int)
+  startingHole: number;
+
+  @Field(() => [StarterTicketPlayerType])
+  players: StarterTicketPlayerType[];
+
+  @Field({ nullable: true })
+  cartNumber?: string;
+
+  @Field({ nullable: true })
+  caddyName?: string;
+
+  @Field(() => [String])
+  rentalItems: string[];
+
+  @Field({ nullable: true })
+  specialRequests?: string;
+
+  @Field({ nullable: true })
+  qrCodeData?: string;
+
+  @Field()
+  generatedAt: Date;
+
+  @Field()
+  generatedBy: string;
+
+  @Field({ nullable: true })
+  printedAt?: Date;
+
+  @Field(() => Int)
+  reprintCount: number;
+}
+
+// ============================================================================
+// PRINT JOB TYPES
+// ============================================================================
+
+@ObjectType()
+export class PrintJobResultType {
+  @Field()
+  success: boolean;
+
+  @Field({ nullable: true })
+  jobId?: string;
+
+  @Field({ nullable: true })
+  error?: string;
+
+  @Field({ nullable: true })
+  printedAt?: Date;
+}
+
+@ObjectType()
+export class TicketValidationResultType {
+  @Field()
+  valid: boolean;
+
+  @Field(() => ID, { nullable: true })
+  ticketId?: string;
+
+  @Field(() => ID, { nullable: true })
+  teeTimeId?: string;
+
+  @Field({ nullable: true })
+  message?: string;
+}
+
+// ============================================================================
+// FLIGHT PAYMENT SUMMARY
+// ============================================================================
+
+@ObjectType()
+export class FlightPaymentSummaryType {
+  @Field(() => ID)
+  teeTimeId: string;
+
+  @Field()
+  teeTime: Date;
+
+  @Field()
+  course: string;
+
+  @Field(() => Int)
+  totalPlayers: number;
+
+  @Field(() => Int)
+  checkedInCount: number;
+
+  @Field(() => Int)
+  settledCount: number;
+
+  @Field()
+  totalDue: number;
+
+  @Field()
+  totalPaid: number;
+
+  @Field()
+  totalBalance: number;
+
+  @Field()
+  isFullyCheckedIn: boolean;
+
+  @Field()
+  isFullySettled: boolean;
+}
+
+// ============================================================================
+// CHECK-IN HISTORY / AUDIT TYPES
+// ============================================================================
+
+@ObjectType()
+export class CheckInAuditEntryType {
+  @Field(() => ID)
+  id: string;
+
+  @Field()
+  action: string;
+
+  @Field(() => ID)
+  teeTimeId: string;
+
+  @Field(() => ID, { nullable: true })
+  playerId?: string;
+
+  @Field({ nullable: true })
+  playerName?: string;
+
+  @Field()
+  performedBy: string;
+
+  @Field()
+  performedAt: Date;
+
+  @Field({ nullable: true })
+  details?: string;
+
+  @Field({ nullable: true })
+  amount?: number;
+}
+
+@ObjectType()
+export class DailyCheckInReportType {
+  @Field()
+  date: Date;
+
+  @Field()
+  course: string;
+
+  @Field(() => Int)
+  totalFlights: number;
+
+  @Field(() => Int)
+  totalPlayers: number;
+
+  @Field(() => Int)
+  checkedInPlayers: number;
+
+  @Field(() => Int)
+  noShowPlayers: number;
+
+  @Field()
+  totalRevenue: number;
+
+  @Field()
+  totalCash: number;
+
+  @Field()
+  totalCard: number;
+
+  @Field()
+  totalTransfer: number;
+
+  @Field()
+  totalAccount: number;
+
+  @Field(() => [FlightPaymentSummaryType])
+  flights: FlightPaymentSummaryType[];
+}
+
+// ============================================================================
+// PAYMENT TRANSACTION TYPES
+// ============================================================================
+
+export enum TransactionStatus {
+  COMPLETED = 'COMPLETED',
+  VOIDED = 'VOIDED',
+  REFUNDED = 'REFUNDED',
+  PENDING = 'PENDING',
+}
+
+registerEnumType(TransactionStatus, {
+  name: 'TransactionStatus',
+  description: 'Payment transaction status',
+});
+
+@ObjectType()
+export class LineItemPaymentType {
+  @Field(() => ID)
+  id: string;
+
+  @Field(() => ID)
+  lineItemId: string;
+
+  @Field()
+  amount: number;
+
+  @Field({ nullable: true })
+  description?: string;
+}
+
+@ObjectType()
+export class PaymentTransactionType {
+  @Field(() => ID)
+  id: string;
+
+  @Field()
+  transactionNumber: string;
+
+  @Field(() => ID)
+  clubId: string;
+
+  @Field(() => ID, { nullable: true })
+  teeTimeId?: string;
+
+  @Field()
+  amount: number;
+
+  @Field(() => ID)
+  paymentMethodId: string;
+
+  @Field({ nullable: true })
+  paymentMethodName?: string;
+
+  @Field(() => TransactionStatus)
+  status: TransactionStatus;
+
+  @Field({ nullable: true })
+  reference?: string;
+
+  @Field()
+  paidAt: Date;
+
+  @Field()
+  paidBy: string;
+
+  @Field({ nullable: true })
+  voidedAt?: Date;
+
+  @Field({ nullable: true })
+  voidedBy?: string;
+
+  @Field({ nullable: true })
+  voidReason?: string;
+
+  @Field({ nullable: true })
+  refundedAt?: Date;
+
+  @Field({ nullable: true })
+  refundedBy?: string;
+
+  @Field({ nullable: true })
+  refundAmount?: number;
+
+  @Field({ nullable: true })
+  refundReason?: string;
+
+  @Field()
+  allocatedToRevenue: boolean;
+
+  @Field({ nullable: true })
+  allocatedAt?: Date;
+
+  @Field(() => [LineItemPaymentType], { nullable: true })
+  lineItemPayments?: LineItemPaymentType[];
+
+  @Field()
+  createdAt: Date;
+
+  @Field()
+  updatedAt: Date;
+}
+
+// ============================================================================
+// SHOPPING CART TYPES (US-CART)
+// ============================================================================
+
+@ObjectType()
+export class TransferredItemType {
+  @Field(() => ID)
+  lineItemId: string;
+
+  @Field()
+  description: string;
+
+  @Field()
+  amount: number;
+
+  @Field(() => ID)
+  fromPlayerId: string;
+
+  @Field()
+  fromPlayerName: string;
+
+  @Field(() => ID, { nullable: true })
+  toPlayerId?: string;
+
+  @Field({ nullable: true })
+  toPlayerName?: string;
+}
+
+@ObjectType()
+export class SlotLineItemType {
+  @Field(() => ID)
+  id: string;
+
+  @Field()
+  type: string;
+
+  @Field()
+  description: string;
+
+  @Field()
+  baseAmount: number;
+
+  @Field()
+  taxType: string;
+
+  @Field()
+  taxRate: number;
+
+  @Field()
+  taxAmount: number;
+
+  @Field()
+  totalAmount: number;
+
+  @Field(() => Int)
+  quantity: number;
+
+  @Field()
+  isPaid: boolean;
+
+  @Field({ nullable: true })
+  paidAt?: Date;
+
+  @Field({ nullable: true })
+  paymentMethod?: string;
+
+  @Field()
+  isTransferred: boolean;
+
+  @Field({ nullable: true })
+  transferredFromPlayerName?: string;
+}
+
+@ObjectType()
+export class SlotCartType {
+  @Field(() => ID)
+  playerId: string;
+
+  @Field()
+  playerName: string;
+
+  @Field()
+  playerType: string;
+
+  @Field(() => ID, { nullable: true })
+  memberId?: string;
+
+  @Field({ nullable: true })
+  memberNumber?: string;
+
+  @Field(() => [SlotLineItemType])
+  lineItems: SlotLineItemType[];
+
+  @Field(() => [TransferredItemType])
+  transferredInItems: TransferredItemType[];
+
+  @Field(() => [TransferredItemType])
+  transferredOutItems: TransferredItemType[];
+
+  @Field()
+  subtotal: number;
+
+  @Field()
+  taxTotal: number;
+
+  @Field()
+  grandTotal: number;
+
+  @Field()
+  paidAmount: number;
+
+  @Field()
+  balanceDue: number;
+
+  @Field()
+  isCheckedIn: boolean;
+
+  @Field({ nullable: true })
+  checkedInAt?: Date;
+
+  @Field()
+  isSettled: boolean;
+}
+
+@ObjectType()
+export class BatchTotalType {
+  @Field(() => [ID])
+  playerIds: string[];
+
+  @Field()
+  subtotal: number;
+
+  @Field()
+  taxTotal: number;
+
+  @Field()
+  grandTotal: number;
+
+  @Field()
+  paidAmount: number;
+
+  @Field()
+  balanceDue: number;
+
+  @Field(() => Int)
+  lineItemCount: number;
+}
+
+@ObjectType()
+export class TransferResultType {
+  @Field()
+  success: boolean;
+
+  @Field({ nullable: true })
+  error?: string;
+
+  @Field(() => ID, { nullable: true })
+  lineItemId?: string;
+
+  @Field({ nullable: true })
+  isTransferred?: boolean;
+
+  @Field(() => ID, { nullable: true })
+  transferredToPlayerId?: string;
+}
+
+@ObjectType()
+export class CartDraftType {
+  @Field(() => ID)
+  id: string;
+
+  @Field(() => ID)
+  teeTimeId: string;
+
+  @Field(() => String, { description: 'JSON stringified draft data' })
+  draftData: string;
+
+  @Field()
+  updatedAt: Date;
+
+  @Field()
+  createdBy: string;
+}
+
+@ObjectType()
+export class BatchPaymentResultType {
+  @Field()
+  success: boolean;
+
+  @Field({ nullable: true })
+  transactionId?: string;
+
+  @Field({ nullable: true })
+  error?: string;
+
+  @Field(() => [SlotPaymentResultType], { nullable: true })
+  processedSlots?: SlotPaymentResultType[];
+}
+
+@ObjectType()
+export class SlotPaymentResultType {
+  @Field(() => ID)
+  playerId: string;
+
+  @Field()
+  amountPaid: number;
+
+  @Field()
+  newBalance: number;
+
+  @Field()
+  isSettled: boolean;
+}
+
+@ObjectType()
+export class CheckInSlotsResultType {
+  @Field()
+  success: boolean;
+
+  @Field({ nullable: true })
+  error?: string;
+
+  @Field(() => [SlotCheckInResultType], { nullable: true })
+  checkedInSlots?: SlotCheckInResultType[];
+
+  @Field(() => ID, { nullable: true })
+  ticketId?: string;
+
+  @Field({ nullable: true })
+  ticketNumber?: string;
+}
+
+@ObjectType()
+export class SlotCheckInResultType {
+  @Field(() => ID)
+  playerId: string;
+
+  @Field({ nullable: true })
+  checkedInAt?: Date;
+
+  @Field({ nullable: true })
+  error?: string;
+}
+
+// Wrapper type for teeTimeCarts query with context info
+@ObjectType()
+export class TeeTimeCartsType {
+  @Field(() => ID)
+  teeTimeId: string;
+
+  @Field()
+  teeTime: string;
+
+  @Field()
+  courseName: string;
+
+  @Field(() => ID)
+  courseId: string;
+
+  @Field()
+  date: Date;
+
+  @Field(() => [SlotCartType])
+  slots: SlotCartType[];
+
+  @Field()
+  isFullySettled: boolean;
+
+  @Field()
+  isFullyCheckedIn: boolean;
+}
