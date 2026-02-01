@@ -65,6 +65,7 @@ model Club {
   teeTimes               TeeTime[]
   users                  User[]
   waitlistEntries        WaitlistEntry[]
+  discounts              Discount[]
 
   @@index([slug])
   @@index([isActive])
@@ -1335,6 +1336,7 @@ model BookingLineItem {
   transactionItems         TransactionLineItem[]
   transferredFromPlayer    TeeTimePlayer?        @relation("TransferredFromPlayer", fields: [transferredFromPlayerId], references: [id])
   transferredToPlayer      TeeTimePlayer?        @relation("TransferredToPlayer", fields: [transferredToPlayerId], references: [id])
+  appliedDiscounts         AppliedDiscount[]
 
   @@index([teeTimePlayerId])
   @@index([teeTimePlayerId, isPaid])
@@ -1420,6 +1422,7 @@ model PaymentTransaction {
   paidByMember       Member?               @relation(fields: [paidByMemberId], references: [id])
   teeTime            TeeTime?              @relation(fields: [teeTimeId], references: [id])
   lineItemPayments   TransactionLineItem[]
+  appliedDiscounts   AppliedDiscount[]
 
   @@index([teeTimeId])
   @@index([clubId, paidAt])
@@ -1707,6 +1710,72 @@ model TaxOverride {
   @@map("tax_overrides")
 }
 
+/// Discount configuration for club
+model Discount {
+  id                    String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId                String            @db.Uuid
+  name                  String            @db.VarChar(100)
+  code                  String?           @db.VarChar(50)
+  type                  DiscountType
+  value                 Decimal           @db.Decimal(10, 2)
+  scope                 DiscountScope
+
+  // Conditions
+  minimumAmount         Decimal?          @db.Decimal(10, 2)
+  maximumDiscount       Decimal?          @db.Decimal(10, 2)
+  membershipTypeIds     String[]          @default([])
+  playerTypes           PlayerType[]      @default([])
+
+  // Validity
+  validFrom             DateTime?
+  validTo               DateTime?
+  usageLimit            Int?
+  usageCount            Int               @default(0)
+
+  // Approval
+  requiresApproval      Boolean           @default(false)
+  approvalThreshold     Decimal?          @db.Decimal(10, 2)
+
+  isActive              Boolean           @default(true)
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
+  club                  Club              @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  appliedDiscounts      AppliedDiscount[]
+
+  @@unique([clubId, code])
+  @@index([clubId])
+  @@index([clubId, isActive])
+  @@map("discounts")
+}
+
+/// Applied discount record - tracks when discounts are used
+model AppliedDiscount {
+  id                    String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  discountId            String              @db.Uuid
+  lineItemId            String?             @db.Uuid
+  transactionId         String?             @db.Uuid
+
+  discountType          DiscountType
+  discountValue         Decimal             @db.Decimal(10, 2)
+  calculatedAmount      Decimal             @db.Decimal(10, 2)
+
+  appliedBy             String              @db.Uuid
+  approvedBy            String?             @db.Uuid
+  approvalNote          String?             @db.VarChar(500)
+
+  createdAt             DateTime            @default(now())
+
+  discount              Discount            @relation(fields: [discountId], references: [id])
+  lineItem              BookingLineItem?    @relation(fields: [lineItemId], references: [id])
+  transaction           PaymentTransaction? @relation(fields: [transactionId], references: [id])
+
+  @@index([discountId])
+  @@index([lineItemId])
+  @@index([transactionId])
+  @@map("applied_discounts")
+}
+
 enum MemberStatus {
   PROSPECT
   LEAD
@@ -1971,4 +2040,16 @@ enum TicketGenerateOn {
   CHECK_IN
   SETTLEMENT
   MANUAL
+}
+
+/// Discount type - percentage or fixed amount
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+/// Discount scope - applies to line item or entire order
+enum DiscountScope {
+  LINE_ITEM
+  ORDER
 }
