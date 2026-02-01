@@ -66,6 +66,7 @@ model Club {
   users                  User[]
   waitlistEntries        WaitlistEntry[]
   discounts              Discount[]
+  cashDrawers            CashDrawer[]
 
   @@index([slug])
   @@index([isActive])
@@ -2081,4 +2082,115 @@ enum DiscountType {
 enum DiscountScope {
   LINE_ITEM
   ORDER
+}
+
+// ─────────────────────────────────────────────────────────────
+// CASH DRAWER SYSTEM
+// ─────────────────────────────────────────────────────────────
+
+/// Cash drawer status
+enum CashDrawerStatus {
+  OPEN
+  CLOSED
+  SUSPENDED
+}
+
+/// Cash movement type
+enum CashMovementType {
+  OPENING_FLOAT
+  CASH_SALE
+  CASH_REFUND
+  PAID_IN
+  PAID_OUT
+  DROP
+  ADJUSTMENT
+  CLOSING_COUNT
+}
+
+/// Physical cash drawer location
+model CashDrawer {
+  id            String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId        String            @db.Uuid
+  name          String            @db.VarChar(100)
+  location      String?           @db.VarChar(200)
+  isActive      Boolean           @default(true)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  club          Club              @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  shifts        CashDrawerShift[]
+
+  @@index([clubId])
+  @@index([clubId, isActive])
+  @@map("cash_drawers")
+}
+
+/// Cash drawer shift (open/close session)
+model CashDrawerShift {
+  id                String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  cashDrawerId      String            @db.Uuid
+  status            CashDrawerStatus  @default(OPEN)
+
+  // Opening
+  openedBy          String            @db.Uuid
+  openedAt          DateTime          @default(now())
+  openingFloat      Decimal           @db.Decimal(12, 2)
+  openingDenominations Json?          // { "1000": 5, "500": 10, ... }
+
+  // Closing
+  closedBy          String?           @db.Uuid
+  closedAt          DateTime?
+  closingCount      Decimal?          @db.Decimal(12, 2)
+  closingDenominations Json?          // { "1000": 5, "500": 10, ... }
+
+  // Calculated totals
+  expectedCash      Decimal?          @db.Decimal(12, 2)
+  actualCash        Decimal?          @db.Decimal(12, 2)
+  variance          Decimal?          @db.Decimal(12, 2)
+  varianceNote      String?           @db.VarChar(500)
+
+  // Summary
+  totalSales        Decimal           @default(0) @db.Decimal(12, 2)
+  totalRefunds      Decimal           @default(0) @db.Decimal(12, 2)
+  totalPaidIn       Decimal           @default(0) @db.Decimal(12, 2)
+  totalPaidOut      Decimal           @default(0) @db.Decimal(12, 2)
+  totalDrops        Decimal           @default(0) @db.Decimal(12, 2)
+
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  cashDrawer        CashDrawer        @relation(fields: [cashDrawerId], references: [id], onDelete: Cascade)
+  movements         CashMovement[]
+
+  @@index([cashDrawerId])
+  @@index([cashDrawerId, status])
+  @@index([openedAt])
+  @@map("cash_drawer_shifts")
+}
+
+/// Individual cash movement within a shift
+model CashMovement {
+  id              String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  shiftId         String            @db.Uuid
+  type            CashMovementType
+  amount          Decimal           @db.Decimal(12, 2)
+  description     String?           @db.VarChar(500)
+  reference       String?           @db.VarChar(100)
+
+  // For PAID_IN/PAID_OUT
+  reason          String?           @db.VarChar(200)
+  approvedBy      String?           @db.Uuid
+
+  // For CASH_SALE/CASH_REFUND
+  transactionId   String?           @db.Uuid
+
+  performedBy     String            @db.Uuid
+  performedAt     DateTime          @default(now())
+
+  shift           CashDrawerShift   @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+
+  @@index([shiftId])
+  @@index([shiftId, type])
+  @@index([performedAt])
+  @@map("cash_movements")
 }
