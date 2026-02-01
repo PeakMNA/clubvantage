@@ -47,11 +47,11 @@ export class POSConfigService {
   }
 
   /**
-   * Get a single template by ID
+   * Get a single template by ID with tenant isolation
    */
-  async getTemplate(id: string) {
-    const template = await this.prisma.pOSTemplate.findUnique({
-      where: { id },
+  async getTemplate(id: string, clubId: string) {
+    const template = await this.prisma.pOSTemplate.findFirst({
+      where: { id, clubId },
       include: {
         outlets: true,
       },
@@ -118,11 +118,11 @@ export class POSConfigService {
   }
 
   /**
-   * Clone a template with a new name
+   * Clone a template with a new name with tenant isolation
    */
-  async cloneTemplate(id: string, newName: string) {
-    const original = await this.prisma.pOSTemplate.findUnique({
-      where: { id },
+  async cloneTemplate(id: string, newName: string, clubId: string) {
+    const original = await this.prisma.pOSTemplate.findFirst({
+      where: { id, clubId },
     });
 
     if (!original) {
@@ -132,7 +132,7 @@ export class POSConfigService {
     // Check for duplicate name
     const existing = await this.prisma.pOSTemplate.findFirst({
       where: {
-        clubId: original.clubId,
+        clubId,
         name: newName,
       },
     });
@@ -143,7 +143,7 @@ export class POSConfigService {
 
     return this.prisma.pOSTemplate.create({
       data: {
-        clubId: original.clubId,
+        clubId,
         name: newName,
         description: original.description,
         outletType: original.outletType,
@@ -173,11 +173,11 @@ export class POSConfigService {
   }
 
   /**
-   * Get a single outlet by ID
+   * Get a single outlet by ID with tenant isolation
    */
-  async getOutlet(id: string) {
-    const outlet = await this.prisma.pOSOutlet.findUnique({
-      where: { id },
+  async getOutlet(id: string, clubId: string) {
+    const outlet = await this.prisma.pOSOutlet.findFirst({
+      where: { id, clubId },
       include: {
         template: true,
         roleConfigs: true,
@@ -192,28 +192,23 @@ export class POSConfigService {
   }
 
   /**
-   * Assign a template to an outlet
+   * Assign a template to an outlet with tenant isolation
    */
-  async assignTemplate(outletId: string, templateId: string) {
-    const outlet = await this.prisma.pOSOutlet.findUnique({
-      where: { id: outletId },
+  async assignTemplate(outletId: string, templateId: string, clubId: string) {
+    const outlet = await this.prisma.pOSOutlet.findFirst({
+      where: { id: outletId, clubId },
     });
 
     if (!outlet) {
       throw new NotFoundException('POS Outlet not found');
     }
 
-    const template = await this.prisma.pOSTemplate.findUnique({
-      where: { id: templateId },
+    const template = await this.prisma.pOSTemplate.findFirst({
+      where: { id: templateId, clubId },
     });
 
     if (!template) {
       throw new NotFoundException('POS Template not found');
-    }
-
-    // Verify template and outlet are in the same club
-    if (outlet.clubId !== template.clubId) {
-      throw new BadRequestException('Template and outlet must belong to the same club');
     }
 
     return this.prisma.pOSOutlet.update({
@@ -231,11 +226,11 @@ export class POSConfigService {
   // ============================================================================
 
   /**
-   * Set role overrides for an outlet
+   * Set role overrides for an outlet with tenant isolation
    */
-  async setRoleOverrides(outletId: string, input: POSRoleOverridesInput) {
-    const outlet = await this.prisma.pOSOutlet.findUnique({
-      where: { id: outletId },
+  async setRoleOverrides(outletId: string, input: POSRoleOverridesInput, clubId: string) {
+    const outlet = await this.prisma.pOSOutlet.findFirst({
+      where: { id: outletId, clubId },
     });
 
     if (!outlet) {
@@ -323,16 +318,17 @@ export class POSConfigService {
   // ============================================================================
 
   /**
-   * Get resolved configuration for an outlet and user role
+   * Get resolved configuration for an outlet and user role with tenant isolation
    * Merges template config + outlet overrides + role overrides
    */
   async getResolvedConfig(
     outletId: string,
     userRole: string,
+    clubId: string,
     userPermissions: string[] = [],
   ): Promise<ResolvedConfig> {
-    const outlet = await this.prisma.pOSOutlet.findUnique({
-      where: { id: outletId },
+    const outlet = await this.prisma.pOSOutlet.findFirst({
+      where: { id: outletId, clubId },
       include: {
         template: true,
         roleConfigs: {

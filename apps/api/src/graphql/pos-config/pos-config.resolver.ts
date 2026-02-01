@@ -52,9 +52,10 @@ export class POSConfigResolver {
     nullable: true,
   })
   async getPOSTemplate(
+    @GqlCurrentUser() user: JwtPayload,
     @Args('id', { type: () => ID }) id: string,
   ): Promise<POSTemplateGraphQLType | null> {
-    const template = await this.posConfigService.getTemplate(id);
+    const template = await this.posConfigService.getTemplate(id, user.tenantId);
     return template ? this.mapTemplateToGraphQL(template) : null;
   }
 
@@ -79,9 +80,10 @@ export class POSConfigResolver {
     nullable: true,
   })
   async getPOSOutlet(
+    @GqlCurrentUser() user: JwtPayload,
     @Args('id', { type: () => ID }) id: string,
   ): Promise<POSOutletGraphQLType | null> {
-    const outlet = await this.posConfigService.getOutlet(id);
+    const outlet = await this.posConfigService.getOutlet(id, user.tenantId);
     return outlet ? this.mapOutletToGraphQL(outlet) : null;
   }
 
@@ -108,6 +110,7 @@ export class POSConfigResolver {
     description: 'Get resolved POS configuration for an outlet and user role',
   })
   async getPOSConfig(
+    @GqlCurrentUser() user: JwtPayload,
     @Args('outletId', { type: () => ID }) outletId: string,
     @Args('userRole') userRole: string,
     @Args('userPermissions', { type: () => [String], nullable: true })
@@ -116,6 +119,7 @@ export class POSConfigResolver {
     const config = await this.posConfigService.getResolvedConfig(
       outletId,
       userRole,
+      user.tenantId,
       userPermissions || [],
     );
 
@@ -165,11 +169,12 @@ export class POSConfigResolver {
     description: 'Clone a POS template with a new name',
   })
   async clonePOSTemplate(
+    @GqlCurrentUser() user: JwtPayload,
     @Args('id', { type: () => ID }) id: string,
     @Args('newName') newName: string,
   ): Promise<CloneTemplateMutationResponse> {
     try {
-      const template = await this.posConfigService.cloneTemplate(id, newName);
+      const template = await this.posConfigService.cloneTemplate(id, newName, user.tenantId);
       return {
         success: true,
         message: 'Template cloned successfully',
@@ -192,12 +197,14 @@ export class POSConfigResolver {
     description: 'Assign a template to an outlet',
   })
   async assignPOSTemplate(
+    @GqlCurrentUser() user: JwtPayload,
     @Args('input') input: AssignTemplateInput,
   ): Promise<AssignTemplateMutationResponse> {
     try {
       const outlet = await this.posConfigService.assignTemplate(
         input.outletId,
         input.templateId,
+        user.tenantId,
       );
       return {
         success: true,
@@ -221,11 +228,12 @@ export class POSConfigResolver {
     description: 'Set role-specific button overrides for an outlet',
   })
   async setPOSRoleOverrides(
+    @GqlCurrentUser() user: JwtPayload,
     @Args('outletId', { type: () => ID }) outletId: string,
     @Args('input') input: POSRoleOverridesInput,
   ): Promise<SetRoleOverridesMutationResponse> {
     try {
-      const roleConfig = await this.posConfigService.setRoleOverrides(outletId, input);
+      const roleConfig = await this.posConfigService.setRoleOverrides(outletId, input, user.tenantId);
       return {
         success: true,
         message: 'Role overrides set successfully',
