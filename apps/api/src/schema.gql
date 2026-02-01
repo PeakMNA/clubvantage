@@ -17,6 +17,29 @@ input AddGroupPlayersInput {
   players: [GroupPlayerInput!]!
 }
 
+input AddLineItemInput {
+  baseAmount: Float!
+  description: String!
+  playerId: ID!
+  productId: ID
+  taxRate: Float
+  taxType: TaxType
+  type: LineItemType!
+  variantId: ID
+}
+
+input AddStoredPaymentInput {
+  brand: String!
+  cardholderName: String
+  expiryMonth: Int
+  expiryYear: Int
+  isDefault: Boolean = false
+  last4: String!
+  memberId: String!
+  stripeCustomerId: String
+  stripePaymentMethodId: String!
+}
+
 """Days to which a configuration applies"""
 enum ApplicableDays {
   ALL
@@ -70,6 +93,181 @@ enum ApplicationStatus {
   WITHDRAWN
 }
 
+type AppliedDiscountType {
+  appliedBy: String!
+  approvalNote: String
+  approvedBy: String
+  calculatedAmount: String!
+  createdAt: DateTime!
+  discount: DiscountGraphQLType
+  discountId: String!
+  discountType: DiscountType!
+  discountValue: String!
+  id: ID!
+  lineItemId: String
+  transactionId: String
+}
+
+input ApplyDiscountByCodeInput {
+  code: String!
+  lineItemId: ID
+  membershipTypeId: ID
+  originalAmount: Float!
+  playerType: String
+  transactionId: ID
+}
+
+input ApplyDiscountInput {
+  discountId: ID!
+  lineItemId: ID
+  originalAmount: Float!
+  transactionId: ID
+}
+
+type ApplyDiscountResultType {
+  appliedDiscount: AppliedDiscountType
+  discountedAmount: String
+  message: String
+  originalAmount: String
+  requiresApproval: Boolean
+  savings: String
+  success: Boolean!
+}
+
+input ApproveDiscountInput {
+  appliedDiscountId: ID!
+  approvalNote: String
+}
+
+input AssignTemplateInput {
+  outletId: ID!
+  templateId: ID!
+}
+
+type AssignTemplateMutationResponse {
+  message: String
+  outlet: POSOutletGraphQLType
+  success: Boolean!
+}
+
+type AutoPayAttempt {
+  amount: Float!
+  attemptNumber: Int!
+  clubId: String!
+  createdAt: DateTime!
+  failedAt: DateTime
+  failureCode: String
+  failureMessage: String
+  id: ID!
+  invoiceId: String
+  isManualRetry: Boolean!
+  memberId: String!
+  nextRetryAt: DateTime
+  paymentMethod: StoredPaymentMethod
+  paymentMethodId: String!
+  paymentTransactionId: String
+  processedAt: DateTime
+  status: AutoPayAttemptStatus!
+  stripeChargeId: String
+  stripePaymentIntentId: String
+  succeededAt: DateTime
+  updatedAt: DateTime!
+}
+
+"""Status of auto-pay attempt"""
+enum AutoPayAttemptStatus {
+  CANCELLED
+  FAILED
+  PENDING
+  PROCESSING
+  SUCCEEDED
+}
+
+type AutoPayResult {
+  attemptId: String
+  error: String
+  message: String
+  stripePaymentIntentId: String
+  success: Boolean!
+}
+
+"""Auto-pay schedule type"""
+enum AutoPaySchedule {
+  INVOICE_DUE
+  MONTHLY_FIXED
+  STATEMENT_DATE
+}
+
+type AutoPaySetting {
+  clubId: String!
+  createdAt: DateTime!
+  excludeCategories: [String!]!
+  id: ID!
+  isEnabled: Boolean!
+  maxPaymentAmount: Float
+  maxRetryAttempts: Int!
+  memberId: String!
+  monthlyMaxAmount: Float
+  notifyBeforePayment: Boolean!
+  notifyDaysBefore: Int!
+  notifyOnFailure: Boolean!
+  notifyOnSuccess: Boolean!
+  payDuesOnly: Boolean!
+  paymentDayOfMonth: Int
+  paymentMethod: StoredPaymentMethod
+  paymentMethodId: String!
+  requireApprovalAbove: Float
+  retryIntervalDays: Int!
+  schedule: AutoPaySchedule!
+  updatedAt: DateTime!
+}
+
+input AutoPaySettingInput {
+  excludeCategories: [String!]
+  isEnabled: Boolean = true
+  maxPaymentAmount: Float
+  maxRetryAttempts: Int = 3
+  memberId: String!
+  monthlyMaxAmount: Float
+  notifyBeforePayment: Boolean = true
+  notifyDaysBefore: Int = 3
+  notifyOnFailure: Boolean = true
+  notifyOnSuccess: Boolean = true
+  payDuesOnly: Boolean = false
+  paymentDayOfMonth: Int
+  paymentMethodId: ID!
+  requireApprovalAbove: Float
+  retryIntervalDays: Int = 3
+  schedule: AutoPaySchedule
+}
+
+input BatchPaymentInput {
+  """For member account charges"""
+  chargeToMemberId: ID
+  lineItemIds: [ID!]
+  paymentMethodId: ID!
+  playerIds: [ID!]!
+  reference: String
+  teeTimeId: ID!
+}
+
+type BatchPaymentResultType {
+  error: String
+  processedSlots: [SlotPaymentResultType!]
+  success: Boolean!
+  transactionId: String
+}
+
+type BatchTotalType {
+  balanceDue: Float!
+  grandTotal: Float!
+  lineItemCount: Int!
+  paidAmount: Float!
+  playerIds: [ID!]!
+  subtotal: Float!
+  taxTotal: Float!
+}
+
 type BillingStatsType {
   invoiceCount: Float!
   outstandingBalance: String!
@@ -116,6 +314,23 @@ type BookingGroupType {
   groupNumber: Int!
   id: ID!
   playerIds: [String!]!
+}
+
+type BookingLineItemType {
+  baseAmount: Float!
+  description: String!
+  id: ID!
+  isPaid: Boolean!
+  paidAt: DateTime
+  paymentMethod: String
+  productId: ID
+  reference: String
+  taxAmount: Float!
+  taxRate: Float!
+  taxType: TaxType!
+  totalAmount: Float!
+  type: LineItemType!
+  variantId: ID
 }
 
 type BookingMemberType {
@@ -192,12 +407,56 @@ enum BookingTypeEnum {
   SERVICE
 }
 
+input BulkRemoveLineItemsInput {
+  lineItemIds: [ID!]!
+}
+
+type BulkRemoveResultType {
+  error: String
+  removedCount: Int!
+  removedItems: [SlotLineItemType!]!
+  success: Boolean!
+}
+
+input BulkTransferLineItemsInput {
+  lineItemIds: [ID!]!
+  toPlayerId: ID!
+}
+
+type BulkTransferResultType {
+  error: String
+  success: Boolean!
+  transferredCount: Int!
+}
+
+input BulkUpdateProShopProductInput {
+  categoryId: ID
+  isActive: Boolean
+  isQuickAdd: Boolean
+}
+
 input CSVPlayerRow {
   email: String
   handicap: Int
   memberId: String
   name: String!
   phone: String
+}
+
+type CaddyRateMutationResponse {
+  caddyRate: CaddyRateType
+  message: String
+  success: Boolean!
+}
+
+type CaddyRateType {
+  amount: Float!
+  caddyType: String!
+  createdAt: DateTime!
+  id: ID!
+  taxRate: Float!
+  taxType: String!
+  updatedAt: DateTime!
 }
 
 type CaddyType {
@@ -251,10 +510,36 @@ type CancelResponseType {
   message: String!
 }
 
+type CartDraftType {
+  createdBy: String!
+
+  """JSON stringified draft data"""
+  draftData: String!
+  id: ID!
+  teeTimeId: ID!
+  updatedAt: DateTime!
+}
+
 """Cart policy for golf bookings"""
 enum CartPolicy {
   OPTIONAL
   REQUIRED
+}
+
+type CartRateMutationResponse {
+  cartRate: CartRateType
+  message: String
+  success: Boolean!
+}
+
+type CartRateType {
+  amount: Float!
+  cartType: String!
+  createdAt: DateTime!
+  id: ID!
+  taxRate: Float!
+  taxType: String!
+  updatedAt: DateTime!
 }
 
 """Golf cart type"""
@@ -264,15 +549,98 @@ enum CartType {
   WALKING
 }
 
+type CashDrawerGraphQLType {
+  clubId: ID!
+  createdAt: DateTime!
+  currentShift: CashDrawerShiftGraphQLType
+  id: ID!
+  isActive: Boolean!
+  location: String
+  name: String!
+  updatedAt: DateTime!
+}
+
+type CashDrawerShiftGraphQLType {
+  actualCash: Float
+  cashDrawerId: ID!
+  closedAt: DateTime
+  closedBy: ID
+  closingCount: Float
+
+  """JSON string of denomination counts"""
+  closingDenominations: String
+  createdAt: DateTime!
+  expectedCash: Float
+  id: ID!
+  movements: [CashMovementGraphQLType!]
+  openedAt: DateTime!
+  openedBy: ID!
+
+  """JSON string of denomination counts"""
+  openingDenominations: String
+  openingFloat: Float!
+  status: CashDrawerStatus!
+  totalDrops: Float!
+  totalPaidIn: Float!
+  totalPaidOut: Float!
+  totalRefunds: Float!
+  totalSales: Float!
+  variance: Float
+  varianceNote: String
+}
+
+"""Status of a cash drawer shift"""
+enum CashDrawerStatus {
+  CLOSED
+  OPEN
+  SUSPENDED
+}
+
+type CashMovementGraphQLType {
+  amount: Float!
+  approvedBy: ID
+  description: String
+  id: ID!
+  performedAt: DateTime!
+  performedBy: ID!
+  reason: String
+  reference: String
+  shiftId: ID!
+  transactionId: ID
+  type: CashMovementType!
+}
+
+"""Type of cash movement"""
+enum CashMovementType {
+  ADJUSTMENT
+  CASH_REFUND
+  CASH_SALE
+  CLOSING_COUNT
+  DROP
+  OPENING_FLOAT
+  PAID_IN
+  PAID_OUT
+}
+
 input ChangeApplicationStatusInput {
   rejectionReason: String
   reviewNotes: String
   status: ApplicationStatus!
 }
 
+input ChangePinInput {
+  newPin: String!
+  subAccountId: String!
+}
+
 input ChangeStatusInput {
   reason: String
   status: MemberStatus!
+}
+
+input ChangeSubAccountStatusInput {
+  status: SubAccountStatus!
+  subAccountId: String!
 }
 
 type ChargeTypeType {
@@ -282,9 +650,104 @@ type ChargeTypeType {
   name: String!
 }
 
+input CheckCreditInput {
+  chargeAmount: Float!
+  memberId: ID!
+}
+
+input CheckInAllPlayersInput {
+  cartNumber: String
+  notes: String
+  skipPaymentValidation: Boolean = false
+  teeTimeId: ID!
+}
+
+type CheckInAuditEntryType {
+  action: String!
+  amount: Float
+  details: String
+  id: ID!
+  performedAt: DateTime!
+  performedBy: String!
+  playerId: ID
+  playerName: String
+  teeTimeId: ID!
+}
+
+input CheckInFlightInput {
+  cartNumber: String
+  generateTicket: Boolean = true
+  notes: String
+  players: [CheckInPlayerInput!]!
+  teeTimeId: ID!
+}
+
+input CheckInHistoryFilterInput {
+  action: String
+  endDate: DateTime
+  limit: Float = 50
+  playerId: ID
+  startDate: DateTime
+  teeTimeId: ID
+}
+
 input CheckInInput {
   bookingId: ID!
   outletId: ID
+}
+
+type CheckInPaymentMethodType {
+  icon: String!
+  id: ID!
+  isEnabled: Boolean!
+  name: String!
+  opensPOS: Boolean!
+  requiresRef: Boolean!
+  sortOrder: Int!
+  type: PaymentMethodTypeEnum!
+}
+
+type CheckInPlayerInfoType {
+  balanceDue: Float!
+  checkedInAt: DateTime
+  id: ID!
+  isCheckedIn: Boolean!
+  isSuspended: Boolean!
+  lineItems: [BookingLineItemType!]!
+  memberNumber: String
+  name: String!
+  paymentStatus: PaymentStatus!
+  suspensionReason: String
+  totalDue: Float!
+  totalPaid: Float!
+  type: CheckInPlayerType!
+}
+
+input CheckInPlayerInput {
+  playerId: ID!
+  skipPaymentValidation: Boolean = false
+}
+
+"""Player type for check-in (more granular than PlayerType)"""
+enum CheckInPlayerType {
+  DEPENDENT
+  GUEST
+  MEMBER
+  WALKUP
+}
+
+input CheckInPolicyInput {
+  allowPartialPayment: Boolean
+  blockSuspendedMembers: Boolean
+  requireAllItemsPaid: Boolean
+  showSuspensionReason: Boolean
+}
+
+type CheckInPolicyType {
+  allowPartialPayment: Boolean!
+  blockSuspendedMembers: Boolean!
+  requireAllItemsPaid: Boolean!
+  showSuspensionReason: Boolean!
 }
 
 type CheckInResponseType {
@@ -292,6 +755,68 @@ type CheckInResponseType {
   checkedInAt: DateTime!
   error: String
   success: Boolean!
+}
+
+type CheckInResultType {
+  checkedInAt: DateTime!
+  checkedInBy: String!
+  players: [PlayerCheckInResultType!]!
+  success: Boolean!
+  ticketId: ID
+  ticketNumber: String
+}
+
+type CheckInSettingsType {
+  paymentMethods: [CheckInPaymentMethodType!]!
+  policy: CheckInPolicyType!
+  pos: POSConfigType!
+  proShop: ProShopConfigType!
+  starterTicket: StarterTicketConfigType!
+  tax: TaxConfigType!
+}
+
+input CheckInSlotsInput {
+  notes: String
+  playerIds: [ID!]!
+  teeTimeId: ID!
+}
+
+type CheckInSlotsResultType {
+  checkedInSlots: [SlotCheckInResultType!]
+  error: String
+  success: Boolean!
+  ticketId: ID
+  ticketNumber: String
+}
+
+input CheckLimitInput {
+  amount: Float!
+  category: SubAccountPermission!
+  subAccountId: String!
+}
+
+type CloneTemplateMutationResponse {
+  message: String
+  success: Boolean!
+  template: POSTemplateGraphQLType
+}
+
+input ClosePeriodInput {
+  periodEnd: DateTime!
+}
+
+input CloseSettlementInput {
+  notes: String
+  settlementId: ID!
+}
+
+input CloseShiftInput {
+  closingCount: Float!
+
+  """JSON string of denomination counts"""
+  denominations: String
+  shiftId: ID!
+  varianceNote: String
 }
 
 type ClubGolfSettingsType {
@@ -351,6 +876,34 @@ type CreateBookingResponseType {
   success: Boolean!
 }
 
+input CreateCaddyRateInput {
+  amount: Float!
+  caddyType: String!
+  rateConfigId: ID!
+  taxRate: Float! = 0
+  taxType: String! = "NONE"
+}
+
+input CreateCartRateInput {
+  amount: Float!
+  cartType: String!
+  rateConfigId: ID!
+  taxRate: Float! = 0
+  taxType: String! = "ADD"
+}
+
+input CreateCashDrawerInput {
+  location: String
+  name: String!
+}
+
+input CreateCreditOverrideInput {
+  expiresAt: DateTime
+  memberId: ID!
+  newLimit: Float!
+  reason: String!
+}
+
 input CreateDependentInput {
   dateOfBirth: DateTime
   email: String
@@ -359,6 +912,29 @@ input CreateDependentInput {
   memberId: ID!
   phone: String
   relationship: String!
+}
+
+input CreateDiscountInput {
+  approval: DiscountApprovalInput
+  code: String
+  conditions: DiscountConditionsInput
+  isActive: Boolean! = true
+  name: String!
+  scope: DiscountScope!
+  type: DiscountType!
+  validity: DiscountValidityInput
+  value: Float!
+}
+
+input CreateExceptionInput {
+  amount: Float
+  description: String!
+  lineItemId: ID
+  settlementId: ID!
+  severity: ExceptionSeverity
+  shiftId: ID
+  transactionId: ID
+  type: ExceptionType!
 }
 
 input CreateFacilityInput {
@@ -372,6 +948,16 @@ input CreateFacilityInput {
   outletId: ID
   revenueCenterId: ID
   type: ResourceTypeEnum!
+}
+
+input CreateGreenFeeRateInput {
+  amount: Float!
+  holes: Int!
+  playerType: String!
+  rateConfigId: ID!
+  taxRate: Float! = 0
+  taxType: String! = "ADD"
+  timeCategory: String! = "STANDARD"
 }
 
 input CreateGroupBookingInput {
@@ -451,6 +1037,72 @@ input CreatePaymentInput {
   referenceNumber: String
 }
 
+input CreatePaymentMethodInput {
+  icon: String!
+  name: String!
+  opensPOS: Boolean = false
+  requiresRef: Boolean = false
+  type: PaymentMethodTypeEnum!
+}
+
+input CreateProShopCategoryInput {
+  defaultTaxRate: Float!
+  defaultTaxType: TaxType!
+  description: String
+  isActive: Boolean = true
+  name: String!
+}
+
+input CreateProShopProductInput {
+  categoryId: ID!
+  description: String
+  isActive: Boolean = true
+  isQuickAdd: Boolean = false
+  name: String!
+  price: Float!
+  sku: String
+  taxRate: Float
+  taxType: TaxType
+  useCategoryDefaults: Boolean = true
+  variants: [CreateProShopVariantInput!]
+}
+
+input CreateProShopVariantInput {
+  name: String!
+  priceAdjustment: Float = 0
+  sku: String
+}
+
+input CreateRateConfigInput {
+  courseId: ID!
+  description: String
+  effectiveFrom: DateTime!
+  effectiveTo: DateTime
+  name: String!
+}
+
+input CreateRequirementInput {
+  allowPartialCredit: Boolean = false
+  defaultShortfallAction: ShortfallAction
+  description: String
+  effectiveFrom: DateTime
+  effectiveTo: DateTime
+  excludedCategories: [String!]
+  gracePeriodDays: Int = 0
+  includeEvents: Boolean = false
+  includeFoodBeverage: Boolean = true
+  includeGolf: Boolean = true
+  includeRetail: Boolean = false
+  includeSpa: Boolean = false
+  includedCategories: [String!]
+  membershipTypes: [String!]!
+  minimumAmount: Float!
+  name: String!
+  notifyAtPercent: [Int!]
+  notifyDaysBeforeEnd: [Int!]
+  period: MinimumSpendPeriod!
+}
+
 input CreateScheduleInput {
   courseId: ID!
   endDate: DateTime!
@@ -523,6 +1175,24 @@ input CreateStaffMemberInput {
   workingHours: [DayHoursInput!]
 }
 
+input CreateSubAccountInput {
+  dailyLimit: Float
+  email: String
+  memberId: String!
+  monthlyLimit: Float
+  name: String!
+  notifyOnLimitReached: Boolean = true
+  notifyPrimaryOnUse: Boolean = false
+  perTransactionLimit: Float
+  permissions: [SubAccountPermission!]
+  phone: String
+  pin: String!
+  relationship: String!
+  validFrom: DateTime
+  validUntil: DateTime
+  weeklyLimit: Float
+}
+
 input CreateTeeTimeInput {
   courseId: ID!
   holes: Int = 18
@@ -552,6 +1222,109 @@ input CreateWaitlistEntryInput {
   requesterPhone: String!
   timeRangeEnd: String!
   timeRangeStart: String!
+}
+
+type CreditCheckResultType {
+  allowed: Boolean!
+  availableCredit: Float!
+  chargeAmount: Float!
+  creditLimit: Float!
+  currentBalance: Float!
+  newBalance: Float!
+  shortfall: Float
+  usagePercent: Float!
+  warning: CreditWarningLevel
+}
+
+type CreditLimitOverrideType {
+  approvedAt: DateTime!
+  approvedBy: ID!
+  createdAt: DateTime!
+  expiresAt: DateTime
+  id: ID!
+  isActive: Boolean!
+  memberId: ID!
+  newLimit: Float!
+  previousLimit: Float!
+  reason: String!
+}
+
+type CreditSettingsType {
+  creditAlertThreshold: Float!
+  creditBlockEnabled: Boolean!
+  creditLimit: Float
+  creditLimitEnabled: Boolean!
+  creditOverrideAllowed: Boolean!
+}
+
+type CreditStatusType {
+  alertThreshold: Float!
+  availableCredit: Float!
+  creditLimit: Float!
+  currentBalance: Float!
+  isBlocked: Boolean!
+  overrideAllowed: Boolean!
+  usagePercent: Float!
+}
+
+"""Warning level for credit limit status"""
+enum CreditWarningLevel {
+  APPROACHING_LIMIT
+  EXCEEDED
+}
+
+type DailyCheckInReportType {
+  checkedInPlayers: Int!
+  course: String!
+  date: DateTime!
+  flights: [FlightPaymentSummaryType!]!
+  noShowPlayers: Int!
+  totalAccount: Float!
+  totalCard: Float!
+  totalCash: Float!
+  totalFlights: Int!
+  totalPlayers: Int!
+  totalRevenue: Float!
+  totalTransfer: Float!
+}
+
+input DailyReportInput {
+  courseId: ID!
+  date: DateTime!
+}
+
+type DailySettlementGraphQLType {
+  actualCash: Float
+  businessDate: DateTime!
+  cashVariance: Float
+  closedAt: DateTime
+  closedBy: ID
+  clubId: ID!
+  createdAt: DateTime!
+  exceptions: [SettlementExceptionGraphQLType!]
+  expectedCash: Float!
+  id: ID!
+  notes: String
+  openedAt: DateTime
+  openedBy: ID
+  refundCount: Int!
+  reviewedAt: DateTime
+  reviewedBy: ID
+  status: SettlementStatus!
+  totalCard: Float!
+  totalCash: Float!
+  totalDiscounts: Float!
+  totalGrossSales: Float!
+  totalMemberAccount: Float!
+  totalNetSales: Float!
+  totalOther: Float!
+  totalRefunds: Float!
+  totalServiceCharge: Float!
+  totalTax: Float!
+  totalVoids: Float!
+  transactionCount: Int!
+  updatedAt: DateTime!
+  voidCount: Int!
 }
 
 """
@@ -593,6 +1366,11 @@ type DeleteMutationResponse {
   success: Boolean!
 }
 
+type DeleteRateMutationResponse {
+  message: String
+  success: Boolean!
+}
+
 type DeleteResponseType {
   error: String
   message: String
@@ -610,6 +1388,89 @@ type DependentType {
   relationship: String!
 }
 
+input DiscountApprovalInput {
+  approvalThreshold: Float
+  requiresApproval: Boolean! = false
+}
+
+type DiscountApprovalType {
+  approvalThreshold: String
+  requiresApproval: Boolean!
+}
+
+input DiscountConditionsInput {
+  maximumDiscount: Float
+  membershipTypeIds: [ID!]
+  minimumAmount: Float
+  playerTypes: [String!]
+}
+
+type DiscountConditionsType {
+  maximumDiscount: String
+  membershipTypeIds: [String!]
+  minimumAmount: String
+  playerTypes: [String!]
+}
+
+type DiscountConnection {
+  edges: [DiscountGraphQLTypeEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type DiscountGraphQLType {
+  approval: DiscountApprovalType!
+  clubId: String!
+  code: String
+  conditions: DiscountConditionsType!
+  createdAt: DateTime!
+  id: ID!
+  isActive: Boolean!
+  name: String!
+  scope: DiscountScope!
+  type: DiscountType!
+  updatedAt: DateTime!
+  validity: DiscountValidityType!
+  value: String!
+}
+
+type DiscountGraphQLTypeEdge {
+  cursor: String!
+  node: DiscountGraphQLType!
+}
+
+"""Scope of discount application"""
+enum DiscountScope {
+  LINE_ITEM
+  ORDER
+}
+
+"""Type of discount calculation"""
+enum DiscountType {
+  FIXED_AMOUNT
+  PERCENTAGE
+}
+
+type DiscountValidationResultType {
+  calculatedAmount: String
+  isValid: Boolean!
+  message: String
+  requiresApproval: Boolean
+}
+
+input DiscountValidityInput {
+  usageLimit: Float
+  validFrom: DateTime
+  validTo: DateTime
+}
+
+type DiscountValidityType {
+  usageCount: Float!
+  usageLimit: Float
+  validFrom: DateTime
+  validTo: DateTime
+}
+
 type EffectiveScheduleType {
   activeSeason: ActiveSeasonInfo
   activeSpecialDay: ActiveSpecialDayInfo
@@ -623,6 +1484,42 @@ type EffectiveScheduleType {
   timePeriods: [GolfTimePeriodType!]!
   twilightMode: TwilightMode!
   twilightTime: String!
+}
+
+"""Resolution status of an exception"""
+enum ExceptionResolution {
+  ACKNOWLEDGED
+  ADJUSTED
+  ESCALATED
+  PENDING
+  RESOLVED
+  WRITTEN_OFF
+}
+
+"""Severity level of an exception"""
+enum ExceptionSeverity {
+  CRITICAL
+  HIGH
+  LOW
+  MEDIUM
+}
+
+"""Type of settlement exception"""
+enum ExceptionType {
+  CARD_VARIANCE
+  CASH_VARIANCE
+  DISCOUNT_WITHOUT_APPROVAL
+  DUPLICATE_TRANSACTION
+  MISSING_RECEIPT
+  OTHER
+  REFUND_WITHOUT_APPROVAL
+  SYSTEM_ERROR
+  VOID_WITHOUT_APPROVAL
+}
+
+input ExemptMemberInput {
+  memberSpendId: String!
+  reason: String!
 }
 
 type ExtendedServiceType {
@@ -684,10 +1581,62 @@ type FlightAssignment {
   teeTime: String!
 }
 
+type FlightCheckInInfoType {
+  caddyAssignment: String
+  cartNumber: String
+  course: String!
+  id: ID!
+  players: [CheckInPlayerInfoType!]!
+  startingHole: Int!
+  teeTime: DateTime!
+}
+
 type FlightCheckInResponseType {
   checkedInAt: DateTime!
   success: Boolean!
   teeTime: TeeTimeType!
+}
+
+type FlightPaymentSummaryType {
+  checkedInCount: Int!
+  course: String!
+  isFullyCheckedIn: Boolean!
+  isFullySettled: Boolean!
+  settledCount: Int!
+  teeTime: DateTime!
+  teeTimeId: ID!
+  totalBalance: Float!
+  totalDue: Float!
+  totalPaid: Float!
+  totalPlayers: Int!
+}
+
+input GenerateTicketInput {
+  forceRegenerate: Boolean = false
+  teeTimeId: ID!
+}
+
+input GetAutoPayHistoryInput {
+  limit: Int = 20
+  memberId: String!
+}
+
+input GetMemberSpendsInput {
+  memberId: String
+  periodEnd: DateTime
+  periodStart: DateTime
+  status: MemberSpendStatus
+}
+
+input GetSettlementsInput {
+  endDate: DateTime!
+  startDate: DateTime!
+}
+
+input GetTransactionsInput {
+  endDate: DateTime
+  startDate: DateTime
+  subAccountId: String
 }
 
 type GolfCourseIntervalType {
@@ -889,6 +1838,24 @@ type GolfWaitlistType {
   updatedAt: DateTime!
 }
 
+type GreenFeeRateMutationResponse {
+  greenFeeRate: GreenFeeRateType
+  message: String
+  success: Boolean!
+}
+
+type GreenFeeRateType {
+  amount: Float!
+  createdAt: DateTime!
+  holes: Int!
+  id: ID!
+  playerType: String!
+  taxRate: Float!
+  taxType: String!
+  timeCategory: String!
+  updatedAt: DateTime!
+}
+
 type GroupBookingFlightsResponse {
   flights: [FlightAssignment!]!
   success: Boolean!
@@ -1000,6 +1967,11 @@ type InvoiceTypeEdge {
   node: InvoiceType!
 }
 
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSON
+
 input JoinWaitlistInput {
   facilityId: ID
   memberId: ID!
@@ -1007,6 +1979,22 @@ input JoinWaitlistInput {
   requestedDate: String!
   requestedTime: String!
   serviceId: ID
+}
+
+type LineItemPaymentType {
+  amount: Float!
+  description: String
+  id: ID!
+  lineItemId: ID!
+}
+
+"""Type of booking line item"""
+enum LineItemType {
+  CADDY
+  CART
+  GREEN_FEE
+  PROSHOP
+  RENTAL
 }
 
 type LotteryDrawResult {
@@ -1053,10 +2041,62 @@ enum LotteryType {
   SPECIAL_EVENT
 }
 
+type MemberAtRiskType {
+  creditLimit: Float!
+  firstName: String!
+  id: ID!
+  isAtRisk: Boolean!
+  isExceeded: Boolean!
+  lastName: String!
+  memberId: String!
+  outstandingBalance: Float!
+  usagePercent: Float!
+}
+
 type MemberConnection {
   edges: [MemberTypeEdge!]!
   pageInfo: PageInfo!
   totalCount: Int!
+}
+
+type MemberMinimumSpend {
+  carryForwardAmount: Float!
+  clubId: String!
+  createdAt: DateTime!
+  currentSpend: Float!
+  exemptAt: DateTime
+  exemptBy: String
+  exemptReason: String
+  id: ID!
+  isExempt: Boolean!
+  lastCalculatedAt: DateTime!
+  memberId: String!
+  periodEnd: DateTime!
+  periodLabel: String!
+  periodStart: DateTime!
+  projectedSpend: Float
+  requiredAmount: Float!
+  requirement: MinimumSpendRequirement
+  requirementId: String!
+  shortfallAction: ShortfallAction
+  shortfallAmount: Float
+  shortfallInvoiceId: String
+  shortfallNote: String
+  shortfallResolvedAt: DateTime
+  shortfallResolvedBy: String
+  status: MemberSpendStatus!
+  updatedAt: DateTime!
+}
+
+"""Status of member spending against requirement"""
+enum MemberSpendStatus {
+  AT_RISK
+  EXEMPT
+  MET
+  ON_TRACK
+  PENDING_ACTION
+  RESOLVED
+  SHORTFALL
 }
 
 type MemberStatsType {
@@ -1200,6 +2240,40 @@ type MembershipTypeType {
   priorityBooking: Boolean!
 }
 
+"""Period for minimum spend requirements"""
+enum MinimumSpendPeriod {
+  ANNUALLY
+  MONTHLY
+  QUARTERLY
+}
+
+type MinimumSpendRequirement {
+  allowPartialCredit: Boolean!
+  clubId: String!
+  createdAt: DateTime!
+  defaultShortfallAction: ShortfallAction!
+  description: String
+  effectiveFrom: DateTime!
+  effectiveTo: DateTime
+  excludedCategories: [String!]!
+  gracePeriodDays: Int!
+  id: ID!
+  includeEvents: Boolean!
+  includeFoodBeverage: Boolean!
+  includeGolf: Boolean!
+  includeRetail: Boolean!
+  includeSpa: Boolean!
+  includedCategories: [String!]!
+  isActive: Boolean!
+  membershipTypes: [String!]!
+  minimumAmount: Float!
+  name: String!
+  notifyAtPercent: [Int!]!
+  notifyDaysBeforeEnd: [Int!]!
+  period: MinimumSpendPeriod!
+  updatedAt: DateTime!
+}
+
 input MoveTeeTimeInput {
   newCourseId: ID
   newTeeDate: DateTime!
@@ -1213,8 +2287,35 @@ type Mutation {
   """Add players to a group booking"""
   addGroupPlayers(id: ID!, input: AddGroupPlayersInput!): GroupBookingMutationResponse!
 
+  """Add a line item to a player"""
+  addLineItem(input: AddLineItemInput!): BookingLineItemType!
+
+  """Add a new stored payment method"""
+  addPaymentMethod(input: AddStoredPaymentInput!): StoredPaymentMethod!
+
+  """Apply a discount to a line item or transaction"""
+  applyDiscount(input: ApplyDiscountInput!): ApplyDiscountResultType!
+
+  """Apply a discount using a promo code"""
+  applyDiscountByCode(input: ApplyDiscountByCodeInput!): ApplyDiscountResultType!
+
+  """Approve a pending discount that requires manager approval"""
+  approveDiscount(input: ApproveDiscountInput!): AppliedDiscountType!
+
   """Auto-assign players to flights"""
   assignFlights(id: ID!, interval: Float! = 8): GroupBookingFlightsResponse!
+
+  """Assign a template to an outlet"""
+  assignPOSTemplate(input: AssignTemplateInput!): AssignTemplateMutationResponse!
+
+  """Remove multiple line items"""
+  bulkRemoveLineItems(input: BulkRemoveLineItemsInput!): BulkRemoveResultType!
+
+  """Transfer multiple line items to another player"""
+  bulkTransferLineItems(input: BulkTransferLineItemsInput!): BulkTransferResultType!
+
+  """Bulk update multiple pro shop products"""
+  bulkUpdateProShopProducts(ids: [ID!]!, input: BulkUpdateProShopProductInput!): [ProShopProductType!]!
 
   """Cancel a booking"""
   cancelBooking(input: CancelBookingInput!): CancelBookingResponseType!
@@ -1237,11 +2338,41 @@ type Mutation {
   """Change member status"""
   changeMemberStatus(id: ID!, input: ChangeStatusInput!): MemberType!
 
+  """Change a sub-account PIN"""
+  changeSubAccountPin(input: ChangePinInput!): SubAccount!
+
+  """Change a sub-account status"""
+  changeSubAccountStatus(input: ChangeSubAccountStatusInput!): SubAccount!
+
   """Check in a booking"""
   checkIn(input: CheckInInput!): CheckInResponseType!
 
+  """Check in all players in a flight at once"""
+  checkInAllPlayers(input: CheckInAllPlayersInput!): CheckInResultType!
+
+  """Check in multiple players for a flight"""
+  checkInFlight(input: CheckInFlightInput!): CheckInResultType!
+
+  """Check in multiple players at once"""
+  checkInSlots(input: CheckInSlotsInput!): CheckInSlotsResultType!
+
+  """Clear cart draft for a tee time"""
+  clearCartDraft(teeTimeId: ID!): Boolean!
+
+  """Clone a POS template with a new name"""
+  clonePOSTemplate(id: ID!, newName: String!): CloneTemplateMutationResponse!
+
   """Close a lottery to new requests"""
   closeLottery(id: ID!): LotteryMutationResponse!
+
+  """Close a minimum spend period and process shortfalls"""
+  closeMinimumSpendPeriod(input: ClosePeriodInput!): [MemberMinimumSpend!]!
+
+  """Close a settlement"""
+  closeSettlement(input: CloseSettlementInput!): DailySettlementGraphQLType!
+
+  """Close a shift"""
+  closeShift(input: CloseShiftInput!): CashDrawerShiftGraphQLType!
 
   """Confirm group booking and create tee times"""
   confirmGroupBooking(id: ID!): GroupBookingMutationResponse!
@@ -1255,8 +2386,23 @@ type Mutation {
   """Create a new booking"""
   createBooking(input: CreateBookingInput!): CreateBookingResponseType!
 
+  """Create a caddy rate"""
+  createCaddyRate(input: CreateCaddyRateInput!): CaddyRateMutationResponse!
+
+  """Create a cart rate"""
+  createCartRate(input: CreateCartRateInput!): CartRateMutationResponse!
+
+  """Create a new cash drawer"""
+  createCashDrawer(input: CreateCashDrawerInput!): CashDrawerGraphQLType!
+
+  """Create a new payment method for check-in"""
+  createCheckInPaymentMethod(input: CreatePaymentMethodInput!): CheckInPaymentMethodType!
+
   """Create a course schedule"""
   createCourseSchedule(input: CreateScheduleInput!): ScheduleMutationResponse!
+
+  """Create a credit limit override (temporary or permanent increase)"""
+  createCreditOverride(input: CreateCreditOverrideInput!): CreditLimitOverrideType!
 
   """Create default schedule configuration for a course"""
   createDefaultScheduleConfig(courseId: ID!): ScheduleConfigMutationResponse!
@@ -1264,8 +2410,14 @@ type Mutation {
   """Add a dependent to a member"""
   createDependent(input: CreateDependentInput!): DependentType!
 
+  """Create a new discount"""
+  createDiscount(input: CreateDiscountInput!): DiscountGraphQLType!
+
   """Create a new facility"""
   createFacility(input: CreateFacilityInput!): FacilityResponseType!
+
+  """Create a green fee rate"""
+  createGreenFeeRate(input: CreateGreenFeeRateInput!): GreenFeeRateMutationResponse!
 
   """Create a group booking"""
   createGroupBooking(input: CreateGroupBookingInput!): GroupBookingMutationResponse!
@@ -1279,17 +2431,35 @@ type Mutation {
   """Create a new member"""
   createMember(input: CreateMemberInput!): MemberType!
 
+  """Create a new minimum spend requirement"""
+  createMinimumSpendRequirement(input: CreateRequirementInput!): MinimumSpendRequirement!
+
+  """Create a new pro shop category"""
+  createProShopCategory(input: CreateProShopCategoryInput!): ProShopCategoryType!
+
+  """Create a new pro shop product"""
+  createProShopProduct(input: CreateProShopProductInput!): ProShopProductType!
+
+  """Create a rate configuration"""
+  createRateConfig(input: CreateRateConfigInput!): RateConfigMutationResponse!
+
   """Create a season"""
   createSeason(input: CreateSeasonInput!, scheduleId: ID!): SeasonMutationResponse!
 
   """Create a new service"""
   createService(input: CreateServiceInput!): ServiceResponseType!
 
+  """Create a settlement exception"""
+  createSettlementException(input: CreateExceptionInput!): SettlementExceptionGraphQLType!
+
   """Create a special day"""
   createSpecialDay(input: CreateSpecialDayInput!, scheduleId: ID!): SpecialDayMutationResponse!
 
   """Create a new staff member"""
   createStaffMember(input: CreateStaffMemberInput!): StaffResponseType!
+
+  """Create a new sub-account"""
+  createSubAccount(input: CreateSubAccountInput!): SubAccount!
 
   """Create a new tee time booking"""
   createTeeTime(input: CreateTeeTimeInput!): TeeTimeType!
@@ -1306,14 +2476,29 @@ type Mutation {
   """Decline a waitlist offer"""
   declineWaitlistOffer(input: WaitlistActionInput!): WaitlistResponseType!
 
+  """Delete a caddy rate"""
+  deleteCaddyRate(id: ID!): DeleteRateMutationResponse!
+
+  """Delete a cart rate"""
+  deleteCartRate(id: ID!): DeleteRateMutationResponse!
+
+  """Delete a payment method"""
+  deleteCheckInPaymentMethod(id: ID!): Boolean!
+
   """Delete a course schedule"""
   deleteCourseSchedule(id: ID!): ScheduleMutationResponse!
 
   """Delete a dependent"""
   deleteDependent(id: ID!): DeleteDependentResponseType!
 
+  """Delete a discount (soft delete)"""
+  deleteDiscount(id: ID!): Boolean!
+
   """Delete a facility"""
   deleteFacility(id: ID!): DeleteResponseType!
+
+  """Delete a green fee rate"""
+  deleteGreenFeeRate(id: ID!): DeleteRateMutationResponse!
 
   """Delete a draft group booking"""
   deleteGroupBooking(id: ID!): GroupBookingMutationResponse!
@@ -1323,6 +2508,20 @@ type Mutation {
 
   """Soft delete a member"""
   deleteMember(id: ID!): DeleteMemberResponseType!
+
+  """Delete (deactivate) a minimum spend requirement"""
+  deleteMinimumSpendRequirement(id: ID!): MinimumSpendRequirement!
+
+  """
+  Delete a pro shop category. If category has products, provide moveProductsTo.
+  """
+  deleteProShopCategory(id: ID!, moveProductsTo: ID): Boolean!
+
+  """Delete a pro shop product"""
+  deleteProShopProduct(id: ID!): Boolean!
+
+  """Delete a rate configuration"""
+  deleteRateConfig(id: ID!): DeleteRateMutationResponse!
 
   """Delete a season"""
   deleteSeason(id: ID!): DeleteMutationResponse!
@@ -1336,6 +2535,9 @@ type Mutation {
   """Delete a staff member"""
   deleteStaffMember(id: ID!): DeleteResponseType!
 
+  """Delete (revoke) a sub-account"""
+  deleteSubAccount(id: ID!): SubAccount!
+
   """Delete a tee time block"""
   deleteTeeTimeBlock(id: ID!): BlockMutationResponse!
 
@@ -1345,11 +2547,20 @@ type Mutation {
   """Delete a waitlist entry"""
   deleteWaitlistEntry(id: ID!): WaitlistMutationResponse!
 
+  """Disable auto-pay for a member"""
+  disableAutoPay(memberId: ID!): RemovePaymentMethodResult!
+
   """Execute the lottery draw"""
   executeLotteryDraw(id: ID!): LotteryDrawResult!
 
+  """Exempt a member from a minimum spend requirement"""
+  exemptMemberFromMinimumSpend(input: ExemptMemberInput!): MemberMinimumSpend!
+
   """Mark expired waitlist entries"""
   expireOldWaitlistEntries: WaitlistMutationResponse!
+
+  """Generate or regenerate a starter ticket for a tee time"""
+  generateStarterTicket(input: GenerateTicketInput!): StarterTicketResponseType!
 
   """Import players from CSV data"""
   importPlayersFromCSV(id: ID!, input: ImportPlayersFromCSVInput!): GroupBookingMutationResponse!
@@ -1363,14 +2574,59 @@ type Mutation {
   """Notify waitlist when a tee time is cancelled"""
   notifyWaitlistForCancellation(availableSpots: Float! = 4, courseId: ID!, date: DateTime!, time: String!): WaitlistNotificationResult!
 
+  """Open a new business day"""
+  openDay(input: OpenDayInput!): DailySettlementGraphQLType!
+
   """Open a lottery for requests"""
   openLottery(id: ID!): LotteryMutationResponse!
+
+  """Open a new shift on a cash drawer"""
+  openShift(input: OpenShiftInput!): CashDrawerShiftGraphQLType!
+
+  """Pay specific line items"""
+  payLineItems(input: PayLineItemsInput!): PayLineItemsResultType!
+
+  """Mark a starter ticket as printed"""
+  printStarterTicket(input: PrintTicketInput!): StarterTicketResponseType!
+
+  """Manually process an auto-pay for an invoice"""
+  processAutoPay(input: ProcessAutoPayInput!): AutoPayResult!
+
+  """Process payment for multiple players at once"""
+  processBatchPayment(input: BatchPaymentInput!): BatchPaymentResultType!
+
+  """Process payment settlement for players"""
+  processSettlement(input: ProcessSettlementInput!): SettlementResultType!
 
   """Publish lottery results and create tee times"""
   publishLotteryResults(id: ID!): LotteryMutationResponse!
 
+  """Recalculate member spend from transactions"""
+  recalculateMemberSpend(memberSpendId: ID!): MemberMinimumSpend!
+
+  """Recalculate settlement totals from transactions"""
+  recalculateSettlementTotals(settlementId: ID!): DailySettlementGraphQLType!
+
+  """Record actual cash count"""
+  recordCashCount(input: RecordCashCountInput!): DailySettlementGraphQLType!
+
+  """Record a cash movement"""
+  recordCashMovement(approvedBy: ID, input: RecordMovementInput!): CashMovementGraphQLType!
+
+  """Record spending against a member minimum spend requirement"""
+  recordMinimumSpend(input: RecordSpendInput!): MemberMinimumSpend!
+
   """Record a payment"""
   recordPayment(input: CreatePaymentInput!): PaymentType!
+
+  """Record a transaction for a sub-account"""
+  recordSubAccountTransaction(input: RecordTransactionInput!): SubAccountTransaction!
+
+  """Manually regenerate line items for a tee time"""
+  regenerateLineItems(teeTimeId: ID!): Boolean!
+
+  """Remove an applied discount"""
+  removeAppliedDiscount(appliedDiscountId: ID!): Boolean!
 
   """Remove entry from waitlist"""
   removeFromWaitlist(input: WaitlistActionInput!): WaitlistResponseType!
@@ -1378,8 +2634,50 @@ type Mutation {
   """Remove a player from a group booking"""
   removeGroupPlayer(groupBookingId: ID!, playerId: ID!): GroupBookingMutationResponse!
 
+  """Remove a line item from cart"""
+  removeLineItem(input: RemoveLineItemInput!): RemoveLineItemResultType!
+
+  """Remove minimum spend exemption from a member"""
+  removeMinimumSpendExemption(memberSpendId: ID!): MemberMinimumSpend!
+
+  """Remove a stored payment method"""
+  removePaymentMethod(id: ID!): RemovePaymentMethodResult!
+
+  """Reopen a closed settlement"""
+  reopenSettlement(input: ReopenSettlementInput!): DailySettlementGraphQLType!
+
+  """Reorder payment methods by providing ordered IDs"""
+  reorderCheckInPaymentMethods(orderedIds: [ID!]!): [CheckInPaymentMethodType!]!
+
+  """Reorder pro shop categories by providing ordered IDs"""
+  reorderProShopCategories(orderedIds: [ID!]!): [ProShopCategoryType!]!
+
   """Reschedule a booking"""
   rescheduleBooking(input: RescheduleBookingInput!): CreateBookingResponseType!
+
+  """Reset all check-in settings to defaults"""
+  resetCheckInSettings: CheckInSettingsType!
+
+  """Reset all spending counters for a sub-account"""
+  resetSubAccountSpending(subAccountId: ID!): SubAccount!
+
+  """Resolve a minimum spend shortfall"""
+  resolveMinimumSpendShortfall(input: ResolveShortfallInput!): MemberMinimumSpend!
+
+  """Resolve a settlement exception"""
+  resolveSettlementException(input: ResolveExceptionInput!): SettlementExceptionGraphQLType!
+
+  """Resume a suspended shift"""
+  resumeShift(shiftId: ID!): CashDrawerShiftGraphQLType!
+
+  """Retry a failed auto-pay attempt"""
+  retryAutoPayAttempt(attemptId: ID!): AutoPayResult!
+
+  """Revert a credit limit override"""
+  revertCreditOverride(overrideId: ID!): Boolean!
+
+  """Save cart draft for a tee time"""
+  saveCartDraft(input: SaveCartDraftInput!): CartDraftType!
 
   """Send an invoice"""
   sendInvoice(id: ID!): InvoiceType!
@@ -1387,11 +2685,59 @@ type Mutation {
   """Send offer to waitlist entry"""
   sendWaitlistOffer(input: SendWaitlistOfferInput!): WaitlistResponseType!
 
+  """Set a payment method as default"""
+  setDefaultPaymentMethod(id: ID!): StoredPaymentMethod!
+
+  """Set role-specific button overrides for an outlet"""
+  setPOSRoleOverrides(input: POSRoleOverridesInput!, outletId: ID!): SetRoleOverridesMutationResponse!
+
+  """Settle all players in a flight at once"""
+  settleAllPlayers(input: SettleAllPlayersInput!): SettlementResultType!
+
   """Submit a lottery request (member)"""
   submitLotteryRequest(input: CreateLotteryRequestInput!): LotteryRequestMutationResponse!
 
+  """Submit settlement for review"""
+  submitSettlementForReview(settlementId: ID!): DailySettlementGraphQLType!
+
+  """Suspend a shift temporarily"""
+  suspendShift(shiftId: ID!): CashDrawerShiftGraphQLType!
+
+  """Enable or disable a payment method"""
+  toggleCheckInPaymentMethod(id: ID!, isEnabled: Boolean!): CheckInPaymentMethodType!
+
+  """Toggle quick add status for a product"""
+  toggleProductQuickAdd(id: ID!, isQuickAdd: Boolean!): ProShopProductType!
+
+  """Transfer a line item from one player to another"""
+  transferLineItem(input: TransferLineItemInput!): TransferResultType!
+
+  """Undo a player check-in"""
+  undoCheckIn(input: UndoCheckInInput!): Boolean!
+
+  """Undo a line item transfer"""
+  undoTransfer(input: UndoTransferInput!): TransferResultType!
+
+  """Unlock a locked sub-account PIN"""
+  unlockSubAccountPin(subAccountId: ID!): SubAccount!
+
   """Update an existing membership application"""
   updateApplication(id: ID!, input: UpdateApplicationInput!): MembershipApplicationType!
+
+  """Update a caddy rate"""
+  updateCaddyRate(id: ID!, input: UpdateCaddyRateInput!): CaddyRateMutationResponse!
+
+  """Update a cart rate"""
+  updateCartRate(id: ID!, input: UpdateCartRateInput!): CartRateMutationResponse!
+
+  """Update a cash drawer"""
+  updateCashDrawer(input: UpdateCashDrawerInput!): CashDrawerGraphQLType!
+
+  """Update an existing payment method"""
+  updateCheckInPaymentMethod(id: ID!, input: UpdatePaymentMethodInput!): CheckInPaymentMethodType!
+
+  """Update check-in policy settings"""
+  updateCheckInPolicy(input: CheckInPolicyInput!): CheckInSettingsType!
 
   """Update a course schedule"""
   updateCourseSchedule(id: ID!, input: UpdateScheduleInput!): ScheduleMutationResponse!
@@ -1399,11 +2745,20 @@ type Mutation {
   """Update a dependent"""
   updateDependent(id: ID!, input: UpdateDependentInput!): DependentType!
 
+  """Update an existing discount"""
+  updateDiscount(id: ID!, input: UpdateDiscountInput!): DiscountGraphQLType!
+
   """Update an existing facility"""
   updateFacility(input: UpdateFacilityInput!): FacilityResponseType!
 
+  """Update a green fee rate"""
+  updateGreenFeeRate(id: ID!, input: UpdateGreenFeeRateInput!): GreenFeeRateMutationResponse!
+
   """Update a group booking"""
   updateGroupBooking(id: ID!, input: UpdateGroupBookingInput!): GroupBookingMutationResponse!
+
+  """Update line item quantity"""
+  updateLineItemQuantity(input: UpdateLineItemQuantityInput!): UpdateQuantityResultType!
 
   """Update a lottery"""
   updateLottery(id: ID!, input: UpdateLotteryInput!): LotteryMutationResponse!
@@ -1411,8 +2766,35 @@ type Mutation {
   """Update an existing member"""
   updateMember(id: ID!, input: UpdateMemberInput!): MemberType!
 
+  """Update credit limit settings for a member"""
+  updateMemberCreditSettings(input: UpdateCreditSettingsInput!): Boolean!
+
+  """Update a minimum spend requirement"""
+  updateMinimumSpendRequirement(input: UpdateRequirementInput!): MinimumSpendRequirement!
+
+  """Update the button registry for the club"""
+  updatePOSButtonRegistry(input: UpdateButtonRegistryInput!): UpdateButtonRegistryMutationResponse!
+
+  """Update POS integration settings"""
+  updatePOSConfig(input: POSConfigInput!): CheckInSettingsType!
+
+  """Update a stored payment method"""
+  updatePaymentMethod(input: UpdateStoredPaymentInput!): StoredPaymentMethod!
+
   """Update a single player rental status (cart/caddy)"""
   updatePlayerRentalStatus(input: UpdatePlayerRentalStatusInput!, playerId: ID!): TeeTimePlayerType!
+
+  """Update an existing pro shop category"""
+  updateProShopCategory(id: ID!, input: UpdateProShopCategoryInput!): ProShopCategoryType!
+
+  """Update pro shop integration settings"""
+  updateProShopConfig(input: ProShopConfigInput!): CheckInSettingsType!
+
+  """Update an existing pro shop product"""
+  updateProShopProduct(id: ID!, input: UpdateProShopProductInput!): ProShopProductType!
+
+  """Update a rate configuration"""
+  updateRateConfig(id: ID!, input: UpdateRateConfigInput!): RateConfigMutationResponse!
 
   """Update schedule configuration"""
   updateScheduleConfig(id: ID!, input: UpdateScheduleConfigInput!): ScheduleConfigMutationResponse!
@@ -1423,11 +2805,23 @@ type Mutation {
   """Update an existing service"""
   updateService(input: UpdateServiceInput!): ServiceResponseType!
 
+  """Update settlement totals"""
+  updateSettlementTotals(input: UpdateSettlementTotalsInput!): DailySettlementGraphQLType!
+
   """Update a special day"""
   updateSpecialDay(id: ID!, input: UpdateSpecialDayInput!): SpecialDayMutationResponse!
 
   """Update a staff member"""
   updateStaffMember(input: UpdateStaffMemberInput!): StaffResponseType!
+
+  """Update starter ticket configuration"""
+  updateStarterTicketConfig(input: StarterTicketConfigInput!): CheckInSettingsType!
+
+  """Update a sub-account"""
+  updateSubAccount(input: UpdateSubAccountInput!): SubAccount!
+
+  """Update tax configuration including overrides"""
+  updateTaxConfig(input: TaxConfigInput!): CheckInSettingsType!
 
   """Update an existing tee time"""
   updateTeeTime(id: ID!, input: UpdateTeeTimeInput!): TeeTimeType!
@@ -1444,6 +2838,15 @@ type Mutation {
   """Update a waitlist entry"""
   updateWaitlistEntry(id: ID!, input: UpdateWaitlistEntryInput!): WaitlistMutationResponse!
 
+  """Create or update auto-pay settings"""
+  upsertAutoPaySetting(input: AutoPaySettingInput!): AutoPaySetting!
+
+  """Create or update a POS template"""
+  upsertPOSTemplate(id: ID, input: POSTemplateInput!): UpsertTemplateMutationResponse!
+
+  """Verify a sub-account PIN"""
+  verifySubAccountPin(input: VerifyPinInput!): PinVerificationResult!
+
   """Void an invoice"""
   voidInvoice(id: ID!, input: VoidInvoiceInput!): InvoiceType!
 }
@@ -1454,11 +2857,123 @@ enum NineType {
   FRONT
 }
 
+input OpenDayInput {
+  businessDate: DateTime!
+}
+
+input OpenShiftInput {
+  cashDrawerId: ID!
+
+  """JSON string of denomination counts"""
+  denominations: String
+  openingFloat: Float!
+}
+
+type POSButtonRegistryGraphQLType {
+  clubId: String!
+  registry: JSON!
+  updatedAt: DateTime!
+}
+
+type POSButtonStateGraphQLType {
+  buttonId: String!
+  enabled: Boolean!
+  requiresApproval: Boolean!
+  visible: Boolean!
+}
+
+input POSConfigInput {
+  isConnected: Boolean
+  provider: String
+  terminalId: String
+}
+
+type POSConfigType {
+  isConnected: Boolean!
+  provider: String
+  terminalId: String
+}
+
+type POSOutletGraphQLType {
+  clubId: String!
+  createdAt: DateTime!
+  customConfig: JSON!
+  id: ID!
+  isActive: Boolean!
+  name: String!
+  outletType: String!
+  roleConfigs: [POSOutletRoleConfigGraphQLType!]
+  template: POSTemplateGraphQLType
+  templateId: String
+  updatedAt: DateTime!
+}
+
+type POSOutletRoleConfigGraphQLType {
+  buttonOverrides: JSON!
+  createdAt: DateTime!
+  id: ID!
+  outletId: String!
+  role: String!
+  updatedAt: DateTime!
+}
+
+type POSResolvedConfigGraphQLType {
+  actionBarConfig: JSON!
+  buttonStates: [POSButtonStateGraphQLType!]!
+  outlet: POSOutletGraphQLType!
+  template: POSTemplateGraphQLType
+  toolbarConfig: JSON!
+}
+
+input POSRoleOverridesInput {
+  disabled: [String!]
+  hidden: [String!]
+  requireApproval: [String!]
+  role: String!
+}
+
+type POSTemplateGraphQLType {
+  actionBarConfig: JSON!
+  clubId: String!
+  createdAt: DateTime!
+  description: String
+  id: ID!
+  isDefault: Boolean!
+  name: String!
+  outletType: String!
+  outlets: [POSOutletGraphQLType!]
+  toolbarConfig: JSON!
+  updatedAt: DateTime!
+}
+
+input POSTemplateInput {
+  actionBarConfig: JSON!
+  description: String
+  isDefault: Boolean! = false
+  name: String!
+  outletType: String!
+  toolbarConfig: JSON!
+}
+
 type PageInfo {
   endCursor: String
   hasNextPage: Boolean!
   hasPreviousPage: Boolean!
   startCursor: String
+}
+
+input PayLineItemsInput {
+  lineItemIds: [ID!]!
+  paymentMethodId: ID!
+  reference: String
+}
+
+type PayLineItemsResultType {
+  error: String
+  paidCount: Int!
+  success: Boolean!
+  totalPaid: Float!
+  transactionId: String
 }
 
 input PaymentAllocationInput {
@@ -1483,12 +2998,55 @@ enum PaymentMethod {
   OTHER
 }
 
+"""Type of payment method"""
+enum PaymentMethodTypeEnum {
+  ACCOUNT
+  CARD
+  CASH
+  CUSTOM
+  TRANSFER
+}
+
+"""Payment status for player check-in"""
+enum PaymentStatus {
+  NO_CHARGES
+  PARTIAL
+  PREPAID
+  UNPAID
+}
+
 type PaymentSummaryType {
   amount: String!
   id: ID!
   method: PaymentMethod!
   paymentDate: DateTime!
   receiptNumber: String!
+}
+
+type PaymentTransactionType {
+  allocatedAt: DateTime
+  allocatedToRevenue: Boolean!
+  amount: Float!
+  clubId: ID!
+  createdAt: DateTime!
+  id: ID!
+  lineItemPayments: [LineItemPaymentType!]
+  paidAt: DateTime!
+  paidBy: String!
+  paymentMethodId: ID!
+  paymentMethodName: String
+  reference: String
+  refundAmount: Float
+  refundReason: String
+  refundedAt: DateTime
+  refundedBy: String
+  status: TransactionStatus!
+  teeTimeId: ID
+  transactionNumber: String!
+  updatedAt: DateTime!
+  voidReason: String
+  voidedAt: DateTime
+  voidedBy: String
 }
 
 type PaymentType {
@@ -1510,10 +3068,22 @@ type PaymentTypeEdge {
   node: PaymentType!
 }
 
+type PinVerificationResult {
+  message: String
+  remainingAttempts: Float
+  success: Boolean!
+}
+
 """Golf play format (18 holes or cross-tee)"""
 enum PlayFormat {
   CROSS_TEE
   EIGHTEEN_HOLE
+}
+
+type PlayerCheckInResultType {
+  checkedIn: Boolean!
+  error: String
+  playerId: ID!
 }
 
 type PlayerDependentType {
@@ -1531,6 +3101,38 @@ type PlayerMemberType {
   id: ID!
   lastName: String!
   memberId: String!
+}
+
+type PlayerPaymentInfoType {
+  balanceDue: Float!
+  grandTotal: Float!
+  isSettled: Boolean!
+  lineItems: [BookingLineItemType!]!
+  memberNumber: String
+  paidOnline: Float!
+  playerId: ID!
+  playerName: String!
+  playerType: CheckInPlayerType!
+  settledAt: DateTime
+  settledBy: String
+  settledVia: String
+  subtotal: Float!
+  totalTax: Float!
+}
+
+input PlayerPaymentInput {
+  amount: Float!
+
+  """Specific line item IDs to mark as paid"""
+  lineItemIds: [ID!]
+  playerId: ID!
+}
+
+type PlayerSettlementResultType {
+  amountPaid: Float!
+  error: String
+  playerId: ID!
+  success: Boolean!
 }
 
 """Type of player in a tee time"""
@@ -1554,7 +3156,103 @@ type PriceModifierType {
   label: String!
 }
 
+"""Print output options for starter ticket"""
+enum PrintOption {
+  COMBINED
+  NONE
+  RECEIPT
+  TICKET
+}
+
+input PrintTicketInput {
+  copies: Float = 1
+  ticketId: ID!
+}
+
+type ProShopCategoryType {
+  defaultTaxRate: Float!
+  defaultTaxType: TaxType!
+  description: String
+  id: ID!
+  isActive: Boolean!
+  name: String!
+  productCount: Int
+  sortOrder: Int!
+}
+
+input ProShopConfigInput {
+  allowAddAtCheckIn: Boolean
+  quickAddProductIds: [ID!]
+  showQuickAddItems: Boolean
+}
+
+type ProShopConfigType {
+  allowAddAtCheckIn: Boolean!
+  quickAddProductIds: [ID!]!
+  showQuickAddItems: Boolean!
+}
+
+type ProShopProductConnectionType {
+  hasMore: Boolean!
+  items: [ProShopProductType!]!
+  limit: Int!
+  page: Int!
+  total: Int!
+}
+
+input ProShopProductFilterInput {
+  categoryId: ID
+  isActive: Boolean
+  isQuickAdd: Boolean
+  limit: Int = 20
+  page: Int = 1
+  search: String
+}
+
+type ProShopProductType {
+  category: ProShopCategoryType
+  categoryId: ID!
+  description: String
+  effectiveTaxRate: Float!
+  effectiveTaxType: TaxType!
+  id: ID!
+  isActive: Boolean!
+  isQuickAdd: Boolean!
+  name: String!
+  price: Float!
+  sku: String
+  taxRate: Float!
+  taxType: TaxType!
+  useCategoryDefaults: Boolean!
+  variants: [ProShopVariantType!]!
+}
+
+type ProShopVariantType {
+  finalPrice: Float!
+  id: ID!
+  name: String!
+  priceAdjustment: Float!
+  sku: String
+}
+
+input ProcessAutoPayInput {
+  amount: Float!
+  invoiceId: String!
+  paymentMethodId: ID!
+}
+
+input ProcessSettlementInput {
+  notes: String
+  paymentMethodId: ID!
+  payments: [PlayerPaymentInput!]!
+  reference: String
+  teeTimeId: ID!
+}
+
 type Query {
+  """Get all active discounts for POS use"""
+  activeDiscounts: [DiscountGraphQLType!]!
+
   """Get active schedule for a course and date"""
   activeSchedule(courseId: ID!, date: DateTime!): GolfCourseScheduleType
 
@@ -1566,6 +3264,9 @@ type Query {
 
   """Get paginated list of membership applications"""
   applications(after: String, first: Int = 10, search: String, skip: Int, status: ApplicationStatus): ApplicationConnection!
+
+  """Calculate totals for multiple players (for batch payment)"""
+  batchTotal(playerIds: [ID!]!): BatchTotalType!
 
   """Get billing statistics for the current month"""
   billingStats: BillingStatsType!
@@ -1585,6 +3286,33 @@ type Query {
   """Get calendar data for a specific day"""
   calendarDay(date: String!, facilityId: ID, resourceIds: [ID!], statuses: [BookingStatus!]): CalendarDayType!
 
+  """Get cart draft for a tee time"""
+  cartDraft(teeTimeId: ID!): CartDraftType
+
+  """Get a single cash drawer by ID"""
+  cashDrawer(id: ID!): CashDrawerGraphQLType
+
+  """Get a shift by ID"""
+  cashDrawerShift(shiftId: ID!): CashDrawerShiftGraphQLType
+
+  """Get all cash drawers for the current club"""
+  cashDrawers(activeOnly: Boolean = true): [CashDrawerGraphQLType!]!
+
+  """Get check-in audit history"""
+  checkInHistory(filter: CheckInHistoryFilterInput): [CheckInAuditEntryType!]!
+
+  """Get a single payment method by ID"""
+  checkInPaymentMethod(id: ID!): CheckInPaymentMethodType
+
+  """Get all payment methods for check-in"""
+  checkInPaymentMethods: [CheckInPaymentMethodType!]!
+
+  """Check if a charge is allowed for a member based on their credit limit"""
+  checkMemberCredit(input: CheckCreditInput!): CreditCheckResultType!
+
+  """Check if a sub-account can make a transaction"""
+  checkSubAccountLimit(input: CheckLimitInput!): SubAccountLimitCheck!
+
   """Get club golf settings including cart, rental, and caddy policies"""
   clubGolfSettings: ClubGolfSettingsType
 
@@ -1594,8 +3322,32 @@ type Query {
   """Get all golf courses"""
   courses: [GolfCourseType!]!
 
+  """Get or create current period spend for a member and requirement"""
+  currentMemberSpend(memberId: ID!, requirementId: ID!): MemberMinimumSpend!
+
+  """Get the current open shift for a drawer"""
+  currentShift(cashDrawerId: ID!): CashDrawerShiftGraphQLType
+
+  """Get daily check-in report for a course"""
+  dailyCheckInReport(input: DailyReportInput!): DailyCheckInReportType!
+
+  """Get a single discount by ID"""
+  discount(id: ID!): DiscountGraphQLType
+
+  """Find a discount by its code"""
+  discountByCode(code: String!): DiscountGraphQLType
+
+  """Get all discounts for the current club with filtering and pagination"""
+  discounts(after: String, first: Int = 10, isActive: Boolean, scope: DiscountScope, search: String, skip: Int, sortBy: String = "name", sortOrder: String = "asc", type: DiscountType): DiscountConnection!
+
   """Get list of facilities"""
   facilities(filter: FacilityFilterInput): [FacilityType!]!
+
+  """Get check-in info for all players in a tee time"""
+  flightCheckInInfo(teeTimeId: ID!): FlightCheckInInfoType!
+
+  """Get payment summary for a flight"""
+  flightPaymentSummary(teeTimeId: ID!): FlightPaymentSummaryType!
 
   """Generate a tee ticket for a tee time"""
   generateTeeTicket(teeTimeId: ID!): TeeTicketType
@@ -1610,17 +3362,35 @@ type Query {
   """
   getScheduleConfig(autoCreate: Boolean = false, courseId: ID!): GolfScheduleConfigType
 
+  """Get complete golf check-in settings for the current club"""
+  golfCheckInSettings: CheckInSettingsType!
+
+  """Get rate configurations for a course"""
+  golfRates(activeOnly: Boolean, courseId: ID!): [RateConfigType!]!
+
   """Get a single group booking"""
   groupBooking(id: ID!): GolfGroupBookingType!
 
   """Get group bookings"""
   groupBookings(courseId: ID, endDate: DateTime, startDate: DateTime, status: GroupBookingStatus): [GolfGroupBookingType!]!
 
+  """Check if a tee time has a cart draft"""
+  hasDraft(teeTimeId: ID!): Boolean!
+
   """Get a single invoice by ID"""
   invoice(id: ID!): InvoiceType!
 
+  """Get auto-pay attempts for an invoice"""
+  invoiceAutoPayAttempts(invoiceId: ID!): [AutoPayAttempt!]!
+
   """Get paginated list of invoices"""
   invoices(after: String, endDate: DateTime, first: Int = 10, memberId: ID, search: String, skip: Int, sortBy: String = "invoiceDate", sortOrder: String = "desc", startDate: DateTime, status: InvoiceStatus): InvoiceConnection!
+
+  """Check if all players in a tee time are settled"""
+  isTeeTimeFullySettled(teeTimeId: ID!): Boolean!
+
+  """Get discounts applied to a line item"""
+  lineItemDiscounts(lineItemId: ID!): [AppliedDiscountType!]!
 
   """Get lotteries"""
   lotteries(courseId: ID, endDate: DateTime, startDate: DateTime, status: LotteryStatus): [GolfLotteryType!]!
@@ -1631,11 +3401,41 @@ type Query {
   """Get a single member by ID"""
   member(id: ID!): MemberType!
 
+  """Get auto-pay attempt history for a member"""
+  memberAutoPayHistory(input: GetAutoPayHistoryInput!): [AutoPayAttempt!]!
+
+  """Get auto-pay settings for a member"""
+  memberAutoPaySetting(memberId: ID!): AutoPaySetting
+
+  """Get credit limit override history for a member"""
+  memberCreditOverrideHistory(limit: Int = 10, memberId: ID!): [CreditLimitOverrideType!]!
+
+  """Get active credit limit overrides for a member"""
+  memberCreditOverrides(memberId: ID!): [CreditLimitOverrideType!]!
+
+  """Get credit settings for a member"""
+  memberCreditSettings(memberId: ID!): CreditSettingsType
+
+  """Get credit status for a member (for display in UI)"""
+  memberCreditStatus(memberId: ID!): CreditStatusType
+
   """Get member dependents"""
   memberDependents(memberId: ID!): [DependentType!]!
 
+  """Get a member minimum spend record by ID"""
+  memberMinimumSpend(id: ID!): MemberMinimumSpend
+
+  """Get member minimum spend records"""
+  memberMinimumSpends(input: GetMemberSpendsInput!): [MemberMinimumSpend!]!
+
+  """Get all stored payment methods for a member"""
+  memberPaymentMethods(activeOnly: Boolean = true, memberId: ID!): [StoredPaymentMethod!]!
+
   """Get member statistics"""
   memberStats: MemberStatsType!
+
+  """Get sub-accounts for a member"""
+  memberSubAccounts(activeOnly: Boolean = true, memberId: ID!): [SubAccount!]!
 
   """Get transaction history for a member"""
   memberTransactions(memberId: ID!): MemberTransactionsType!
@@ -1643,8 +3443,17 @@ type Query {
   """Get paginated list of members"""
   members(after: String, first: Int = 10, householdId: ID, membershipTypeId: ID, search: String, skip: Int, sortBy: String = "createdAt", sortOrder: String = "desc", status: MemberStatus): MemberConnection!
 
+  """Get members approaching or exceeding their credit limits"""
+  membersAtCreditRisk: [MemberAtRiskType!]!
+
   """Get all membership types"""
   membershipTypes: [MembershipTypeType!]!
+
+  """Get a minimum spend requirement by ID"""
+  minimumSpendRequirement(id: ID!): MinimumSpendRequirement
+
+  """Get all minimum spend requirements for the club"""
+  minimumSpendRequirements(activeOnly: Boolean = true): [MinimumSpendRequirement!]!
 
   """Get current member's invoices"""
   myInvoices(after: String, endDate: DateTime, first: Int = 10, memberId: ID, search: String, skip: Int, sortBy: String = "invoiceDate", sortOrder: String = "desc", startDate: DateTime, status: InvoiceStatus): InvoiceConnection!
@@ -1661,11 +3470,98 @@ type Query {
   """Get open lotteries for member portal"""
   openLotteries: [GolfLotteryType!]!
 
+  """Get a single stored payment method"""
+  paymentMethod(id: ID!): StoredPaymentMethod
+
+  """Get detailed payment info for a single player"""
+  playerPaymentInfo(playerId: ID!): PlayerPaymentInfoType!
+
+  """Get the button registry for the current club"""
+  posButtonRegistry: POSButtonRegistryGraphQLType!
+
+  """Get resolved POS configuration for an outlet and user role"""
+  posConfig(outletId: ID!, userPermissions: [String!], userRole: String!): POSResolvedConfigGraphQLType!
+
+  """Get a single POS outlet by ID"""
+  posOutlet(id: ID!): POSOutletGraphQLType
+
+  """Get all POS outlets for the current club"""
+  posOutlets: [POSOutletGraphQLType!]!
+
+  """Get a single POS template by ID"""
+  posTemplate(id: ID!): POSTemplateGraphQLType
+
+  """Get all POS templates for the current club"""
+  posTemplates: [POSTemplateGraphQLType!]!
+
+  """Get all pro shop categories for the current club"""
+  proShopCategories: [ProShopCategoryType!]!
+
+  """Get a single pro shop category by ID"""
+  proShopCategory(id: ID!): ProShopCategoryType
+
+  """Get a single pro shop product by ID"""
+  proShopProduct(id: ID!): ProShopProductType
+
+  """Get pro shop products with filtering and pagination"""
+  proShopProducts(filter: ProShopProductFilterInput): ProShopProductConnectionType!
+
+  """Get products marked as quick add for check-in"""
+  quickAddProducts: [ProShopProductType!]!
+
+  """Get a single rate configuration by ID"""
+  rateConfig(id: ID!): RateConfigType!
+
+  """Get HTML template for a receipt"""
+  receiptHTML(playerId: ID!, teeTimeId: ID!): String!
+
   """Search for caddies by name or caddy number"""
   searchCaddies(courseId: ID, search: String): [CaddyType!]!
 
   """Get list of services"""
   services(filter: ServiceFilterInput): [ServiceType!]!
+
+  """Get a settlement by ID"""
+  settlement(id: ID!): DailySettlementGraphQLType
+
+  """Get or create a settlement for a specific date"""
+  settlementByDate(date: DateTime!): DailySettlementGraphQLType!
+
+  """Get exceptions for a settlement"""
+  settlementExceptions(pendingOnly: Boolean = false, settlementId: ID!): [SettlementExceptionGraphQLType!]!
+
+  """Get settlement summary"""
+  settlementSummary(settlementId: ID!): SettlementSummaryGraphQLType!
+
+  """Get settlements for a date range"""
+  settlements(input: GetSettlementsInput!): [DailySettlementGraphQLType!]!
+
+  """Get shift history for a drawer"""
+  shiftHistory(cashDrawerId: ID!, limit: Int = 30): [CashDrawerShiftGraphQLType!]!
+
+  """Get movements for a shift"""
+  shiftMovements(shiftId: ID!, type: CashMovementType): [CashMovementGraphQLType!]!
+
+  """Get summary for a shift"""
+  shiftSummary(shiftId: ID!): ShiftSummaryGraphQLType!
+
+  """Get cart for a specific player/slot"""
+  slotCart(playerId: ID!): SlotCartType
+
+  """Get starter ticket by ID"""
+  starterTicket(ticketId: ID!): StarterTicketResponseType
+
+  """Get starter ticket for a tee time"""
+  starterTicketByTeeTime(teeTimeId: ID!): StarterTicketResponseType
+
+  """Get a sub-account by ID"""
+  subAccount(id: ID!): SubAccount
+
+  """Get transactions for sub-accounts"""
+  subAccountTransactions(input: GetTransactionsInput!): [SubAccountTransaction!]!
+
+  """Get all sub-accounts for the club"""
+  subAccounts(status: SubAccountStatus): [SubAccount!]!
 
   """Get tee sheet for a course and date"""
   teeSheet(courseId: ID!, date: DateTime!): [TeeSheetSlotType!]!
@@ -1676,11 +3572,35 @@ type Query {
   """Get tee time blocks for a course"""
   teeTimeBlocks(blockType: BlockType, courseId: ID!, endDate: DateTime, startDate: DateTime): [TeeTimeBlockType!]!
 
+  """Get all carts for a tee time with context info"""
+  teeTimeCarts(teeTimeId: ID!): TeeTimeCartsType!
+
   """Get paginated list of tee times"""
   teeTimes(courseId: ID, endDate: DateTime, first: Int = 20, memberId: ID, skip: Int, startDate: DateTime, status: TeeTimeStatus): TeeTimeConnection!
 
+  """Get all tee time IDs with drafts for a specific date"""
+  teeTimesWithDrafts(date: DateTime!): [ID!]!
+
+  """Get HTML template for a starter ticket"""
+  ticketHTML(teeTimeId: ID!): String!
+
+  """Get today's settlement for the current club"""
+  todaySettlement: DailySettlementGraphQLType
+
+  """Get discounts applied to a transaction"""
+  transactionDiscounts(transactionId: ID!): [AppliedDiscountType!]!
+
+  """Get payment transaction history for a tee time"""
+  transactionHistory(teeTimeId: ID!): [PaymentTransactionType!]!
+
+  """Validate if a discount can be applied"""
+  validateDiscount(input: ValidateDiscountInput!): DiscountValidationResultType!
+
   """Validate a tee ticket by barcode"""
   validateTeeTicket(barcode: String!): TeeTicketValidationResult!
+
+  """Validate a ticket by QR code data"""
+  validateTicket(qrCodeData: String!): TicketValidationResultType!
 
   """Get waitlist entries"""
   waitlist(date: String, facilityId: ID, first: Int = 20, serviceId: ID, skip: Int): WaitlistConnection!
@@ -1700,6 +3620,76 @@ type Query {
   weekViewOccupancy(input: WeekViewOccupancyInput!): WeekViewOccupancyResponse!
 }
 
+type RateConfigMutationResponse {
+  message: String
+  rateConfig: RateConfigType
+  success: Boolean!
+}
+
+type RateConfigType {
+  caddyRates: [CaddyRateType!]!
+  cartRates: [CartRateType!]!
+  courseId: ID!
+  createdAt: DateTime!
+  description: String
+  effectiveFrom: DateTime!
+  effectiveTo: DateTime
+  greenFeeRates: [GreenFeeRateType!]!
+  id: ID!
+  isActive: Boolean!
+  name: String!
+  updatedAt: DateTime!
+}
+
+input RecordCashCountInput {
+  actualCash: Float!
+  settlementId: ID!
+}
+
+input RecordMovementInput {
+  amount: Float!
+  description: String
+  reason: String
+  reference: String
+  shiftId: ID!
+  transactionId: ID
+  type: CashMovementType!
+}
+
+input RecordSpendInput {
+  amount: Float!
+  category: String
+  memberId: String!
+  requirementId: String!
+}
+
+input RecordTransactionInput {
+  amount: Float!
+  category: SubAccountPermission!
+  description: String!
+  lineItemId: String
+  locationName: String
+  notes: String
+  paymentTransactionId: String
+  subAccountId: String!
+  teeTimeId: String
+}
+
+input RemoveLineItemInput {
+  lineItemId: ID!
+}
+
+type RemoveLineItemResultType {
+  error: String
+  removedItem: SlotLineItemType
+  success: Boolean!
+}
+
+type RemovePaymentMethodResult {
+  error: String
+  success: Boolean!
+}
+
 """Rental club policy for golf bookings"""
 enum RentalPolicy {
   OPTIONAL
@@ -1715,10 +3705,27 @@ enum RentalStatus {
   RETURNED
 }
 
+input ReopenSettlementInput {
+  reason: String!
+  settlementId: ID!
+}
+
 input RescheduleBookingInput {
   id: ID!
   newResourceId: ID
   newStartTime: String!
+}
+
+input ResolveExceptionInput {
+  exceptionId: ID!
+  resolution: ExceptionResolution!
+  resolutionNote: String
+}
+
+input ResolveShortfallInput {
+  action: ShortfallAction!
+  memberSpendId: String!
+  note: String
 }
 
 type ResourceType {
@@ -1735,6 +3742,12 @@ enum ResourceTypeEnum {
   ROOM
   SPA
   STUDIO
+}
+
+input SaveCartDraftInput {
+  """JSON stringified draft data"""
+  draftData: String!
+  teeTimeId: ID!
 }
 
 type ScheduleConfigMutationResponse {
@@ -1793,6 +3806,146 @@ type ServiceVariationType {
   name: String!
   priceModifier: Float!
   priceType: String!
+}
+
+type SetRoleOverridesMutationResponse {
+  message: String
+  roleConfig: POSOutletRoleConfigGraphQLType
+  success: Boolean!
+}
+
+input SettleAllPlayersInput {
+  paymentMethodId: ID!
+  reference: String
+  teeTimeId: ID!
+}
+
+type SettlementExceptionGraphQLType {
+  amount: Float
+  createdAt: DateTime!
+  description: String!
+  id: ID!
+  lineItemId: ID
+  resolution: ExceptionResolution!
+  resolutionNote: String
+  resolvedAt: DateTime
+  resolvedBy: ID
+  settlementId: ID!
+  severity: ExceptionSeverity!
+  shiftId: ID
+  transactionId: ID
+  type: ExceptionType!
+  updatedAt: DateTime!
+}
+
+type SettlementResultType {
+  error: String
+  players: [PlayerSettlementResultType!]!
+  settledAt: DateTime!
+  settledBy: String!
+  success: Boolean!
+  transactionId: String
+}
+
+"""Status of a daily settlement"""
+enum SettlementStatus {
+  CLOSED
+  IN_REVIEW
+  OPEN
+  REOPENED
+}
+
+type SettlementSummaryGraphQLType {
+  actualCash: Float
+  businessDate: DateTime!
+  cashVariance: Float
+  exceptionCount: Int!
+  expectedCash: Float!
+  settlementId: ID!
+  status: SettlementStatus!
+  totalCard: Float!
+  totalCash: Float!
+  totalGrossSales: Float!
+  totalMemberAccount: Float!
+  totalNetSales: Float!
+  unresolvedExceptionCount: Int!
+}
+
+type ShiftSummaryGraphQLType {
+  actualCash: Float
+  closedAt: DateTime
+  closedBy: ID
+  closingCount: Float
+  expectedCash: Float!
+  movementCount: Float!
+  openedAt: DateTime!
+  openedBy: ID!
+  openingFloat: Float!
+  shiftId: ID!
+  status: CashDrawerStatus!
+  totalDrops: Float!
+  totalPaidIn: Float!
+  totalPaidOut: Float!
+  totalRefunds: Float!
+  totalSales: Float!
+  variance: Float
+}
+
+"""Action to take when member has a shortfall"""
+enum ShortfallAction {
+  CARRY_FORWARD
+  CHARGE_DIFFERENCE
+  CREDIT_BALANCE
+  WAIVE
+}
+
+type SlotCartType {
+  balanceDue: Float!
+  checkedInAt: DateTime
+  grandTotal: Float!
+  isCheckedIn: Boolean!
+  isSettled: Boolean!
+  lineItems: [SlotLineItemType!]!
+  memberId: ID
+  memberNumber: String
+  paidAmount: Float!
+  playerId: ID!
+  playerName: String!
+  playerType: String!
+  subtotal: Float!
+  taxTotal: Float!
+  transferredInItems: [TransferredItemType!]!
+  transferredOutItems: [TransferredItemType!]!
+}
+
+type SlotCheckInResultType {
+  checkedInAt: DateTime
+  error: String
+  playerId: ID!
+}
+
+type SlotLineItemType {
+  baseAmount: Float!
+  description: String!
+  id: ID!
+  isPaid: Boolean!
+  isTransferred: Boolean!
+  paidAt: DateTime
+  paymentMethod: String
+  quantity: Int!
+  taxAmount: Float!
+  taxRate: Float!
+  taxType: String!
+  totalAmount: Float!
+  transferredFromPlayerName: String
+  type: String!
+}
+
+type SlotPaymentResultType {
+  amountPaid: Float!
+  isSettled: Boolean!
+  newBalance: Float!
+  playerId: ID!
 }
 
 type SpecialDayMutationResponse {
@@ -1860,6 +4013,159 @@ enum StartFormat {
   SHOTGUN
 }
 
+input StarterTicketConfigInput {
+  autoGenerate: Boolean
+  content: TicketContentInput
+  defaultPrintOption: PrintOption
+  generateOn: TicketGenerateOn
+}
+
+type StarterTicketConfigType {
+  autoGenerate: Boolean!
+  content: TicketContentConfigType!
+  defaultPrintOption: PrintOption!
+  generateOn: TicketGenerateOn!
+}
+
+type StarterTicketPlayerType {
+  memberNumber: String
+  name: String!
+  type: CheckInPlayerType!
+}
+
+type StarterTicketResponseType {
+  caddyName: String
+  cartNumber: String
+  course: String!
+  generatedAt: DateTime!
+  generatedBy: String!
+  id: ID!
+  players: [StarterTicketPlayerType!]!
+  printedAt: DateTime
+  qrCodeData: String
+  rentalItems: [String!]!
+  reprintCount: Int!
+  specialRequests: String
+  startingHole: Int!
+  teeTime: DateTime!
+  ticketNumber: String!
+}
+
+type StoredPaymentMethod {
+  brand: String!
+  cardholderName: String
+  clubId: String!
+  createdAt: DateTime!
+  expiryMonth: Int
+  expiryYear: Int
+  failureCount: Int!
+  id: ID!
+  isAutoPayEnabled: Boolean!
+  isDefault: Boolean!
+  last4: String!
+  lastFailureReason: String
+  lastUsedAt: DateTime
+  memberId: String!
+  status: StoredPaymentMethodStatus!
+  stripeCustomerId: String
+  stripePaymentMethodId: String!
+  type: StoredPaymentMethodType!
+  updatedAt: DateTime!
+  verifiedAt: DateTime
+}
+
+"""Status of stored payment method"""
+enum StoredPaymentMethodStatus {
+  ACTIVE
+  EXPIRED
+  FAILED
+  REMOVED
+}
+
+"""Type of stored payment method"""
+enum StoredPaymentMethodType {
+  BANK_ACCOUNT
+  CARD
+}
+
+type SubAccount {
+  clubId: String!
+  createdAt: DateTime!
+  dailyLimit: Float
+  dailySpend: Float!
+  email: String
+  id: ID!
+  lastResetDaily: DateTime!
+  lastResetMonthly: DateTime!
+  lastResetWeekly: DateTime!
+  memberId: String!
+  monthlyLimit: Float
+  monthlySpend: Float!
+  name: String!
+  notifyOnLimitReached: Boolean!
+  notifyPrimaryOnUse: Boolean!
+  perTransactionLimit: Float
+  permissions: [SubAccountPermission!]!
+  phone: String
+  pinAttempts: Int!
+  pinLockedUntil: DateTime
+  relationship: String!
+  status: SubAccountStatus!
+  updatedAt: DateTime!
+  validFrom: DateTime!
+  validUntil: DateTime
+  weeklyLimit: Float
+  weeklySpend: Float!
+}
+
+type SubAccountLimitCheck {
+  allowed: Boolean!
+  currentDaily: Float!
+  currentMonthly: Float!
+  currentWeekly: Float!
+  dailyLimit: Float
+  monthlyLimit: Float
+  perTransactionLimit: Float
+  reason: String
+  weeklyLimit: Float
+}
+
+"""Permission categories for sub-accounts"""
+enum SubAccountPermission {
+  ALL
+  EVENTS
+  FOOD_BEVERAGE
+  GOLF
+  RETAIL
+  SPA
+}
+
+"""Status of a sub-account"""
+enum SubAccountStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+  SUSPENDED
+}
+
+type SubAccountTransaction {
+  amount: Float!
+  category: SubAccountPermission!
+  clubId: String!
+  createdAt: DateTime!
+  description: String!
+  id: ID!
+  lineItemId: String
+  locationName: String
+  notes: String
+  paymentTransactionId: String
+  subAccount: SubAccount
+  subAccountId: String!
+  teeTimeId: String
+  verifiedAt: DateTime!
+  verifiedBy: String
+}
+
 type Subscription {
   """Subscribe to tee time cancellations"""
   teeTimeCancelled: TeeTimeType!
@@ -1872,6 +4178,43 @@ type Subscription {
 
   """Subscribe to tee time updates for a specific course and date"""
   teeTimeUpdated(courseId: ID, date: DateTime): TeeTimeType!
+}
+
+input TaxConfigInput {
+  defaultRate: Float
+  defaultType: TaxType
+  overrides: [TaxOverrideInput!]
+  showBreakdown: Boolean
+  showTypeIndicator: Boolean
+  taxLabel: String
+}
+
+type TaxConfigType {
+  defaultRate: Float!
+  defaultType: TaxType!
+  overrides: [TaxOverrideType!]!
+  showBreakdown: Boolean!
+  showTypeIndicator: Boolean!
+  taxLabel: String!
+}
+
+input TaxOverrideInput {
+  itemType: LineItemType!
+  rate: Float!
+  taxType: TaxType!
+}
+
+type TaxOverrideType {
+  itemType: LineItemType!
+  rate: Float!
+  taxType: TaxType!
+}
+
+"""Tax calculation type: ADD (on top), INCLUDE (in price), NONE"""
+enum TaxType {
+  ADD
+  INCLUDE
+  NONE
 }
 
 type TeeSheetBlockInfoType {
@@ -1937,6 +4280,17 @@ type TeeTimeBlockType {
   recurringPattern: String
   startTime: DateTime!
   updatedAt: DateTime!
+}
+
+type TeeTimeCartsType {
+  courseId: ID!
+  courseName: String!
+  date: DateTime!
+  isFullyCheckedIn: Boolean!
+  isFullySettled: Boolean!
+  slots: [SlotCartType!]!
+  teeTime: String!
+  teeTimeId: ID!
 }
 
 type TeeTimeConnection {
@@ -2022,6 +4376,46 @@ type TeeTimeTypeEdge {
   node: TeeTimeType!
 }
 
+type TicketContentConfigType {
+  showCaddyName: Boolean!
+  showCartNumber: Boolean!
+  showCourse: Boolean!
+  showMemberNumbers: Boolean!
+  showPlayerNames: Boolean!
+  showQRCode: Boolean!
+  showRentalItems: Boolean!
+  showSpecialRequests: Boolean!
+  showStartingHole: Boolean!
+  showTeeTime: Boolean!
+}
+
+input TicketContentInput {
+  showCaddyName: Boolean
+  showCartNumber: Boolean
+  showCourse: Boolean
+  showMemberNumbers: Boolean
+  showPlayerNames: Boolean
+  showQRCode: Boolean
+  showRentalItems: Boolean
+  showSpecialRequests: Boolean
+  showStartingHole: Boolean
+  showTeeTime: Boolean
+}
+
+"""When to generate starter ticket"""
+enum TicketGenerateOn {
+  CHECK_IN
+  MANUAL
+  SETTLEMENT
+}
+
+type TicketValidationResultType {
+  message: String
+  teeTimeId: ID
+  ticketId: ID
+  valid: Boolean!
+}
+
 input TierDiscountInput {
   discountPercent: Float!
   tierName: String!
@@ -2038,10 +4432,51 @@ type TimePeriodMutationResponse {
   timePeriod: GolfTimePeriodType
 }
 
+"""Payment transaction status"""
+enum TransactionStatus {
+  COMPLETED
+  PENDING
+  REFUNDED
+  VOIDED
+}
+
+input TransferLineItemInput {
+  fromPlayerId: ID!
+  lineItemId: ID!
+  toPlayerId: ID!
+}
+
+type TransferResultType {
+  error: String
+  isTransferred: Boolean
+  lineItemId: ID
+  success: Boolean!
+  transferredToPlayerId: ID
+}
+
+type TransferredItemType {
+  amount: Float!
+  description: String!
+  fromPlayerId: ID!
+  fromPlayerName: String!
+  lineItemId: ID!
+  toPlayerId: ID
+  toPlayerName: String
+}
+
 """Twilight calculation mode"""
 enum TwilightMode {
   FIXED
   SUNSET
+}
+
+input UndoCheckInInput {
+  playerId: ID!
+  reason: String
+}
+
+input UndoTransferInput {
+  lineItemId: ID!
 }
 
 input UpdateApplicationInput {
@@ -2063,6 +4498,46 @@ input UpdateBlockInput {
   startTime: DateTime
 }
 
+input UpdateButtonRegistryInput {
+  registry: JSON!
+}
+
+type UpdateButtonRegistryMutationResponse {
+  buttonRegistry: POSButtonRegistryGraphQLType
+  message: String
+  success: Boolean!
+}
+
+input UpdateCaddyRateInput {
+  amount: Float
+  caddyType: String
+  taxRate: Float
+  taxType: String
+}
+
+input UpdateCartRateInput {
+  amount: Float
+  cartType: String
+  taxRate: Float
+  taxType: String
+}
+
+input UpdateCashDrawerInput {
+  id: ID!
+  isActive: Boolean
+  location: String
+  name: String
+}
+
+input UpdateCreditSettingsInput {
+  creditAlertThreshold: Float
+  creditBlockEnabled: Boolean
+  creditLimit: Float
+  creditLimitEnabled: Boolean
+  creditOverrideAllowed: Boolean
+  memberId: ID!
+}
+
 input UpdateDependentInput {
   dateOfBirth: DateTime
   email: String
@@ -2071,6 +4546,18 @@ input UpdateDependentInput {
   lastName: String
   phone: String
   relationship: String
+}
+
+input UpdateDiscountInput {
+  approval: DiscountApprovalInput
+  code: String
+  conditions: DiscountConditionsInput
+  isActive: Boolean
+  name: String
+  scope: DiscountScope
+  type: DiscountType
+  validity: DiscountValidityInput
+  value: Float
 }
 
 input UpdateFacilityInput {
@@ -2087,6 +4574,15 @@ input UpdateFacilityInput {
   type: ResourceTypeEnum
 }
 
+input UpdateGreenFeeRateInput {
+  amount: Float
+  holes: Int
+  playerType: String
+  taxRate: Float
+  taxType: String
+  timeCategory: String
+}
+
 input UpdateGroupBookingInput {
   eventDate: DateTime
   groupName: String
@@ -2094,6 +4590,11 @@ input UpdateGroupBookingInput {
   startFormat: StartFormat
   startTime: String
   status: GroupBookingStatus
+}
+
+input UpdateLineItemQuantityInput {
+  lineItemId: ID!
+  quantity: Int!
 }
 
 input UpdateLotteryInput {
@@ -2129,10 +4630,89 @@ input UpdateMemberInput {
   tags: [String!]
 }
 
+input UpdatePaymentMethodInput {
+  icon: String
+  isEnabled: Boolean
+  name: String
+  opensPOS: Boolean
+  requiresRef: Boolean
+  type: PaymentMethodTypeEnum
+}
+
 input UpdatePlayerRentalStatusInput {
   caddyId: ID
   caddyStatus: RentalStatus
   cartStatus: RentalStatus
+}
+
+input UpdateProShopCategoryInput {
+  defaultTaxRate: Float
+  defaultTaxType: TaxType
+  description: String
+  isActive: Boolean
+  name: String
+}
+
+input UpdateProShopProductInput {
+  categoryId: ID
+  description: String
+  isActive: Boolean
+  isQuickAdd: Boolean
+  name: String
+  price: Float
+  sku: String
+  taxRate: Float
+  taxType: TaxType
+  useCategoryDefaults: Boolean
+  variants: [UpdateProShopVariantInput!]
+}
+
+input UpdateProShopVariantInput {
+  """Set to true to delete this variant"""
+  _delete: Boolean
+
+  """ID for existing variant, omit for new variant"""
+  id: ID
+  name: String!
+  priceAdjustment: Float = 0
+  sku: String
+}
+
+type UpdateQuantityResultType {
+  error: String
+  lineItem: SlotLineItemType
+  success: Boolean!
+}
+
+input UpdateRateConfigInput {
+  description: String
+  effectiveFrom: DateTime
+  effectiveTo: DateTime
+  isActive: Boolean
+  name: String
+}
+
+input UpdateRequirementInput {
+  allowPartialCredit: Boolean
+  defaultShortfallAction: ShortfallAction
+  description: String
+  effectiveTo: DateTime
+  excludedCategories: [String!]
+  gracePeriodDays: Int
+  includeEvents: Boolean
+  includeFoodBeverage: Boolean
+  includeGolf: Boolean
+  includeRetail: Boolean
+  includeSpa: Boolean
+  includedCategories: [String!]
+  isActive: Boolean
+  membershipTypes: [String!]
+  minimumAmount: Float
+  name: String
+  notifyAtPercent: [Int!]
+  notifyDaysBeforeEnd: [Int!]
+  period: MinimumSpendPeriod
+  requirementId: String!
 }
 
 input UpdateScheduleConfigInput {
@@ -2195,6 +4775,24 @@ input UpdateServiceInput {
   variations: [ServiceVariationInput!]
 }
 
+input UpdateSettlementTotalsInput {
+  refundCount: Int
+  settlementId: ID!
+  totalCard: Float
+  totalCash: Float
+  totalDiscounts: Float
+  totalGrossSales: Float
+  totalMemberAccount: Float
+  totalNetSales: Float
+  totalOther: Float
+  totalRefunds: Float
+  totalServiceCharge: Float
+  totalTax: Float
+  totalVoids: Float
+  transactionCount: Int
+  voidCount: Int
+}
+
 input UpdateSpecialDayInput {
   bookingMode: BookingMode
   customFirstTee: String
@@ -2223,6 +4821,28 @@ input UpdateStaffMemberInput {
   workingHours: [DayHoursInput!]
 }
 
+input UpdateStoredPaymentInput {
+  id: ID!
+  isAutoPayEnabled: Boolean
+  isDefault: Boolean
+}
+
+input UpdateSubAccountInput {
+  dailyLimit: Float
+  email: String
+  monthlyLimit: Float
+  name: String
+  notifyOnLimitReached: Boolean
+  notifyPrimaryOnUse: Boolean
+  perTransactionLimit: Float
+  permissions: [SubAccountPermission!]
+  phone: String
+  relationship: String
+  subAccountId: String!
+  validUntil: DateTime
+  weeklyLimit: Float
+}
+
 input UpdateTeeTimeInput {
   holes: Int
   notes: String
@@ -2249,6 +4869,25 @@ input UpdateWaitlistEntryInput {
   status: GolfWaitlistStatus
   timeRangeEnd: String
   timeRangeStart: String
+}
+
+type UpsertTemplateMutationResponse {
+  message: String
+  success: Boolean!
+  template: POSTemplateGraphQLType
+}
+
+input ValidateDiscountInput {
+  amount: Float!
+  code: String
+  discountId: ID
+  membershipTypeId: ID
+  playerType: String
+}
+
+input VerifyPinInput {
+  pin: String!
+  subAccountId: String!
 }
 
 input VoidInvoiceInput {

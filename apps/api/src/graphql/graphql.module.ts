@@ -18,6 +18,11 @@ import { ScheduleConfigGraphqlModule } from './schedule-config/schedule-config.m
 import { DiscountsModule } from './discounts/discounts.module';
 import { CreditLimitsModule } from './credit-limits/credit-limits.module';
 import { CashDrawerModule } from './cash-drawer/cash-drawer.module';
+import { EODSettlementModule } from './eod-settlement/eod-settlement.module';
+import { MinimumSpendModule } from './minimum-spend/minimum-spend.module';
+import { SubAccountsModule } from './sub-accounts/sub-accounts.module';
+import { StoredPaymentsModule } from './stored-payments/stored-payments.module';
+import { POSConfigModule } from './pos-config/pos-config.module';
 
 @Module({
   imports: [
@@ -62,6 +67,11 @@ import { CashDrawerModule } from './cash-drawer/cash-drawer.module';
     DiscountsModule,
     CreditLimitsModule,
     CashDrawerModule,
+    EODSettlementModule,
+    MinimumSpendModule,
+    SubAccountsModule,
+    StoredPaymentsModule,
+    POSConfigModule,
   ],
 })
 export class GraphqlModule {}
