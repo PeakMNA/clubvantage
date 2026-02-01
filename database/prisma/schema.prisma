@@ -70,6 +70,7 @@ model Club {
   productCategories      ProductCategory[]
   products               Product[]
   modifierGroups         ModifierGroup[]
+  posOutlets             POSOutlet[]
 
   @@index([slug])
   @@index([isActive])
@@ -2103,6 +2104,35 @@ enum ModifierSelectionType {
   MULTIPLE  // Pick many (toppings)
 }
 
+enum TileSize {
+  SMALL
+  MEDIUM
+  LARGE
+}
+
+enum CategoryDisplayStyle {
+  TABS
+  SIDEBAR
+  DROPDOWN
+}
+
+enum QuickKeysPosition {
+  TOP
+  LEFT
+}
+
+enum SuggestionPosition {
+  TOP_ROW
+  SIDEBAR
+  FLOATING
+}
+
+enum InventoryVisibilityRule {
+  ALWAYS_SHOW
+  HIDE_WHEN_ZERO
+  SHOW_DISABLED
+}
+
 model ProductCategory {
   id          String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   clubId      String            @db.Uuid
@@ -2122,7 +2152,7 @@ model ProductCategory {
   parent      ProductCategory?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
   children    ProductCategory[] @relation("CategoryHierarchy")
   products    Product[]
-  // outletCategoryConfigs OutletCategoryConfig[]  // Added in Task 3
+  outletCategoryConfigs OutletCategoryConfig[]
 
   @@index([clubId])
   @@index([clubId, parentId])
@@ -2171,7 +2201,7 @@ model Product {
   category             ProductCategory  @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   variants             ProductVariant[]
   modifierGroups       ProductModifierGroup[]
-  // outletConfigs        OutletProductConfig[]    // Added in Task 3
+  outletConfigs        OutletProductConfig[]
   // salesMetrics         ProductSalesMetric[]     // Added in Task 4
   // staffUsage           StaffProductUsage[]      // Added in Task 4
 
@@ -2265,6 +2295,115 @@ model ProductModifierGroup {
   @@index([productId])
   @@index([modifierGroupId])
   @@map("product_modifier_groups")
+}
+
+// ─────────────────────────────────────────────────────────────
+// POS OUTLET SYSTEM
+// ─────────────────────────────────────────────────────────────
+
+/// POS outlet/station for product sales (e.g., Pro Shop, Restaurant, Bar)
+model POSOutlet {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId      String   @db.Uuid
+  name        String   @db.VarChar(100)
+  code        String   @db.VarChar(20)
+  description String?  @db.VarChar(500)
+  location    String?  @db.VarChar(200)
+
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  club             Club                   @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  productConfigs   OutletProductConfig[]
+  categoryConfigs  OutletCategoryConfig[]
+  gridConfig       OutletGridConfig?
+  // salesMetrics     ProductSalesMetric[]      // Added in Task 4
+  // staffUsage       StaffProductUsage[]       // Added in Task 4
+  // suggestionConfig SmartSuggestionConfig?    // Added in Task 4
+
+  @@unique([clubId, code])
+  @@index([clubId])
+  @@index([clubId, isActive])
+  @@map("pos_outlets")
+}
+
+/// Product configuration per outlet (visibility, display settings, quick keys)
+model OutletProductConfig {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  outletId     String    @db.Uuid
+  productId    String    @db.Uuid
+  categoryId   String?   @db.Uuid
+
+  displayName  String?   @db.VarChar(100)
+  buttonColor  String?   @db.VarChar(7)
+  sortPriority Int?
+  gridPosition Json?
+
+  isVisible       Boolean @default(true)
+  visibilityRules Json    @default("{}")
+
+  isQuickKey       Boolean @default(false)
+  quickKeyPosition Int?
+
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  outlet       POSOutlet @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  product      Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([outletId, productId])
+  @@index([outletId])
+  @@index([outletId, isVisible])
+  @@index([outletId, isQuickKey])
+  @@map("outlet_product_configs")
+}
+
+/// Category configuration per outlet (visibility, sort order, color override)
+model OutletCategoryConfig {
+  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  outletId      String          @db.Uuid
+  categoryId    String          @db.Uuid
+
+  isVisible     Boolean         @default(true)
+  sortOrder     Int?
+  colorOverride String?         @db.VarChar(7)
+
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  outlet        POSOutlet       @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  category      ProductCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([outletId, categoryId])
+  @@index([outletId])
+  @@map("outlet_category_configs")
+}
+
+/// Grid layout configuration per outlet
+model OutletGridConfig {
+  id                String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  outletId          String               @unique @db.Uuid
+
+  gridColumns       Int                  @default(6)
+  gridRows          Int                  @default(4)
+  tileSize          TileSize             @default(MEDIUM)
+  showImages        Boolean              @default(true)
+  showPrices        Boolean              @default(true)
+
+  categoryStyle     CategoryDisplayStyle @default(TABS)
+  showAllCategory   Boolean              @default(true)
+
+  quickKeysEnabled  Boolean              @default(true)
+  quickKeysCount    Int                  @default(8)
+  quickKeysPosition QuickKeysPosition    @default(TOP)
+
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+
+  outlet            POSOutlet            @relation(fields: [outletId], references: [id], onDelete: Cascade)
+
+  @@map("outlet_grid_configs")
 }
 
 // ─────────────────────────────────────────────────────────────
