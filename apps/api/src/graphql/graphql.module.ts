@@ -15,6 +15,7 @@ import { GolfGraphqlModule } from './golf/golf.module';
 import { BookingsGraphQLModule } from './bookings/bookings.module';
 import { ApplicationsGraphqlModule } from './applications/applications.module';
 import { ScheduleConfigGraphqlModule } from './schedule-config/schedule-config.module';
+import { DiscountsModule } from './discounts/discounts.module';
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { ScheduleConfigGraphqlModule } from './schedule-config/schedule-config.m
     BookingsGraphQLModule,
     ApplicationsGraphqlModule,
     ScheduleConfigGraphqlModule,
+    DiscountsModule,
   ],
 })
 export class GraphqlModule {}

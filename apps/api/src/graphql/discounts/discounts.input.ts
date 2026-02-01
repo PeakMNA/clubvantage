@@ -291,4 +291,13 @@ export class DiscountsQueryArgs extends PaginationArgs {
   @IsOptional()
   @IsString()
   sortOrder?: 'asc' | 'desc';
+
+  // Computed helpers for offset pagination
+  get limit(): number {
+    return this.first || 50;
+  }
+
+  get offset(): number {
+    return this.skip || 0;
+  }
 }
