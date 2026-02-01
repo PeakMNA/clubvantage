@@ -55,7 +55,7 @@ export function POSActionBar({
   // Place buttons in grid
   buttons.forEach(btn => {
     const [row, col] = btn.position
-    if (row < rows && col < columns) {
+    if (row < rows && col < columns && grid[row]) {
       grid[row][col] = btn
     }
   })

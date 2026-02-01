@@ -28,10 +28,10 @@ import { DateNavigator } from '@/components/golf/calendar-popup'
 import { TeeSheetWeekView } from '@/components/golf/tee-sheet-week-view'
 import { TeeSheetMonthView } from '@/components/golf/tee-sheet-month-view'
 import { FlightDetailPanel } from '@/components/golf/flight-detail-panel'
+import { ShoppingCartCheckInPanel } from '@/components/golf/shopping-cart-checkin-panel'
 // Dynamic modal imports for better bundle size - only loaded when modal is opened
 import {
   DynamicBookTeeTimeModal as BookTeeTimeModal,
-  DynamicCheckInModal as CheckInModal,
   DynamicSettlementModal as SettlementModal,
   DynamicCourseModal as CourseModal,
   DynamicCartModal as CartModal,
@@ -45,11 +45,13 @@ import { CartsTab } from '@/components/golf/carts-tab'
 import { CaddiesTab } from '@/components/golf/caddies-tab'
 import { SettingsTab } from '@/components/golf/settings-tab'
 import { BlockTeeTimeModal, type BlockFormData } from '@/components/golf/block-tee-time-modal'
+import { MoveBookingDialog } from '@/components/golf/confirmation-dialogs'
 // Booking-centric components
 import { BookingsTab } from '@/components/golf/bookings-tab'
 import { BookingModal, type BookingPayload as NewBookingPayload, type ClubSettings as NewClubSettings } from '@/components/golf/booking-modal'
 import { type PlayerData } from '@/components/golf/add-player-flow'
 import { PlacementModeOverlay, usePlacementMode } from '@/components/golf/placement-mode-overlay'
+import { GolfPOSWrapper } from '@/components/golf/golf-pos-wrapper'
 import type { Flight, Course, Cart, Caddy, TeeSheetDay, DayAvailability, Player, BookingGroup, TeeSheetSideBySide, NineHoleType, NineType, Booking, BookingPlayer, BookingFilters, WeekViewSlot, WeekViewPosition, BackendPlayerType, RentalStatus } from '@/components/golf/types'
 import type { FlightStatus } from '@/components/golf/flight-status-badge'
 import type { PlayerType } from '@/components/golf/player-type-badge'
@@ -736,7 +738,7 @@ const initialSettings = {
   },
   schedule: {
     weekday: { firstTeeTime: '06:00', lastTeeTime: '17:00', interval: 8 },
-    weekend: { firstTeeTime: '05:30', lastTeeTime: '17:30', interval: 8 },
+    weekend: { firstTeeTime: '06:00', lastTeeTime: '17:30', interval: 8 },  // Same as weekday
     seasons: [],
     holidays: [],
   } as SettingsScheduleConfig,
@@ -794,7 +796,7 @@ export default function GolfPage() {
   const { courses: apiCourses, isLoading: isCoursesLoading } = useCourses()
 
   // Golf mutations for booking, check-in, etc.
-  const { createTeeTime, updateTeeTime, updateTeeTimePlayers, checkIn, cancelTeeTime, updatePlayerRentalStatus, isCreating, isUpdatingRentalStatus } = useGolfMutations()
+  const { createTeeTime, updateTeeTime, updateTeeTimePlayers, checkIn, cancelTeeTime, updatePlayerRentalStatus, moveTeeTime, isCreating, isUpdatingRentalStatus, isMoving } = useGolfMutations()
 
   // Prefetch hook for week view (bundle-preload pattern - warm cache on hover)
   const prefetchWeekView = usePrefetchWeekView()
@@ -804,6 +806,16 @@ export default function GolfPage() {
 
   // Settings state (synced with tee sheet)
   const [golfSettings, setGolfSettings] = useState(initialSettings)
+
+  // Feature flag for POS integration (can be controlled via URL param or config)
+  // Set to false by default - enable by adding ?pos=true to URL
+  const [isPOSEnabled] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      return params.get('pos') === 'true'
+    }
+    return false
+  })
 
   // =========================================================================
   // BOOKING-CENTRIC STATE
@@ -839,10 +851,16 @@ export default function GolfPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('day')
   const [layoutType, setLayoutType] = useState<LayoutType>('list')
 
-  // Local courses state for editing - synced with API courses when they load
-  const [courses, setCourses] = useState<Course[]>(mockCourses)
+  // Local courses state for editing - starts empty, synced from API when loaded
+  const [courses, setCourses] = useState<Course[]>([])
   // selectedCourse: empty until API courses load - ensures we never query with mock IDs
   const [selectedCourse, setSelectedCourse] = useState<string>('')
+
+  // Debug logging for courses loading
+  useEffect(() => {
+    console.log('[Golf Page] apiCourses:', apiCourses)
+    console.log('[Golf Page] isCoursesLoading:', isCoursesLoading)
+  }, [apiCourses, isCoursesLoading])
 
   // Sync courses and selected course when API data loads
   useEffect(() => {
@@ -861,6 +879,7 @@ export default function GolfPage() {
         lastTeeTime: c.lastTeeTime,
         enable18HoleBooking: c.holes === 18,
       }))
+      console.log('[Golf Page] Setting courses from API:', transformedCourses)
       setCourses(transformedCourses)
       // Only set selectedCourse if not already set (preserve user selection)
       if (!selectedCourse) {
@@ -1001,6 +1020,13 @@ export default function GolfPage() {
   const [editingCaddy, setEditingCaddy] = useState<Caddy | null>(null)
   const [showCaddyScheduleModal, setShowCaddyScheduleModal] = useState(false)
   const [scheduleCaddy, setScheduleCaddy] = useState<Caddy | null>(null)
+
+  // Move/Copy booking dialog state
+  const [moveDialog, setMoveDialog] = useState<{
+    isOpen: boolean
+    targetTeeTime: string
+    isProcessing: boolean
+  }>({ isOpen: false, targetTeeTime: '', isProcessing: false })
 
   // Flights state - generated from schedule config
   const [flights, setFlights] = useState<Flight[]>([])
@@ -1905,15 +1931,25 @@ export default function GolfPage() {
 
   // Handle booking context menu actions
   const handleBookingContextAction = useCallback((bookingId: string, action: BookingAction) => {
+    // Find flight by booking group ID, player bookingId, or flight ID
     const flight = flights.find((f) =>
-      f.bookingGroups?.some((g) => g.id === bookingId) || f.id === bookingId
+      f.bookingGroups?.some((g) => g.id === bookingId) ||
+      f.players.some((p) => p?.bookingId === bookingId) ||
+      f.id === bookingId
     )
     if (!flight) return
 
     // Filter players that belong to THIS specific booking
-    const bookingPlayers = flight.players.filter(
+    let bookingPlayers = flight.players.filter(
       (p): p is NonNullable<typeof p> => p !== null && p !== undefined && p.bookingId === bookingId
     )
+
+    // Fallback: if no players matched by bookingId, use all players from the flight
+    if (bookingPlayers.length === 0) {
+      bookingPlayers = flight.players.filter(
+        (p): p is NonNullable<typeof p> => p !== null && p !== undefined
+      )
+    }
 
     switch (action) {
       case 'check_in':
@@ -1927,7 +1963,9 @@ export default function GolfPage() {
           playerNames: bookingPlayers.map((p) => p.name),
           playerCount: bookingPlayers.length,
           sourceTeeTime: flight.time,
-          sourceDate: currentDate.toISOString().split('T')[0] || '',
+          sourceDate: currentDate.toISOString().slice(0, 10),
+          sourceFlightId: flight.id,
+          playerIds: bookingPlayers.map((p) => p.id),
         })
         break
       case 'copy':
@@ -1938,7 +1976,9 @@ export default function GolfPage() {
           playerNames: bookingPlayers.map((p) => p.name),
           playerCount: bookingPlayers.length,
           sourceTeeTime: flight.time,
-          sourceDate: currentDate.toISOString().split('T')[0] || '',
+          sourceDate: currentDate.toISOString().slice(0, 10),
+          sourceFlightId: flight.id,
+          playerIds: bookingPlayers.map((p) => p.id),
         })
         break
       case 'edit':
@@ -2012,7 +2052,7 @@ export default function GolfPage() {
     }
   }, [flights, clipboardBooking, placementMode, handleBookSlot])
 
-  // Handle placement target selection
+  // Handle placement target selection - show confirmation dialog
   const handlePlacementSelect = useCallback((teeTime: string) => {
     if (!placementMode.state.active || !placementMode.state.sourceBooking) return
 
@@ -2028,10 +2068,99 @@ export default function GolfPage() {
       return
     }
 
-    // For now, just complete the operation (actual move/copy logic would go here)
-    console.log(`${placementMode.state.action} booking to ${teeTime}`)
-    placementMode.complete()
+    // Show confirmation dialog
+    setMoveDialog({
+      isOpen: true,
+      targetTeeTime: teeTime,
+      isProcessing: false,
+    })
   }, [flights, placementMode])
+
+  // Handle move/copy confirmation - actually perform the operation
+  const handleMoveConfirm = useCallback(async () => {
+    if (!placementMode.state.active || !placementMode.state.sourceBooking) return
+    if (!selectedCourse) return
+
+    const courseId = selectedCourse
+    const { sourceBooking, action } = placementMode.state
+    const targetTeeTime = moveDialog.targetTeeTime
+
+    // Find source flight by ID first, fallback to time matching
+    const sourceFlight = sourceBooking.sourceFlightId
+      ? flights.find((f) => f.id === sourceBooking.sourceFlightId)
+      : flights.find((f) => f.time === sourceBooking.sourceTeeTime)
+    const targetFlight = flights.find((f) => f.time === targetTeeTime)
+
+    if (!sourceFlight || !targetFlight) return
+
+    setMoveDialog((prev) => ({ ...prev, isProcessing: true }))
+
+    try {
+      // Convert 12-hour time format to 24-hour format for API
+      const convert12To24Hour = (time12: string): string => {
+        const match = time12.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i)
+        if (!match) return time12
+        let hours = parseInt(match[1] || '0', 10)
+        const minutes = match[2]
+        const period = match[3]?.toUpperCase()
+        if (period === 'PM' && hours !== 12) hours += 12
+        if (period === 'AM' && hours === 12) hours = 0
+        return `${hours.toString().padStart(2, '0')}:${minutes}`
+      }
+
+      const dateStr = currentDate.toISOString().slice(0, 10)
+      const newTeeTime24 = convert12To24Hour(targetTeeTime)
+
+      if (action === 'move') {
+        await moveTeeTime(sourceBooking.id, {
+          newTeeDate: dateStr,
+          newTeeTime: newTeeTime24,
+          newCourseId: courseId,
+        })
+      } else {
+        // For copy action, create a new booking with the same players
+        let playersToCopy = sourceFlight.players.filter(
+          (p): p is Player => p !== null && (
+            !sourceBooking.playerIds?.length ||
+            sourceBooking.playerIds.includes(p.id) ||
+            sourceBooking.playerNames.includes(p.name)
+          )
+        )
+
+        if (playersToCopy.length === 0) {
+          playersToCopy = sourceFlight.players.filter((p): p is Player => p !== null)
+        }
+
+        await createTeeTime({
+          courseId: courseId,
+          teeDate: dateStr,
+          teeTime: newTeeTime24,
+          holes: sourceFlight.holes || 18,
+          players: playersToCopy.map((p, index) => ({
+            position: index + 1,
+            playerType: p.type === 'member' ? 'MEMBER' : p.type === 'guest' ? 'GUEST' : 'MEMBER',
+            memberId: p.memberUuid,
+            guestName: p.type === 'guest' ? p.name : undefined,
+          })),
+        })
+      }
+
+      // Refetch tee sheet to get updated data
+      refetchTeeSheet()
+
+      // Close dialog and complete placement mode
+      setMoveDialog({ isOpen: false, targetTeeTime: '', isProcessing: false })
+      placementMode.complete()
+    } catch (error) {
+      console.error('Move/copy operation failed:', error)
+      setMoveDialog((prev) => ({ ...prev, isProcessing: false }))
+    }
+  }, [flights, placementMode, moveDialog.targetTeeTime, currentDate, selectedCourse, moveTeeTime, createTeeTime, refetchTeeSheet])
+
+  // Handle move dialog cancel
+  const handleMoveCancel = useCallback(() => {
+    setMoveDialog({ isOpen: false, targetTeeTime: '', isProcessing: false })
+  }, [])
 
   // Handle releasing a block
   const handleReleaseBlock = useCallback((blockId: string) => {
@@ -2050,7 +2179,8 @@ export default function GolfPage() {
   const renderTabContent = () => {
     switch (activeTab) {
       case 'tee-sheet':
-        return (
+        // Tee sheet content that can optionally be wrapped with POS
+        const teeSheetContent = (
           <div className="space-y-6">
             {/* Controls */}
             <div className="flex items-center justify-between">
@@ -2239,6 +2369,28 @@ export default function GolfPage() {
           </div>
         )
 
+        // Conditionally wrap with POS when enabled
+        if (isPOSEnabled) {
+          // Get selected player IDs from selected flight
+          const selectedPlayerIds = selectedFlight
+            ? selectedFlight.players
+                .filter((p): p is Player => p !== null)
+                .map((p) => p.id)
+            : []
+
+          return (
+            <GolfPOSWrapper
+              selectedTeeTimeId={selectedFlight?.id}
+              selectedPlayerIds={selectedPlayerIds}
+              onOpenSettlement={() => setShowSettlementModal(true)}
+            >
+              {teeSheetContent}
+            </GolfPOSWrapper>
+          )
+        }
+
+        return teeSheetContent
+
       case 'bookings':
         // Generate bookings from flights for the bookings tab
         const mockBookings = generateMockBookings(
@@ -2283,6 +2435,7 @@ export default function GolfPage() {
         return (
           <CoursesTab
             courses={courses}
+            isLoading={isCoursesLoading}
             onAddCourse={() => {
               setEditingCourse(null)
               setShowCourseModal(true)
@@ -2516,26 +2669,15 @@ export default function GolfPage() {
         }}
       />
 
-      {/* Check-In Modal */}
-      {selectedFlight && (
-        <CheckInModal
+      {/* Check-In Panel (Slide-over) */}
+      {(selectedFlight || selectedBooking) && (
+        <ShoppingCartCheckInPanel
           isOpen={showCheckInModal}
+          teeTimeId={selectedFlight?.id || selectedBooking?.flightId || ''}
           onClose={() => setShowCheckInModal(false)}
-          flight={selectedFlight}
-          availableCarts={carts.filter((c: Cart) => c.status === 'available')}
-          availableCaddies={caddies.filter((c: Caddy) => c.status === 'available')}
-          onComplete={async (data: {
-            checkedInPlayers: string[]
-            assignedCarts: string[]
-            assignedCaddies: string[]
-            notes: string
-          }) => {
-            await handleCheckInFlight({
-              flightId: selectedFlight.id,
-              playerIds: data.checkedInPlayers,
-              cartId: data.assignedCarts[0],
-              caddyId: data.assignedCaddies[0],
-            })
+          onCheckInComplete={() => {
+            refetchTeeSheet()
+            setShowCheckInModal(false)
           }}
         />
       )}
@@ -2721,13 +2863,9 @@ export default function GolfPage() {
           }
         }}
         onCheckIn={selectedBooking ? async () => {
-          try {
-            await checkIn(selectedBooking.id)
-            refetchTeeSheet()
-          } catch (error) {
-            console.error('Failed to check in:', error)
-            throw error
-          }
+          // Open the check-in panel
+          setShowCheckInModal(true)
+          setIsBookingModalOpen(false)
         } : undefined}
         onCancel={selectedBooking ? async (reason) => {
           try {
@@ -2750,6 +2888,7 @@ export default function GolfPage() {
             playerCount: selectedBooking.playerCount,
             sourceTeeTime: selectedBooking.teeTime,
             sourceDate: selectedBooking.teeDate,
+            sourceFlightId: selectedBooking.flightId,
             playerIds: selectedBooking.players.map(p => p.id),
           })
           setIsBookingModalOpen(false)
@@ -2764,6 +2903,7 @@ export default function GolfPage() {
             playerCount: selectedBooking.playerCount,
             sourceTeeTime: selectedBooking.teeTime,
             sourceDate: selectedBooking.teeDate,
+            sourceFlightId: selectedBooking.flightId,
             playerIds: selectedBooking.players.map(p => p.id),
           })
           setIsBookingModalOpen(false)
@@ -2809,6 +2949,21 @@ export default function GolfPage() {
           sourceBooking={placementMode.state.sourceBooking}
           isProcessing={isBookingProcessing}
           onCancel={placementMode.cancel}
+        />
+      )}
+
+      {/* Move/Copy Booking Confirmation Dialog */}
+      {placementMode.state.sourceBooking && (
+        <MoveBookingDialog
+          isOpen={moveDialog.isOpen}
+          isProcessing={moveDialog.isProcessing}
+          action={placementMode.state.action}
+          playerNames={placementMode.state.sourceBooking.playerNames}
+          sourceTeeTime={placementMode.state.sourceBooking.sourceTeeTime}
+          targetTeeTime={moveDialog.targetTeeTime}
+          date={currentDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+          onClose={handleMoveCancel}
+          onConfirm={handleMoveConfirm}
         />
       )}
     </div>

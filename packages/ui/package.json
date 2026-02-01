@@ -13,7 +13,8 @@
     "./lib/utils": "./src/lib/utils.ts",
     "./components/*": "./src/components/*.tsx",
     "./primitives/*": "./src/primitives/*.tsx",
-    "./layouts/*": "./src/layouts/*.tsx"
+    "./layouts/*": "./src/layouts/*.tsx",
+    "./pos": "./src/pos/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

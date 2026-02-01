@@ -111,7 +111,10 @@ function CategoryTabs({ categories, active, onChange }: CategoryTabsProps) {
 
     if (newIndex !== index) {
       setFocusedIndex(newIndex)
-      onChange?.(categories[newIndex].id)
+      const category = categories[newIndex]
+      if (category) {
+        onChange?.(category.id)
+      }
     }
   }
 
