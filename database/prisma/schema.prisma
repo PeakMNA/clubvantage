@@ -599,6 +599,7 @@ model Staff {
   user              User?                @relation(fields: [userId], references: [id])
   capabilities      StaffCapability[]
   certifications    StaffCertification[]
+  productUsage      StaffProductUsage[]
 
   @@index([clubId])
   @@index([userId])
@@ -2202,8 +2203,8 @@ model Product {
   variants             ProductVariant[]
   modifierGroups       ProductModifierGroup[]
   outletConfigs        OutletProductConfig[]
-  // salesMetrics         ProductSalesMetric[]     // Added in Task 4
-  // staffUsage           StaffProductUsage[]      // Added in Task 4
+  salesMetrics         ProductSalesMetric[]
+  staffUsage           StaffProductUsage[]
 
   @@unique([clubId, sku])
   @@index([clubId])
@@ -2318,9 +2319,9 @@ model POSOutlet {
   productConfigs   OutletProductConfig[]
   categoryConfigs  OutletCategoryConfig[]
   gridConfig       OutletGridConfig?
-  // salesMetrics     ProductSalesMetric[]      // Added in Task 4
-  // staffUsage       StaffProductUsage[]       // Added in Task 4
-  // suggestionConfig SmartSuggestionConfig?    // Added in Task 4
+  salesMetrics     ProductSalesMetric[]
+  staffUsage       StaffProductUsage[]
+  suggestionConfig SmartSuggestionConfig?
 
   @@unique([clubId, code])
   @@index([clubId])
@@ -2404,6 +2405,73 @@ model OutletGridConfig {
   outlet            POSOutlet            @relation(fields: [outletId], references: [id], onDelete: Cascade)
 
   @@map("outlet_grid_configs")
+}
+
+/// Daily sales metrics aggregated per product per outlet
+model ProductSalesMetric {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productId        String    @db.Uuid
+  outletId         String    @db.Uuid
+  date             DateTime  @db.Date
+
+  quantitySold     Int       @default(0)
+  revenue          Decimal   @default(0) @db.Decimal(12, 2)
+  transactionCount Int       @default(0)
+  salesByHour      Json      @default("{}")
+
+  updatedAt        DateTime  @updatedAt
+
+  product          Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  outlet           POSOutlet @relation(fields: [outletId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, outletId, date])
+  @@index([outletId, date])
+  @@index([productId, date])
+  @@map("product_sales_metrics")
+}
+
+/// Tracks staff product usage patterns for personalized suggestions
+model StaffProductUsage {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  staffId    String    @db.Uuid
+  productId  String    @db.Uuid
+  outletId   String    @db.Uuid
+
+  usageCount Int       @default(0)
+  lastUsedAt DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  staff      Staff     @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  product    Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  outlet     POSOutlet @relation(fields: [outletId], references: [id], onDelete: Cascade)
+
+  @@unique([staffId, productId, outletId])
+  @@index([staffId, outletId])
+  @@index([outletId])
+  @@map("staff_product_usage")
+}
+
+/// Configuration for smart product suggestions per outlet
+model SmartSuggestionConfig {
+  id                     String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  outletId               String             @unique @db.Uuid
+
+  enabled                Boolean            @default(true)
+  suggestionCount        Int                @default(6)
+  position               SuggestionPosition @default(TOP_ROW)
+
+  timeOfDayWeight        Int                @default(40)
+  salesVelocityWeight    Int                @default(35)
+  staffHistoryWeight     Int                @default(25)
+
+  refreshIntervalMinutes Int                @default(30)
+
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+
+  outlet                 POSOutlet          @relation(fields: [outletId], references: [id], onDelete: Cascade)
+
+  @@map("smart_suggestion_configs")
 }
 
 // ─────────────────────────────────────────────────────────────
