@@ -63,6 +63,7 @@ function SearchInput({ value = '', onChange }: SearchInputProps) {
         value={localValue}
         onChange={handleChange}
         className="pl-10 w-64 h-9 bg-stone-50 border-stone-200 focus:bg-white"
+        aria-label="Search items"
       />
     </div>
   )
@@ -93,16 +94,44 @@ interface CategoryTabsProps {
 }
 
 function CategoryTabs({ categories, active, onChange }: CategoryTabsProps) {
+  const [focusedIndex, setFocusedIndex] = React.useState(
+    categories.findIndex((cat) => cat.id === active)
+  )
+
+  const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
+    let newIndex = index
+
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault()
+      newIndex = index === 0 ? categories.length - 1 : index - 1
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault()
+      newIndex = index === categories.length - 1 ? 0 : index + 1
+    }
+
+    if (newIndex !== index) {
+      setFocusedIndex(newIndex)
+      onChange?.(categories[newIndex].id)
+    }
+  }
+
   if (categories.length === 0) {
     return null
   }
 
   return (
-    <div className="flex items-center gap-1 bg-stone-100 rounded-lg p-1">
-      {categories.map((category) => (
+    <div
+      className="flex items-center gap-1 bg-stone-100 rounded-lg p-1"
+      role="tablist"
+    >
+      {categories.map((category, index) => (
         <button
           key={category.id}
           onClick={() => onChange?.(category.id)}
+          onKeyDown={(e) => handleKeyDown(e, index)}
+          role="tab"
+          aria-selected={active === category.id}
+          tabIndex={active === category.id ? 0 : -1}
           className={cn(
             'px-4 py-1.5 text-sm font-medium rounded-md transition-all duration-200',
             active === category.id

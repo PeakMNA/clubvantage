@@ -48,8 +48,14 @@ export function POSButton({
   className,
   style,
 }: POSButtonProps) {
-  // Get icon component
-  const IconComponent = icon ? (LucideIcons as any)[icon] : null
+  // Type-safe icon lookup
+  const IconComponent = icon && icon in LucideIcons
+    ? (LucideIcons[icon as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>)
+    : null
+
+  // Build aria-label with button label and shortcut info
+  const ariaLabel = shortcut ? `${label} (${shortcut})` : label
+  const approvalDescriptionId = requiresApproval ? `${buttonId}-approval` : undefined
 
   return (
     <button
@@ -64,6 +70,8 @@ export function POSButton({
         className
       )}
       style={style}
+      aria-label={ariaLabel}
+      aria-describedby={approvalDescriptionId}
       title={shortcut ? `${label} (${shortcut})` : label}
     >
       {IconComponent && <IconComponent className="h-4 w-4" />}
@@ -71,7 +79,12 @@ export function POSButton({
 
       {/* Approval indicator */}
       {requiresApproval && (
-        <LockKeyhole className="absolute top-1 right-1 h-3 w-3 opacity-60" />
+        <LockKeyhole
+          className="absolute top-1 right-1 h-3 w-3 opacity-60"
+          id={approvalDescriptionId}
+          role="img"
+          aria-label="Requires approval"
+        />
       )}
 
       {/* Shortcut badge */}

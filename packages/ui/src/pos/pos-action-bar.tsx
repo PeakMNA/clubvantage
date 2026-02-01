@@ -67,6 +67,8 @@ export function POSActionBar({
         className
       )}
       style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}
+      role="toolbar"
+      aria-label="Action buttons"
     >
       {grid.flat().map((cell, idx) => {
         if (!cell) return <div key={idx} className="h-12" />
