@@ -30,24 +30,38 @@ interface ApiResponse<T> {
 
 async function fetchWithCredentials<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  timeoutMs: number = 5000
 ): Promise<T> {
   const url = `${apiBaseUrl}/api/v1/auth${endpoint}`;
+
+  // Create abort controller for timeout
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   let response: Response;
   try {
     response = await fetch(url, {
       ...options,
       credentials: 'include',
+      signal: controller.signal,
       headers: {
         'Content-Type': 'application/json',
         ...options.headers,
       },
     });
   } catch (fetchError) {
+    clearTimeout(timeoutId);
+    // Check if it was a timeout
+    if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+      console.error('[Auth API] Request timeout:', endpoint);
+      throw new Error('Request timeout');
+    }
     // Network error - likely CORS or server not reachable
     console.error('[Auth API] Network error:', fetchError);
     throw new Error('Network error - unable to reach server');
+  } finally {
+    clearTimeout(timeoutId);
   }
 
   if (!response.ok) {
@@ -78,6 +92,8 @@ async function fetchWithCredentials<T>(
  * Uses local database authentication (bcrypt)
  */
 export async function signIn(credentials: LoginCredentials): Promise<SignInResponse> {
+  console.log('[Auth API] Starting sign in...');
+
   const response = await fetchWithCredentials<{
     accessToken: string;
     refreshToken: string;
@@ -96,14 +112,22 @@ export async function signIn(credentials: LoginCredentials): Promise<SignInRespo
     body: JSON.stringify(credentials),
   });
 
+  console.log('[Auth API] Login successful, setting session cookies...');
+
   // Set cookies via the session endpoint
-  await fetchWithCredentials('/session', {
-    method: 'POST',
-    body: JSON.stringify({
-      accessToken: response.accessToken,
-      refreshToken: response.refreshToken,
-    }),
-  });
+  try {
+    await fetchWithCredentials('/session', {
+      method: 'POST',
+      body: JSON.stringify({
+        accessToken: response.accessToken,
+        refreshToken: response.refreshToken,
+      }),
+    });
+    console.log('[Auth API] Session cookies set successfully');
+  } catch (sessionError) {
+    console.error('[Auth API] Failed to set session cookies:', sessionError);
+    // Continue anyway - login was successful, cookies may work with a refresh
+  }
 
   return {
     expiresIn: response.expiresIn,
@@ -136,23 +160,34 @@ export async function signOut(): Promise<void> {
 
 /**
  * Refresh the current session
- * Uses the refresh token from storage
+ * Uses the refresh token from cookies (set by /session endpoint)
  */
 export async function refreshSession(): Promise<RefreshResponse> {
-  const url = `${apiBaseUrl}/api/v1/auth/refresh`;
+  // Use /refresh-session which reads refresh token from cookies
+  const url = `${apiBaseUrl}/api/v1/auth/refresh-session`;
+
+  // Create abort controller for timeout (3 second timeout)
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 3000);
 
   let response: Response;
   try {
     response = await fetch(url, {
       method: 'POST',
       credentials: 'include',
+      signal: controller.signal,
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({}),
     });
-  } catch {
+  } catch (err) {
+    clearTimeout(timeoutId);
+    if (err instanceof Error && err.name === 'AbortError') {
+      throw new Error('Session refresh timeout');
+    }
     throw new Error('Network error during session refresh');
+  } finally {
+    clearTimeout(timeoutId);
   }
 
   // 401 means no valid refresh token
@@ -167,23 +202,6 @@ export async function refreshSession(): Promise<RefreshResponse> {
   const json = await response.json();
   const data = json.data || json;
 
-  // Set new cookies via session endpoint
-  try {
-    await fetch(`${apiBaseUrl}/api/v1/auth/session`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        accessToken: data.accessToken,
-        refreshToken: data.refreshToken,
-      }),
-    });
-  } catch {
-    // Cookie setting failed but we have valid tokens
-  }
-
   return {
     expiresIn: data.expiresIn,
     expiresAt: Date.now() + data.expiresIn * 1000,
@@ -197,18 +215,26 @@ export async function refreshSession(): Promise<RefreshResponse> {
 export async function getSession(): Promise<AuthUser | null> {
   const url = `${apiBaseUrl}/api/v1/auth/me`;
 
+  // Create abort controller for timeout (3 second timeout for session check)
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 3000);
+
   let response: Response;
   try {
     response = await fetch(url, {
       method: 'GET',
       credentials: 'include',
+      signal: controller.signal,
       headers: {
         'Content-Type': 'application/json',
       },
     });
   } catch {
-    // Network error - no session
+    clearTimeout(timeoutId);
+    // Network error or timeout - no session
     return null;
+  } finally {
+    clearTimeout(timeoutId);
   }
 
   // 401 is expected when not logged in - return null silently

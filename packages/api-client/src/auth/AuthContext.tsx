@@ -82,6 +82,35 @@ export function AuthProvider({
     return () => clearInterval(refreshInterval);
   }, [state.isAuthenticated, onAuthStateChange]);
 
+  // Refresh session when tab becomes visible again
+  useEffect(() => {
+    if (!state.isAuthenticated) return;
+
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === 'visible') {
+        try {
+          // Silently refresh session when returning to tab
+          await authApi.refreshSession();
+        } catch {
+          // If refresh fails, check if we still have a valid session
+          const user = await authApi.getSession();
+          if (!user) {
+            setState({
+              user: null,
+              isLoading: false,
+              isAuthenticated: false,
+              error: new Error('Session expired'),
+            });
+            onAuthStateChange?.(null);
+          }
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [state.isAuthenticated, onAuthStateChange]);
+
   const signIn = useCallback(
     async (credentials: LoginCredentials): Promise<AuthUser> => {
       setState((prev) => ({ ...prev, isLoading: true, error: null }));

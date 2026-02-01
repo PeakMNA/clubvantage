@@ -1,0 +1,310 @@
+# Discount Queries
+
+query GetDiscounts(
+  $first: Int
+  $skip: Int
+  $search: String
+  $type: DiscountType
+  $scope: DiscountScope
+  $isActive: Boolean
+  $sortBy: String
+  $sortOrder: String
+) {
+  discounts(
+    first: $first
+    skip: $skip
+    search: $search
+    type: $type
+    scope: $scope
+    isActive: $isActive
+    sortBy: $sortBy
+    sortOrder: $sortOrder
+  ) {
+    edges {
+      node {
+        id
+        clubId
+        name
+        code
+        type
+        value
+        scope
+        conditions {
+          minimumAmount
+          maximumDiscount
+          membershipTypeIds
+          playerTypes
+        }
+        validity {
+          validFrom
+          validTo
+          usageLimit
+          usageCount
+        }
+        approval {
+          requiresApproval
+          approvalThreshold
+        }
+        isActive
+        createdAt
+        updatedAt
+      }
+      cursor
+    }
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      startCursor
+      endCursor
+    }
+    totalCount
+  }
+}
+
+query GetActiveDiscounts {
+  activeDiscounts {
+    id
+    name
+    code
+    type
+    value
+    scope
+    conditions {
+      minimumAmount
+      maximumDiscount
+      membershipTypeIds
+      playerTypes
+    }
+    validity {
+      validFrom
+      validTo
+      usageLimit
+      usageCount
+    }
+    approval {
+      requiresApproval
+      approvalThreshold
+    }
+    isActive
+  }
+}
+
+query GetDiscount($id: ID!) {
+  discount(id: $id) {
+    id
+    clubId
+    name
+    code
+    type
+    value
+    scope
+    conditions {
+      minimumAmount
+      maximumDiscount
+      membershipTypeIds
+      playerTypes
+    }
+    validity {
+      validFrom
+      validTo
+      usageLimit
+      usageCount
+    }
+    approval {
+      requiresApproval
+      approvalThreshold
+    }
+    isActive
+    createdAt
+    updatedAt
+  }
+}
+
+query GetDiscountByCode($code: String!) {
+  discountByCode(code: $code) {
+    id
+    name
+    code
+    type
+    value
+    scope
+    conditions {
+      minimumAmount
+      maximumDiscount
+      membershipTypeIds
+      playerTypes
+    }
+    validity {
+      validFrom
+      validTo
+      usageLimit
+      usageCount
+    }
+    approval {
+      requiresApproval
+      approvalThreshold
+    }
+    isActive
+  }
+}
+
+query ValidateDiscount($input: ValidateDiscountInput!) {
+  validateDiscount(input: $input) {
+    isValid
+    message
+    calculatedAmount
+    requiresApproval
+  }
+}
+
+query GetLineItemDiscounts($lineItemId: ID!) {
+  lineItemDiscounts(lineItemId: $lineItemId) {
+    id
+    discountId
+    lineItemId
+    discountType
+    discountValue
+    calculatedAmount
+    appliedBy
+    approvedBy
+    approvalNote
+    createdAt
+    discount {
+      id
+      name
+      code
+      type
+      value
+    }
+  }
+}
+
+query GetTransactionDiscounts($transactionId: ID!) {
+  transactionDiscounts(transactionId: $transactionId) {
+    id
+    discountId
+    transactionId
+    discountType
+    discountValue
+    calculatedAmount
+    appliedBy
+    approvedBy
+    approvalNote
+    createdAt
+    discount {
+      id
+      name
+      code
+      type
+      value
+    }
+  }
+}
+
+# Discount Mutations
+
+mutation CreateDiscount($input: CreateDiscountInput!) {
+  createDiscount(input: $input) {
+    id
+    clubId
+    name
+    code
+    type
+    value
+    scope
+    conditions {
+      minimumAmount
+      maximumDiscount
+      membershipTypeIds
+      playerTypes
+    }
+    validity {
+      validFrom
+      validTo
+      usageLimit
+      usageCount
+    }
+    approval {
+      requiresApproval
+      approvalThreshold
+    }
+    isActive
+    createdAt
+    updatedAt
+  }
+}
+
+mutation UpdateDiscount($id: ID!, $input: UpdateDiscountInput!) {
+  updateDiscount(id: $id, input: $input) {
+    id
+    clubId
+    name
+    code
+    type
+    value
+    scope
+    conditions {
+      minimumAmount
+      maximumDiscount
+      membershipTypeIds
+      playerTypes
+    }
+    validity {
+      validFrom
+      validTo
+      usageLimit
+      usageCount
+    }
+    approval {
+      requiresApproval
+      approvalThreshold
+    }
+    isActive
+    createdAt
+    updatedAt
+  }
+}
+
+mutation DeleteDiscount($id: ID!) {
+  deleteDiscount(id: $id)
+}
+
+mutation ApplyDiscount($input: ApplyDiscountInput!) {
+  applyDiscount(input: $input) {
+    success
+    message
+    requiresApproval
+    originalAmount
+    discountedAmount
+    savings
+  }
+}
+
+mutation ApplyDiscountByCode($input: ApplyDiscountByCodeInput!) {
+  applyDiscountByCode(input: $input) {
+    success
+    message
+    requiresApproval
+    originalAmount
+    discountedAmount
+    savings
+  }
+}
+
+mutation ApproveDiscount($input: ApproveDiscountInput!) {
+  approveDiscount(input: $input) {
+    id
+    discountId
+    discountType
+    discountValue
+    calculatedAmount
+    appliedBy
+    approvedBy
+    approvalNote
+    createdAt
+  }
+}
+
+mutation RemoveAppliedDiscount($appliedDiscountId: ID!) {
+  removeAppliedDiscount(appliedDiscountId: $appliedDiscountId)
+}

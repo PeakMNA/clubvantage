@@ -104,6 +104,54 @@ export type ApplicationStatus =
   | 'UNDER_REVIEW'
   | 'WITHDRAWN';
 
+export type AppliedDiscountType = {
+  __typename?: 'AppliedDiscountType';
+  appliedBy: Scalars['String']['output'];
+  approvalNote?: Maybe<Scalars['String']['output']>;
+  approvedBy?: Maybe<Scalars['String']['output']>;
+  calculatedAmount: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  discount?: Maybe<DiscountGraphQlType>;
+  discountId: Scalars['String']['output'];
+  discountType: DiscountType;
+  discountValue: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  lineItemId?: Maybe<Scalars['String']['output']>;
+  transactionId?: Maybe<Scalars['String']['output']>;
+};
+
+export type ApplyDiscountByCodeInput = {
+  code: Scalars['String']['input'];
+  lineItemId?: InputMaybe<Scalars['ID']['input']>;
+  membershipTypeId?: InputMaybe<Scalars['ID']['input']>;
+  originalAmount: Scalars['Float']['input'];
+  playerType?: InputMaybe<Scalars['String']['input']>;
+  transactionId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+export type ApplyDiscountInput = {
+  discountId: Scalars['ID']['input'];
+  lineItemId?: InputMaybe<Scalars['ID']['input']>;
+  originalAmount: Scalars['Float']['input'];
+  transactionId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+export type ApplyDiscountResultType = {
+  __typename?: 'ApplyDiscountResultType';
+  appliedDiscount?: Maybe<AppliedDiscountType>;
+  discountedAmount?: Maybe<Scalars['String']['output']>;
+  message?: Maybe<Scalars['String']['output']>;
+  originalAmount?: Maybe<Scalars['String']['output']>;
+  requiresApproval?: Maybe<Scalars['Boolean']['output']>;
+  savings?: Maybe<Scalars['String']['output']>;
+  success: Scalars['Boolean']['output'];
+};
+
+export type ApproveDiscountInput = {
+  appliedDiscountId: Scalars['ID']['input'];
+  approvalNote?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type BatchPaymentInput = {
   /** For member account charges */
   chargeToMemberId?: InputMaybe<Scalars['ID']['input']>;
@@ -674,6 +722,18 @@ export type CreateDependentInput = {
   relationship: Scalars['String']['input'];
 };
 
+export type CreateDiscountInput = {
+  approval?: InputMaybe<DiscountApprovalInput>;
+  code?: InputMaybe<Scalars['String']['input']>;
+  conditions?: InputMaybe<DiscountConditionsInput>;
+  isActive?: Scalars['Boolean']['input'];
+  name: Scalars['String']['input'];
+  scope: DiscountScope;
+  type: DiscountType;
+  validity?: InputMaybe<DiscountValidityInput>;
+  value: Scalars['Float']['input'];
+};
+
 export type CreateFacilityInput = {
   capacity: Scalars['Int']['input'];
   description?: InputMaybe<Scalars['String']['input']>;
@@ -1002,6 +1062,94 @@ export type DependentType = {
   lastName: Scalars['String']['output'];
   phone?: Maybe<Scalars['String']['output']>;
   relationship: Scalars['String']['output'];
+};
+
+export type DiscountApprovalInput = {
+  approvalThreshold?: InputMaybe<Scalars['Float']['input']>;
+  requiresApproval?: Scalars['Boolean']['input'];
+};
+
+export type DiscountApprovalType = {
+  __typename?: 'DiscountApprovalType';
+  approvalThreshold?: Maybe<Scalars['String']['output']>;
+  requiresApproval: Scalars['Boolean']['output'];
+};
+
+export type DiscountConditionsInput = {
+  maximumDiscount?: InputMaybe<Scalars['Float']['input']>;
+  membershipTypeIds?: InputMaybe<Array<Scalars['ID']['input']>>;
+  minimumAmount?: InputMaybe<Scalars['Float']['input']>;
+  playerTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+export type DiscountConditionsType = {
+  __typename?: 'DiscountConditionsType';
+  maximumDiscount?: Maybe<Scalars['String']['output']>;
+  membershipTypeIds?: Maybe<Array<Scalars['String']['output']>>;
+  minimumAmount?: Maybe<Scalars['String']['output']>;
+  playerTypes?: Maybe<Array<Scalars['String']['output']>>;
+};
+
+export type DiscountConnection = {
+  __typename?: 'DiscountConnection';
+  edges: Array<DiscountGraphQlTypeEdge>;
+  pageInfo: PageInfo;
+  totalCount: Scalars['Int']['output'];
+};
+
+export type DiscountGraphQlType = {
+  __typename?: 'DiscountGraphQLType';
+  approval: DiscountApprovalType;
+  clubId: Scalars['String']['output'];
+  code?: Maybe<Scalars['String']['output']>;
+  conditions: DiscountConditionsType;
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  isActive: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  scope: DiscountScope;
+  type: DiscountType;
+  updatedAt: Scalars['DateTime']['output'];
+  validity: DiscountValidityType;
+  value: Scalars['String']['output'];
+};
+
+export type DiscountGraphQlTypeEdge = {
+  __typename?: 'DiscountGraphQLTypeEdge';
+  cursor: Scalars['String']['output'];
+  node: DiscountGraphQlType;
+};
+
+/** Scope of discount application */
+export type DiscountScope =
+  | 'LINE_ITEM'
+  | 'ORDER';
+
+/** Type of discount calculation */
+export type DiscountType =
+  | 'FIXED_AMOUNT'
+  | 'PERCENTAGE';
+
+export type DiscountValidationResultType = {
+  __typename?: 'DiscountValidationResultType';
+  calculatedAmount?: Maybe<Scalars['String']['output']>;
+  isValid: Scalars['Boolean']['output'];
+  message?: Maybe<Scalars['String']['output']>;
+  requiresApproval?: Maybe<Scalars['Boolean']['output']>;
+};
+
+export type DiscountValidityInput = {
+  usageLimit?: InputMaybe<Scalars['Float']['input']>;
+  validFrom?: InputMaybe<Scalars['DateTime']['input']>;
+  validTo?: InputMaybe<Scalars['DateTime']['input']>;
+};
+
+export type DiscountValidityType = {
+  __typename?: 'DiscountValidityType';
+  usageCount: Scalars['Float']['output'];
+  usageLimit?: Maybe<Scalars['Float']['output']>;
+  validFrom?: Maybe<Scalars['DateTime']['output']>;
+  validTo?: Maybe<Scalars['DateTime']['output']>;
 };
 
 export type EffectiveScheduleType = {
@@ -1709,6 +1857,12 @@ export type Mutation = {
   addGroupPlayers: GroupBookingMutationResponse;
   /** Add a line item to a player */
   addLineItem: BookingLineItemType;
+  /** Apply a discount to a line item or transaction */
+  applyDiscount: ApplyDiscountResultType;
+  /** Apply a discount using a promo code */
+  applyDiscountByCode: ApplyDiscountResultType;
+  /** Approve a pending discount that requires manager approval */
+  approveDiscount: AppliedDiscountType;
   /** Auto-assign players to flights */
   assignFlights: GroupBookingFlightsResponse;
   /** Remove multiple line items */
@@ -1763,6 +1917,8 @@ export type Mutation = {
   createDefaultScheduleConfig: ScheduleConfigMutationResponse;
   /** Add a dependent to a member */
   createDependent: DependentType;
+  /** Create a new discount */
+  createDiscount: DiscountGraphQlType;
   /** Create a new facility */
   createFacility: FacilityResponseType;
   /** Create a green fee rate */
@@ -1809,6 +1965,8 @@ export type Mutation = {
   deleteCourseSchedule: ScheduleMutationResponse;
   /** Delete a dependent */
   deleteDependent: DeleteDependentResponseType;
+  /** Delete a discount (soft delete) */
+  deleteDiscount: Scalars['Boolean']['output'];
   /** Delete a facility */
   deleteFacility: DeleteResponseType;
   /** Delete a green fee rate */
@@ -1869,6 +2027,8 @@ export type Mutation = {
   recordPayment: PaymentType;
   /** Manually regenerate line items for a tee time */
   regenerateLineItems: Scalars['Boolean']['output'];
+  /** Remove an applied discount */
+  removeAppliedDiscount: Scalars['Boolean']['output'];
   /** Remove entry from waitlist */
   removeFromWaitlist: WaitlistResponseType;
   /** Remove a player from a group booking */
@@ -1917,6 +2077,8 @@ export type Mutation = {
   updateCourseSchedule: ScheduleMutationResponse;
   /** Update a dependent */
   updateDependent: DependentType;
+  /** Update an existing discount */
+  updateDiscount: DiscountGraphQlType;
   /** Update an existing facility */
   updateFacility: FacilityResponseType;
   /** Update a green fee rate */
@@ -1983,6 +2145,21 @@ export type MutationAddGroupPlayersArgs = {
 
 export type MutationAddLineItemArgs = {
   input: AddLineItemInput;
+};
+
+
+export type MutationApplyDiscountArgs = {
+  input: ApplyDiscountInput;
+};
+
+
+export type MutationApplyDiscountByCodeArgs = {
+  input: ApplyDiscountByCodeInput;
+};
+
+
+export type MutationApproveDiscountArgs = {
+  input: ApproveDiscountInput;
 };
 
 
@@ -2127,6 +2304,11 @@ export type MutationCreateDependentArgs = {
 };
 
 
+export type MutationCreateDiscountArgs = {
+  input: CreateDiscountInput;
+};
+
+
 export type MutationCreateFacilityArgs = {
   input: CreateFacilityInput;
 };
@@ -2241,6 +2423,11 @@ export type MutationDeleteCourseScheduleArgs = {
 
 
 export type MutationDeleteDependentArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteDiscountArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -2396,6 +2583,11 @@ export type MutationRegenerateLineItemsArgs = {
 };
 
 
+export type MutationRemoveAppliedDiscountArgs = {
+  appliedDiscountId: Scalars['ID']['input'];
+};
+
+
 export type MutationRemoveFromWaitlistArgs = {
   input: WaitlistActionInput;
 };
@@ -2517,6 +2709,12 @@ export type MutationUpdateCourseScheduleArgs = {
 export type MutationUpdateDependentArgs = {
   id: Scalars['ID']['input'];
   input: UpdateDependentInput;
+};
+
+
+export type MutationUpdateDiscountArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateDiscountInput;
 };
 
 
@@ -2972,6 +3170,8 @@ export type ProcessSettlementInput = {
 
 export type Query = {
   __typename?: 'Query';
+  /** Get all active discounts for POS use */
+  activeDiscounts: Array<DiscountGraphQlType>;
   /** Get active schedule for a course and date */
   activeSchedule?: Maybe<GolfCourseScheduleType>;
   /** Get a single membership application by ID */
@@ -3010,6 +3210,12 @@ export type Query = {
   courses: Array<GolfCourseType>;
   /** Get daily check-in report for a course */
   dailyCheckInReport: DailyCheckInReportType;
+  /** Get a single discount by ID */
+  discount?: Maybe<DiscountGraphQlType>;
+  /** Find a discount by its code */
+  discountByCode?: Maybe<DiscountGraphQlType>;
+  /** Get all discounts for the current club with filtering and pagination */
+  discounts: DiscountConnection;
   /** Get list of facilities */
   facilities: Array<FacilityType>;
   /** Get check-in info for all players in a tee time */
@@ -3038,6 +3244,8 @@ export type Query = {
   invoices: InvoiceConnection;
   /** Check if all players in a tee time are settled */
   isTeeTimeFullySettled: Scalars['Boolean']['output'];
+  /** Get discounts applied to a line item */
+  lineItemDiscounts: Array<AppliedDiscountType>;
   /** Get lotteries */
   lotteries: Array<GolfLotteryType>;
   /** Get a single lottery */
@@ -3104,8 +3312,12 @@ export type Query = {
   teeTimesWithDrafts: Array<Scalars['ID']['output']>;
   /** Get HTML template for a starter ticket */
   ticketHTML: Scalars['String']['output'];
+  /** Get discounts applied to a transaction */
+  transactionDiscounts: Array<AppliedDiscountType>;
   /** Get payment transaction history for a tee time */
   transactionHistory: Array<PaymentTransactionType>;
+  /** Validate if a discount can be applied */
+  validateDiscount: DiscountValidationResultType;
   /** Validate a tee ticket by barcode */
   validateTeeTicket: TeeTicketValidationResult;
   /** Validate a ticket by QR code data */
@@ -3206,6 +3418,29 @@ export type QueryDailyCheckInReportArgs = {
 };
 
 
+export type QueryDiscountArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryDiscountByCodeArgs = {
+  code: Scalars['String']['input'];
+};
+
+
+export type QueryDiscountsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  isActive?: InputMaybe<Scalars['Boolean']['input']>;
+  scope?: InputMaybe<DiscountScope>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  sortBy?: InputMaybe<Scalars['String']['input']>;
+  sortOrder?: InputMaybe<Scalars['String']['input']>;
+  type?: InputMaybe<DiscountType>;
+};
+
+
 export type QueryFacilitiesArgs = {
   filter?: InputMaybe<FacilityFilterInput>;
 };
@@ -3283,6 +3518,11 @@ export type QueryInvoicesArgs = {
 
 export type QueryIsTeeTimeFullySettledArgs = {
   teeTimeId: Scalars['ID']['input'];
+};
+
+
+export type QueryLineItemDiscountsArgs = {
+  lineItemId: Scalars['ID']['input'];
 };
 
 
@@ -3443,8 +3683,18 @@ export type QueryTicketHtmlArgs = {
 };
 
 
+export type QueryTransactionDiscountsArgs = {
+  transactionId: Scalars['ID']['input'];
+};
+
+
 export type QueryTransactionHistoryArgs = {
   teeTimeId: Scalars['ID']['input'];
+};
+
+
+export type QueryValidateDiscountArgs = {
+  input: ValidateDiscountInput;
 };
 
 
@@ -4183,6 +4433,18 @@ export type UpdateDependentInput = {
   relationship?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type UpdateDiscountInput = {
+  approval?: InputMaybe<DiscountApprovalInput>;
+  code?: InputMaybe<Scalars['String']['input']>;
+  conditions?: InputMaybe<DiscountConditionsInput>;
+  isActive?: InputMaybe<Scalars['Boolean']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  scope?: InputMaybe<DiscountScope>;
+  type?: InputMaybe<DiscountType>;
+  validity?: InputMaybe<DiscountValidityInput>;
+  value?: InputMaybe<Scalars['Float']['input']>;
+};
+
 export type UpdateFacilityInput = {
   capacity?: InputMaybe<Scalars['Int']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
@@ -4429,6 +4691,14 @@ export type UpdateWaitlistEntryInput = {
   status?: InputMaybe<GolfWaitlistStatus>;
   timeRangeEnd?: InputMaybe<Scalars['String']['input']>;
   timeRangeStart?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type ValidateDiscountInput = {
+  amount: Scalars['Float']['input'];
+  code?: InputMaybe<Scalars['String']['input']>;
+  discountId?: InputMaybe<Scalars['ID']['input']>;
+  membershipTypeId?: InputMaybe<Scalars['ID']['input']>;
+  playerType?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type VoidInvoiceInput = {
@@ -4844,6 +5114,110 @@ export type DeclineWaitlistOfferMutationVariables = Exact<{
 
 
 export type DeclineWaitlistOfferMutation = { __typename?: 'Mutation', declineWaitlistOffer: { __typename?: 'WaitlistResponseType', success: boolean, message?: string | null | undefined, error?: string | null | undefined, entry?: { __typename?: 'WaitlistEntryType', id: string, status: WaitlistStatus } | null | undefined } };
+
+export type GetDiscountsQueryVariables = Exact<{
+  first?: InputMaybe<Scalars['Int']['input']>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  type?: InputMaybe<DiscountType>;
+  scope?: InputMaybe<DiscountScope>;
+  isActive?: InputMaybe<Scalars['Boolean']['input']>;
+  sortBy?: InputMaybe<Scalars['String']['input']>;
+  sortOrder?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type GetDiscountsQuery = { __typename?: 'Query', discounts: { __typename?: 'DiscountConnection', totalCount: number, edges: Array<{ __typename?: 'DiscountGraphQLTypeEdge', cursor: string, node: { __typename?: 'DiscountGraphQLType', id: string, clubId: string, name: string, code?: string | null | undefined, type: DiscountType, value: string, scope: DiscountScope, isActive: boolean, createdAt: string, updatedAt: string, conditions: { __typename?: 'DiscountConditionsType', minimumAmount?: string | null | undefined, maximumDiscount?: string | null | undefined, membershipTypeIds?: Array<string> | null | undefined, playerTypes?: Array<string> | null | undefined }, validity: { __typename?: 'DiscountValidityType', validFrom?: string | null | undefined, validTo?: string | null | undefined, usageLimit?: number | null | undefined, usageCount: number }, approval: { __typename?: 'DiscountApprovalType', requiresApproval: boolean, approvalThreshold?: string | null | undefined } } }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean, startCursor?: string | null | undefined, endCursor?: string | null | undefined } } };
+
+export type GetActiveDiscountsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetActiveDiscountsQuery = { __typename?: 'Query', activeDiscounts: Array<{ __typename?: 'DiscountGraphQLType', id: string, name: string, code?: string | null | undefined, type: DiscountType, value: string, scope: DiscountScope, isActive: boolean, conditions: { __typename?: 'DiscountConditionsType', minimumAmount?: string | null | undefined, maximumDiscount?: string | null | undefined, membershipTypeIds?: Array<string> | null | undefined, playerTypes?: Array<string> | null | undefined }, validity: { __typename?: 'DiscountValidityType', validFrom?: string | null | undefined, validTo?: string | null | undefined, usageLimit?: number | null | undefined, usageCount: number }, approval: { __typename?: 'DiscountApprovalType', requiresApproval: boolean, approvalThreshold?: string | null | undefined } }> };
+
+export type GetDiscountQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetDiscountQuery = { __typename?: 'Query', discount?: { __typename?: 'DiscountGraphQLType', id: string, clubId: string, name: string, code?: string | null | undefined, type: DiscountType, value: string, scope: DiscountScope, isActive: boolean, createdAt: string, updatedAt: string, conditions: { __typename?: 'DiscountConditionsType', minimumAmount?: string | null | undefined, maximumDiscount?: string | null | undefined, membershipTypeIds?: Array<string> | null | undefined, playerTypes?: Array<string> | null | undefined }, validity: { __typename?: 'DiscountValidityType', validFrom?: string | null | undefined, validTo?: string | null | undefined, usageLimit?: number | null | undefined, usageCount: number }, approval: { __typename?: 'DiscountApprovalType', requiresApproval: boolean, approvalThreshold?: string | null | undefined } } | null | undefined };
+
+export type GetDiscountByCodeQueryVariables = Exact<{
+  code: Scalars['String']['input'];
+}>;
+
+
+export type GetDiscountByCodeQuery = { __typename?: 'Query', discountByCode?: { __typename?: 'DiscountGraphQLType', id: string, name: string, code?: string | null | undefined, type: DiscountType, value: string, scope: DiscountScope, isActive: boolean, conditions: { __typename?: 'DiscountConditionsType', minimumAmount?: string | null | undefined, maximumDiscount?: string | null | undefined, membershipTypeIds?: Array<string> | null | undefined, playerTypes?: Array<string> | null | undefined }, validity: { __typename?: 'DiscountValidityType', validFrom?: string | null | undefined, validTo?: string | null | undefined, usageLimit?: number | null | undefined, usageCount: number }, approval: { __typename?: 'DiscountApprovalType', requiresApproval: boolean, approvalThreshold?: string | null | undefined } } | null | undefined };
+
+export type ValidateDiscountQueryVariables = Exact<{
+  input: ValidateDiscountInput;
+}>;
+
+
+export type ValidateDiscountQuery = { __typename?: 'Query', validateDiscount: { __typename?: 'DiscountValidationResultType', isValid: boolean, message?: string | null | undefined, calculatedAmount?: string | null | undefined, requiresApproval?: boolean | null | undefined } };
+
+export type GetLineItemDiscountsQueryVariables = Exact<{
+  lineItemId: Scalars['ID']['input'];
+}>;
+
+
+export type GetLineItemDiscountsQuery = { __typename?: 'Query', lineItemDiscounts: Array<{ __typename?: 'AppliedDiscountType', id: string, discountId: string, lineItemId?: string | null | undefined, discountType: DiscountType, discountValue: string, calculatedAmount: string, appliedBy: string, approvedBy?: string | null | undefined, approvalNote?: string | null | undefined, createdAt: string, discount?: { __typename?: 'DiscountGraphQLType', id: string, name: string, code?: string | null | undefined, type: DiscountType, value: string } | null | undefined }> };
+
+export type GetTransactionDiscountsQueryVariables = Exact<{
+  transactionId: Scalars['ID']['input'];
+}>;
+
+
+export type GetTransactionDiscountsQuery = { __typename?: 'Query', transactionDiscounts: Array<{ __typename?: 'AppliedDiscountType', id: string, discountId: string, transactionId?: string | null | undefined, discountType: DiscountType, discountValue: string, calculatedAmount: string, appliedBy: string, approvedBy?: string | null | undefined, approvalNote?: string | null | undefined, createdAt: string, discount?: { __typename?: 'DiscountGraphQLType', id: string, name: string, code?: string | null | undefined, type: DiscountType, value: string } | null | undefined }> };
+
+export type CreateDiscountMutationVariables = Exact<{
+  input: CreateDiscountInput;
+}>;
+
+
+export type CreateDiscountMutation = { __typename?: 'Mutation', createDiscount: { __typename?: 'DiscountGraphQLType', id: string, clubId: string, name: string, code?: string | null | undefined, type: DiscountType, value: string, scope: DiscountScope, isActive: boolean, createdAt: string, updatedAt: string, conditions: { __typename?: 'DiscountConditionsType', minimumAmount?: string | null | undefined, maximumDiscount?: string | null | undefined, membershipTypeIds?: Array<string> | null | undefined, playerTypes?: Array<string> | null | undefined }, validity: { __typename?: 'DiscountValidityType', validFrom?: string | null | undefined, validTo?: string | null | undefined, usageLimit?: number | null | undefined, usageCount: number }, approval: { __typename?: 'DiscountApprovalType', requiresApproval: boolean, approvalThreshold?: string | null | undefined } } };
+
+export type UpdateDiscountMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  input: UpdateDiscountInput;
+}>;
+
+
+export type UpdateDiscountMutation = { __typename?: 'Mutation', updateDiscount: { __typename?: 'DiscountGraphQLType', id: string, clubId: string, name: string, code?: string | null | undefined, type: DiscountType, value: string, scope: DiscountScope, isActive: boolean, createdAt: string, updatedAt: string, conditions: { __typename?: 'DiscountConditionsType', minimumAmount?: string | null | undefined, maximumDiscount?: string | null | undefined, membershipTypeIds?: Array<string> | null | undefined, playerTypes?: Array<string> | null | undefined }, validity: { __typename?: 'DiscountValidityType', validFrom?: string | null | undefined, validTo?: string | null | undefined, usageLimit?: number | null | undefined, usageCount: number }, approval: { __typename?: 'DiscountApprovalType', requiresApproval: boolean, approvalThreshold?: string | null | undefined } } };
+
+export type DeleteDiscountMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type DeleteDiscountMutation = { __typename?: 'Mutation', deleteDiscount: boolean };
+
+export type ApplyDiscountMutationVariables = Exact<{
+  input: ApplyDiscountInput;
+}>;
+
+
+export type ApplyDiscountMutation = { __typename?: 'Mutation', applyDiscount: { __typename?: 'ApplyDiscountResultType', success: boolean, message?: string | null | undefined, requiresApproval?: boolean | null | undefined, originalAmount?: string | null | undefined, discountedAmount?: string | null | undefined, savings?: string | null | undefined } };
+
+export type ApplyDiscountByCodeMutationVariables = Exact<{
+  input: ApplyDiscountByCodeInput;
+}>;
+
+
+export type ApplyDiscountByCodeMutation = { __typename?: 'Mutation', applyDiscountByCode: { __typename?: 'ApplyDiscountResultType', success: boolean, message?: string | null | undefined, requiresApproval?: boolean | null | undefined, originalAmount?: string | null | undefined, discountedAmount?: string | null | undefined, savings?: string | null | undefined } };
+
+export type ApproveDiscountMutationVariables = Exact<{
+  input: ApproveDiscountInput;
+}>;
+
+
+export type ApproveDiscountMutation = { __typename?: 'Mutation', approveDiscount: { __typename?: 'AppliedDiscountType', id: string, discountId: string, discountType: DiscountType, discountValue: string, calculatedAmount: string, appliedBy: string, approvedBy?: string | null | undefined, approvalNote?: string | null | undefined, createdAt: string } };
+
+export type RemoveAppliedDiscountMutationVariables = Exact<{
+  appliedDiscountId: Scalars['ID']['input'];
+}>;
+
+
+export type RemoveAppliedDiscountMutation = { __typename?: 'Mutation', removeAppliedDiscount: boolean };
 
 export type GetTeeSheetQueryVariables = Exact<{
   courseId: Scalars['ID']['input'];
@@ -7607,6 +7981,738 @@ export const useDeclineWaitlistOfferMutation = <
 
 
 useDeclineWaitlistOfferMutation.fetcher = (variables: DeclineWaitlistOfferMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<DeclineWaitlistOfferMutation, DeclineWaitlistOfferMutationVariables>(DeclineWaitlistOfferDocument, variables, options);
+
+export const GetDiscountsDocument = `
+    query GetDiscounts($first: Int, $skip: Int, $search: String, $type: DiscountType, $scope: DiscountScope, $isActive: Boolean, $sortBy: String, $sortOrder: String) {
+  discounts(
+    first: $first
+    skip: $skip
+    search: $search
+    type: $type
+    scope: $scope
+    isActive: $isActive
+    sortBy: $sortBy
+    sortOrder: $sortOrder
+  ) {
+    edges {
+      node {
+        id
+        clubId
+        name
+        code
+        type
+        value
+        scope
+        conditions {
+          minimumAmount
+          maximumDiscount
+          membershipTypeIds
+          playerTypes
+        }
+        validity {
+          validFrom
+          validTo
+          usageLimit
+          usageCount
+        }
+        approval {
+          requiresApproval
+          approvalThreshold
+        }
+        isActive
+        createdAt
+        updatedAt
+      }
+      cursor
+    }
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      startCursor
+      endCursor
+    }
+    totalCount
+  }
+}
+    `;
+
+export const useGetDiscountsQuery = <
+      TData = GetDiscountsQuery,
+      TError = unknown
+    >(
+      variables?: GetDiscountsQueryVariables,
+      options?: Omit<UseQueryOptions<GetDiscountsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetDiscountsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetDiscountsQuery, TError, TData>(
+      {
+    queryKey: variables === undefined ? ['GetDiscounts'] : ['GetDiscounts', variables],
+    queryFn: graphqlFetcher<GetDiscountsQuery, GetDiscountsQueryVariables>(GetDiscountsDocument, variables),
+    ...options
+  }
+    )};
+
+useGetDiscountsQuery.getKey = (variables?: GetDiscountsQueryVariables) => variables === undefined ? ['GetDiscounts'] : ['GetDiscounts', variables];
+
+export const useInfiniteGetDiscountsQuery = <
+      TData = InfiniteData<GetDiscountsQuery>,
+      TError = unknown
+    >(
+      variables: GetDiscountsQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetDiscountsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetDiscountsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetDiscountsQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? variables === undefined ? ['GetDiscounts.infinite'] : ['GetDiscounts.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetDiscountsQuery, GetDiscountsQueryVariables>(GetDiscountsDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetDiscountsQuery.getKey = (variables?: GetDiscountsQueryVariables) => variables === undefined ? ['GetDiscounts.infinite'] : ['GetDiscounts.infinite', variables];
+
+
+useGetDiscountsQuery.fetcher = (variables?: GetDiscountsQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetDiscountsQuery, GetDiscountsQueryVariables>(GetDiscountsDocument, variables, options);
+
+export const GetActiveDiscountsDocument = `
+    query GetActiveDiscounts {
+  activeDiscounts {
+    id
+    name
+    code
+    type
+    value
+    scope
+    conditions {
+      minimumAmount
+      maximumDiscount
+      membershipTypeIds
+      playerTypes
+    }
+    validity {
+      validFrom
+      validTo
+      usageLimit
+      usageCount
+    }
+    approval {
+      requiresApproval
+      approvalThreshold
+    }
+    isActive
+  }
+}
+    `;
+
+export const useGetActiveDiscountsQuery = <
+      TData = GetActiveDiscountsQuery,
+      TError = unknown
+    >(
+      variables?: GetActiveDiscountsQueryVariables,
+      options?: Omit<UseQueryOptions<GetActiveDiscountsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetActiveDiscountsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetActiveDiscountsQuery, TError, TData>(
+      {
+    queryKey: variables === undefined ? ['GetActiveDiscounts'] : ['GetActiveDiscounts', variables],
+    queryFn: graphqlFetcher<GetActiveDiscountsQuery, GetActiveDiscountsQueryVariables>(GetActiveDiscountsDocument, variables),
+    ...options
+  }
+    )};
+
+useGetActiveDiscountsQuery.getKey = (variables?: GetActiveDiscountsQueryVariables) => variables === undefined ? ['GetActiveDiscounts'] : ['GetActiveDiscounts', variables];
+
+export const useInfiniteGetActiveDiscountsQuery = <
+      TData = InfiniteData<GetActiveDiscountsQuery>,
+      TError = unknown
+    >(
+      variables: GetActiveDiscountsQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetActiveDiscountsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetActiveDiscountsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetActiveDiscountsQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? variables === undefined ? ['GetActiveDiscounts.infinite'] : ['GetActiveDiscounts.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetActiveDiscountsQuery, GetActiveDiscountsQueryVariables>(GetActiveDiscountsDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetActiveDiscountsQuery.getKey = (variables?: GetActiveDiscountsQueryVariables) => variables === undefined ? ['GetActiveDiscounts.infinite'] : ['GetActiveDiscounts.infinite', variables];
+
+
+useGetActiveDiscountsQuery.fetcher = (variables?: GetActiveDiscountsQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetActiveDiscountsQuery, GetActiveDiscountsQueryVariables>(GetActiveDiscountsDocument, variables, options);
+
+export const GetDiscountDocument = `
+    query GetDiscount($id: ID!) {
+  discount(id: $id) {
+    id
+    clubId
+    name
+    code
+    type
+    value
+    scope
+    conditions {
+      minimumAmount
+      maximumDiscount
+      membershipTypeIds
+      playerTypes
+    }
+    validity {
+      validFrom
+      validTo
+      usageLimit
+      usageCount
+    }
+    approval {
+      requiresApproval
+      approvalThreshold
+    }
+    isActive
+    createdAt
+    updatedAt
+  }
+}
+    `;
+
+export const useGetDiscountQuery = <
+      TData = GetDiscountQuery,
+      TError = unknown
+    >(
+      variables: GetDiscountQueryVariables,
+      options?: Omit<UseQueryOptions<GetDiscountQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetDiscountQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetDiscountQuery, TError, TData>(
+      {
+    queryKey: ['GetDiscount', variables],
+    queryFn: graphqlFetcher<GetDiscountQuery, GetDiscountQueryVariables>(GetDiscountDocument, variables),
+    ...options
+  }
+    )};
+
+useGetDiscountQuery.getKey = (variables: GetDiscountQueryVariables) => ['GetDiscount', variables];
+
+export const useInfiniteGetDiscountQuery = <
+      TData = InfiniteData<GetDiscountQuery>,
+      TError = unknown
+    >(
+      variables: GetDiscountQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetDiscountQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetDiscountQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetDiscountQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetDiscount.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetDiscountQuery, GetDiscountQueryVariables>(GetDiscountDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetDiscountQuery.getKey = (variables: GetDiscountQueryVariables) => ['GetDiscount.infinite', variables];
+
+
+useGetDiscountQuery.fetcher = (variables: GetDiscountQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetDiscountQuery, GetDiscountQueryVariables>(GetDiscountDocument, variables, options);
+
+export const GetDiscountByCodeDocument = `
+    query GetDiscountByCode($code: String!) {
+  discountByCode(code: $code) {
+    id
+    name
+    code
+    type
+    value
+    scope
+    conditions {
+      minimumAmount
+      maximumDiscount
+      membershipTypeIds
+      playerTypes
+    }
+    validity {
+      validFrom
+      validTo
+      usageLimit
+      usageCount
+    }
+    approval {
+      requiresApproval
+      approvalThreshold
+    }
+    isActive
+  }
+}
+    `;
+
+export const useGetDiscountByCodeQuery = <
+      TData = GetDiscountByCodeQuery,
+      TError = unknown
+    >(
+      variables: GetDiscountByCodeQueryVariables,
+      options?: Omit<UseQueryOptions<GetDiscountByCodeQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetDiscountByCodeQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetDiscountByCodeQuery, TError, TData>(
+      {
+    queryKey: ['GetDiscountByCode', variables],
+    queryFn: graphqlFetcher<GetDiscountByCodeQuery, GetDiscountByCodeQueryVariables>(GetDiscountByCodeDocument, variables),
+    ...options
+  }
+    )};
+
+useGetDiscountByCodeQuery.getKey = (variables: GetDiscountByCodeQueryVariables) => ['GetDiscountByCode', variables];
+
+export const useInfiniteGetDiscountByCodeQuery = <
+      TData = InfiniteData<GetDiscountByCodeQuery>,
+      TError = unknown
+    >(
+      variables: GetDiscountByCodeQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetDiscountByCodeQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetDiscountByCodeQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetDiscountByCodeQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetDiscountByCode.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetDiscountByCodeQuery, GetDiscountByCodeQueryVariables>(GetDiscountByCodeDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetDiscountByCodeQuery.getKey = (variables: GetDiscountByCodeQueryVariables) => ['GetDiscountByCode.infinite', variables];
+
+
+useGetDiscountByCodeQuery.fetcher = (variables: GetDiscountByCodeQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetDiscountByCodeQuery, GetDiscountByCodeQueryVariables>(GetDiscountByCodeDocument, variables, options);
+
+export const ValidateDiscountDocument = `
+    query ValidateDiscount($input: ValidateDiscountInput!) {
+  validateDiscount(input: $input) {
+    isValid
+    message
+    calculatedAmount
+    requiresApproval
+  }
+}
+    `;
+
+export const useValidateDiscountQuery = <
+      TData = ValidateDiscountQuery,
+      TError = unknown
+    >(
+      variables: ValidateDiscountQueryVariables,
+      options?: Omit<UseQueryOptions<ValidateDiscountQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<ValidateDiscountQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<ValidateDiscountQuery, TError, TData>(
+      {
+    queryKey: ['ValidateDiscount', variables],
+    queryFn: graphqlFetcher<ValidateDiscountQuery, ValidateDiscountQueryVariables>(ValidateDiscountDocument, variables),
+    ...options
+  }
+    )};
+
+useValidateDiscountQuery.getKey = (variables: ValidateDiscountQueryVariables) => ['ValidateDiscount', variables];
+
+export const useInfiniteValidateDiscountQuery = <
+      TData = InfiniteData<ValidateDiscountQuery>,
+      TError = unknown
+    >(
+      variables: ValidateDiscountQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<ValidateDiscountQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<ValidateDiscountQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<ValidateDiscountQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['ValidateDiscount.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<ValidateDiscountQuery, ValidateDiscountQueryVariables>(ValidateDiscountDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteValidateDiscountQuery.getKey = (variables: ValidateDiscountQueryVariables) => ['ValidateDiscount.infinite', variables];
+
+
+useValidateDiscountQuery.fetcher = (variables: ValidateDiscountQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<ValidateDiscountQuery, ValidateDiscountQueryVariables>(ValidateDiscountDocument, variables, options);
+
+export const GetLineItemDiscountsDocument = `
+    query GetLineItemDiscounts($lineItemId: ID!) {
+  lineItemDiscounts(lineItemId: $lineItemId) {
+    id
+    discountId
+    lineItemId
+    discountType
+    discountValue
+    calculatedAmount
+    appliedBy
+    approvedBy
+    approvalNote
+    createdAt
+    discount {
+      id
+      name
+      code
+      type
+      value
+    }
+  }
+}
+    `;
+
+export const useGetLineItemDiscountsQuery = <
+      TData = GetLineItemDiscountsQuery,
+      TError = unknown
+    >(
+      variables: GetLineItemDiscountsQueryVariables,
+      options?: Omit<UseQueryOptions<GetLineItemDiscountsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetLineItemDiscountsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetLineItemDiscountsQuery, TError, TData>(
+      {
+    queryKey: ['GetLineItemDiscounts', variables],
+    queryFn: graphqlFetcher<GetLineItemDiscountsQuery, GetLineItemDiscountsQueryVariables>(GetLineItemDiscountsDocument, variables),
+    ...options
+  }
+    )};
+
+useGetLineItemDiscountsQuery.getKey = (variables: GetLineItemDiscountsQueryVariables) => ['GetLineItemDiscounts', variables];
+
+export const useInfiniteGetLineItemDiscountsQuery = <
+      TData = InfiniteData<GetLineItemDiscountsQuery>,
+      TError = unknown
+    >(
+      variables: GetLineItemDiscountsQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetLineItemDiscountsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetLineItemDiscountsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetLineItemDiscountsQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetLineItemDiscounts.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetLineItemDiscountsQuery, GetLineItemDiscountsQueryVariables>(GetLineItemDiscountsDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetLineItemDiscountsQuery.getKey = (variables: GetLineItemDiscountsQueryVariables) => ['GetLineItemDiscounts.infinite', variables];
+
+
+useGetLineItemDiscountsQuery.fetcher = (variables: GetLineItemDiscountsQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetLineItemDiscountsQuery, GetLineItemDiscountsQueryVariables>(GetLineItemDiscountsDocument, variables, options);
+
+export const GetTransactionDiscountsDocument = `
+    query GetTransactionDiscounts($transactionId: ID!) {
+  transactionDiscounts(transactionId: $transactionId) {
+    id
+    discountId
+    transactionId
+    discountType
+    discountValue
+    calculatedAmount
+    appliedBy
+    approvedBy
+    approvalNote
+    createdAt
+    discount {
+      id
+      name
+      code
+      type
+      value
+    }
+  }
+}
+    `;
+
+export const useGetTransactionDiscountsQuery = <
+      TData = GetTransactionDiscountsQuery,
+      TError = unknown
+    >(
+      variables: GetTransactionDiscountsQueryVariables,
+      options?: Omit<UseQueryOptions<GetTransactionDiscountsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetTransactionDiscountsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetTransactionDiscountsQuery, TError, TData>(
+      {
+    queryKey: ['GetTransactionDiscounts', variables],
+    queryFn: graphqlFetcher<GetTransactionDiscountsQuery, GetTransactionDiscountsQueryVariables>(GetTransactionDiscountsDocument, variables),
+    ...options
+  }
+    )};
+
+useGetTransactionDiscountsQuery.getKey = (variables: GetTransactionDiscountsQueryVariables) => ['GetTransactionDiscounts', variables];
+
+export const useInfiniteGetTransactionDiscountsQuery = <
+      TData = InfiniteData<GetTransactionDiscountsQuery>,
+      TError = unknown
+    >(
+      variables: GetTransactionDiscountsQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetTransactionDiscountsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetTransactionDiscountsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetTransactionDiscountsQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetTransactionDiscounts.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetTransactionDiscountsQuery, GetTransactionDiscountsQueryVariables>(GetTransactionDiscountsDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetTransactionDiscountsQuery.getKey = (variables: GetTransactionDiscountsQueryVariables) => ['GetTransactionDiscounts.infinite', variables];
+
+
+useGetTransactionDiscountsQuery.fetcher = (variables: GetTransactionDiscountsQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetTransactionDiscountsQuery, GetTransactionDiscountsQueryVariables>(GetTransactionDiscountsDocument, variables, options);
+
+export const CreateDiscountDocument = `
+    mutation CreateDiscount($input: CreateDiscountInput!) {
+  createDiscount(input: $input) {
+    id
+    clubId
+    name
+    code
+    type
+    value
+    scope
+    conditions {
+      minimumAmount
+      maximumDiscount
+      membershipTypeIds
+      playerTypes
+    }
+    validity {
+      validFrom
+      validTo
+      usageLimit
+      usageCount
+    }
+    approval {
+      requiresApproval
+      approvalThreshold
+    }
+    isActive
+    createdAt
+    updatedAt
+  }
+}
+    `;
+
+export const useCreateDiscountMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<CreateDiscountMutation, TError, CreateDiscountMutationVariables, TContext>) => {
+    
+    return useMutation<CreateDiscountMutation, TError, CreateDiscountMutationVariables, TContext>(
+      {
+    mutationKey: ['CreateDiscount'],
+    mutationFn: (variables?: CreateDiscountMutationVariables) => graphqlFetcher<CreateDiscountMutation, CreateDiscountMutationVariables>(CreateDiscountDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useCreateDiscountMutation.fetcher = (variables: CreateDiscountMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<CreateDiscountMutation, CreateDiscountMutationVariables>(CreateDiscountDocument, variables, options);
+
+export const UpdateDiscountDocument = `
+    mutation UpdateDiscount($id: ID!, $input: UpdateDiscountInput!) {
+  updateDiscount(id: $id, input: $input) {
+    id
+    clubId
+    name
+    code
+    type
+    value
+    scope
+    conditions {
+      minimumAmount
+      maximumDiscount
+      membershipTypeIds
+      playerTypes
+    }
+    validity {
+      validFrom
+      validTo
+      usageLimit
+      usageCount
+    }
+    approval {
+      requiresApproval
+      approvalThreshold
+    }
+    isActive
+    createdAt
+    updatedAt
+  }
+}
+    `;
+
+export const useUpdateDiscountMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<UpdateDiscountMutation, TError, UpdateDiscountMutationVariables, TContext>) => {
+    
+    return useMutation<UpdateDiscountMutation, TError, UpdateDiscountMutationVariables, TContext>(
+      {
+    mutationKey: ['UpdateDiscount'],
+    mutationFn: (variables?: UpdateDiscountMutationVariables) => graphqlFetcher<UpdateDiscountMutation, UpdateDiscountMutationVariables>(UpdateDiscountDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useUpdateDiscountMutation.fetcher = (variables: UpdateDiscountMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<UpdateDiscountMutation, UpdateDiscountMutationVariables>(UpdateDiscountDocument, variables, options);
+
+export const DeleteDiscountDocument = `
+    mutation DeleteDiscount($id: ID!) {
+  deleteDiscount(id: $id)
+}
+    `;
+
+export const useDeleteDiscountMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<DeleteDiscountMutation, TError, DeleteDiscountMutationVariables, TContext>) => {
+    
+    return useMutation<DeleteDiscountMutation, TError, DeleteDiscountMutationVariables, TContext>(
+      {
+    mutationKey: ['DeleteDiscount'],
+    mutationFn: (variables?: DeleteDiscountMutationVariables) => graphqlFetcher<DeleteDiscountMutation, DeleteDiscountMutationVariables>(DeleteDiscountDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useDeleteDiscountMutation.fetcher = (variables: DeleteDiscountMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<DeleteDiscountMutation, DeleteDiscountMutationVariables>(DeleteDiscountDocument, variables, options);
+
+export const ApplyDiscountDocument = `
+    mutation ApplyDiscount($input: ApplyDiscountInput!) {
+  applyDiscount(input: $input) {
+    success
+    message
+    requiresApproval
+    originalAmount
+    discountedAmount
+    savings
+  }
+}
+    `;
+
+export const useApplyDiscountMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<ApplyDiscountMutation, TError, ApplyDiscountMutationVariables, TContext>) => {
+    
+    return useMutation<ApplyDiscountMutation, TError, ApplyDiscountMutationVariables, TContext>(
+      {
+    mutationKey: ['ApplyDiscount'],
+    mutationFn: (variables?: ApplyDiscountMutationVariables) => graphqlFetcher<ApplyDiscountMutation, ApplyDiscountMutationVariables>(ApplyDiscountDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useApplyDiscountMutation.fetcher = (variables: ApplyDiscountMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<ApplyDiscountMutation, ApplyDiscountMutationVariables>(ApplyDiscountDocument, variables, options);
+
+export const ApplyDiscountByCodeDocument = `
+    mutation ApplyDiscountByCode($input: ApplyDiscountByCodeInput!) {
+  applyDiscountByCode(input: $input) {
+    success
+    message
+    requiresApproval
+    originalAmount
+    discountedAmount
+    savings
+  }
+}
+    `;
+
+export const useApplyDiscountByCodeMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<ApplyDiscountByCodeMutation, TError, ApplyDiscountByCodeMutationVariables, TContext>) => {
+    
+    return useMutation<ApplyDiscountByCodeMutation, TError, ApplyDiscountByCodeMutationVariables, TContext>(
+      {
+    mutationKey: ['ApplyDiscountByCode'],
+    mutationFn: (variables?: ApplyDiscountByCodeMutationVariables) => graphqlFetcher<ApplyDiscountByCodeMutation, ApplyDiscountByCodeMutationVariables>(ApplyDiscountByCodeDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useApplyDiscountByCodeMutation.fetcher = (variables: ApplyDiscountByCodeMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<ApplyDiscountByCodeMutation, ApplyDiscountByCodeMutationVariables>(ApplyDiscountByCodeDocument, variables, options);
+
+export const ApproveDiscountDocument = `
+    mutation ApproveDiscount($input: ApproveDiscountInput!) {
+  approveDiscount(input: $input) {
+    id
+    discountId
+    discountType
+    discountValue
+    calculatedAmount
+    appliedBy
+    approvedBy
+    approvalNote
+    createdAt
+  }
+}
+    `;
+
+export const useApproveDiscountMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<ApproveDiscountMutation, TError, ApproveDiscountMutationVariables, TContext>) => {
+    
+    return useMutation<ApproveDiscountMutation, TError, ApproveDiscountMutationVariables, TContext>(
+      {
+    mutationKey: ['ApproveDiscount'],
+    mutationFn: (variables?: ApproveDiscountMutationVariables) => graphqlFetcher<ApproveDiscountMutation, ApproveDiscountMutationVariables>(ApproveDiscountDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useApproveDiscountMutation.fetcher = (variables: ApproveDiscountMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<ApproveDiscountMutation, ApproveDiscountMutationVariables>(ApproveDiscountDocument, variables, options);
+
+export const RemoveAppliedDiscountDocument = `
+    mutation RemoveAppliedDiscount($appliedDiscountId: ID!) {
+  removeAppliedDiscount(appliedDiscountId: $appliedDiscountId)
+}
+    `;
+
+export const useRemoveAppliedDiscountMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<RemoveAppliedDiscountMutation, TError, RemoveAppliedDiscountMutationVariables, TContext>) => {
+    
+    return useMutation<RemoveAppliedDiscountMutation, TError, RemoveAppliedDiscountMutationVariables, TContext>(
+      {
+    mutationKey: ['RemoveAppliedDiscount'],
+    mutationFn: (variables?: RemoveAppliedDiscountMutationVariables) => graphqlFetcher<RemoveAppliedDiscountMutation, RemoveAppliedDiscountMutationVariables>(RemoveAppliedDiscountDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useRemoveAppliedDiscountMutation.fetcher = (variables: RemoveAppliedDiscountMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<RemoveAppliedDiscountMutation, RemoveAppliedDiscountMutationVariables>(RemoveAppliedDiscountDocument, variables, options);
 
 export const GetTeeSheetDocument = `
     query GetTeeSheet($courseId: ID!, $date: DateTime!) {
