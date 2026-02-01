@@ -34,3 +34,6 @@ export * from './components/tabs';
 export * from './layouts/app-shell';
 export * from './layouts/sidebar';
 export * from './layouts/header';
+
+// POS (Point of Sale) Components
+export * from './pos';
