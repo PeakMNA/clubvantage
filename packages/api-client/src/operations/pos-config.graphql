@@ -1,0 +1,165 @@
+# POS Configuration Operations
+
+# Queries
+
+query GetPOSConfig($outletId: ID!, $userRole: String!, $userPermissions: [String!]) {
+  posConfig(outletId: $outletId, userRole: $userRole, userPermissions: $userPermissions) {
+    outlet {
+      id
+      clubId
+      name
+      outletType
+      isActive
+    }
+    template {
+      id
+      name
+      outletType
+    }
+    toolbarConfig
+    actionBarConfig
+    buttonStates {
+      buttonId
+      visible
+      enabled
+      requiresApproval
+    }
+  }
+}
+
+query GetPOSTemplates {
+  posTemplates {
+    id
+    clubId
+    name
+    description
+    outletType
+    toolbarConfig
+    actionBarConfig
+    isDefault
+    createdAt
+    updatedAt
+  }
+}
+
+query GetPOSTemplate($id: ID!) {
+  posTemplate(id: $id) {
+    id
+    clubId
+    name
+    description
+    outletType
+    toolbarConfig
+    actionBarConfig
+    isDefault
+    createdAt
+    updatedAt
+    outlets {
+      id
+      name
+    }
+  }
+}
+
+query GetPOSOutlets {
+  posOutlets {
+    id
+    clubId
+    name
+    outletType
+    templateId
+    customConfig
+    isActive
+    createdAt
+    updatedAt
+    template {
+      id
+      name
+    }
+  }
+}
+
+query GetPOSOutlet($id: ID!) {
+  posOutlet(id: $id) {
+    id
+    clubId
+    name
+    outletType
+    templateId
+    customConfig
+    isActive
+    createdAt
+    updatedAt
+    template {
+      id
+      name
+    }
+    roleConfigs {
+      id
+      role
+      buttonOverrides
+    }
+  }
+}
+
+query GetPOSButtonRegistry {
+  posButtonRegistry {
+    clubId
+    registry
+  }
+}
+
+# Mutations
+
+mutation UpsertPOSTemplate($id: ID, $input: POSTemplateInput!) {
+  upsertPOSTemplate(id: $id, input: $input) {
+    success
+    message
+    template {
+      id
+      name
+    }
+  }
+}
+
+mutation ClonePOSTemplate($id: ID!, $newName: String!) {
+  clonePOSTemplate(id: $id, newName: $newName) {
+    success
+    message
+    template {
+      id
+      name
+    }
+  }
+}
+
+mutation AssignPOSTemplate($input: AssignTemplateInput!) {
+  assignPOSTemplate(input: $input) {
+    success
+    message
+    outlet {
+      id
+      name
+      templateId
+    }
+  }
+}
+
+mutation SetPOSRoleOverrides($outletId: ID!, $input: POSRoleOverridesInput!) {
+  setPOSRoleOverrides(outletId: $outletId, input: $input) {
+    success
+    message
+    roleConfig {
+      id
+      role
+      buttonOverrides
+    }
+  }
+}
+
+mutation UpdatePOSButtonRegistry($input: UpdateButtonRegistryInput!) {
+  updatePOSButtonRegistry(input: $input) {
+    success
+    message
+  }
+}

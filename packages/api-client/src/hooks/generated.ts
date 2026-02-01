@@ -18,6 +18,8 @@ export type Scalars = {
   Float: { input: number; output: number; }
   /** A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format. */
   DateTime: { input: string; output: string; }
+  /** The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf). */
+  JSON: { input: any; output: any; }
 };
 
 export type ActiveSeasonInfo = {
@@ -46,6 +48,18 @@ export type AddLineItemInput = {
   taxType?: InputMaybe<TaxType>;
   type: LineItemType;
   variantId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+export type AddStoredPaymentInput = {
+  brand: Scalars['String']['input'];
+  cardholderName?: InputMaybe<Scalars['String']['input']>;
+  expiryMonth?: InputMaybe<Scalars['Int']['input']>;
+  expiryYear?: InputMaybe<Scalars['Int']['input']>;
+  isDefault?: InputMaybe<Scalars['Boolean']['input']>;
+  last4: Scalars['String']['input'];
+  memberId: Scalars['String']['input'];
+  stripeCustomerId?: InputMaybe<Scalars['String']['input']>;
+  stripePaymentMethodId: Scalars['String']['input'];
 };
 
 /** Days to which a configuration applies */
@@ -150,6 +164,110 @@ export type ApplyDiscountResultType = {
 export type ApproveDiscountInput = {
   appliedDiscountId: Scalars['ID']['input'];
   approvalNote?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type AssignTemplateInput = {
+  outletId: Scalars['ID']['input'];
+  templateId: Scalars['ID']['input'];
+};
+
+export type AssignTemplateMutationResponse = {
+  __typename?: 'AssignTemplateMutationResponse';
+  message?: Maybe<Scalars['String']['output']>;
+  outlet?: Maybe<PosOutletGraphQlType>;
+  success: Scalars['Boolean']['output'];
+};
+
+export type AutoPayAttempt = {
+  __typename?: 'AutoPayAttempt';
+  amount: Scalars['Float']['output'];
+  attemptNumber: Scalars['Int']['output'];
+  clubId: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  failedAt?: Maybe<Scalars['DateTime']['output']>;
+  failureCode?: Maybe<Scalars['String']['output']>;
+  failureMessage?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  invoiceId?: Maybe<Scalars['String']['output']>;
+  isManualRetry: Scalars['Boolean']['output'];
+  memberId: Scalars['String']['output'];
+  nextRetryAt?: Maybe<Scalars['DateTime']['output']>;
+  paymentMethod?: Maybe<StoredPaymentMethod>;
+  paymentMethodId: Scalars['String']['output'];
+  paymentTransactionId?: Maybe<Scalars['String']['output']>;
+  processedAt?: Maybe<Scalars['DateTime']['output']>;
+  status: AutoPayAttemptStatus;
+  stripeChargeId?: Maybe<Scalars['String']['output']>;
+  stripePaymentIntentId?: Maybe<Scalars['String']['output']>;
+  succeededAt?: Maybe<Scalars['DateTime']['output']>;
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+/** Status of auto-pay attempt */
+export type AutoPayAttemptStatus =
+  | 'CANCELLED'
+  | 'FAILED'
+  | 'PENDING'
+  | 'PROCESSING'
+  | 'SUCCEEDED';
+
+export type AutoPayResult = {
+  __typename?: 'AutoPayResult';
+  attemptId?: Maybe<Scalars['String']['output']>;
+  error?: Maybe<Scalars['String']['output']>;
+  message?: Maybe<Scalars['String']['output']>;
+  stripePaymentIntentId?: Maybe<Scalars['String']['output']>;
+  success: Scalars['Boolean']['output'];
+};
+
+/** Auto-pay schedule type */
+export type AutoPaySchedule =
+  | 'INVOICE_DUE'
+  | 'MONTHLY_FIXED'
+  | 'STATEMENT_DATE';
+
+export type AutoPaySetting = {
+  __typename?: 'AutoPaySetting';
+  clubId: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  excludeCategories: Array<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  isEnabled: Scalars['Boolean']['output'];
+  maxPaymentAmount?: Maybe<Scalars['Float']['output']>;
+  maxRetryAttempts: Scalars['Int']['output'];
+  memberId: Scalars['String']['output'];
+  monthlyMaxAmount?: Maybe<Scalars['Float']['output']>;
+  notifyBeforePayment: Scalars['Boolean']['output'];
+  notifyDaysBefore: Scalars['Int']['output'];
+  notifyOnFailure: Scalars['Boolean']['output'];
+  notifyOnSuccess: Scalars['Boolean']['output'];
+  payDuesOnly: Scalars['Boolean']['output'];
+  paymentDayOfMonth?: Maybe<Scalars['Int']['output']>;
+  paymentMethod?: Maybe<StoredPaymentMethod>;
+  paymentMethodId: Scalars['String']['output'];
+  requireApprovalAbove?: Maybe<Scalars['Float']['output']>;
+  retryIntervalDays: Scalars['Int']['output'];
+  schedule: AutoPaySchedule;
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+export type AutoPaySettingInput = {
+  excludeCategories?: InputMaybe<Array<Scalars['String']['input']>>;
+  isEnabled?: InputMaybe<Scalars['Boolean']['input']>;
+  maxPaymentAmount?: InputMaybe<Scalars['Float']['input']>;
+  maxRetryAttempts?: InputMaybe<Scalars['Int']['input']>;
+  memberId: Scalars['String']['input'];
+  monthlyMaxAmount?: InputMaybe<Scalars['Float']['input']>;
+  notifyBeforePayment?: InputMaybe<Scalars['Boolean']['input']>;
+  notifyDaysBefore?: InputMaybe<Scalars['Int']['input']>;
+  notifyOnFailure?: InputMaybe<Scalars['Boolean']['input']>;
+  notifyOnSuccess?: InputMaybe<Scalars['Boolean']['input']>;
+  payDuesOnly?: InputMaybe<Scalars['Boolean']['input']>;
+  paymentDayOfMonth?: InputMaybe<Scalars['Int']['input']>;
+  paymentMethodId: Scalars['ID']['input'];
+  requireApprovalAbove?: InputMaybe<Scalars['Float']['input']>;
+  retryIntervalDays?: InputMaybe<Scalars['Int']['input']>;
+  schedule?: InputMaybe<AutoPaySchedule>;
 };
 
 export type BatchPaymentInput = {
@@ -477,15 +595,97 @@ export type CartType =
   | 'SINGLE'
   | 'WALKING';
 
+export type CashDrawerGraphQlType = {
+  __typename?: 'CashDrawerGraphQLType';
+  clubId: Scalars['ID']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  currentShift?: Maybe<CashDrawerShiftGraphQlType>;
+  id: Scalars['ID']['output'];
+  isActive: Scalars['Boolean']['output'];
+  location?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+export type CashDrawerShiftGraphQlType = {
+  __typename?: 'CashDrawerShiftGraphQLType';
+  actualCash?: Maybe<Scalars['Float']['output']>;
+  cashDrawerId: Scalars['ID']['output'];
+  closedAt?: Maybe<Scalars['DateTime']['output']>;
+  closedBy?: Maybe<Scalars['ID']['output']>;
+  closingCount?: Maybe<Scalars['Float']['output']>;
+  /** JSON string of denomination counts */
+  closingDenominations?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  expectedCash?: Maybe<Scalars['Float']['output']>;
+  id: Scalars['ID']['output'];
+  movements?: Maybe<Array<CashMovementGraphQlType>>;
+  openedAt: Scalars['DateTime']['output'];
+  openedBy: Scalars['ID']['output'];
+  /** JSON string of denomination counts */
+  openingDenominations?: Maybe<Scalars['String']['output']>;
+  openingFloat: Scalars['Float']['output'];
+  status: CashDrawerStatus;
+  totalDrops: Scalars['Float']['output'];
+  totalPaidIn: Scalars['Float']['output'];
+  totalPaidOut: Scalars['Float']['output'];
+  totalRefunds: Scalars['Float']['output'];
+  totalSales: Scalars['Float']['output'];
+  variance?: Maybe<Scalars['Float']['output']>;
+  varianceNote?: Maybe<Scalars['String']['output']>;
+};
+
+/** Status of a cash drawer shift */
+export type CashDrawerStatus =
+  | 'CLOSED'
+  | 'OPEN'
+  | 'SUSPENDED';
+
+export type CashMovementGraphQlType = {
+  __typename?: 'CashMovementGraphQLType';
+  amount: Scalars['Float']['output'];
+  approvedBy?: Maybe<Scalars['ID']['output']>;
+  description?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  performedAt: Scalars['DateTime']['output'];
+  performedBy: Scalars['ID']['output'];
+  reason?: Maybe<Scalars['String']['output']>;
+  reference?: Maybe<Scalars['String']['output']>;
+  shiftId: Scalars['ID']['output'];
+  transactionId?: Maybe<Scalars['ID']['output']>;
+  type: CashMovementType;
+};
+
+/** Type of cash movement */
+export type CashMovementType =
+  | 'ADJUSTMENT'
+  | 'CASH_REFUND'
+  | 'CASH_SALE'
+  | 'CLOSING_COUNT'
+  | 'DROP'
+  | 'OPENING_FLOAT'
+  | 'PAID_IN'
+  | 'PAID_OUT';
+
 export type ChangeApplicationStatusInput = {
   rejectionReason?: InputMaybe<Scalars['String']['input']>;
   reviewNotes?: InputMaybe<Scalars['String']['input']>;
   status: ApplicationStatus;
 };
 
+export type ChangePinInput = {
+  newPin: Scalars['String']['input'];
+  subAccountId: Scalars['String']['input'];
+};
+
 export type ChangeStatusInput = {
   reason?: InputMaybe<Scalars['String']['input']>;
   status: MemberStatus;
+};
+
+export type ChangeSubAccountStatusInput = {
+  status: SubAccountStatus;
+  subAccountId: Scalars['String']['input'];
 };
 
 export type ChargeTypeType = {
@@ -642,6 +842,36 @@ export type CheckInSlotsResultType = {
   ticketNumber?: Maybe<Scalars['String']['output']>;
 };
 
+export type CheckLimitInput = {
+  amount: Scalars['Float']['input'];
+  category: SubAccountPermission;
+  subAccountId: Scalars['String']['input'];
+};
+
+export type CloneTemplateMutationResponse = {
+  __typename?: 'CloneTemplateMutationResponse';
+  message?: Maybe<Scalars['String']['output']>;
+  success: Scalars['Boolean']['output'];
+  template?: Maybe<PosTemplateGraphQlType>;
+};
+
+export type ClosePeriodInput = {
+  periodEnd: Scalars['DateTime']['input'];
+};
+
+export type CloseSettlementInput = {
+  notes?: InputMaybe<Scalars['String']['input']>;
+  settlementId: Scalars['ID']['input'];
+};
+
+export type CloseShiftInput = {
+  closingCount: Scalars['Float']['input'];
+  /** JSON string of denomination counts */
+  denominations?: InputMaybe<Scalars['String']['input']>;
+  shiftId: Scalars['ID']['input'];
+  varianceNote?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type ClubGolfSettingsType = {
   __typename?: 'ClubGolfSettingsType';
   caddyDrivesCart: Scalars['Boolean']['output'];
@@ -717,6 +947,11 @@ export type CreateCartRateInput = {
   taxType?: Scalars['String']['input'];
 };
 
+export type CreateCashDrawerInput = {
+  location?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+};
+
 export type CreateCreditOverrideInput = {
   expiresAt?: InputMaybe<Scalars['DateTime']['input']>;
   memberId: Scalars['ID']['input'];
@@ -744,6 +979,17 @@ export type CreateDiscountInput = {
   type: DiscountType;
   validity?: InputMaybe<DiscountValidityInput>;
   value: Scalars['Float']['input'];
+};
+
+export type CreateExceptionInput = {
+  amount?: InputMaybe<Scalars['Float']['input']>;
+  description: Scalars['String']['input'];
+  lineItemId?: InputMaybe<Scalars['ID']['input']>;
+  settlementId: Scalars['ID']['input'];
+  severity?: InputMaybe<ExceptionSeverity>;
+  shiftId?: InputMaybe<Scalars['ID']['input']>;
+  transactionId?: InputMaybe<Scalars['ID']['input']>;
+  type: ExceptionType;
 };
 
 export type CreateFacilityInput = {
@@ -890,6 +1136,28 @@ export type CreateRateConfigInput = {
   name: Scalars['String']['input'];
 };
 
+export type CreateRequirementInput = {
+  allowPartialCredit?: InputMaybe<Scalars['Boolean']['input']>;
+  defaultShortfallAction?: InputMaybe<ShortfallAction>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  effectiveFrom?: InputMaybe<Scalars['DateTime']['input']>;
+  effectiveTo?: InputMaybe<Scalars['DateTime']['input']>;
+  excludedCategories?: InputMaybe<Array<Scalars['String']['input']>>;
+  gracePeriodDays?: InputMaybe<Scalars['Int']['input']>;
+  includeEvents?: InputMaybe<Scalars['Boolean']['input']>;
+  includeFoodBeverage?: InputMaybe<Scalars['Boolean']['input']>;
+  includeGolf?: InputMaybe<Scalars['Boolean']['input']>;
+  includeRetail?: InputMaybe<Scalars['Boolean']['input']>;
+  includeSpa?: InputMaybe<Scalars['Boolean']['input']>;
+  includedCategories?: InputMaybe<Array<Scalars['String']['input']>>;
+  membershipTypes: Array<Scalars['String']['input']>;
+  minimumAmount: Scalars['Float']['input'];
+  name: Scalars['String']['input'];
+  notifyAtPercent?: InputMaybe<Array<Scalars['Int']['input']>>;
+  notifyDaysBeforeEnd?: InputMaybe<Array<Scalars['Int']['input']>>;
+  period: MinimumSpendPeriod;
+};
+
 export type CreateScheduleInput = {
   courseId: Scalars['ID']['input'];
   endDate: Scalars['DateTime']['input'];
@@ -960,6 +1228,24 @@ export type CreateStaffMemberInput = {
   phone?: InputMaybe<Scalars['String']['input']>;
   userId?: InputMaybe<Scalars['ID']['input']>;
   workingHours?: InputMaybe<Array<DayHoursInput>>;
+};
+
+export type CreateSubAccountInput = {
+  dailyLimit?: InputMaybe<Scalars['Float']['input']>;
+  email?: InputMaybe<Scalars['String']['input']>;
+  memberId: Scalars['String']['input'];
+  monthlyLimit?: InputMaybe<Scalars['Float']['input']>;
+  name: Scalars['String']['input'];
+  notifyOnLimitReached?: InputMaybe<Scalars['Boolean']['input']>;
+  notifyPrimaryOnUse?: InputMaybe<Scalars['Boolean']['input']>;
+  perTransactionLimit?: InputMaybe<Scalars['Float']['input']>;
+  permissions?: InputMaybe<Array<SubAccountPermission>>;
+  phone?: InputMaybe<Scalars['String']['input']>;
+  pin: Scalars['String']['input'];
+  relationship: Scalars['String']['input'];
+  validFrom?: InputMaybe<Scalars['DateTime']['input']>;
+  validUntil?: InputMaybe<Scalars['DateTime']['input']>;
+  weeklyLimit?: InputMaybe<Scalars['Float']['input']>;
 };
 
 export type CreateTeeTimeInput = {
@@ -1064,6 +1350,41 @@ export type DailyCheckInReportType = {
 export type DailyReportInput = {
   courseId: Scalars['ID']['input'];
   date: Scalars['DateTime']['input'];
+};
+
+export type DailySettlementGraphQlType = {
+  __typename?: 'DailySettlementGraphQLType';
+  actualCash?: Maybe<Scalars['Float']['output']>;
+  businessDate: Scalars['DateTime']['output'];
+  cashVariance?: Maybe<Scalars['Float']['output']>;
+  closedAt?: Maybe<Scalars['DateTime']['output']>;
+  closedBy?: Maybe<Scalars['ID']['output']>;
+  clubId: Scalars['ID']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  exceptions?: Maybe<Array<SettlementExceptionGraphQlType>>;
+  expectedCash: Scalars['Float']['output'];
+  id: Scalars['ID']['output'];
+  notes?: Maybe<Scalars['String']['output']>;
+  openedAt?: Maybe<Scalars['DateTime']['output']>;
+  openedBy?: Maybe<Scalars['ID']['output']>;
+  refundCount: Scalars['Int']['output'];
+  reviewedAt?: Maybe<Scalars['DateTime']['output']>;
+  reviewedBy?: Maybe<Scalars['ID']['output']>;
+  status: SettlementStatus;
+  totalCard: Scalars['Float']['output'];
+  totalCash: Scalars['Float']['output'];
+  totalDiscounts: Scalars['Float']['output'];
+  totalGrossSales: Scalars['Float']['output'];
+  totalMemberAccount: Scalars['Float']['output'];
+  totalNetSales: Scalars['Float']['output'];
+  totalOther: Scalars['Float']['output'];
+  totalRefunds: Scalars['Float']['output'];
+  totalServiceCharge: Scalars['Float']['output'];
+  totalTax: Scalars['Float']['output'];
+  totalVoids: Scalars['Float']['output'];
+  transactionCount: Scalars['Int']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+  voidCount: Scalars['Int']['output'];
 };
 
 export type DayHoursInput = {
@@ -1232,6 +1553,39 @@ export type EffectiveScheduleType = {
   twilightTime: Scalars['String']['output'];
 };
 
+/** Resolution status of an exception */
+export type ExceptionResolution =
+  | 'ACKNOWLEDGED'
+  | 'ADJUSTED'
+  | 'ESCALATED'
+  | 'PENDING'
+  | 'RESOLVED'
+  | 'WRITTEN_OFF';
+
+/** Severity level of an exception */
+export type ExceptionSeverity =
+  | 'CRITICAL'
+  | 'HIGH'
+  | 'LOW'
+  | 'MEDIUM';
+
+/** Type of settlement exception */
+export type ExceptionType =
+  | 'CARD_VARIANCE'
+  | 'CASH_VARIANCE'
+  | 'DISCOUNT_WITHOUT_APPROVAL'
+  | 'DUPLICATE_TRANSACTION'
+  | 'MISSING_RECEIPT'
+  | 'OTHER'
+  | 'REFUND_WITHOUT_APPROVAL'
+  | 'SYSTEM_ERROR'
+  | 'VOID_WITHOUT_APPROVAL';
+
+export type ExemptMemberInput = {
+  memberSpendId: Scalars['String']['input'];
+  reason: Scalars['String']['input'];
+};
+
 export type ExtendedServiceType = {
   __typename?: 'ExtendedServiceType';
   basePrice: Scalars['Float']['output'];
@@ -1332,6 +1686,29 @@ export type FlightPaymentSummaryType = {
 export type GenerateTicketInput = {
   forceRegenerate?: InputMaybe<Scalars['Boolean']['input']>;
   teeTimeId: Scalars['ID']['input'];
+};
+
+export type GetAutoPayHistoryInput = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  memberId: Scalars['String']['input'];
+};
+
+export type GetMemberSpendsInput = {
+  memberId?: InputMaybe<Scalars['String']['input']>;
+  periodEnd?: InputMaybe<Scalars['DateTime']['input']>;
+  periodStart?: InputMaybe<Scalars['DateTime']['input']>;
+  status?: InputMaybe<MemberSpendStatus>;
+};
+
+export type GetSettlementsInput = {
+  endDate: Scalars['DateTime']['input'];
+  startDate: Scalars['DateTime']['input'];
+};
+
+export type GetTransactionsInput = {
+  endDate?: InputMaybe<Scalars['DateTime']['input']>;
+  startDate?: InputMaybe<Scalars['DateTime']['input']>;
+  subAccountId?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type GolfCourseIntervalType = {
@@ -1769,6 +2146,46 @@ export type MemberConnection = {
   totalCount: Scalars['Int']['output'];
 };
 
+export type MemberMinimumSpend = {
+  __typename?: 'MemberMinimumSpend';
+  carryForwardAmount: Scalars['Float']['output'];
+  clubId: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  currentSpend: Scalars['Float']['output'];
+  exemptAt?: Maybe<Scalars['DateTime']['output']>;
+  exemptBy?: Maybe<Scalars['String']['output']>;
+  exemptReason?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  isExempt: Scalars['Boolean']['output'];
+  lastCalculatedAt: Scalars['DateTime']['output'];
+  memberId: Scalars['String']['output'];
+  periodEnd: Scalars['DateTime']['output'];
+  periodLabel: Scalars['String']['output'];
+  periodStart: Scalars['DateTime']['output'];
+  projectedSpend?: Maybe<Scalars['Float']['output']>;
+  requiredAmount: Scalars['Float']['output'];
+  requirement?: Maybe<MinimumSpendRequirement>;
+  requirementId: Scalars['String']['output'];
+  shortfallAction?: Maybe<ShortfallAction>;
+  shortfallAmount?: Maybe<Scalars['Float']['output']>;
+  shortfallInvoiceId?: Maybe<Scalars['String']['output']>;
+  shortfallNote?: Maybe<Scalars['String']['output']>;
+  shortfallResolvedAt?: Maybe<Scalars['DateTime']['output']>;
+  shortfallResolvedBy?: Maybe<Scalars['String']['output']>;
+  status: MemberSpendStatus;
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+/** Status of member spending against requirement */
+export type MemberSpendStatus =
+  | 'AT_RISK'
+  | 'EXEMPT'
+  | 'MET'
+  | 'ON_TRACK'
+  | 'PENDING_ACTION'
+  | 'RESOLVED'
+  | 'SHORTFALL';
+
 export type MemberStatsType = {
   __typename?: 'MemberStatsType';
   active: Scalars['Float']['output'];
@@ -1920,6 +2337,40 @@ export type MembershipTypeType = {
   priorityBooking: Scalars['Boolean']['output'];
 };
 
+/** Period for minimum spend requirements */
+export type MinimumSpendPeriod =
+  | 'ANNUALLY'
+  | 'MONTHLY'
+  | 'QUARTERLY';
+
+export type MinimumSpendRequirement = {
+  __typename?: 'MinimumSpendRequirement';
+  allowPartialCredit: Scalars['Boolean']['output'];
+  clubId: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  defaultShortfallAction: ShortfallAction;
+  description?: Maybe<Scalars['String']['output']>;
+  effectiveFrom: Scalars['DateTime']['output'];
+  effectiveTo?: Maybe<Scalars['DateTime']['output']>;
+  excludedCategories: Array<Scalars['String']['output']>;
+  gracePeriodDays: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  includeEvents: Scalars['Boolean']['output'];
+  includeFoodBeverage: Scalars['Boolean']['output'];
+  includeGolf: Scalars['Boolean']['output'];
+  includeRetail: Scalars['Boolean']['output'];
+  includeSpa: Scalars['Boolean']['output'];
+  includedCategories: Array<Scalars['String']['output']>;
+  isActive: Scalars['Boolean']['output'];
+  membershipTypes: Array<Scalars['String']['output']>;
+  minimumAmount: Scalars['Float']['output'];
+  name: Scalars['String']['output'];
+  notifyAtPercent: Array<Scalars['Int']['output']>;
+  notifyDaysBeforeEnd: Array<Scalars['Int']['output']>;
+  period: MinimumSpendPeriod;
+  updatedAt: Scalars['DateTime']['output'];
+};
+
 export type MoveTeeTimeInput = {
   newCourseId?: InputMaybe<Scalars['ID']['input']>;
   newTeeDate: Scalars['DateTime']['input'];
@@ -1934,6 +2385,8 @@ export type Mutation = {
   addGroupPlayers: GroupBookingMutationResponse;
   /** Add a line item to a player */
   addLineItem: BookingLineItemType;
+  /** Add a new stored payment method */
+  addPaymentMethod: StoredPaymentMethod;
   /** Apply a discount to a line item or transaction */
   applyDiscount: ApplyDiscountResultType;
   /** Apply a discount using a promo code */
@@ -1942,6 +2395,8 @@ export type Mutation = {
   approveDiscount: AppliedDiscountType;
   /** Auto-assign players to flights */
   assignFlights: GroupBookingFlightsResponse;
+  /** Assign a template to an outlet */
+  assignPOSTemplate: AssignTemplateMutationResponse;
   /** Remove multiple line items */
   bulkRemoveLineItems: BulkRemoveResultType;
   /** Transfer multiple line items to another player */
@@ -1962,6 +2417,10 @@ export type Mutation = {
   changeApplicationStatus: MembershipApplicationType;
   /** Change member status */
   changeMemberStatus: MemberType;
+  /** Change a sub-account PIN */
+  changeSubAccountPin: SubAccount;
+  /** Change a sub-account status */
+  changeSubAccountStatus: SubAccount;
   /** Check in a booking */
   checkIn: CheckInResponseType;
   /** Check in all players in a flight at once */
@@ -1972,8 +2431,16 @@ export type Mutation = {
   checkInSlots: CheckInSlotsResultType;
   /** Clear cart draft for a tee time */
   clearCartDraft: Scalars['Boolean']['output'];
+  /** Clone a POS template with a new name */
+  clonePOSTemplate: CloneTemplateMutationResponse;
   /** Close a lottery to new requests */
   closeLottery: LotteryMutationResponse;
+  /** Close a minimum spend period and process shortfalls */
+  closeMinimumSpendPeriod: Array<MemberMinimumSpend>;
+  /** Close a settlement */
+  closeSettlement: DailySettlementGraphQlType;
+  /** Close a shift */
+  closeShift: CashDrawerShiftGraphQlType;
   /** Confirm group booking and create tee times */
   confirmGroupBooking: GroupBookingMutationResponse;
   /** Convert a waitlist entry to a booking */
@@ -1986,6 +2453,8 @@ export type Mutation = {
   createCaddyRate: CaddyRateMutationResponse;
   /** Create a cart rate */
   createCartRate: CartRateMutationResponse;
+  /** Create a new cash drawer */
+  createCashDrawer: CashDrawerGraphQlType;
   /** Create a new payment method for check-in */
   createCheckInPaymentMethod: CheckInPaymentMethodType;
   /** Create a course schedule */
@@ -2010,6 +2479,8 @@ export type Mutation = {
   createLottery: LotteryMutationResponse;
   /** Create a new member */
   createMember: MemberType;
+  /** Create a new minimum spend requirement */
+  createMinimumSpendRequirement: MinimumSpendRequirement;
   /** Create a new pro shop category */
   createProShopCategory: ProShopCategoryType;
   /** Create a new pro shop product */
@@ -2020,10 +2491,14 @@ export type Mutation = {
   createSeason: SeasonMutationResponse;
   /** Create a new service */
   createService: ServiceResponseType;
+  /** Create a settlement exception */
+  createSettlementException: SettlementExceptionGraphQlType;
   /** Create a special day */
   createSpecialDay: SpecialDayMutationResponse;
   /** Create a new staff member */
   createStaffMember: StaffResponseType;
+  /** Create a new sub-account */
+  createSubAccount: SubAccount;
   /** Create a new tee time booking */
   createTeeTime: TeeTimeType;
   /** Create a tee time block */
@@ -2056,6 +2531,8 @@ export type Mutation = {
   deleteLottery: LotteryMutationResponse;
   /** Soft delete a member */
   deleteMember: DeleteMemberResponseType;
+  /** Delete (deactivate) a minimum spend requirement */
+  deleteMinimumSpendRequirement: MinimumSpendRequirement;
   /** Delete a pro shop category. If category has products, provide moveProductsTo. */
   deleteProShopCategory: Scalars['Boolean']['output'];
   /** Delete a pro shop product */
@@ -2070,14 +2547,20 @@ export type Mutation = {
   deleteSpecialDay: DeleteMutationResponse;
   /** Delete a staff member */
   deleteStaffMember: DeleteResponseType;
+  /** Delete (revoke) a sub-account */
+  deleteSubAccount: SubAccount;
   /** Delete a tee time block */
   deleteTeeTimeBlock: BlockMutationResponse;
   /** Delete a time period */
   deleteTimePeriod: DeleteMutationResponse;
   /** Delete a waitlist entry */
   deleteWaitlistEntry: WaitlistMutationResponse;
+  /** Disable auto-pay for a member */
+  disableAutoPay: RemovePaymentMethodResult;
   /** Execute the lottery draw */
   executeLotteryDraw: LotteryDrawResult;
+  /** Exempt a member from a minimum spend requirement */
+  exemptMemberFromMinimumSpend: MemberMinimumSpend;
   /** Mark expired waitlist entries */
   expireOldWaitlistEntries: WaitlistMutationResponse;
   /** Generate or regenerate a starter ticket for a tee time */
@@ -2090,20 +2573,38 @@ export type Mutation = {
   moveTeeTime: TeeTimeType;
   /** Notify waitlist when a tee time is cancelled */
   notifyWaitlistForCancellation: WaitlistNotificationResult;
+  /** Open a new business day */
+  openDay: DailySettlementGraphQlType;
   /** Open a lottery for requests */
   openLottery: LotteryMutationResponse;
+  /** Open a new shift on a cash drawer */
+  openShift: CashDrawerShiftGraphQlType;
   /** Pay specific line items */
   payLineItems: PayLineItemsResultType;
   /** Mark a starter ticket as printed */
   printStarterTicket: StarterTicketResponseType;
+  /** Manually process an auto-pay for an invoice */
+  processAutoPay: AutoPayResult;
   /** Process payment for multiple players at once */
   processBatchPayment: BatchPaymentResultType;
   /** Process payment settlement for players */
   processSettlement: SettlementResultType;
   /** Publish lottery results and create tee times */
   publishLotteryResults: LotteryMutationResponse;
+  /** Recalculate member spend from transactions */
+  recalculateMemberSpend: MemberMinimumSpend;
+  /** Recalculate settlement totals from transactions */
+  recalculateSettlementTotals: DailySettlementGraphQlType;
+  /** Record actual cash count */
+  recordCashCount: DailySettlementGraphQlType;
+  /** Record a cash movement */
+  recordCashMovement: CashMovementGraphQlType;
+  /** Record spending against a member minimum spend requirement */
+  recordMinimumSpend: MemberMinimumSpend;
   /** Record a payment */
   recordPayment: PaymentType;
+  /** Record a transaction for a sub-account */
+  recordSubAccountTransaction: SubAccountTransaction;
   /** Manually regenerate line items for a tee time */
   regenerateLineItems: Scalars['Boolean']['output'];
   /** Remove an applied discount */
@@ -2114,6 +2615,12 @@ export type Mutation = {
   removeGroupPlayer: GroupBookingMutationResponse;
   /** Remove a line item from cart */
   removeLineItem: RemoveLineItemResultType;
+  /** Remove minimum spend exemption from a member */
+  removeMinimumSpendExemption: MemberMinimumSpend;
+  /** Remove a stored payment method */
+  removePaymentMethod: RemovePaymentMethodResult;
+  /** Reopen a closed settlement */
+  reopenSettlement: DailySettlementGraphQlType;
   /** Reorder payment methods by providing ordered IDs */
   reorderCheckInPaymentMethods: Array<CheckInPaymentMethodType>;
   /** Reorder pro shop categories by providing ordered IDs */
@@ -2122,6 +2629,16 @@ export type Mutation = {
   rescheduleBooking: CreateBookingResponseType;
   /** Reset all check-in settings to defaults */
   resetCheckInSettings: CheckInSettingsType;
+  /** Reset all spending counters for a sub-account */
+  resetSubAccountSpending: SubAccount;
+  /** Resolve a minimum spend shortfall */
+  resolveMinimumSpendShortfall: MemberMinimumSpend;
+  /** Resolve a settlement exception */
+  resolveSettlementException: SettlementExceptionGraphQlType;
+  /** Resume a suspended shift */
+  resumeShift: CashDrawerShiftGraphQlType;
+  /** Retry a failed auto-pay attempt */
+  retryAutoPayAttempt: AutoPayResult;
   /** Revert a credit limit override */
   revertCreditOverride: Scalars['Boolean']['output'];
   /** Save cart draft for a tee time */
@@ -2130,10 +2647,18 @@ export type Mutation = {
   sendInvoice: InvoiceType;
   /** Send offer to waitlist entry */
   sendWaitlistOffer: WaitlistResponseType;
+  /** Set a payment method as default */
+  setDefaultPaymentMethod: StoredPaymentMethod;
+  /** Set role-specific button overrides for an outlet */
+  setPOSRoleOverrides: SetRoleOverridesMutationResponse;
   /** Settle all players in a flight at once */
   settleAllPlayers: SettlementResultType;
   /** Submit a lottery request (member) */
   submitLotteryRequest: LotteryRequestMutationResponse;
+  /** Submit settlement for review */
+  submitSettlementForReview: DailySettlementGraphQlType;
+  /** Suspend a shift temporarily */
+  suspendShift: CashDrawerShiftGraphQlType;
   /** Enable or disable a payment method */
   toggleCheckInPaymentMethod: CheckInPaymentMethodType;
   /** Toggle quick add status for a product */
@@ -2144,12 +2669,16 @@ export type Mutation = {
   undoCheckIn: Scalars['Boolean']['output'];
   /** Undo a line item transfer */
   undoTransfer: TransferResultType;
+  /** Unlock a locked sub-account PIN */
+  unlockSubAccountPin: SubAccount;
   /** Update an existing membership application */
   updateApplication: MembershipApplicationType;
   /** Update a caddy rate */
   updateCaddyRate: CaddyRateMutationResponse;
   /** Update a cart rate */
   updateCartRate: CartRateMutationResponse;
+  /** Update a cash drawer */
+  updateCashDrawer: CashDrawerGraphQlType;
   /** Update an existing payment method */
   updateCheckInPaymentMethod: CheckInPaymentMethodType;
   /** Update check-in policy settings */
@@ -2174,8 +2703,14 @@ export type Mutation = {
   updateMember: MemberType;
   /** Update credit limit settings for a member */
   updateMemberCreditSettings: Scalars['Boolean']['output'];
+  /** Update a minimum spend requirement */
+  updateMinimumSpendRequirement: MinimumSpendRequirement;
+  /** Update the button registry for the club */
+  updatePOSButtonRegistry: UpdateButtonRegistryMutationResponse;
   /** Update POS integration settings */
   updatePOSConfig: CheckInSettingsType;
+  /** Update a stored payment method */
+  updatePaymentMethod: StoredPaymentMethod;
   /** Update a single player rental status (cart/caddy) */
   updatePlayerRentalStatus: TeeTimePlayerType;
   /** Update an existing pro shop category */
@@ -2192,12 +2727,16 @@ export type Mutation = {
   updateSeason: SeasonMutationResponse;
   /** Update an existing service */
   updateService: ServiceResponseType;
+  /** Update settlement totals */
+  updateSettlementTotals: DailySettlementGraphQlType;
   /** Update a special day */
   updateSpecialDay: SpecialDayMutationResponse;
   /** Update a staff member */
   updateStaffMember: StaffResponseType;
   /** Update starter ticket configuration */
   updateStarterTicketConfig: CheckInSettingsType;
+  /** Update a sub-account */
+  updateSubAccount: SubAccount;
   /** Update tax configuration including overrides */
   updateTaxConfig: CheckInSettingsType;
   /** Update an existing tee time */
@@ -2210,6 +2749,12 @@ export type Mutation = {
   updateTimePeriod: TimePeriodMutationResponse;
   /** Update a waitlist entry */
   updateWaitlistEntry: WaitlistMutationResponse;
+  /** Create or update auto-pay settings */
+  upsertAutoPaySetting: AutoPaySetting;
+  /** Create or update a POS template */
+  upsertPOSTemplate: UpsertTemplateMutationResponse;
+  /** Verify a sub-account PIN */
+  verifySubAccountPin: PinVerificationResult;
   /** Void an invoice */
   voidInvoice: InvoiceType;
 };
@@ -2231,6 +2776,11 @@ export type MutationAddLineItemArgs = {
 };
 
 
+export type MutationAddPaymentMethodArgs = {
+  input: AddStoredPaymentInput;
+};
+
+
 export type MutationApplyDiscountArgs = {
   input: ApplyDiscountInput;
 };
@@ -2249,6 +2799,11 @@ export type MutationApproveDiscountArgs = {
 export type MutationAssignFlightsArgs = {
   id: Scalars['ID']['input'];
   interval?: Scalars['Float']['input'];
+};
+
+
+export type MutationAssignPosTemplateArgs = {
+  input: AssignTemplateInput;
 };
 
 
@@ -2306,6 +2861,16 @@ export type MutationChangeMemberStatusArgs = {
 };
 
 
+export type MutationChangeSubAccountPinArgs = {
+  input: ChangePinInput;
+};
+
+
+export type MutationChangeSubAccountStatusArgs = {
+  input: ChangeSubAccountStatusInput;
+};
+
+
 export type MutationCheckInArgs = {
   input: CheckInInput;
 };
@@ -2331,8 +2896,29 @@ export type MutationClearCartDraftArgs = {
 };
 
 
+export type MutationClonePosTemplateArgs = {
+  id: Scalars['ID']['input'];
+  newName: Scalars['String']['input'];
+};
+
+
 export type MutationCloseLotteryArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationCloseMinimumSpendPeriodArgs = {
+  input: ClosePeriodInput;
+};
+
+
+export type MutationCloseSettlementArgs = {
+  input: CloseSettlementInput;
+};
+
+
+export type MutationCloseShiftArgs = {
+  input: CloseShiftInput;
 };
 
 
@@ -2364,6 +2950,11 @@ export type MutationCreateCaddyRateArgs = {
 
 export type MutationCreateCartRateArgs = {
   input: CreateCartRateInput;
+};
+
+
+export type MutationCreateCashDrawerArgs = {
+  input: CreateCashDrawerInput;
 };
 
 
@@ -2427,6 +3018,11 @@ export type MutationCreateMemberArgs = {
 };
 
 
+export type MutationCreateMinimumSpendRequirementArgs = {
+  input: CreateRequirementInput;
+};
+
+
 export type MutationCreateProShopCategoryArgs = {
   input: CreateProShopCategoryInput;
 };
@@ -2453,6 +3049,11 @@ export type MutationCreateServiceArgs = {
 };
 
 
+export type MutationCreateSettlementExceptionArgs = {
+  input: CreateExceptionInput;
+};
+
+
 export type MutationCreateSpecialDayArgs = {
   input: CreateSpecialDayInput;
   scheduleId: Scalars['ID']['input'];
@@ -2461,6 +3062,11 @@ export type MutationCreateSpecialDayArgs = {
 
 export type MutationCreateStaffMemberArgs = {
   input: CreateStaffMemberInput;
+};
+
+
+export type MutationCreateSubAccountArgs = {
+  input: CreateSubAccountInput;
 };
 
 
@@ -2545,6 +3151,11 @@ export type MutationDeleteMemberArgs = {
 };
 
 
+export type MutationDeleteMinimumSpendRequirementArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteProShopCategoryArgs = {
   id: Scalars['ID']['input'];
   moveProductsTo?: InputMaybe<Scalars['ID']['input']>;
@@ -2581,6 +3192,11 @@ export type MutationDeleteStaffMemberArgs = {
 };
 
 
+export type MutationDeleteSubAccountArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteTeeTimeBlockArgs = {
   id: Scalars['ID']['input'];
 };
@@ -2596,8 +3212,18 @@ export type MutationDeleteWaitlistEntryArgs = {
 };
 
 
+export type MutationDisableAutoPayArgs = {
+  memberId: Scalars['ID']['input'];
+};
+
+
 export type MutationExecuteLotteryDrawArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationExemptMemberFromMinimumSpendArgs = {
+  input: ExemptMemberInput;
 };
 
 
@@ -2631,8 +3257,18 @@ export type MutationNotifyWaitlistForCancellationArgs = {
 };
 
 
+export type MutationOpenDayArgs = {
+  input: OpenDayInput;
+};
+
+
 export type MutationOpenLotteryArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationOpenShiftArgs = {
+  input: OpenShiftInput;
 };
 
 
@@ -2643,6 +3279,11 @@ export type MutationPayLineItemsArgs = {
 
 export type MutationPrintStarterTicketArgs = {
   input: PrintTicketInput;
+};
+
+
+export type MutationProcessAutoPayArgs = {
+  input: ProcessAutoPayInput;
 };
 
 
@@ -2661,8 +3302,39 @@ export type MutationPublishLotteryResultsArgs = {
 };
 
 
+export type MutationRecalculateMemberSpendArgs = {
+  memberSpendId: Scalars['ID']['input'];
+};
+
+
+export type MutationRecalculateSettlementTotalsArgs = {
+  settlementId: Scalars['ID']['input'];
+};
+
+
+export type MutationRecordCashCountArgs = {
+  input: RecordCashCountInput;
+};
+
+
+export type MutationRecordCashMovementArgs = {
+  approvedBy?: InputMaybe<Scalars['ID']['input']>;
+  input: RecordMovementInput;
+};
+
+
+export type MutationRecordMinimumSpendArgs = {
+  input: RecordSpendInput;
+};
+
+
 export type MutationRecordPaymentArgs = {
   input: CreatePaymentInput;
+};
+
+
+export type MutationRecordSubAccountTransactionArgs = {
+  input: RecordTransactionInput;
 };
 
 
@@ -2692,6 +3364,21 @@ export type MutationRemoveLineItemArgs = {
 };
 
 
+export type MutationRemoveMinimumSpendExemptionArgs = {
+  memberSpendId: Scalars['ID']['input'];
+};
+
+
+export type MutationRemovePaymentMethodArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationReopenSettlementArgs = {
+  input: ReopenSettlementInput;
+};
+
+
 export type MutationReorderCheckInPaymentMethodsArgs = {
   orderedIds: Array<Scalars['ID']['input']>;
 };
@@ -2704,6 +3391,31 @@ export type MutationReorderProShopCategoriesArgs = {
 
 export type MutationRescheduleBookingArgs = {
   input: RescheduleBookingInput;
+};
+
+
+export type MutationResetSubAccountSpendingArgs = {
+  subAccountId: Scalars['ID']['input'];
+};
+
+
+export type MutationResolveMinimumSpendShortfallArgs = {
+  input: ResolveShortfallInput;
+};
+
+
+export type MutationResolveSettlementExceptionArgs = {
+  input: ResolveExceptionInput;
+};
+
+
+export type MutationResumeShiftArgs = {
+  shiftId: Scalars['ID']['input'];
+};
+
+
+export type MutationRetryAutoPayAttemptArgs = {
+  attemptId: Scalars['ID']['input'];
 };
 
 
@@ -2727,6 +3439,17 @@ export type MutationSendWaitlistOfferArgs = {
 };
 
 
+export type MutationSetDefaultPaymentMethodArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationSetPosRoleOverridesArgs = {
+  input: PosRoleOverridesInput;
+  outletId: Scalars['ID']['input'];
+};
+
+
 export type MutationSettleAllPlayersArgs = {
   input: SettleAllPlayersInput;
 };
@@ -2734,6 +3457,16 @@ export type MutationSettleAllPlayersArgs = {
 
 export type MutationSubmitLotteryRequestArgs = {
   input: CreateLotteryRequestInput;
+};
+
+
+export type MutationSubmitSettlementForReviewArgs = {
+  settlementId: Scalars['ID']['input'];
+};
+
+
+export type MutationSuspendShiftArgs = {
+  shiftId: Scalars['ID']['input'];
 };
 
 
@@ -2764,6 +3497,11 @@ export type MutationUndoTransferArgs = {
 };
 
 
+export type MutationUnlockSubAccountPinArgs = {
+  subAccountId: Scalars['ID']['input'];
+};
+
+
 export type MutationUpdateApplicationArgs = {
   id: Scalars['ID']['input'];
   input: UpdateApplicationInput;
@@ -2779,6 +3517,11 @@ export type MutationUpdateCaddyRateArgs = {
 export type MutationUpdateCartRateArgs = {
   id: Scalars['ID']['input'];
   input: UpdateCartRateInput;
+};
+
+
+export type MutationUpdateCashDrawerArgs = {
+  input: UpdateCashDrawerInput;
 };
 
 
@@ -2850,8 +3593,23 @@ export type MutationUpdateMemberCreditSettingsArgs = {
 };
 
 
+export type MutationUpdateMinimumSpendRequirementArgs = {
+  input: UpdateRequirementInput;
+};
+
+
+export type MutationUpdatePosButtonRegistryArgs = {
+  input: UpdateButtonRegistryInput;
+};
+
+
 export type MutationUpdatePosConfigArgs = {
   input: PosConfigInput;
+};
+
+
+export type MutationUpdatePaymentMethodArgs = {
+  input: UpdateStoredPaymentInput;
 };
 
 
@@ -2901,6 +3659,11 @@ export type MutationUpdateServiceArgs = {
 };
 
 
+export type MutationUpdateSettlementTotalsArgs = {
+  input: UpdateSettlementTotalsInput;
+};
+
+
 export type MutationUpdateSpecialDayArgs = {
   id: Scalars['ID']['input'];
   input: UpdateSpecialDayInput;
@@ -2914,6 +3677,11 @@ export type MutationUpdateStaffMemberArgs = {
 
 export type MutationUpdateStarterTicketConfigArgs = {
   input: StarterTicketConfigInput;
+};
+
+
+export type MutationUpdateSubAccountArgs = {
+  input: UpdateSubAccountInput;
 };
 
 
@@ -2952,6 +3720,22 @@ export type MutationUpdateWaitlistEntryArgs = {
 };
 
 
+export type MutationUpsertAutoPaySettingArgs = {
+  input: AutoPaySettingInput;
+};
+
+
+export type MutationUpsertPosTemplateArgs = {
+  id?: InputMaybe<Scalars['ID']['input']>;
+  input: PosTemplateInput;
+};
+
+
+export type MutationVerifySubAccountPinArgs = {
+  input: VerifyPinInput;
+};
+
+
 export type MutationVoidInvoiceArgs = {
   id: Scalars['ID']['input'];
   input: VoidInvoiceInput;
@@ -2961,6 +3745,32 @@ export type MutationVoidInvoiceArgs = {
 export type NineType =
   | 'BACK'
   | 'FRONT';
+
+export type OpenDayInput = {
+  businessDate: Scalars['DateTime']['input'];
+};
+
+export type OpenShiftInput = {
+  cashDrawerId: Scalars['ID']['input'];
+  /** JSON string of denomination counts */
+  denominations?: InputMaybe<Scalars['String']['input']>;
+  openingFloat: Scalars['Float']['input'];
+};
+
+export type PosButtonRegistryGraphQlType = {
+  __typename?: 'POSButtonRegistryGraphQLType';
+  clubId: Scalars['String']['output'];
+  registry: Scalars['JSON']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+export type PosButtonStateGraphQlType = {
+  __typename?: 'POSButtonStateGraphQLType';
+  buttonId: Scalars['String']['output'];
+  enabled: Scalars['Boolean']['output'];
+  requiresApproval: Scalars['Boolean']['output'];
+  visible: Scalars['Boolean']['output'];
+};
 
 export type PosConfigInput = {
   isConnected?: InputMaybe<Scalars['Boolean']['input']>;
@@ -2973,6 +3783,71 @@ export type PosConfigType = {
   isConnected: Scalars['Boolean']['output'];
   provider?: Maybe<Scalars['String']['output']>;
   terminalId?: Maybe<Scalars['String']['output']>;
+};
+
+export type PosOutletGraphQlType = {
+  __typename?: 'POSOutletGraphQLType';
+  clubId: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  customConfig: Scalars['JSON']['output'];
+  id: Scalars['ID']['output'];
+  isActive: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  outletType: Scalars['String']['output'];
+  roleConfigs?: Maybe<Array<PosOutletRoleConfigGraphQlType>>;
+  template?: Maybe<PosTemplateGraphQlType>;
+  templateId?: Maybe<Scalars['String']['output']>;
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+export type PosOutletRoleConfigGraphQlType = {
+  __typename?: 'POSOutletRoleConfigGraphQLType';
+  buttonOverrides: Scalars['JSON']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  outletId: Scalars['String']['output'];
+  role: Scalars['String']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+export type PosResolvedConfigGraphQlType = {
+  __typename?: 'POSResolvedConfigGraphQLType';
+  actionBarConfig: Scalars['JSON']['output'];
+  buttonStates: Array<PosButtonStateGraphQlType>;
+  outlet: PosOutletGraphQlType;
+  template?: Maybe<PosTemplateGraphQlType>;
+  toolbarConfig: Scalars['JSON']['output'];
+};
+
+export type PosRoleOverridesInput = {
+  disabled?: InputMaybe<Array<Scalars['String']['input']>>;
+  hidden?: InputMaybe<Array<Scalars['String']['input']>>;
+  requireApproval?: InputMaybe<Array<Scalars['String']['input']>>;
+  role: Scalars['String']['input'];
+};
+
+export type PosTemplateGraphQlType = {
+  __typename?: 'POSTemplateGraphQLType';
+  actionBarConfig: Scalars['JSON']['output'];
+  clubId: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  description?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  isDefault: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  outletType: Scalars['String']['output'];
+  outlets?: Maybe<Array<PosOutletGraphQlType>>;
+  toolbarConfig: Scalars['JSON']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+export type PosTemplateInput = {
+  actionBarConfig: Scalars['JSON']['input'];
+  description?: InputMaybe<Scalars['String']['input']>;
+  isDefault?: Scalars['Boolean']['input'];
+  name: Scalars['String']['input'];
+  outletType: Scalars['String']['input'];
+  toolbarConfig: Scalars['JSON']['input'];
 };
 
 export type PageInfo = {
@@ -3090,6 +3965,13 @@ export type PaymentTypeEdge = {
   __typename?: 'PaymentTypeEdge';
   cursor: Scalars['String']['output'];
   node: PaymentType;
+};
+
+export type PinVerificationResult = {
+  __typename?: 'PinVerificationResult';
+  message?: Maybe<Scalars['String']['output']>;
+  remainingAttempts?: Maybe<Scalars['Float']['output']>;
+  success: Scalars['Boolean']['output'];
 };
 
 /** Golf play format (18 holes or cross-tee) */
@@ -3258,6 +4140,12 @@ export type ProShopVariantType = {
   sku?: Maybe<Scalars['String']['output']>;
 };
 
+export type ProcessAutoPayInput = {
+  amount: Scalars['Float']['input'];
+  invoiceId: Scalars['String']['input'];
+  paymentMethodId: Scalars['ID']['input'];
+};
+
 export type ProcessSettlementInput = {
   notes?: InputMaybe<Scalars['String']['input']>;
   paymentMethodId: Scalars['ID']['input'];
@@ -3294,6 +4182,12 @@ export type Query = {
   calendarDay: CalendarDayType;
   /** Get cart draft for a tee time */
   cartDraft?: Maybe<CartDraftType>;
+  /** Get a single cash drawer by ID */
+  cashDrawer?: Maybe<CashDrawerGraphQlType>;
+  /** Get a shift by ID */
+  cashDrawerShift?: Maybe<CashDrawerShiftGraphQlType>;
+  /** Get all cash drawers for the current club */
+  cashDrawers: Array<CashDrawerGraphQlType>;
   /** Get check-in audit history */
   checkInHistory: Array<CheckInAuditEntryType>;
   /** Get a single payment method by ID */
@@ -3302,12 +4196,18 @@ export type Query = {
   checkInPaymentMethods: Array<CheckInPaymentMethodType>;
   /** Check if a charge is allowed for a member based on their credit limit */
   checkMemberCredit: CreditCheckResultType;
+  /** Check if a sub-account can make a transaction */
+  checkSubAccountLimit: SubAccountLimitCheck;
   /** Get club golf settings including cart, rental, and caddy policies */
   clubGolfSettings?: Maybe<ClubGolfSettingsType>;
   /** Get schedules for a course */
   courseSchedules: Array<GolfCourseScheduleType>;
   /** Get all golf courses */
   courses: Array<GolfCourseType>;
+  /** Get or create current period spend for a member and requirement */
+  currentMemberSpend: MemberMinimumSpend;
+  /** Get the current open shift for a drawer */
+  currentShift?: Maybe<CashDrawerShiftGraphQlType>;
   /** Get daily check-in report for a course */
   dailyCheckInReport: DailyCheckInReportType;
   /** Get a single discount by ID */
@@ -3340,6 +4240,8 @@ export type Query = {
   hasDraft: Scalars['Boolean']['output'];
   /** Get a single invoice by ID */
   invoice: InvoiceType;
+  /** Get auto-pay attempts for an invoice */
+  invoiceAutoPayAttempts: Array<AutoPayAttempt>;
   /** Get paginated list of invoices */
   invoices: InvoiceConnection;
   /** Check if all players in a tee time are settled */
@@ -3352,6 +4254,10 @@ export type Query = {
   lottery: GolfLotteryType;
   /** Get a single member by ID */
   member: MemberType;
+  /** Get auto-pay attempt history for a member */
+  memberAutoPayHistory: Array<AutoPayAttempt>;
+  /** Get auto-pay settings for a member */
+  memberAutoPaySetting?: Maybe<AutoPaySetting>;
   /** Get credit limit override history for a member */
   memberCreditOverrideHistory: Array<CreditLimitOverrideType>;
   /** Get active credit limit overrides for a member */
@@ -3362,8 +4268,16 @@ export type Query = {
   memberCreditStatus?: Maybe<CreditStatusType>;
   /** Get member dependents */
   memberDependents: Array<DependentType>;
+  /** Get a member minimum spend record by ID */
+  memberMinimumSpend?: Maybe<MemberMinimumSpend>;
+  /** Get member minimum spend records */
+  memberMinimumSpends: Array<MemberMinimumSpend>;
+  /** Get all stored payment methods for a member */
+  memberPaymentMethods: Array<StoredPaymentMethod>;
   /** Get member statistics */
   memberStats: MemberStatsType;
+  /** Get sub-accounts for a member */
+  memberSubAccounts: Array<SubAccount>;
   /** Get transaction history for a member */
   memberTransactions: MemberTransactionsType;
   /** Get paginated list of members */
@@ -3372,6 +4286,10 @@ export type Query = {
   membersAtCreditRisk: Array<MemberAtRiskType>;
   /** Get all membership types */
   membershipTypes: Array<MembershipTypeType>;
+  /** Get a minimum spend requirement by ID */
+  minimumSpendRequirement?: Maybe<MinimumSpendRequirement>;
+  /** Get all minimum spend requirements for the club */
+  minimumSpendRequirements: Array<MinimumSpendRequirement>;
   /** Get current member's invoices */
   myInvoices: InvoiceConnection;
   /** Get current user lottery requests */
@@ -3382,8 +4300,22 @@ export type Query = {
   myWaitlistEntries: Array<GolfWaitlistType>;
   /** Get open lotteries for member portal */
   openLotteries: Array<GolfLotteryType>;
+  /** Get a single stored payment method */
+  paymentMethod?: Maybe<StoredPaymentMethod>;
   /** Get detailed payment info for a single player */
   playerPaymentInfo: PlayerPaymentInfoType;
+  /** Get the button registry for the current club */
+  posButtonRegistry: PosButtonRegistryGraphQlType;
+  /** Get resolved POS configuration for an outlet and user role */
+  posConfig: PosResolvedConfigGraphQlType;
+  /** Get a single POS outlet by ID */
+  posOutlet?: Maybe<PosOutletGraphQlType>;
+  /** Get all POS outlets for the current club */
+  posOutlets: Array<PosOutletGraphQlType>;
+  /** Get a single POS template by ID */
+  posTemplate?: Maybe<PosTemplateGraphQlType>;
+  /** Get all POS templates for the current club */
+  posTemplates: Array<PosTemplateGraphQlType>;
   /** Get all pro shop categories for the current club */
   proShopCategories: Array<ProShopCategoryType>;
   /** Get a single pro shop category by ID */
@@ -3402,12 +4334,34 @@ export type Query = {
   searchCaddies: Array<CaddyType>;
   /** Get list of services */
   services: Array<ServiceType>;
+  /** Get a settlement by ID */
+  settlement?: Maybe<DailySettlementGraphQlType>;
+  /** Get or create a settlement for a specific date */
+  settlementByDate: DailySettlementGraphQlType;
+  /** Get exceptions for a settlement */
+  settlementExceptions: Array<SettlementExceptionGraphQlType>;
+  /** Get settlement summary */
+  settlementSummary: SettlementSummaryGraphQlType;
+  /** Get settlements for a date range */
+  settlements: Array<DailySettlementGraphQlType>;
+  /** Get shift history for a drawer */
+  shiftHistory: Array<CashDrawerShiftGraphQlType>;
+  /** Get movements for a shift */
+  shiftMovements: Array<CashMovementGraphQlType>;
+  /** Get summary for a shift */
+  shiftSummary: ShiftSummaryGraphQlType;
   /** Get cart for a specific player/slot */
   slotCart?: Maybe<SlotCartType>;
   /** Get starter ticket by ID */
   starterTicket?: Maybe<StarterTicketResponseType>;
   /** Get starter ticket for a tee time */
   starterTicketByTeeTime?: Maybe<StarterTicketResponseType>;
+  /** Get a sub-account by ID */
+  subAccount?: Maybe<SubAccount>;
+  /** Get transactions for sub-accounts */
+  subAccountTransactions: Array<SubAccountTransaction>;
+  /** Get all sub-accounts for the club */
+  subAccounts: Array<SubAccount>;
   /** Get tee sheet for a course and date */
   teeSheet: Array<TeeSheetSlotType>;
   /** Get a single tee time by ID */
@@ -3422,6 +4376,8 @@ export type Query = {
   teeTimesWithDrafts: Array<Scalars['ID']['output']>;
   /** Get HTML template for a starter ticket */
   ticketHTML: Scalars['String']['output'];
+  /** Get today's settlement for the current club */
+  todaySettlement?: Maybe<DailySettlementGraphQlType>;
   /** Get discounts applied to a transaction */
   transactionDiscounts: Array<AppliedDiscountType>;
   /** Get payment transaction history for a tee time */
@@ -3508,6 +4464,21 @@ export type QueryCartDraftArgs = {
 };
 
 
+export type QueryCashDrawerArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryCashDrawerShiftArgs = {
+  shiftId: Scalars['ID']['input'];
+};
+
+
+export type QueryCashDrawersArgs = {
+  activeOnly?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+
 export type QueryCheckInHistoryArgs = {
   filter?: InputMaybe<CheckInHistoryFilterInput>;
 };
@@ -3523,8 +4494,24 @@ export type QueryCheckMemberCreditArgs = {
 };
 
 
+export type QueryCheckSubAccountLimitArgs = {
+  input: CheckLimitInput;
+};
+
+
 export type QueryCourseSchedulesArgs = {
   courseId: Scalars['ID']['input'];
+};
+
+
+export type QueryCurrentMemberSpendArgs = {
+  memberId: Scalars['ID']['input'];
+  requirementId: Scalars['ID']['input'];
+};
+
+
+export type QueryCurrentShiftArgs = {
+  cashDrawerId: Scalars['ID']['input'];
 };
 
 
@@ -3617,6 +4604,11 @@ export type QueryInvoiceArgs = {
 };
 
 
+export type QueryInvoiceAutoPayAttemptsArgs = {
+  invoiceId: Scalars['ID']['input'];
+};
+
+
 export type QueryInvoicesArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   endDate?: InputMaybe<Scalars['DateTime']['input']>;
@@ -3659,6 +4651,16 @@ export type QueryMemberArgs = {
 };
 
 
+export type QueryMemberAutoPayHistoryArgs = {
+  input: GetAutoPayHistoryInput;
+};
+
+
+export type QueryMemberAutoPaySettingArgs = {
+  memberId: Scalars['ID']['input'];
+};
+
+
 export type QueryMemberCreditOverrideHistoryArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   memberId: Scalars['ID']['input'];
@@ -3685,6 +4687,28 @@ export type QueryMemberDependentsArgs = {
 };
 
 
+export type QueryMemberMinimumSpendArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryMemberMinimumSpendsArgs = {
+  input: GetMemberSpendsInput;
+};
+
+
+export type QueryMemberPaymentMethodsArgs = {
+  activeOnly?: InputMaybe<Scalars['Boolean']['input']>;
+  memberId: Scalars['ID']['input'];
+};
+
+
+export type QueryMemberSubAccountsArgs = {
+  activeOnly?: InputMaybe<Scalars['Boolean']['input']>;
+  memberId: Scalars['ID']['input'];
+};
+
+
 export type QueryMemberTransactionsArgs = {
   memberId: Scalars['ID']['input'];
 };
@@ -3703,6 +4727,16 @@ export type QueryMembersArgs = {
 };
 
 
+export type QueryMinimumSpendRequirementArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryMinimumSpendRequirementsArgs = {
+  activeOnly?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+
 export type QueryMyInvoicesArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   endDate?: InputMaybe<Scalars['DateTime']['input']>;
@@ -3717,8 +4751,30 @@ export type QueryMyInvoicesArgs = {
 };
 
 
+export type QueryPaymentMethodArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type QueryPlayerPaymentInfoArgs = {
   playerId: Scalars['ID']['input'];
+};
+
+
+export type QueryPosConfigArgs = {
+  outletId: Scalars['ID']['input'];
+  userPermissions?: InputMaybe<Array<Scalars['String']['input']>>;
+  userRole: Scalars['String']['input'];
+};
+
+
+export type QueryPosOutletArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryPosTemplateArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -3759,6 +4815,49 @@ export type QueryServicesArgs = {
 };
 
 
+export type QuerySettlementArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QuerySettlementByDateArgs = {
+  date: Scalars['DateTime']['input'];
+};
+
+
+export type QuerySettlementExceptionsArgs = {
+  pendingOnly?: InputMaybe<Scalars['Boolean']['input']>;
+  settlementId: Scalars['ID']['input'];
+};
+
+
+export type QuerySettlementSummaryArgs = {
+  settlementId: Scalars['ID']['input'];
+};
+
+
+export type QuerySettlementsArgs = {
+  input: GetSettlementsInput;
+};
+
+
+export type QueryShiftHistoryArgs = {
+  cashDrawerId: Scalars['ID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryShiftMovementsArgs = {
+  shiftId: Scalars['ID']['input'];
+  type?: InputMaybe<CashMovementType>;
+};
+
+
+export type QueryShiftSummaryArgs = {
+  shiftId: Scalars['ID']['input'];
+};
+
+
 export type QuerySlotCartArgs = {
   playerId: Scalars['ID']['input'];
 };
@@ -3771,6 +4870,21 @@ export type QueryStarterTicketArgs = {
 
 export type QueryStarterTicketByTeeTimeArgs = {
   teeTimeId: Scalars['ID']['input'];
+};
+
+
+export type QuerySubAccountArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QuerySubAccountTransactionsArgs = {
+  input: GetTransactionsInput;
+};
+
+
+export type QuerySubAccountsArgs = {
+  status?: InputMaybe<SubAccountStatus>;
 };
 
 
@@ -3899,6 +5013,40 @@ export type RateConfigType = {
   updatedAt: Scalars['DateTime']['output'];
 };
 
+export type RecordCashCountInput = {
+  actualCash: Scalars['Float']['input'];
+  settlementId: Scalars['ID']['input'];
+};
+
+export type RecordMovementInput = {
+  amount: Scalars['Float']['input'];
+  description?: InputMaybe<Scalars['String']['input']>;
+  reason?: InputMaybe<Scalars['String']['input']>;
+  reference?: InputMaybe<Scalars['String']['input']>;
+  shiftId: Scalars['ID']['input'];
+  transactionId?: InputMaybe<Scalars['ID']['input']>;
+  type: CashMovementType;
+};
+
+export type RecordSpendInput = {
+  amount: Scalars['Float']['input'];
+  category?: InputMaybe<Scalars['String']['input']>;
+  memberId: Scalars['String']['input'];
+  requirementId: Scalars['String']['input'];
+};
+
+export type RecordTransactionInput = {
+  amount: Scalars['Float']['input'];
+  category: SubAccountPermission;
+  description: Scalars['String']['input'];
+  lineItemId?: InputMaybe<Scalars['String']['input']>;
+  locationName?: InputMaybe<Scalars['String']['input']>;
+  notes?: InputMaybe<Scalars['String']['input']>;
+  paymentTransactionId?: InputMaybe<Scalars['String']['input']>;
+  subAccountId: Scalars['String']['input'];
+  teeTimeId?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type RemoveLineItemInput = {
   lineItemId: Scalars['ID']['input'];
 };
@@ -3907,6 +5055,12 @@ export type RemoveLineItemResultType = {
   __typename?: 'RemoveLineItemResultType';
   error?: Maybe<Scalars['String']['output']>;
   removedItem?: Maybe<SlotLineItemType>;
+  success: Scalars['Boolean']['output'];
+};
+
+export type RemovePaymentMethodResult = {
+  __typename?: 'RemovePaymentMethodResult';
+  error?: Maybe<Scalars['String']['output']>;
   success: Scalars['Boolean']['output'];
 };
 
@@ -3923,10 +5077,27 @@ export type RentalStatus =
   | 'REQUESTED'
   | 'RETURNED';
 
+export type ReopenSettlementInput = {
+  reason: Scalars['String']['input'];
+  settlementId: Scalars['ID']['input'];
+};
+
 export type RescheduleBookingInput = {
   id: Scalars['ID']['input'];
   newResourceId?: InputMaybe<Scalars['ID']['input']>;
   newStartTime: Scalars['String']['input'];
+};
+
+export type ResolveExceptionInput = {
+  exceptionId: Scalars['ID']['input'];
+  resolution: ExceptionResolution;
+  resolutionNote?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type ResolveShortfallInput = {
+  action: ShortfallAction;
+  memberSpendId: Scalars['String']['input'];
+  note?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type ResourceType = {
@@ -4015,10 +5186,36 @@ export type ServiceVariationType = {
   priceType: Scalars['String']['output'];
 };
 
+export type SetRoleOverridesMutationResponse = {
+  __typename?: 'SetRoleOverridesMutationResponse';
+  message?: Maybe<Scalars['String']['output']>;
+  roleConfig?: Maybe<PosOutletRoleConfigGraphQlType>;
+  success: Scalars['Boolean']['output'];
+};
+
 export type SettleAllPlayersInput = {
   paymentMethodId: Scalars['ID']['input'];
   reference?: InputMaybe<Scalars['String']['input']>;
   teeTimeId: Scalars['ID']['input'];
+};
+
+export type SettlementExceptionGraphQlType = {
+  __typename?: 'SettlementExceptionGraphQLType';
+  amount?: Maybe<Scalars['Float']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  description: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  lineItemId?: Maybe<Scalars['ID']['output']>;
+  resolution: ExceptionResolution;
+  resolutionNote?: Maybe<Scalars['String']['output']>;
+  resolvedAt?: Maybe<Scalars['DateTime']['output']>;
+  resolvedBy?: Maybe<Scalars['ID']['output']>;
+  settlementId: Scalars['ID']['output'];
+  severity: ExceptionSeverity;
+  shiftId?: Maybe<Scalars['ID']['output']>;
+  transactionId?: Maybe<Scalars['ID']['output']>;
+  type: ExceptionType;
+  updatedAt: Scalars['DateTime']['output'];
 };
 
 export type SettlementResultType = {
@@ -4030,6 +5227,58 @@ export type SettlementResultType = {
   success: Scalars['Boolean']['output'];
   transactionId?: Maybe<Scalars['String']['output']>;
 };
+
+/** Status of a daily settlement */
+export type SettlementStatus =
+  | 'CLOSED'
+  | 'IN_REVIEW'
+  | 'OPEN'
+  | 'REOPENED';
+
+export type SettlementSummaryGraphQlType = {
+  __typename?: 'SettlementSummaryGraphQLType';
+  actualCash?: Maybe<Scalars['Float']['output']>;
+  businessDate: Scalars['DateTime']['output'];
+  cashVariance?: Maybe<Scalars['Float']['output']>;
+  exceptionCount: Scalars['Int']['output'];
+  expectedCash: Scalars['Float']['output'];
+  settlementId: Scalars['ID']['output'];
+  status: SettlementStatus;
+  totalCard: Scalars['Float']['output'];
+  totalCash: Scalars['Float']['output'];
+  totalGrossSales: Scalars['Float']['output'];
+  totalMemberAccount: Scalars['Float']['output'];
+  totalNetSales: Scalars['Float']['output'];
+  unresolvedExceptionCount: Scalars['Int']['output'];
+};
+
+export type ShiftSummaryGraphQlType = {
+  __typename?: 'ShiftSummaryGraphQLType';
+  actualCash?: Maybe<Scalars['Float']['output']>;
+  closedAt?: Maybe<Scalars['DateTime']['output']>;
+  closedBy?: Maybe<Scalars['ID']['output']>;
+  closingCount?: Maybe<Scalars['Float']['output']>;
+  expectedCash: Scalars['Float']['output'];
+  movementCount: Scalars['Float']['output'];
+  openedAt: Scalars['DateTime']['output'];
+  openedBy: Scalars['ID']['output'];
+  openingFloat: Scalars['Float']['output'];
+  shiftId: Scalars['ID']['output'];
+  status: CashDrawerStatus;
+  totalDrops: Scalars['Float']['output'];
+  totalPaidIn: Scalars['Float']['output'];
+  totalPaidOut: Scalars['Float']['output'];
+  totalRefunds: Scalars['Float']['output'];
+  totalSales: Scalars['Float']['output'];
+  variance?: Maybe<Scalars['Float']['output']>;
+};
+
+/** Action to take when member has a shortfall */
+export type ShortfallAction =
+  | 'CARRY_FORWARD'
+  | 'CHARGE_DIFFERENCE'
+  | 'CREDIT_BALANCE'
+  | 'WAIVE';
 
 export type SlotCartType = {
   __typename?: 'SlotCartType';
@@ -4191,6 +5440,121 @@ export type StarterTicketResponseType = {
   startingHole: Scalars['Int']['output'];
   teeTime: Scalars['DateTime']['output'];
   ticketNumber: Scalars['String']['output'];
+};
+
+export type StoredPaymentMethod = {
+  __typename?: 'StoredPaymentMethod';
+  brand: Scalars['String']['output'];
+  cardholderName?: Maybe<Scalars['String']['output']>;
+  clubId: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  expiryMonth?: Maybe<Scalars['Int']['output']>;
+  expiryYear?: Maybe<Scalars['Int']['output']>;
+  failureCount: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  isAutoPayEnabled: Scalars['Boolean']['output'];
+  isDefault: Scalars['Boolean']['output'];
+  last4: Scalars['String']['output'];
+  lastFailureReason?: Maybe<Scalars['String']['output']>;
+  lastUsedAt?: Maybe<Scalars['DateTime']['output']>;
+  memberId: Scalars['String']['output'];
+  status: StoredPaymentMethodStatus;
+  stripeCustomerId?: Maybe<Scalars['String']['output']>;
+  stripePaymentMethodId: Scalars['String']['output'];
+  type: StoredPaymentMethodType;
+  updatedAt: Scalars['DateTime']['output'];
+  verifiedAt?: Maybe<Scalars['DateTime']['output']>;
+};
+
+/** Status of stored payment method */
+export type StoredPaymentMethodStatus =
+  | 'ACTIVE'
+  | 'EXPIRED'
+  | 'FAILED'
+  | 'REMOVED';
+
+/** Type of stored payment method */
+export type StoredPaymentMethodType =
+  | 'BANK_ACCOUNT'
+  | 'CARD';
+
+export type SubAccount = {
+  __typename?: 'SubAccount';
+  clubId: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  dailyLimit?: Maybe<Scalars['Float']['output']>;
+  dailySpend: Scalars['Float']['output'];
+  email?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  lastResetDaily: Scalars['DateTime']['output'];
+  lastResetMonthly: Scalars['DateTime']['output'];
+  lastResetWeekly: Scalars['DateTime']['output'];
+  memberId: Scalars['String']['output'];
+  monthlyLimit?: Maybe<Scalars['Float']['output']>;
+  monthlySpend: Scalars['Float']['output'];
+  name: Scalars['String']['output'];
+  notifyOnLimitReached: Scalars['Boolean']['output'];
+  notifyPrimaryOnUse: Scalars['Boolean']['output'];
+  perTransactionLimit?: Maybe<Scalars['Float']['output']>;
+  permissions: Array<SubAccountPermission>;
+  phone?: Maybe<Scalars['String']['output']>;
+  pinAttempts: Scalars['Int']['output'];
+  pinLockedUntil?: Maybe<Scalars['DateTime']['output']>;
+  relationship: Scalars['String']['output'];
+  status: SubAccountStatus;
+  updatedAt: Scalars['DateTime']['output'];
+  validFrom: Scalars['DateTime']['output'];
+  validUntil?: Maybe<Scalars['DateTime']['output']>;
+  weeklyLimit?: Maybe<Scalars['Float']['output']>;
+  weeklySpend: Scalars['Float']['output'];
+};
+
+export type SubAccountLimitCheck = {
+  __typename?: 'SubAccountLimitCheck';
+  allowed: Scalars['Boolean']['output'];
+  currentDaily: Scalars['Float']['output'];
+  currentMonthly: Scalars['Float']['output'];
+  currentWeekly: Scalars['Float']['output'];
+  dailyLimit?: Maybe<Scalars['Float']['output']>;
+  monthlyLimit?: Maybe<Scalars['Float']['output']>;
+  perTransactionLimit?: Maybe<Scalars['Float']['output']>;
+  reason?: Maybe<Scalars['String']['output']>;
+  weeklyLimit?: Maybe<Scalars['Float']['output']>;
+};
+
+/** Permission categories for sub-accounts */
+export type SubAccountPermission =
+  | 'ALL'
+  | 'EVENTS'
+  | 'FOOD_BEVERAGE'
+  | 'GOLF'
+  | 'RETAIL'
+  | 'SPA';
+
+/** Status of a sub-account */
+export type SubAccountStatus =
+  | 'ACTIVE'
+  | 'EXPIRED'
+  | 'REVOKED'
+  | 'SUSPENDED';
+
+export type SubAccountTransaction = {
+  __typename?: 'SubAccountTransaction';
+  amount: Scalars['Float']['output'];
+  category: SubAccountPermission;
+  clubId: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  description: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  lineItemId?: Maybe<Scalars['String']['output']>;
+  locationName?: Maybe<Scalars['String']['output']>;
+  notes?: Maybe<Scalars['String']['output']>;
+  paymentTransactionId?: Maybe<Scalars['String']['output']>;
+  subAccount?: Maybe<SubAccount>;
+  subAccountId: Scalars['String']['output'];
+  teeTimeId?: Maybe<Scalars['String']['output']>;
+  verifiedAt: Scalars['DateTime']['output'];
+  verifiedBy?: Maybe<Scalars['String']['output']>;
 };
 
 export type Subscription = {
@@ -4545,6 +5909,17 @@ export type UpdateBlockInput = {
   startTime?: InputMaybe<Scalars['DateTime']['input']>;
 };
 
+export type UpdateButtonRegistryInput = {
+  registry: Scalars['JSON']['input'];
+};
+
+export type UpdateButtonRegistryMutationResponse = {
+  __typename?: 'UpdateButtonRegistryMutationResponse';
+  buttonRegistry?: Maybe<PosButtonRegistryGraphQlType>;
+  message?: Maybe<Scalars['String']['output']>;
+  success: Scalars['Boolean']['output'];
+};
+
 export type UpdateCaddyRateInput = {
   amount?: InputMaybe<Scalars['Float']['input']>;
   caddyType?: InputMaybe<Scalars['String']['input']>;
@@ -4557,6 +5932,13 @@ export type UpdateCartRateInput = {
   cartType?: InputMaybe<Scalars['String']['input']>;
   taxRate?: InputMaybe<Scalars['Float']['input']>;
   taxType?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateCashDrawerInput = {
+  id: Scalars['ID']['input'];
+  isActive?: InputMaybe<Scalars['Boolean']['input']>;
+  location?: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type UpdateCreditSettingsInput = {
@@ -4722,6 +6104,29 @@ export type UpdateRateConfigInput = {
   name?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type UpdateRequirementInput = {
+  allowPartialCredit?: InputMaybe<Scalars['Boolean']['input']>;
+  defaultShortfallAction?: InputMaybe<ShortfallAction>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  effectiveTo?: InputMaybe<Scalars['DateTime']['input']>;
+  excludedCategories?: InputMaybe<Array<Scalars['String']['input']>>;
+  gracePeriodDays?: InputMaybe<Scalars['Int']['input']>;
+  includeEvents?: InputMaybe<Scalars['Boolean']['input']>;
+  includeFoodBeverage?: InputMaybe<Scalars['Boolean']['input']>;
+  includeGolf?: InputMaybe<Scalars['Boolean']['input']>;
+  includeRetail?: InputMaybe<Scalars['Boolean']['input']>;
+  includeSpa?: InputMaybe<Scalars['Boolean']['input']>;
+  includedCategories?: InputMaybe<Array<Scalars['String']['input']>>;
+  isActive?: InputMaybe<Scalars['Boolean']['input']>;
+  membershipTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  minimumAmount?: InputMaybe<Scalars['Float']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  notifyAtPercent?: InputMaybe<Array<Scalars['Int']['input']>>;
+  notifyDaysBeforeEnd?: InputMaybe<Array<Scalars['Int']['input']>>;
+  period?: InputMaybe<MinimumSpendPeriod>;
+  requirementId: Scalars['String']['input'];
+};
+
 export type UpdateScheduleConfigInput = {
   clubLatitude?: InputMaybe<Scalars['Float']['input']>;
   clubLongitude?: InputMaybe<Scalars['Float']['input']>;
@@ -4782,6 +6187,24 @@ export type UpdateServiceInput = {
   variations?: InputMaybe<Array<ServiceVariationInput>>;
 };
 
+export type UpdateSettlementTotalsInput = {
+  refundCount?: InputMaybe<Scalars['Int']['input']>;
+  settlementId: Scalars['ID']['input'];
+  totalCard?: InputMaybe<Scalars['Float']['input']>;
+  totalCash?: InputMaybe<Scalars['Float']['input']>;
+  totalDiscounts?: InputMaybe<Scalars['Float']['input']>;
+  totalGrossSales?: InputMaybe<Scalars['Float']['input']>;
+  totalMemberAccount?: InputMaybe<Scalars['Float']['input']>;
+  totalNetSales?: InputMaybe<Scalars['Float']['input']>;
+  totalOther?: InputMaybe<Scalars['Float']['input']>;
+  totalRefunds?: InputMaybe<Scalars['Float']['input']>;
+  totalServiceCharge?: InputMaybe<Scalars['Float']['input']>;
+  totalTax?: InputMaybe<Scalars['Float']['input']>;
+  totalVoids?: InputMaybe<Scalars['Float']['input']>;
+  transactionCount?: InputMaybe<Scalars['Int']['input']>;
+  voidCount?: InputMaybe<Scalars['Int']['input']>;
+};
+
 export type UpdateSpecialDayInput = {
   bookingMode?: InputMaybe<BookingMode>;
   customFirstTee?: InputMaybe<Scalars['String']['input']>;
@@ -4808,6 +6231,28 @@ export type UpdateStaffMemberInput = {
   phone?: InputMaybe<Scalars['String']['input']>;
   userId?: InputMaybe<Scalars['ID']['input']>;
   workingHours?: InputMaybe<Array<DayHoursInput>>;
+};
+
+export type UpdateStoredPaymentInput = {
+  id: Scalars['ID']['input'];
+  isAutoPayEnabled?: InputMaybe<Scalars['Boolean']['input']>;
+  isDefault?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+export type UpdateSubAccountInput = {
+  dailyLimit?: InputMaybe<Scalars['Float']['input']>;
+  email?: InputMaybe<Scalars['String']['input']>;
+  monthlyLimit?: InputMaybe<Scalars['Float']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  notifyOnLimitReached?: InputMaybe<Scalars['Boolean']['input']>;
+  notifyPrimaryOnUse?: InputMaybe<Scalars['Boolean']['input']>;
+  perTransactionLimit?: InputMaybe<Scalars['Float']['input']>;
+  permissions?: InputMaybe<Array<SubAccountPermission>>;
+  phone?: InputMaybe<Scalars['String']['input']>;
+  relationship?: InputMaybe<Scalars['String']['input']>;
+  subAccountId: Scalars['String']['input'];
+  validUntil?: InputMaybe<Scalars['DateTime']['input']>;
+  weeklyLimit?: InputMaybe<Scalars['Float']['input']>;
 };
 
 export type UpdateTeeTimeInput = {
@@ -4838,12 +6283,24 @@ export type UpdateWaitlistEntryInput = {
   timeRangeStart?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type UpsertTemplateMutationResponse = {
+  __typename?: 'UpsertTemplateMutationResponse';
+  message?: Maybe<Scalars['String']['output']>;
+  success: Scalars['Boolean']['output'];
+  template?: Maybe<PosTemplateGraphQlType>;
+};
+
 export type ValidateDiscountInput = {
   amount: Scalars['Float']['input'];
   code?: InputMaybe<Scalars['String']['input']>;
   discountId?: InputMaybe<Scalars['ID']['input']>;
   membershipTypeId?: InputMaybe<Scalars['ID']['input']>;
   playerType?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type VerifyPinInput = {
+  pin: Scalars['String']['input'];
+  subAccountId: Scalars['String']['input'];
 };
 
 export type VoidInvoiceInput = {
@@ -5260,6 +6717,107 @@ export type DeclineWaitlistOfferMutationVariables = Exact<{
 
 export type DeclineWaitlistOfferMutation = { __typename?: 'Mutation', declineWaitlistOffer: { __typename?: 'WaitlistResponseType', success: boolean, message?: string | null | undefined, error?: string | null | undefined, entry?: { __typename?: 'WaitlistEntryType', id: string, status: WaitlistStatus } | null | undefined } };
 
+export type GetCashDrawersQueryVariables = Exact<{
+  activeOnly?: InputMaybe<Scalars['Boolean']['input']>;
+}>;
+
+
+export type GetCashDrawersQuery = { __typename?: 'Query', cashDrawers: Array<{ __typename?: 'CashDrawerGraphQLType', id: string, clubId: string, name: string, location?: string | null | undefined, isActive: boolean, createdAt: string, updatedAt: string, currentShift?: { __typename?: 'CashDrawerShiftGraphQLType', id: string, status: CashDrawerStatus, openedAt: string, openedBy: string, openingFloat: number } | null | undefined }> };
+
+export type GetCashDrawerQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetCashDrawerQuery = { __typename?: 'Query', cashDrawer?: { __typename?: 'CashDrawerGraphQLType', id: string, clubId: string, name: string, location?: string | null | undefined, isActive: boolean, createdAt: string, updatedAt: string, currentShift?: { __typename?: 'CashDrawerShiftGraphQLType', id: string, status: CashDrawerStatus, openedAt: string, openedBy: string, openingFloat: number, totalSales: number, totalRefunds: number, totalPaidIn: number, totalPaidOut: number, totalDrops: number } | null | undefined } | null | undefined };
+
+export type GetCurrentShiftQueryVariables = Exact<{
+  cashDrawerId: Scalars['ID']['input'];
+}>;
+
+
+export type GetCurrentShiftQuery = { __typename?: 'Query', currentShift?: { __typename?: 'CashDrawerShiftGraphQLType', id: string, cashDrawerId: string, status: CashDrawerStatus, openedBy: string, openedAt: string, openingFloat: number, openingDenominations?: string | null | undefined, totalSales: number, totalRefunds: number, totalPaidIn: number, totalPaidOut: number, totalDrops: number, createdAt: string } | null | undefined };
+
+export type GetCashDrawerShiftQueryVariables = Exact<{
+  shiftId: Scalars['ID']['input'];
+}>;
+
+
+export type GetCashDrawerShiftQuery = { __typename?: 'Query', cashDrawerShift?: { __typename?: 'CashDrawerShiftGraphQLType', id: string, cashDrawerId: string, status: CashDrawerStatus, openedBy: string, openedAt: string, openingFloat: number, openingDenominations?: string | null | undefined, closedBy?: string | null | undefined, closedAt?: string | null | undefined, closingCount?: number | null | undefined, closingDenominations?: string | null | undefined, expectedCash?: number | null | undefined, actualCash?: number | null | undefined, variance?: number | null | undefined, varianceNote?: string | null | undefined, totalSales: number, totalRefunds: number, totalPaidIn: number, totalPaidOut: number, totalDrops: number, createdAt: string, movements?: Array<{ __typename?: 'CashMovementGraphQLType', id: string, type: CashMovementType, amount: number, description?: string | null | undefined, performedAt: string }> | null | undefined } | null | undefined };
+
+export type GetShiftSummaryQueryVariables = Exact<{
+  shiftId: Scalars['ID']['input'];
+}>;
+
+
+export type GetShiftSummaryQuery = { __typename?: 'Query', shiftSummary: { __typename?: 'ShiftSummaryGraphQLType', shiftId: string, status: CashDrawerStatus, openedAt: string, openedBy: string, closedAt?: string | null | undefined, closedBy?: string | null | undefined, openingFloat: number, closingCount?: number | null | undefined, expectedCash: number, actualCash?: number | null | undefined, variance?: number | null | undefined, totalSales: number, totalRefunds: number, totalPaidIn: number, totalPaidOut: number, totalDrops: number, movementCount: number } };
+
+export type GetShiftHistoryQueryVariables = Exact<{
+  cashDrawerId: Scalars['ID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type GetShiftHistoryQuery = { __typename?: 'Query', shiftHistory: Array<{ __typename?: 'CashDrawerShiftGraphQLType', id: string, status: CashDrawerStatus, openedAt: string, openedBy: string, closedAt?: string | null | undefined, closedBy?: string | null | undefined, openingFloat: number, closingCount?: number | null | undefined, expectedCash?: number | null | undefined, actualCash?: number | null | undefined, variance?: number | null | undefined, totalSales: number, totalRefunds: number }> };
+
+export type GetShiftMovementsQueryVariables = Exact<{
+  shiftId: Scalars['ID']['input'];
+  type?: InputMaybe<CashMovementType>;
+}>;
+
+
+export type GetShiftMovementsQuery = { __typename?: 'Query', shiftMovements: Array<{ __typename?: 'CashMovementGraphQLType', id: string, shiftId: string, type: CashMovementType, amount: number, description?: string | null | undefined, reference?: string | null | undefined, reason?: string | null | undefined, approvedBy?: string | null | undefined, transactionId?: string | null | undefined, performedBy: string, performedAt: string }> };
+
+export type CreateCashDrawerMutationVariables = Exact<{
+  input: CreateCashDrawerInput;
+}>;
+
+
+export type CreateCashDrawerMutation = { __typename?: 'Mutation', createCashDrawer: { __typename?: 'CashDrawerGraphQLType', id: string, clubId: string, name: string, location?: string | null | undefined, isActive: boolean, createdAt: string } };
+
+export type UpdateCashDrawerMutationVariables = Exact<{
+  input: UpdateCashDrawerInput;
+}>;
+
+
+export type UpdateCashDrawerMutation = { __typename?: 'Mutation', updateCashDrawer: { __typename?: 'CashDrawerGraphQLType', id: string, name: string, location?: string | null | undefined, isActive: boolean, updatedAt: string } };
+
+export type OpenShiftMutationVariables = Exact<{
+  input: OpenShiftInput;
+}>;
+
+
+export type OpenShiftMutation = { __typename?: 'Mutation', openShift: { __typename?: 'CashDrawerShiftGraphQLType', id: string, cashDrawerId: string, status: CashDrawerStatus, openedBy: string, openedAt: string, openingFloat: number, openingDenominations?: string | null | undefined } };
+
+export type CloseShiftMutationVariables = Exact<{
+  input: CloseShiftInput;
+}>;
+
+
+export type CloseShiftMutation = { __typename?: 'Mutation', closeShift: { __typename?: 'CashDrawerShiftGraphQLType', id: string, status: CashDrawerStatus, closedBy?: string | null | undefined, closedAt?: string | null | undefined, closingCount?: number | null | undefined, closingDenominations?: string | null | undefined, expectedCash?: number | null | undefined, actualCash?: number | null | undefined, variance?: number | null | undefined, varianceNote?: string | null | undefined } };
+
+export type SuspendShiftMutationVariables = Exact<{
+  shiftId: Scalars['ID']['input'];
+}>;
+
+
+export type SuspendShiftMutation = { __typename?: 'Mutation', suspendShift: { __typename?: 'CashDrawerShiftGraphQLType', id: string, status: CashDrawerStatus } };
+
+export type ResumeShiftMutationVariables = Exact<{
+  shiftId: Scalars['ID']['input'];
+}>;
+
+
+export type ResumeShiftMutation = { __typename?: 'Mutation', resumeShift: { __typename?: 'CashDrawerShiftGraphQLType', id: string, status: CashDrawerStatus } };
+
+export type RecordCashMovementMutationVariables = Exact<{
+  input: RecordMovementInput;
+  approvedBy?: InputMaybe<Scalars['ID']['input']>;
+}>;
+
+
+export type RecordCashMovementMutation = { __typename?: 'Mutation', recordCashMovement: { __typename?: 'CashMovementGraphQLType', id: string, shiftId: string, type: CashMovementType, amount: number, description?: string | null | undefined, reference?: string | null | undefined, reason?: string | null | undefined, approvedBy?: string | null | undefined, transactionId?: string | null | undefined, performedBy: string, performedAt: string } };
+
 export type CheckMemberCreditQueryVariables = Exact<{
   input: CheckCreditInput;
 }>;
@@ -5425,6 +6983,110 @@ export type RemoveAppliedDiscountMutationVariables = Exact<{
 
 
 export type RemoveAppliedDiscountMutation = { __typename?: 'Mutation', removeAppliedDiscount: boolean };
+
+export type GetTodaySettlementQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetTodaySettlementQuery = { __typename?: 'Query', todaySettlement?: { __typename?: 'DailySettlementGraphQLType', id: string, clubId: string, businessDate: string, status: SettlementStatus, totalGrossSales: number, totalDiscounts: number, totalNetSales: number, totalTax: number, totalServiceCharge: number, totalCash: number, totalCard: number, totalMemberAccount: number, totalOther: number, totalRefunds: number, totalVoids: number, expectedCash: number, actualCash?: number | null | undefined, cashVariance?: number | null | undefined, transactionCount: number, refundCount: number, voidCount: number, openedBy?: string | null | undefined, openedAt?: string | null | undefined, reviewedBy?: string | null | undefined, reviewedAt?: string | null | undefined, closedBy?: string | null | undefined, closedAt?: string | null | undefined, notes?: string | null | undefined, createdAt: string, updatedAt: string, exceptions?: Array<{ __typename?: 'SettlementExceptionGraphQLType', id: string, type: ExceptionType, severity: ExceptionSeverity, resolution: ExceptionResolution, description: string, amount?: number | null | undefined, createdAt: string }> | null | undefined } | null | undefined };
+
+export type GetSettlementQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetSettlementQuery = { __typename?: 'Query', settlement?: { __typename?: 'DailySettlementGraphQLType', id: string, clubId: string, businessDate: string, status: SettlementStatus, totalGrossSales: number, totalDiscounts: number, totalNetSales: number, totalTax: number, totalServiceCharge: number, totalCash: number, totalCard: number, totalMemberAccount: number, totalOther: number, totalRefunds: number, totalVoids: number, expectedCash: number, actualCash?: number | null | undefined, cashVariance?: number | null | undefined, transactionCount: number, refundCount: number, voidCount: number, openedBy?: string | null | undefined, openedAt?: string | null | undefined, reviewedBy?: string | null | undefined, reviewedAt?: string | null | undefined, closedBy?: string | null | undefined, closedAt?: string | null | undefined, notes?: string | null | undefined, createdAt: string, updatedAt: string, exceptions?: Array<{ __typename?: 'SettlementExceptionGraphQLType', id: string, type: ExceptionType, severity: ExceptionSeverity, resolution: ExceptionResolution, description: string, amount?: number | null | undefined, resolvedBy?: string | null | undefined, resolvedAt?: string | null | undefined, resolutionNote?: string | null | undefined, createdAt: string }> | null | undefined } | null | undefined };
+
+export type GetSettlementByDateQueryVariables = Exact<{
+  date: Scalars['DateTime']['input'];
+}>;
+
+
+export type GetSettlementByDateQuery = { __typename?: 'Query', settlementByDate: { __typename?: 'DailySettlementGraphQLType', id: string, clubId: string, businessDate: string, status: SettlementStatus, totalGrossSales: number, totalNetSales: number, totalCash: number, totalCard: number, totalMemberAccount: number, expectedCash: number, actualCash?: number | null | undefined, cashVariance?: number | null | undefined, transactionCount: number, createdAt: string, exceptions?: Array<{ __typename?: 'SettlementExceptionGraphQLType', id: string, type: ExceptionType, severity: ExceptionSeverity, resolution: ExceptionResolution }> | null | undefined } };
+
+export type GetSettlementsQueryVariables = Exact<{
+  input: GetSettlementsInput;
+}>;
+
+
+export type GetSettlementsQuery = { __typename?: 'Query', settlements: Array<{ __typename?: 'DailySettlementGraphQLType', id: string, businessDate: string, status: SettlementStatus, totalGrossSales: number, totalNetSales: number, totalCash: number, totalCard: number, totalMemberAccount: number, expectedCash: number, actualCash?: number | null | undefined, cashVariance?: number | null | undefined, transactionCount: number, closedAt?: string | null | undefined, exceptions?: Array<{ __typename?: 'SettlementExceptionGraphQLType', id: string, type: ExceptionType, severity: ExceptionSeverity, resolution: ExceptionResolution }> | null | undefined }> };
+
+export type GetSettlementSummaryQueryVariables = Exact<{
+  settlementId: Scalars['ID']['input'];
+}>;
+
+
+export type GetSettlementSummaryQuery = { __typename?: 'Query', settlementSummary: { __typename?: 'SettlementSummaryGraphQLType', settlementId: string, businessDate: string, status: SettlementStatus, totalGrossSales: number, totalNetSales: number, totalCash: number, totalCard: number, totalMemberAccount: number, expectedCash: number, actualCash?: number | null | undefined, cashVariance?: number | null | undefined, exceptionCount: number, unresolvedExceptionCount: number } };
+
+export type GetSettlementExceptionsQueryVariables = Exact<{
+  settlementId: Scalars['ID']['input'];
+  pendingOnly?: InputMaybe<Scalars['Boolean']['input']>;
+}>;
+
+
+export type GetSettlementExceptionsQuery = { __typename?: 'Query', settlementExceptions: Array<{ __typename?: 'SettlementExceptionGraphQLType', id: string, settlementId: string, type: ExceptionType, severity: ExceptionSeverity, resolution: ExceptionResolution, description: string, amount?: number | null | undefined, transactionId?: string | null | undefined, shiftId?: string | null | undefined, lineItemId?: string | null | undefined, resolvedBy?: string | null | undefined, resolvedAt?: string | null | undefined, resolutionNote?: string | null | undefined, createdAt: string, updatedAt: string }> };
+
+export type OpenDayMutationVariables = Exact<{
+  input: OpenDayInput;
+}>;
+
+
+export type OpenDayMutation = { __typename?: 'Mutation', openDay: { __typename?: 'DailySettlementGraphQLType', id: string, clubId: string, businessDate: string, status: SettlementStatus, openedBy?: string | null | undefined, openedAt?: string | null | undefined } };
+
+export type SubmitSettlementForReviewMutationVariables = Exact<{
+  settlementId: Scalars['ID']['input'];
+}>;
+
+
+export type SubmitSettlementForReviewMutation = { __typename?: 'Mutation', submitSettlementForReview: { __typename?: 'DailySettlementGraphQLType', id: string, status: SettlementStatus, reviewedBy?: string | null | undefined, reviewedAt?: string | null | undefined } };
+
+export type CloseSettlementMutationVariables = Exact<{
+  input: CloseSettlementInput;
+}>;
+
+
+export type CloseSettlementMutation = { __typename?: 'Mutation', closeSettlement: { __typename?: 'DailySettlementGraphQLType', id: string, status: SettlementStatus, closedBy?: string | null | undefined, closedAt?: string | null | undefined, notes?: string | null | undefined } };
+
+export type ReopenSettlementMutationVariables = Exact<{
+  input: ReopenSettlementInput;
+}>;
+
+
+export type ReopenSettlementMutation = { __typename?: 'Mutation', reopenSettlement: { __typename?: 'DailySettlementGraphQLType', id: string, status: SettlementStatus } };
+
+export type UpdateSettlementTotalsMutationVariables = Exact<{
+  input: UpdateSettlementTotalsInput;
+}>;
+
+
+export type UpdateSettlementTotalsMutation = { __typename?: 'Mutation', updateSettlementTotals: { __typename?: 'DailySettlementGraphQLType', id: string, totalGrossSales: number, totalDiscounts: number, totalNetSales: number, totalTax: number, totalServiceCharge: number, totalCash: number, totalCard: number, totalMemberAccount: number, totalOther: number, totalRefunds: number, totalVoids: number, expectedCash: number, transactionCount: number, refundCount: number, voidCount: number } };
+
+export type RecordCashCountMutationVariables = Exact<{
+  input: RecordCashCountInput;
+}>;
+
+
+export type RecordCashCountMutation = { __typename?: 'Mutation', recordCashCount: { __typename?: 'DailySettlementGraphQLType', id: string, actualCash?: number | null | undefined, cashVariance?: number | null | undefined, exceptions?: Array<{ __typename?: 'SettlementExceptionGraphQLType', id: string, type: ExceptionType, severity: ExceptionSeverity, description: string, amount?: number | null | undefined }> | null | undefined } };
+
+export type RecalculateSettlementTotalsMutationVariables = Exact<{
+  settlementId: Scalars['ID']['input'];
+}>;
+
+
+export type RecalculateSettlementTotalsMutation = { __typename?: 'Mutation', recalculateSettlementTotals: { __typename?: 'DailySettlementGraphQLType', id: string, totalGrossSales: number, totalNetSales: number, totalCash: number, totalCard: number, totalMemberAccount: number, totalOther: number, totalRefunds: number, totalVoids: number, expectedCash: number, transactionCount: number, refundCount: number, voidCount: number } };
+
+export type CreateSettlementExceptionMutationVariables = Exact<{
+  input: CreateExceptionInput;
+}>;
+
+
+export type CreateSettlementExceptionMutation = { __typename?: 'Mutation', createSettlementException: { __typename?: 'SettlementExceptionGraphQLType', id: string, settlementId: string, type: ExceptionType, severity: ExceptionSeverity, resolution: ExceptionResolution, description: string, amount?: number | null | undefined, createdAt: string } };
+
+export type ResolveSettlementExceptionMutationVariables = Exact<{
+  input: ResolveExceptionInput;
+}>;
+
+
+export type ResolveSettlementExceptionMutation = { __typename?: 'Mutation', resolveSettlementException: { __typename?: 'SettlementExceptionGraphQLType', id: string, resolution: ExceptionResolution, resolvedBy?: string | null | undefined, resolvedAt?: string | null | undefined, resolutionNote?: string | null | undefined } };
 
 export type GetTeeSheetQueryVariables = Exact<{
   courseId: Scalars['ID']['input'];
@@ -6035,6 +7697,372 @@ export type DeleteDependentMutationVariables = Exact<{
 
 
 export type DeleteDependentMutation = { __typename?: 'Mutation', deleteDependent: { __typename?: 'DeleteDependentResponseType', message: string } };
+
+export type GetMinimumSpendRequirementsQueryVariables = Exact<{
+  activeOnly?: InputMaybe<Scalars['Boolean']['input']>;
+}>;
+
+
+export type GetMinimumSpendRequirementsQuery = { __typename?: 'Query', minimumSpendRequirements: Array<{ __typename?: 'MinimumSpendRequirement', id: string, clubId: string, name: string, description?: string | null | undefined, membershipTypes: Array<string>, minimumAmount: number, period: MinimumSpendPeriod, includeFoodBeverage: boolean, includeGolf: boolean, includeSpa: boolean, includeRetail: boolean, includeEvents: boolean, includedCategories: Array<string>, excludedCategories: Array<string>, defaultShortfallAction: ShortfallAction, gracePeriodDays: number, allowPartialCredit: boolean, notifyAtPercent: Array<number>, notifyDaysBeforeEnd: Array<number>, isActive: boolean, effectiveFrom: string, effectiveTo?: string | null | undefined, createdAt: string, updatedAt: string }> };
+
+export type GetMinimumSpendRequirementQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetMinimumSpendRequirementQuery = { __typename?: 'Query', minimumSpendRequirement?: { __typename?: 'MinimumSpendRequirement', id: string, clubId: string, name: string, description?: string | null | undefined, membershipTypes: Array<string>, minimumAmount: number, period: MinimumSpendPeriod, includeFoodBeverage: boolean, includeGolf: boolean, includeSpa: boolean, includeRetail: boolean, includeEvents: boolean, includedCategories: Array<string>, excludedCategories: Array<string>, defaultShortfallAction: ShortfallAction, gracePeriodDays: number, allowPartialCredit: boolean, notifyAtPercent: Array<number>, notifyDaysBeforeEnd: Array<number>, isActive: boolean, effectiveFrom: string, effectiveTo?: string | null | undefined, createdAt: string, updatedAt: string } | null | undefined };
+
+export type GetMemberMinimumSpendsQueryVariables = Exact<{
+  input: GetMemberSpendsInput;
+}>;
+
+
+export type GetMemberMinimumSpendsQuery = { __typename?: 'Query', memberMinimumSpends: Array<{ __typename?: 'MemberMinimumSpend', id: string, clubId: string, memberId: string, requirementId: string, periodStart: string, periodEnd: string, periodLabel: string, requiredAmount: number, currentSpend: number, projectedSpend?: number | null | undefined, shortfallAmount?: number | null | undefined, carryForwardAmount: number, status: MemberSpendStatus, isExempt: boolean, exemptReason?: string | null | undefined, exemptBy?: string | null | undefined, exemptAt?: string | null | undefined, shortfallAction?: ShortfallAction | null | undefined, shortfallResolvedBy?: string | null | undefined, shortfallResolvedAt?: string | null | undefined, shortfallNote?: string | null | undefined, shortfallInvoiceId?: string | null | undefined, lastCalculatedAt: string, createdAt: string, updatedAt: string, requirement?: { __typename?: 'MinimumSpendRequirement', id: string, name: string, minimumAmount: number, period: MinimumSpendPeriod } | null | undefined }> };
+
+export type GetMemberMinimumSpendQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetMemberMinimumSpendQuery = { __typename?: 'Query', memberMinimumSpend?: { __typename?: 'MemberMinimumSpend', id: string, clubId: string, memberId: string, requirementId: string, periodStart: string, periodEnd: string, periodLabel: string, requiredAmount: number, currentSpend: number, projectedSpend?: number | null | undefined, shortfallAmount?: number | null | undefined, carryForwardAmount: number, status: MemberSpendStatus, isExempt: boolean, exemptReason?: string | null | undefined, exemptBy?: string | null | undefined, exemptAt?: string | null | undefined, shortfallAction?: ShortfallAction | null | undefined, shortfallResolvedBy?: string | null | undefined, shortfallResolvedAt?: string | null | undefined, shortfallNote?: string | null | undefined, shortfallInvoiceId?: string | null | undefined, lastCalculatedAt: string, createdAt: string, updatedAt: string, requirement?: { __typename?: 'MinimumSpendRequirement', id: string, name: string, minimumAmount: number, period: MinimumSpendPeriod, defaultShortfallAction: ShortfallAction } | null | undefined } | null | undefined };
+
+export type GetCurrentMemberSpendQueryVariables = Exact<{
+  memberId: Scalars['ID']['input'];
+  requirementId: Scalars['ID']['input'];
+}>;
+
+
+export type GetCurrentMemberSpendQuery = { __typename?: 'Query', currentMemberSpend: { __typename?: 'MemberMinimumSpend', id: string, clubId: string, memberId: string, requirementId: string, periodStart: string, periodEnd: string, periodLabel: string, requiredAmount: number, currentSpend: number, projectedSpend?: number | null | undefined, shortfallAmount?: number | null | undefined, carryForwardAmount: number, status: MemberSpendStatus, isExempt: boolean, lastCalculatedAt: string, requirement?: { __typename?: 'MinimumSpendRequirement', id: string, name: string, minimumAmount: number, period: MinimumSpendPeriod } | null | undefined } };
+
+export type CreateMinimumSpendRequirementMutationVariables = Exact<{
+  input: CreateRequirementInput;
+}>;
+
+
+export type CreateMinimumSpendRequirementMutation = { __typename?: 'Mutation', createMinimumSpendRequirement: { __typename?: 'MinimumSpendRequirement', id: string, name: string, description?: string | null | undefined, membershipTypes: Array<string>, minimumAmount: number, period: MinimumSpendPeriod, isActive: boolean, createdAt: string } };
+
+export type UpdateMinimumSpendRequirementMutationVariables = Exact<{
+  input: UpdateRequirementInput;
+}>;
+
+
+export type UpdateMinimumSpendRequirementMutation = { __typename?: 'Mutation', updateMinimumSpendRequirement: { __typename?: 'MinimumSpendRequirement', id: string, name: string, description?: string | null | undefined, membershipTypes: Array<string>, minimumAmount: number, period: MinimumSpendPeriod, isActive: boolean, updatedAt: string } };
+
+export type DeleteMinimumSpendRequirementMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type DeleteMinimumSpendRequirementMutation = { __typename?: 'Mutation', deleteMinimumSpendRequirement: { __typename?: 'MinimumSpendRequirement', id: string, isActive: boolean } };
+
+export type RecordMinimumSpendMutationVariables = Exact<{
+  input: RecordSpendInput;
+}>;
+
+
+export type RecordMinimumSpendMutation = { __typename?: 'Mutation', recordMinimumSpend: { __typename?: 'MemberMinimumSpend', id: string, currentSpend: number, status: MemberSpendStatus, lastCalculatedAt: string, requirement?: { __typename?: 'MinimumSpendRequirement', id: string, name: string, minimumAmount: number } | null | undefined } };
+
+export type ResolveMinimumSpendShortfallMutationVariables = Exact<{
+  input: ResolveShortfallInput;
+}>;
+
+
+export type ResolveMinimumSpendShortfallMutation = { __typename?: 'Mutation', resolveMinimumSpendShortfall: { __typename?: 'MemberMinimumSpend', id: string, status: MemberSpendStatus, shortfallAction?: ShortfallAction | null | undefined, shortfallResolvedBy?: string | null | undefined, shortfallResolvedAt?: string | null | undefined, shortfallNote?: string | null | undefined } };
+
+export type ExemptMemberFromMinimumSpendMutationVariables = Exact<{
+  input: ExemptMemberInput;
+}>;
+
+
+export type ExemptMemberFromMinimumSpendMutation = { __typename?: 'Mutation', exemptMemberFromMinimumSpend: { __typename?: 'MemberMinimumSpend', id: string, status: MemberSpendStatus, isExempt: boolean, exemptReason?: string | null | undefined, exemptBy?: string | null | undefined, exemptAt?: string | null | undefined } };
+
+export type RemoveMinimumSpendExemptionMutationVariables = Exact<{
+  memberSpendId: Scalars['ID']['input'];
+}>;
+
+
+export type RemoveMinimumSpendExemptionMutation = { __typename?: 'Mutation', removeMinimumSpendExemption: { __typename?: 'MemberMinimumSpend', id: string, status: MemberSpendStatus, isExempt: boolean } };
+
+export type CloseMinimumSpendPeriodMutationVariables = Exact<{
+  input: ClosePeriodInput;
+}>;
+
+
+export type CloseMinimumSpendPeriodMutation = { __typename?: 'Mutation', closeMinimumSpendPeriod: Array<{ __typename?: 'MemberMinimumSpend', id: string, status: MemberSpendStatus, shortfallAmount?: number | null | undefined, shortfallAction?: ShortfallAction | null | undefined }> };
+
+export type RecalculateMemberSpendMutationVariables = Exact<{
+  memberSpendId: Scalars['ID']['input'];
+}>;
+
+
+export type RecalculateMemberSpendMutation = { __typename?: 'Mutation', recalculateMemberSpend: { __typename?: 'MemberMinimumSpend', id: string, currentSpend: number, status: MemberSpendStatus, lastCalculatedAt: string } };
+
+export type GetPosConfigQueryVariables = Exact<{
+  outletId: Scalars['ID']['input'];
+  userRole: Scalars['String']['input'];
+  userPermissions?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+}>;
+
+
+export type GetPosConfigQuery = { __typename?: 'Query', posConfig: { __typename?: 'POSResolvedConfigGraphQLType', toolbarConfig: any, actionBarConfig: any, outlet: { __typename?: 'POSOutletGraphQLType', id: string, clubId: string, name: string, outletType: string, isActive: boolean }, template?: { __typename?: 'POSTemplateGraphQLType', id: string, name: string, outletType: string } | null | undefined, buttonStates: Array<{ __typename?: 'POSButtonStateGraphQLType', buttonId: string, visible: boolean, enabled: boolean, requiresApproval: boolean }> } };
+
+export type GetPosTemplatesQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetPosTemplatesQuery = { __typename?: 'Query', posTemplates: Array<{ __typename?: 'POSTemplateGraphQLType', id: string, clubId: string, name: string, description?: string | null | undefined, outletType: string, toolbarConfig: any, actionBarConfig: any, isDefault: boolean, createdAt: string, updatedAt: string }> };
+
+export type GetPosTemplateQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetPosTemplateQuery = { __typename?: 'Query', posTemplate?: { __typename?: 'POSTemplateGraphQLType', id: string, clubId: string, name: string, description?: string | null | undefined, outletType: string, toolbarConfig: any, actionBarConfig: any, isDefault: boolean, createdAt: string, updatedAt: string, outlets?: Array<{ __typename?: 'POSOutletGraphQLType', id: string, name: string }> | null | undefined } | null | undefined };
+
+export type GetPosOutletsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetPosOutletsQuery = { __typename?: 'Query', posOutlets: Array<{ __typename?: 'POSOutletGraphQLType', id: string, clubId: string, name: string, outletType: string, templateId?: string | null | undefined, customConfig: any, isActive: boolean, createdAt: string, updatedAt: string, template?: { __typename?: 'POSTemplateGraphQLType', id: string, name: string } | null | undefined }> };
+
+export type GetPosOutletQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetPosOutletQuery = { __typename?: 'Query', posOutlet?: { __typename?: 'POSOutletGraphQLType', id: string, clubId: string, name: string, outletType: string, templateId?: string | null | undefined, customConfig: any, isActive: boolean, createdAt: string, updatedAt: string, template?: { __typename?: 'POSTemplateGraphQLType', id: string, name: string } | null | undefined, roleConfigs?: Array<{ __typename?: 'POSOutletRoleConfigGraphQLType', id: string, role: string, buttonOverrides: any }> | null | undefined } | null | undefined };
+
+export type GetPosButtonRegistryQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetPosButtonRegistryQuery = { __typename?: 'Query', posButtonRegistry: { __typename?: 'POSButtonRegistryGraphQLType', clubId: string, registry: any } };
+
+export type UpsertPosTemplateMutationVariables = Exact<{
+  id?: InputMaybe<Scalars['ID']['input']>;
+  input: PosTemplateInput;
+}>;
+
+
+export type UpsertPosTemplateMutation = { __typename?: 'Mutation', upsertPOSTemplate: { __typename?: 'UpsertTemplateMutationResponse', success: boolean, message?: string | null | undefined, template?: { __typename?: 'POSTemplateGraphQLType', id: string, name: string } | null | undefined } };
+
+export type ClonePosTemplateMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  newName: Scalars['String']['input'];
+}>;
+
+
+export type ClonePosTemplateMutation = { __typename?: 'Mutation', clonePOSTemplate: { __typename?: 'CloneTemplateMutationResponse', success: boolean, message?: string | null | undefined, template?: { __typename?: 'POSTemplateGraphQLType', id: string, name: string } | null | undefined } };
+
+export type AssignPosTemplateMutationVariables = Exact<{
+  input: AssignTemplateInput;
+}>;
+
+
+export type AssignPosTemplateMutation = { __typename?: 'Mutation', assignPOSTemplate: { __typename?: 'AssignTemplateMutationResponse', success: boolean, message?: string | null | undefined, outlet?: { __typename?: 'POSOutletGraphQLType', id: string, name: string, templateId?: string | null | undefined } | null | undefined } };
+
+export type SetPosRoleOverridesMutationVariables = Exact<{
+  outletId: Scalars['ID']['input'];
+  input: PosRoleOverridesInput;
+}>;
+
+
+export type SetPosRoleOverridesMutation = { __typename?: 'Mutation', setPOSRoleOverrides: { __typename?: 'SetRoleOverridesMutationResponse', success: boolean, message?: string | null | undefined, roleConfig?: { __typename?: 'POSOutletRoleConfigGraphQLType', id: string, role: string, buttonOverrides: any } | null | undefined } };
+
+export type UpdatePosButtonRegistryMutationVariables = Exact<{
+  input: UpdateButtonRegistryInput;
+}>;
+
+
+export type UpdatePosButtonRegistryMutation = { __typename?: 'Mutation', updatePOSButtonRegistry: { __typename?: 'UpdateButtonRegistryMutationResponse', success: boolean, message?: string | null | undefined } };
+
+export type GetMemberPaymentMethodsQueryVariables = Exact<{
+  memberId: Scalars['ID']['input'];
+  activeOnly?: InputMaybe<Scalars['Boolean']['input']>;
+}>;
+
+
+export type GetMemberPaymentMethodsQuery = { __typename?: 'Query', memberPaymentMethods: Array<{ __typename?: 'StoredPaymentMethod', id: string, clubId: string, memberId: string, stripeCustomerId?: string | null | undefined, stripePaymentMethodId: string, type: StoredPaymentMethodType, brand: string, last4: string, expiryMonth?: number | null | undefined, expiryYear?: number | null | undefined, cardholderName?: string | null | undefined, status: StoredPaymentMethodStatus, isDefault: boolean, isAutoPayEnabled: boolean, verifiedAt?: string | null | undefined, lastUsedAt?: string | null | undefined, failureCount: number, lastFailureReason?: string | null | undefined, createdAt: string, updatedAt: string }> };
+
+export type GetPaymentMethodQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetPaymentMethodQuery = { __typename?: 'Query', paymentMethod?: { __typename?: 'StoredPaymentMethod', id: string, clubId: string, memberId: string, stripeCustomerId?: string | null | undefined, stripePaymentMethodId: string, type: StoredPaymentMethodType, brand: string, last4: string, expiryMonth?: number | null | undefined, expiryYear?: number | null | undefined, cardholderName?: string | null | undefined, status: StoredPaymentMethodStatus, isDefault: boolean, isAutoPayEnabled: boolean, verifiedAt?: string | null | undefined, lastUsedAt?: string | null | undefined, failureCount: number, lastFailureReason?: string | null | undefined, createdAt: string, updatedAt: string } | null | undefined };
+
+export type GetMemberAutoPaySettingQueryVariables = Exact<{
+  memberId: Scalars['ID']['input'];
+}>;
+
+
+export type GetMemberAutoPaySettingQuery = { __typename?: 'Query', memberAutoPaySetting?: { __typename?: 'AutoPaySetting', id: string, clubId: string, memberId: string, paymentMethodId: string, isEnabled: boolean, schedule: AutoPaySchedule, paymentDayOfMonth?: number | null | undefined, maxPaymentAmount?: number | null | undefined, monthlyMaxAmount?: number | null | undefined, requireApprovalAbove?: number | null | undefined, payDuesOnly: boolean, excludeCategories: Array<string>, notifyBeforePayment: boolean, notifyDaysBefore: number, notifyOnSuccess: boolean, notifyOnFailure: boolean, maxRetryAttempts: number, retryIntervalDays: number, createdAt: string, updatedAt: string, paymentMethod?: { __typename?: 'StoredPaymentMethod', id: string, brand: string, last4: string, isDefault: boolean } | null | undefined } | null | undefined };
+
+export type GetMemberAutoPayHistoryQueryVariables = Exact<{
+  input: GetAutoPayHistoryInput;
+}>;
+
+
+export type GetMemberAutoPayHistoryQuery = { __typename?: 'Query', memberAutoPayHistory: Array<{ __typename?: 'AutoPayAttempt', id: string, clubId: string, memberId: string, paymentMethodId: string, invoiceId?: string | null | undefined, amount: number, attemptNumber: number, status: AutoPayAttemptStatus, stripePaymentIntentId?: string | null | undefined, stripeChargeId?: string | null | undefined, processedAt?: string | null | undefined, succeededAt?: string | null | undefined, failedAt?: string | null | undefined, failureCode?: string | null | undefined, failureMessage?: string | null | undefined, nextRetryAt?: string | null | undefined, isManualRetry: boolean, paymentTransactionId?: string | null | undefined, createdAt: string, updatedAt: string, paymentMethod?: { __typename?: 'StoredPaymentMethod', id: string, brand: string, last4: string } | null | undefined }> };
+
+export type GetInvoiceAutoPayAttemptsQueryVariables = Exact<{
+  invoiceId: Scalars['ID']['input'];
+}>;
+
+
+export type GetInvoiceAutoPayAttemptsQuery = { __typename?: 'Query', invoiceAutoPayAttempts: Array<{ __typename?: 'AutoPayAttempt', id: string, memberId: string, paymentMethodId: string, amount: number, attemptNumber: number, status: AutoPayAttemptStatus, processedAt?: string | null | undefined, succeededAt?: string | null | undefined, failedAt?: string | null | undefined, failureCode?: string | null | undefined, failureMessage?: string | null | undefined, createdAt: string, paymentMethod?: { __typename?: 'StoredPaymentMethod', id: string, brand: string, last4: string } | null | undefined }> };
+
+export type AddPaymentMethodMutationVariables = Exact<{
+  input: AddStoredPaymentInput;
+}>;
+
+
+export type AddPaymentMethodMutation = { __typename?: 'Mutation', addPaymentMethod: { __typename?: 'StoredPaymentMethod', id: string, memberId: string, brand: string, last4: string, expiryMonth?: number | null | undefined, expiryYear?: number | null | undefined, cardholderName?: string | null | undefined, status: StoredPaymentMethodStatus, isDefault: boolean, isAutoPayEnabled: boolean, createdAt: string } };
+
+export type UpdatePaymentMethodMutationVariables = Exact<{
+  input: UpdateStoredPaymentInput;
+}>;
+
+
+export type UpdatePaymentMethodMutation = { __typename?: 'Mutation', updatePaymentMethod: { __typename?: 'StoredPaymentMethod', id: string, isDefault: boolean, isAutoPayEnabled: boolean, updatedAt: string } };
+
+export type RemovePaymentMethodMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type RemovePaymentMethodMutation = { __typename?: 'Mutation', removePaymentMethod: { __typename?: 'RemovePaymentMethodResult', success: boolean, error?: string | null | undefined } };
+
+export type SetDefaultPaymentMethodMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type SetDefaultPaymentMethodMutation = { __typename?: 'Mutation', setDefaultPaymentMethod: { __typename?: 'StoredPaymentMethod', id: string, isDefault: boolean, updatedAt: string } };
+
+export type UpsertAutoPaySettingMutationVariables = Exact<{
+  input: AutoPaySettingInput;
+}>;
+
+
+export type UpsertAutoPaySettingMutation = { __typename?: 'Mutation', upsertAutoPaySetting: { __typename?: 'AutoPaySetting', id: string, memberId: string, paymentMethodId: string, isEnabled: boolean, schedule: AutoPaySchedule, paymentDayOfMonth?: number | null | undefined, maxPaymentAmount?: number | null | undefined, monthlyMaxAmount?: number | null | undefined, requireApprovalAbove?: number | null | undefined, payDuesOnly: boolean, excludeCategories: Array<string>, notifyBeforePayment: boolean, notifyDaysBefore: number, notifyOnSuccess: boolean, notifyOnFailure: boolean, maxRetryAttempts: number, retryIntervalDays: number, createdAt: string, updatedAt: string, paymentMethod?: { __typename?: 'StoredPaymentMethod', id: string, brand: string, last4: string } | null | undefined } };
+
+export type DisableAutoPayMutationVariables = Exact<{
+  memberId: Scalars['ID']['input'];
+}>;
+
+
+export type DisableAutoPayMutation = { __typename?: 'Mutation', disableAutoPay: { __typename?: 'RemovePaymentMethodResult', success: boolean, error?: string | null | undefined } };
+
+export type ProcessAutoPayMutationVariables = Exact<{
+  input: ProcessAutoPayInput;
+}>;
+
+
+export type ProcessAutoPayMutation = { __typename?: 'Mutation', processAutoPay: { __typename?: 'AutoPayResult', success: boolean, attemptId?: string | null | undefined, message?: string | null | undefined, stripePaymentIntentId?: string | null | undefined, error?: string | null | undefined } };
+
+export type RetryAutoPayAttemptMutationVariables = Exact<{
+  attemptId: Scalars['ID']['input'];
+}>;
+
+
+export type RetryAutoPayAttemptMutation = { __typename?: 'Mutation', retryAutoPayAttempt: { __typename?: 'AutoPayResult', success: boolean, attemptId?: string | null | undefined, message?: string | null | undefined, stripePaymentIntentId?: string | null | undefined, error?: string | null | undefined } };
+
+export type GetSubAccountsQueryVariables = Exact<{
+  status?: InputMaybe<SubAccountStatus>;
+}>;
+
+
+export type GetSubAccountsQuery = { __typename?: 'Query', subAccounts: Array<{ __typename?: 'SubAccount', id: string, clubId: string, memberId: string, name: string, relationship: string, email?: string | null | undefined, phone?: string | null | undefined, status: SubAccountStatus, validFrom: string, validUntil?: string | null | undefined, permissions: Array<SubAccountPermission>, dailyLimit?: number | null | undefined, weeklyLimit?: number | null | undefined, monthlyLimit?: number | null | undefined, perTransactionLimit?: number | null | undefined, dailySpend: number, weeklySpend: number, monthlySpend: number, notifyPrimaryOnUse: boolean, notifyOnLimitReached: boolean, pinAttempts: number, pinLockedUntil?: string | null | undefined, createdAt: string, updatedAt: string }> };
+
+export type GetSubAccountQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetSubAccountQuery = { __typename?: 'Query', subAccount?: { __typename?: 'SubAccount', id: string, clubId: string, memberId: string, name: string, relationship: string, email?: string | null | undefined, phone?: string | null | undefined, status: SubAccountStatus, validFrom: string, validUntil?: string | null | undefined, permissions: Array<SubAccountPermission>, dailyLimit?: number | null | undefined, weeklyLimit?: number | null | undefined, monthlyLimit?: number | null | undefined, perTransactionLimit?: number | null | undefined, dailySpend: number, weeklySpend: number, monthlySpend: number, lastResetDaily: string, lastResetWeekly: string, lastResetMonthly: string, notifyPrimaryOnUse: boolean, notifyOnLimitReached: boolean, pinAttempts: number, pinLockedUntil?: string | null | undefined, createdAt: string, updatedAt: string } | null | undefined };
+
+export type GetMemberSubAccountsQueryVariables = Exact<{
+  memberId: Scalars['ID']['input'];
+  activeOnly?: InputMaybe<Scalars['Boolean']['input']>;
+}>;
+
+
+export type GetMemberSubAccountsQuery = { __typename?: 'Query', memberSubAccounts: Array<{ __typename?: 'SubAccount', id: string, name: string, relationship: string, status: SubAccountStatus, permissions: Array<SubAccountPermission>, dailyLimit?: number | null | undefined, weeklyLimit?: number | null | undefined, monthlyLimit?: number | null | undefined, perTransactionLimit?: number | null | undefined, dailySpend: number, weeklySpend: number, monthlySpend: number, validUntil?: string | null | undefined, pinLockedUntil?: string | null | undefined }> };
+
+export type CheckSubAccountLimitQueryVariables = Exact<{
+  input: CheckLimitInput;
+}>;
+
+
+export type CheckSubAccountLimitQuery = { __typename?: 'Query', checkSubAccountLimit: { __typename?: 'SubAccountLimitCheck', allowed: boolean, reason?: string | null | undefined, currentDaily: number, currentWeekly: number, currentMonthly: number, dailyLimit?: number | null | undefined, weeklyLimit?: number | null | undefined, monthlyLimit?: number | null | undefined, perTransactionLimit?: number | null | undefined } };
+
+export type GetSubAccountTransactionsQueryVariables = Exact<{
+  input: GetTransactionsInput;
+}>;
+
+
+export type GetSubAccountTransactionsQuery = { __typename?: 'Query', subAccountTransactions: Array<{ __typename?: 'SubAccountTransaction', id: string, clubId: string, subAccountId: string, amount: number, description: string, category: SubAccountPermission, paymentTransactionId?: string | null | undefined, lineItemId?: string | null | undefined, teeTimeId?: string | null | undefined, verifiedAt: string, verifiedBy?: string | null | undefined, locationName?: string | null | undefined, notes?: string | null | undefined, createdAt: string, subAccount?: { __typename?: 'SubAccount', id: string, name: string, memberId: string } | null | undefined }> };
+
+export type CreateSubAccountMutationVariables = Exact<{
+  input: CreateSubAccountInput;
+}>;
+
+
+export type CreateSubAccountMutation = { __typename?: 'Mutation', createSubAccount: { __typename?: 'SubAccount', id: string, name: string, relationship: string, status: SubAccountStatus, permissions: Array<SubAccountPermission>, createdAt: string } };
+
+export type UpdateSubAccountMutationVariables = Exact<{
+  input: UpdateSubAccountInput;
+}>;
+
+
+export type UpdateSubAccountMutation = { __typename?: 'Mutation', updateSubAccount: { __typename?: 'SubAccount', id: string, name: string, relationship: string, email?: string | null | undefined, phone?: string | null | undefined, permissions: Array<SubAccountPermission>, dailyLimit?: number | null | undefined, weeklyLimit?: number | null | undefined, monthlyLimit?: number | null | undefined, perTransactionLimit?: number | null | undefined, validUntil?: string | null | undefined, notifyPrimaryOnUse: boolean, notifyOnLimitReached: boolean, updatedAt: string } };
+
+export type VerifySubAccountPinMutationVariables = Exact<{
+  input: VerifyPinInput;
+}>;
+
+
+export type VerifySubAccountPinMutation = { __typename?: 'Mutation', verifySubAccountPin: { __typename?: 'PinVerificationResult', success: boolean, message?: string | null | undefined, remainingAttempts?: number | null | undefined } };
+
+export type ChangeSubAccountPinMutationVariables = Exact<{
+  input: ChangePinInput;
+}>;
+
+
+export type ChangeSubAccountPinMutation = { __typename?: 'Mutation', changeSubAccountPin: { __typename?: 'SubAccount', id: string, pinAttempts: number, pinLockedUntil?: string | null | undefined } };
+
+export type ChangeSubAccountStatusMutationVariables = Exact<{
+  input: ChangeSubAccountStatusInput;
+}>;
+
+
+export type ChangeSubAccountStatusMutation = { __typename?: 'Mutation', changeSubAccountStatus: { __typename?: 'SubAccount', id: string, status: SubAccountStatus, updatedAt: string } };
+
+export type UnlockSubAccountPinMutationVariables = Exact<{
+  subAccountId: Scalars['ID']['input'];
+}>;
+
+
+export type UnlockSubAccountPinMutation = { __typename?: 'Mutation', unlockSubAccountPin: { __typename?: 'SubAccount', id: string, pinAttempts: number, pinLockedUntil?: string | null | undefined } };
+
+export type DeleteSubAccountMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type DeleteSubAccountMutation = { __typename?: 'Mutation', deleteSubAccount: { __typename?: 'SubAccount', id: string, status: SubAccountStatus } };
+
+export type RecordSubAccountTransactionMutationVariables = Exact<{
+  input: RecordTransactionInput;
+}>;
+
+
+export type RecordSubAccountTransactionMutation = { __typename?: 'Mutation', recordSubAccountTransaction: { __typename?: 'SubAccountTransaction', id: string, amount: number, description: string, category: SubAccountPermission, verifiedAt: string, createdAt: string } };
+
+export type ResetSubAccountSpendingMutationVariables = Exact<{
+  subAccountId: Scalars['ID']['input'];
+}>;
+
+
+export type ResetSubAccountSpendingMutation = { __typename?: 'Mutation', resetSubAccountSpending: { __typename?: 'SubAccount', id: string, dailySpend: number, weeklySpend: number, monthlySpend: number, lastResetDaily: string, lastResetWeekly: string, lastResetMonthly: string } };
 
 
 export const SlotLineItemFieldsFragmentDoc = `
@@ -8189,6 +10217,668 @@ export const useDeclineWaitlistOfferMutation = <
 
 useDeclineWaitlistOfferMutation.fetcher = (variables: DeclineWaitlistOfferMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<DeclineWaitlistOfferMutation, DeclineWaitlistOfferMutationVariables>(DeclineWaitlistOfferDocument, variables, options);
 
+export const GetCashDrawersDocument = `
+    query GetCashDrawers($activeOnly: Boolean) {
+  cashDrawers(activeOnly: $activeOnly) {
+    id
+    clubId
+    name
+    location
+    isActive
+    createdAt
+    updatedAt
+    currentShift {
+      id
+      status
+      openedAt
+      openedBy
+      openingFloat
+    }
+  }
+}
+    `;
+
+export const useGetCashDrawersQuery = <
+      TData = GetCashDrawersQuery,
+      TError = unknown
+    >(
+      variables?: GetCashDrawersQueryVariables,
+      options?: Omit<UseQueryOptions<GetCashDrawersQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetCashDrawersQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetCashDrawersQuery, TError, TData>(
+      {
+    queryKey: variables === undefined ? ['GetCashDrawers'] : ['GetCashDrawers', variables],
+    queryFn: graphqlFetcher<GetCashDrawersQuery, GetCashDrawersQueryVariables>(GetCashDrawersDocument, variables),
+    ...options
+  }
+    )};
+
+useGetCashDrawersQuery.getKey = (variables?: GetCashDrawersQueryVariables) => variables === undefined ? ['GetCashDrawers'] : ['GetCashDrawers', variables];
+
+export const useInfiniteGetCashDrawersQuery = <
+      TData = InfiniteData<GetCashDrawersQuery>,
+      TError = unknown
+    >(
+      variables: GetCashDrawersQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetCashDrawersQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetCashDrawersQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetCashDrawersQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? variables === undefined ? ['GetCashDrawers.infinite'] : ['GetCashDrawers.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetCashDrawersQuery, GetCashDrawersQueryVariables>(GetCashDrawersDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetCashDrawersQuery.getKey = (variables?: GetCashDrawersQueryVariables) => variables === undefined ? ['GetCashDrawers.infinite'] : ['GetCashDrawers.infinite', variables];
+
+
+useGetCashDrawersQuery.fetcher = (variables?: GetCashDrawersQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetCashDrawersQuery, GetCashDrawersQueryVariables>(GetCashDrawersDocument, variables, options);
+
+export const GetCashDrawerDocument = `
+    query GetCashDrawer($id: ID!) {
+  cashDrawer(id: $id) {
+    id
+    clubId
+    name
+    location
+    isActive
+    createdAt
+    updatedAt
+    currentShift {
+      id
+      status
+      openedAt
+      openedBy
+      openingFloat
+      totalSales
+      totalRefunds
+      totalPaidIn
+      totalPaidOut
+      totalDrops
+    }
+  }
+}
+    `;
+
+export const useGetCashDrawerQuery = <
+      TData = GetCashDrawerQuery,
+      TError = unknown
+    >(
+      variables: GetCashDrawerQueryVariables,
+      options?: Omit<UseQueryOptions<GetCashDrawerQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetCashDrawerQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetCashDrawerQuery, TError, TData>(
+      {
+    queryKey: ['GetCashDrawer', variables],
+    queryFn: graphqlFetcher<GetCashDrawerQuery, GetCashDrawerQueryVariables>(GetCashDrawerDocument, variables),
+    ...options
+  }
+    )};
+
+useGetCashDrawerQuery.getKey = (variables: GetCashDrawerQueryVariables) => ['GetCashDrawer', variables];
+
+export const useInfiniteGetCashDrawerQuery = <
+      TData = InfiniteData<GetCashDrawerQuery>,
+      TError = unknown
+    >(
+      variables: GetCashDrawerQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetCashDrawerQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetCashDrawerQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetCashDrawerQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetCashDrawer.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetCashDrawerQuery, GetCashDrawerQueryVariables>(GetCashDrawerDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetCashDrawerQuery.getKey = (variables: GetCashDrawerQueryVariables) => ['GetCashDrawer.infinite', variables];
+
+
+useGetCashDrawerQuery.fetcher = (variables: GetCashDrawerQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetCashDrawerQuery, GetCashDrawerQueryVariables>(GetCashDrawerDocument, variables, options);
+
+export const GetCurrentShiftDocument = `
+    query GetCurrentShift($cashDrawerId: ID!) {
+  currentShift(cashDrawerId: $cashDrawerId) {
+    id
+    cashDrawerId
+    status
+    openedBy
+    openedAt
+    openingFloat
+    openingDenominations
+    totalSales
+    totalRefunds
+    totalPaidIn
+    totalPaidOut
+    totalDrops
+    createdAt
+  }
+}
+    `;
+
+export const useGetCurrentShiftQuery = <
+      TData = GetCurrentShiftQuery,
+      TError = unknown
+    >(
+      variables: GetCurrentShiftQueryVariables,
+      options?: Omit<UseQueryOptions<GetCurrentShiftQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetCurrentShiftQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetCurrentShiftQuery, TError, TData>(
+      {
+    queryKey: ['GetCurrentShift', variables],
+    queryFn: graphqlFetcher<GetCurrentShiftQuery, GetCurrentShiftQueryVariables>(GetCurrentShiftDocument, variables),
+    ...options
+  }
+    )};
+
+useGetCurrentShiftQuery.getKey = (variables: GetCurrentShiftQueryVariables) => ['GetCurrentShift', variables];
+
+export const useInfiniteGetCurrentShiftQuery = <
+      TData = InfiniteData<GetCurrentShiftQuery>,
+      TError = unknown
+    >(
+      variables: GetCurrentShiftQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetCurrentShiftQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetCurrentShiftQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetCurrentShiftQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetCurrentShift.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetCurrentShiftQuery, GetCurrentShiftQueryVariables>(GetCurrentShiftDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetCurrentShiftQuery.getKey = (variables: GetCurrentShiftQueryVariables) => ['GetCurrentShift.infinite', variables];
+
+
+useGetCurrentShiftQuery.fetcher = (variables: GetCurrentShiftQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetCurrentShiftQuery, GetCurrentShiftQueryVariables>(GetCurrentShiftDocument, variables, options);
+
+export const GetCashDrawerShiftDocument = `
+    query GetCashDrawerShift($shiftId: ID!) {
+  cashDrawerShift(shiftId: $shiftId) {
+    id
+    cashDrawerId
+    status
+    openedBy
+    openedAt
+    openingFloat
+    openingDenominations
+    closedBy
+    closedAt
+    closingCount
+    closingDenominations
+    expectedCash
+    actualCash
+    variance
+    varianceNote
+    totalSales
+    totalRefunds
+    totalPaidIn
+    totalPaidOut
+    totalDrops
+    createdAt
+    movements {
+      id
+      type
+      amount
+      description
+      performedAt
+    }
+  }
+}
+    `;
+
+export const useGetCashDrawerShiftQuery = <
+      TData = GetCashDrawerShiftQuery,
+      TError = unknown
+    >(
+      variables: GetCashDrawerShiftQueryVariables,
+      options?: Omit<UseQueryOptions<GetCashDrawerShiftQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetCashDrawerShiftQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetCashDrawerShiftQuery, TError, TData>(
+      {
+    queryKey: ['GetCashDrawerShift', variables],
+    queryFn: graphqlFetcher<GetCashDrawerShiftQuery, GetCashDrawerShiftQueryVariables>(GetCashDrawerShiftDocument, variables),
+    ...options
+  }
+    )};
+
+useGetCashDrawerShiftQuery.getKey = (variables: GetCashDrawerShiftQueryVariables) => ['GetCashDrawerShift', variables];
+
+export const useInfiniteGetCashDrawerShiftQuery = <
+      TData = InfiniteData<GetCashDrawerShiftQuery>,
+      TError = unknown
+    >(
+      variables: GetCashDrawerShiftQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetCashDrawerShiftQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetCashDrawerShiftQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetCashDrawerShiftQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetCashDrawerShift.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetCashDrawerShiftQuery, GetCashDrawerShiftQueryVariables>(GetCashDrawerShiftDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetCashDrawerShiftQuery.getKey = (variables: GetCashDrawerShiftQueryVariables) => ['GetCashDrawerShift.infinite', variables];
+
+
+useGetCashDrawerShiftQuery.fetcher = (variables: GetCashDrawerShiftQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetCashDrawerShiftQuery, GetCashDrawerShiftQueryVariables>(GetCashDrawerShiftDocument, variables, options);
+
+export const GetShiftSummaryDocument = `
+    query GetShiftSummary($shiftId: ID!) {
+  shiftSummary(shiftId: $shiftId) {
+    shiftId
+    status
+    openedAt
+    openedBy
+    closedAt
+    closedBy
+    openingFloat
+    closingCount
+    expectedCash
+    actualCash
+    variance
+    totalSales
+    totalRefunds
+    totalPaidIn
+    totalPaidOut
+    totalDrops
+    movementCount
+  }
+}
+    `;
+
+export const useGetShiftSummaryQuery = <
+      TData = GetShiftSummaryQuery,
+      TError = unknown
+    >(
+      variables: GetShiftSummaryQueryVariables,
+      options?: Omit<UseQueryOptions<GetShiftSummaryQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetShiftSummaryQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetShiftSummaryQuery, TError, TData>(
+      {
+    queryKey: ['GetShiftSummary', variables],
+    queryFn: graphqlFetcher<GetShiftSummaryQuery, GetShiftSummaryQueryVariables>(GetShiftSummaryDocument, variables),
+    ...options
+  }
+    )};
+
+useGetShiftSummaryQuery.getKey = (variables: GetShiftSummaryQueryVariables) => ['GetShiftSummary', variables];
+
+export const useInfiniteGetShiftSummaryQuery = <
+      TData = InfiniteData<GetShiftSummaryQuery>,
+      TError = unknown
+    >(
+      variables: GetShiftSummaryQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetShiftSummaryQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetShiftSummaryQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetShiftSummaryQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetShiftSummary.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetShiftSummaryQuery, GetShiftSummaryQueryVariables>(GetShiftSummaryDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetShiftSummaryQuery.getKey = (variables: GetShiftSummaryQueryVariables) => ['GetShiftSummary.infinite', variables];
+
+
+useGetShiftSummaryQuery.fetcher = (variables: GetShiftSummaryQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetShiftSummaryQuery, GetShiftSummaryQueryVariables>(GetShiftSummaryDocument, variables, options);
+
+export const GetShiftHistoryDocument = `
+    query GetShiftHistory($cashDrawerId: ID!, $limit: Int) {
+  shiftHistory(cashDrawerId: $cashDrawerId, limit: $limit) {
+    id
+    status
+    openedAt
+    openedBy
+    closedAt
+    closedBy
+    openingFloat
+    closingCount
+    expectedCash
+    actualCash
+    variance
+    totalSales
+    totalRefunds
+  }
+}
+    `;
+
+export const useGetShiftHistoryQuery = <
+      TData = GetShiftHistoryQuery,
+      TError = unknown
+    >(
+      variables: GetShiftHistoryQueryVariables,
+      options?: Omit<UseQueryOptions<GetShiftHistoryQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetShiftHistoryQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetShiftHistoryQuery, TError, TData>(
+      {
+    queryKey: ['GetShiftHistory', variables],
+    queryFn: graphqlFetcher<GetShiftHistoryQuery, GetShiftHistoryQueryVariables>(GetShiftHistoryDocument, variables),
+    ...options
+  }
+    )};
+
+useGetShiftHistoryQuery.getKey = (variables: GetShiftHistoryQueryVariables) => ['GetShiftHistory', variables];
+
+export const useInfiniteGetShiftHistoryQuery = <
+      TData = InfiniteData<GetShiftHistoryQuery>,
+      TError = unknown
+    >(
+      variables: GetShiftHistoryQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetShiftHistoryQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetShiftHistoryQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetShiftHistoryQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetShiftHistory.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetShiftHistoryQuery, GetShiftHistoryQueryVariables>(GetShiftHistoryDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetShiftHistoryQuery.getKey = (variables: GetShiftHistoryQueryVariables) => ['GetShiftHistory.infinite', variables];
+
+
+useGetShiftHistoryQuery.fetcher = (variables: GetShiftHistoryQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetShiftHistoryQuery, GetShiftHistoryQueryVariables>(GetShiftHistoryDocument, variables, options);
+
+export const GetShiftMovementsDocument = `
+    query GetShiftMovements($shiftId: ID!, $type: CashMovementType) {
+  shiftMovements(shiftId: $shiftId, type: $type) {
+    id
+    shiftId
+    type
+    amount
+    description
+    reference
+    reason
+    approvedBy
+    transactionId
+    performedBy
+    performedAt
+  }
+}
+    `;
+
+export const useGetShiftMovementsQuery = <
+      TData = GetShiftMovementsQuery,
+      TError = unknown
+    >(
+      variables: GetShiftMovementsQueryVariables,
+      options?: Omit<UseQueryOptions<GetShiftMovementsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetShiftMovementsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetShiftMovementsQuery, TError, TData>(
+      {
+    queryKey: ['GetShiftMovements', variables],
+    queryFn: graphqlFetcher<GetShiftMovementsQuery, GetShiftMovementsQueryVariables>(GetShiftMovementsDocument, variables),
+    ...options
+  }
+    )};
+
+useGetShiftMovementsQuery.getKey = (variables: GetShiftMovementsQueryVariables) => ['GetShiftMovements', variables];
+
+export const useInfiniteGetShiftMovementsQuery = <
+      TData = InfiniteData<GetShiftMovementsQuery>,
+      TError = unknown
+    >(
+      variables: GetShiftMovementsQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetShiftMovementsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetShiftMovementsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetShiftMovementsQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetShiftMovements.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetShiftMovementsQuery, GetShiftMovementsQueryVariables>(GetShiftMovementsDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetShiftMovementsQuery.getKey = (variables: GetShiftMovementsQueryVariables) => ['GetShiftMovements.infinite', variables];
+
+
+useGetShiftMovementsQuery.fetcher = (variables: GetShiftMovementsQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetShiftMovementsQuery, GetShiftMovementsQueryVariables>(GetShiftMovementsDocument, variables, options);
+
+export const CreateCashDrawerDocument = `
+    mutation CreateCashDrawer($input: CreateCashDrawerInput!) {
+  createCashDrawer(input: $input) {
+    id
+    clubId
+    name
+    location
+    isActive
+    createdAt
+  }
+}
+    `;
+
+export const useCreateCashDrawerMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<CreateCashDrawerMutation, TError, CreateCashDrawerMutationVariables, TContext>) => {
+    
+    return useMutation<CreateCashDrawerMutation, TError, CreateCashDrawerMutationVariables, TContext>(
+      {
+    mutationKey: ['CreateCashDrawer'],
+    mutationFn: (variables?: CreateCashDrawerMutationVariables) => graphqlFetcher<CreateCashDrawerMutation, CreateCashDrawerMutationVariables>(CreateCashDrawerDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useCreateCashDrawerMutation.fetcher = (variables: CreateCashDrawerMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<CreateCashDrawerMutation, CreateCashDrawerMutationVariables>(CreateCashDrawerDocument, variables, options);
+
+export const UpdateCashDrawerDocument = `
+    mutation UpdateCashDrawer($input: UpdateCashDrawerInput!) {
+  updateCashDrawer(input: $input) {
+    id
+    name
+    location
+    isActive
+    updatedAt
+  }
+}
+    `;
+
+export const useUpdateCashDrawerMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<UpdateCashDrawerMutation, TError, UpdateCashDrawerMutationVariables, TContext>) => {
+    
+    return useMutation<UpdateCashDrawerMutation, TError, UpdateCashDrawerMutationVariables, TContext>(
+      {
+    mutationKey: ['UpdateCashDrawer'],
+    mutationFn: (variables?: UpdateCashDrawerMutationVariables) => graphqlFetcher<UpdateCashDrawerMutation, UpdateCashDrawerMutationVariables>(UpdateCashDrawerDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useUpdateCashDrawerMutation.fetcher = (variables: UpdateCashDrawerMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<UpdateCashDrawerMutation, UpdateCashDrawerMutationVariables>(UpdateCashDrawerDocument, variables, options);
+
+export const OpenShiftDocument = `
+    mutation OpenShift($input: OpenShiftInput!) {
+  openShift(input: $input) {
+    id
+    cashDrawerId
+    status
+    openedBy
+    openedAt
+    openingFloat
+    openingDenominations
+  }
+}
+    `;
+
+export const useOpenShiftMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<OpenShiftMutation, TError, OpenShiftMutationVariables, TContext>) => {
+    
+    return useMutation<OpenShiftMutation, TError, OpenShiftMutationVariables, TContext>(
+      {
+    mutationKey: ['OpenShift'],
+    mutationFn: (variables?: OpenShiftMutationVariables) => graphqlFetcher<OpenShiftMutation, OpenShiftMutationVariables>(OpenShiftDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useOpenShiftMutation.fetcher = (variables: OpenShiftMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<OpenShiftMutation, OpenShiftMutationVariables>(OpenShiftDocument, variables, options);
+
+export const CloseShiftDocument = `
+    mutation CloseShift($input: CloseShiftInput!) {
+  closeShift(input: $input) {
+    id
+    status
+    closedBy
+    closedAt
+    closingCount
+    closingDenominations
+    expectedCash
+    actualCash
+    variance
+    varianceNote
+  }
+}
+    `;
+
+export const useCloseShiftMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<CloseShiftMutation, TError, CloseShiftMutationVariables, TContext>) => {
+    
+    return useMutation<CloseShiftMutation, TError, CloseShiftMutationVariables, TContext>(
+      {
+    mutationKey: ['CloseShift'],
+    mutationFn: (variables?: CloseShiftMutationVariables) => graphqlFetcher<CloseShiftMutation, CloseShiftMutationVariables>(CloseShiftDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useCloseShiftMutation.fetcher = (variables: CloseShiftMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<CloseShiftMutation, CloseShiftMutationVariables>(CloseShiftDocument, variables, options);
+
+export const SuspendShiftDocument = `
+    mutation SuspendShift($shiftId: ID!) {
+  suspendShift(shiftId: $shiftId) {
+    id
+    status
+  }
+}
+    `;
+
+export const useSuspendShiftMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<SuspendShiftMutation, TError, SuspendShiftMutationVariables, TContext>) => {
+    
+    return useMutation<SuspendShiftMutation, TError, SuspendShiftMutationVariables, TContext>(
+      {
+    mutationKey: ['SuspendShift'],
+    mutationFn: (variables?: SuspendShiftMutationVariables) => graphqlFetcher<SuspendShiftMutation, SuspendShiftMutationVariables>(SuspendShiftDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useSuspendShiftMutation.fetcher = (variables: SuspendShiftMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<SuspendShiftMutation, SuspendShiftMutationVariables>(SuspendShiftDocument, variables, options);
+
+export const ResumeShiftDocument = `
+    mutation ResumeShift($shiftId: ID!) {
+  resumeShift(shiftId: $shiftId) {
+    id
+    status
+  }
+}
+    `;
+
+export const useResumeShiftMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<ResumeShiftMutation, TError, ResumeShiftMutationVariables, TContext>) => {
+    
+    return useMutation<ResumeShiftMutation, TError, ResumeShiftMutationVariables, TContext>(
+      {
+    mutationKey: ['ResumeShift'],
+    mutationFn: (variables?: ResumeShiftMutationVariables) => graphqlFetcher<ResumeShiftMutation, ResumeShiftMutationVariables>(ResumeShiftDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useResumeShiftMutation.fetcher = (variables: ResumeShiftMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<ResumeShiftMutation, ResumeShiftMutationVariables>(ResumeShiftDocument, variables, options);
+
+export const RecordCashMovementDocument = `
+    mutation RecordCashMovement($input: RecordMovementInput!, $approvedBy: ID) {
+  recordCashMovement(input: $input, approvedBy: $approvedBy) {
+    id
+    shiftId
+    type
+    amount
+    description
+    reference
+    reason
+    approvedBy
+    transactionId
+    performedBy
+    performedAt
+  }
+}
+    `;
+
+export const useRecordCashMovementMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<RecordCashMovementMutation, TError, RecordCashMovementMutationVariables, TContext>) => {
+    
+    return useMutation<RecordCashMovementMutation, TError, RecordCashMovementMutationVariables, TContext>(
+      {
+    mutationKey: ['RecordCashMovement'],
+    mutationFn: (variables?: RecordCashMovementMutationVariables) => graphqlFetcher<RecordCashMovementMutation, RecordCashMovementMutationVariables>(RecordCashMovementDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useRecordCashMovementMutation.fetcher = (variables: RecordCashMovementMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<RecordCashMovementMutation, RecordCashMovementMutationVariables>(RecordCashMovementDocument, variables, options);
+
 export const CheckMemberCreditDocument = `
     query CheckMemberCredit($input: CheckCreditInput!) {
   checkMemberCredit(input: $input) {
@@ -9341,6 +12031,724 @@ export const useRemoveAppliedDiscountMutation = <
 
 
 useRemoveAppliedDiscountMutation.fetcher = (variables: RemoveAppliedDiscountMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<RemoveAppliedDiscountMutation, RemoveAppliedDiscountMutationVariables>(RemoveAppliedDiscountDocument, variables, options);
+
+export const GetTodaySettlementDocument = `
+    query GetTodaySettlement {
+  todaySettlement {
+    id
+    clubId
+    businessDate
+    status
+    totalGrossSales
+    totalDiscounts
+    totalNetSales
+    totalTax
+    totalServiceCharge
+    totalCash
+    totalCard
+    totalMemberAccount
+    totalOther
+    totalRefunds
+    totalVoids
+    expectedCash
+    actualCash
+    cashVariance
+    transactionCount
+    refundCount
+    voidCount
+    openedBy
+    openedAt
+    reviewedBy
+    reviewedAt
+    closedBy
+    closedAt
+    notes
+    createdAt
+    updatedAt
+    exceptions {
+      id
+      type
+      severity
+      resolution
+      description
+      amount
+      createdAt
+    }
+  }
+}
+    `;
+
+export const useGetTodaySettlementQuery = <
+      TData = GetTodaySettlementQuery,
+      TError = unknown
+    >(
+      variables?: GetTodaySettlementQueryVariables,
+      options?: Omit<UseQueryOptions<GetTodaySettlementQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetTodaySettlementQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetTodaySettlementQuery, TError, TData>(
+      {
+    queryKey: variables === undefined ? ['GetTodaySettlement'] : ['GetTodaySettlement', variables],
+    queryFn: graphqlFetcher<GetTodaySettlementQuery, GetTodaySettlementQueryVariables>(GetTodaySettlementDocument, variables),
+    ...options
+  }
+    )};
+
+useGetTodaySettlementQuery.getKey = (variables?: GetTodaySettlementQueryVariables) => variables === undefined ? ['GetTodaySettlement'] : ['GetTodaySettlement', variables];
+
+export const useInfiniteGetTodaySettlementQuery = <
+      TData = InfiniteData<GetTodaySettlementQuery>,
+      TError = unknown
+    >(
+      variables: GetTodaySettlementQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetTodaySettlementQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetTodaySettlementQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetTodaySettlementQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? variables === undefined ? ['GetTodaySettlement.infinite'] : ['GetTodaySettlement.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetTodaySettlementQuery, GetTodaySettlementQueryVariables>(GetTodaySettlementDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetTodaySettlementQuery.getKey = (variables?: GetTodaySettlementQueryVariables) => variables === undefined ? ['GetTodaySettlement.infinite'] : ['GetTodaySettlement.infinite', variables];
+
+
+useGetTodaySettlementQuery.fetcher = (variables?: GetTodaySettlementQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetTodaySettlementQuery, GetTodaySettlementQueryVariables>(GetTodaySettlementDocument, variables, options);
+
+export const GetSettlementDocument = `
+    query GetSettlement($id: ID!) {
+  settlement(id: $id) {
+    id
+    clubId
+    businessDate
+    status
+    totalGrossSales
+    totalDiscounts
+    totalNetSales
+    totalTax
+    totalServiceCharge
+    totalCash
+    totalCard
+    totalMemberAccount
+    totalOther
+    totalRefunds
+    totalVoids
+    expectedCash
+    actualCash
+    cashVariance
+    transactionCount
+    refundCount
+    voidCount
+    openedBy
+    openedAt
+    reviewedBy
+    reviewedAt
+    closedBy
+    closedAt
+    notes
+    createdAt
+    updatedAt
+    exceptions {
+      id
+      type
+      severity
+      resolution
+      description
+      amount
+      resolvedBy
+      resolvedAt
+      resolutionNote
+      createdAt
+    }
+  }
+}
+    `;
+
+export const useGetSettlementQuery = <
+      TData = GetSettlementQuery,
+      TError = unknown
+    >(
+      variables: GetSettlementQueryVariables,
+      options?: Omit<UseQueryOptions<GetSettlementQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetSettlementQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetSettlementQuery, TError, TData>(
+      {
+    queryKey: ['GetSettlement', variables],
+    queryFn: graphqlFetcher<GetSettlementQuery, GetSettlementQueryVariables>(GetSettlementDocument, variables),
+    ...options
+  }
+    )};
+
+useGetSettlementQuery.getKey = (variables: GetSettlementQueryVariables) => ['GetSettlement', variables];
+
+export const useInfiniteGetSettlementQuery = <
+      TData = InfiniteData<GetSettlementQuery>,
+      TError = unknown
+    >(
+      variables: GetSettlementQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetSettlementQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetSettlementQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetSettlementQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetSettlement.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetSettlementQuery, GetSettlementQueryVariables>(GetSettlementDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetSettlementQuery.getKey = (variables: GetSettlementQueryVariables) => ['GetSettlement.infinite', variables];
+
+
+useGetSettlementQuery.fetcher = (variables: GetSettlementQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetSettlementQuery, GetSettlementQueryVariables>(GetSettlementDocument, variables, options);
+
+export const GetSettlementByDateDocument = `
+    query GetSettlementByDate($date: DateTime!) {
+  settlementByDate(date: $date) {
+    id
+    clubId
+    businessDate
+    status
+    totalGrossSales
+    totalNetSales
+    totalCash
+    totalCard
+    totalMemberAccount
+    expectedCash
+    actualCash
+    cashVariance
+    transactionCount
+    createdAt
+    exceptions {
+      id
+      type
+      severity
+      resolution
+    }
+  }
+}
+    `;
+
+export const useGetSettlementByDateQuery = <
+      TData = GetSettlementByDateQuery,
+      TError = unknown
+    >(
+      variables: GetSettlementByDateQueryVariables,
+      options?: Omit<UseQueryOptions<GetSettlementByDateQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetSettlementByDateQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetSettlementByDateQuery, TError, TData>(
+      {
+    queryKey: ['GetSettlementByDate', variables],
+    queryFn: graphqlFetcher<GetSettlementByDateQuery, GetSettlementByDateQueryVariables>(GetSettlementByDateDocument, variables),
+    ...options
+  }
+    )};
+
+useGetSettlementByDateQuery.getKey = (variables: GetSettlementByDateQueryVariables) => ['GetSettlementByDate', variables];
+
+export const useInfiniteGetSettlementByDateQuery = <
+      TData = InfiniteData<GetSettlementByDateQuery>,
+      TError = unknown
+    >(
+      variables: GetSettlementByDateQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetSettlementByDateQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetSettlementByDateQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetSettlementByDateQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetSettlementByDate.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetSettlementByDateQuery, GetSettlementByDateQueryVariables>(GetSettlementByDateDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetSettlementByDateQuery.getKey = (variables: GetSettlementByDateQueryVariables) => ['GetSettlementByDate.infinite', variables];
+
+
+useGetSettlementByDateQuery.fetcher = (variables: GetSettlementByDateQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetSettlementByDateQuery, GetSettlementByDateQueryVariables>(GetSettlementByDateDocument, variables, options);
+
+export const GetSettlementsDocument = `
+    query GetSettlements($input: GetSettlementsInput!) {
+  settlements(input: $input) {
+    id
+    businessDate
+    status
+    totalGrossSales
+    totalNetSales
+    totalCash
+    totalCard
+    totalMemberAccount
+    expectedCash
+    actualCash
+    cashVariance
+    transactionCount
+    closedAt
+    exceptions {
+      id
+      type
+      severity
+      resolution
+    }
+  }
+}
+    `;
+
+export const useGetSettlementsQuery = <
+      TData = GetSettlementsQuery,
+      TError = unknown
+    >(
+      variables: GetSettlementsQueryVariables,
+      options?: Omit<UseQueryOptions<GetSettlementsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetSettlementsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetSettlementsQuery, TError, TData>(
+      {
+    queryKey: ['GetSettlements', variables],
+    queryFn: graphqlFetcher<GetSettlementsQuery, GetSettlementsQueryVariables>(GetSettlementsDocument, variables),
+    ...options
+  }
+    )};
+
+useGetSettlementsQuery.getKey = (variables: GetSettlementsQueryVariables) => ['GetSettlements', variables];
+
+export const useInfiniteGetSettlementsQuery = <
+      TData = InfiniteData<GetSettlementsQuery>,
+      TError = unknown
+    >(
+      variables: GetSettlementsQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetSettlementsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetSettlementsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetSettlementsQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetSettlements.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetSettlementsQuery, GetSettlementsQueryVariables>(GetSettlementsDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetSettlementsQuery.getKey = (variables: GetSettlementsQueryVariables) => ['GetSettlements.infinite', variables];
+
+
+useGetSettlementsQuery.fetcher = (variables: GetSettlementsQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetSettlementsQuery, GetSettlementsQueryVariables>(GetSettlementsDocument, variables, options);
+
+export const GetSettlementSummaryDocument = `
+    query GetSettlementSummary($settlementId: ID!) {
+  settlementSummary(settlementId: $settlementId) {
+    settlementId
+    businessDate
+    status
+    totalGrossSales
+    totalNetSales
+    totalCash
+    totalCard
+    totalMemberAccount
+    expectedCash
+    actualCash
+    cashVariance
+    exceptionCount
+    unresolvedExceptionCount
+  }
+}
+    `;
+
+export const useGetSettlementSummaryQuery = <
+      TData = GetSettlementSummaryQuery,
+      TError = unknown
+    >(
+      variables: GetSettlementSummaryQueryVariables,
+      options?: Omit<UseQueryOptions<GetSettlementSummaryQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetSettlementSummaryQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetSettlementSummaryQuery, TError, TData>(
+      {
+    queryKey: ['GetSettlementSummary', variables],
+    queryFn: graphqlFetcher<GetSettlementSummaryQuery, GetSettlementSummaryQueryVariables>(GetSettlementSummaryDocument, variables),
+    ...options
+  }
+    )};
+
+useGetSettlementSummaryQuery.getKey = (variables: GetSettlementSummaryQueryVariables) => ['GetSettlementSummary', variables];
+
+export const useInfiniteGetSettlementSummaryQuery = <
+      TData = InfiniteData<GetSettlementSummaryQuery>,
+      TError = unknown
+    >(
+      variables: GetSettlementSummaryQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetSettlementSummaryQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetSettlementSummaryQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetSettlementSummaryQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetSettlementSummary.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetSettlementSummaryQuery, GetSettlementSummaryQueryVariables>(GetSettlementSummaryDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetSettlementSummaryQuery.getKey = (variables: GetSettlementSummaryQueryVariables) => ['GetSettlementSummary.infinite', variables];
+
+
+useGetSettlementSummaryQuery.fetcher = (variables: GetSettlementSummaryQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetSettlementSummaryQuery, GetSettlementSummaryQueryVariables>(GetSettlementSummaryDocument, variables, options);
+
+export const GetSettlementExceptionsDocument = `
+    query GetSettlementExceptions($settlementId: ID!, $pendingOnly: Boolean) {
+  settlementExceptions(settlementId: $settlementId, pendingOnly: $pendingOnly) {
+    id
+    settlementId
+    type
+    severity
+    resolution
+    description
+    amount
+    transactionId
+    shiftId
+    lineItemId
+    resolvedBy
+    resolvedAt
+    resolutionNote
+    createdAt
+    updatedAt
+  }
+}
+    `;
+
+export const useGetSettlementExceptionsQuery = <
+      TData = GetSettlementExceptionsQuery,
+      TError = unknown
+    >(
+      variables: GetSettlementExceptionsQueryVariables,
+      options?: Omit<UseQueryOptions<GetSettlementExceptionsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetSettlementExceptionsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetSettlementExceptionsQuery, TError, TData>(
+      {
+    queryKey: ['GetSettlementExceptions', variables],
+    queryFn: graphqlFetcher<GetSettlementExceptionsQuery, GetSettlementExceptionsQueryVariables>(GetSettlementExceptionsDocument, variables),
+    ...options
+  }
+    )};
+
+useGetSettlementExceptionsQuery.getKey = (variables: GetSettlementExceptionsQueryVariables) => ['GetSettlementExceptions', variables];
+
+export const useInfiniteGetSettlementExceptionsQuery = <
+      TData = InfiniteData<GetSettlementExceptionsQuery>,
+      TError = unknown
+    >(
+      variables: GetSettlementExceptionsQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetSettlementExceptionsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetSettlementExceptionsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetSettlementExceptionsQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetSettlementExceptions.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetSettlementExceptionsQuery, GetSettlementExceptionsQueryVariables>(GetSettlementExceptionsDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetSettlementExceptionsQuery.getKey = (variables: GetSettlementExceptionsQueryVariables) => ['GetSettlementExceptions.infinite', variables];
+
+
+useGetSettlementExceptionsQuery.fetcher = (variables: GetSettlementExceptionsQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetSettlementExceptionsQuery, GetSettlementExceptionsQueryVariables>(GetSettlementExceptionsDocument, variables, options);
+
+export const OpenDayDocument = `
+    mutation OpenDay($input: OpenDayInput!) {
+  openDay(input: $input) {
+    id
+    clubId
+    businessDate
+    status
+    openedBy
+    openedAt
+  }
+}
+    `;
+
+export const useOpenDayMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<OpenDayMutation, TError, OpenDayMutationVariables, TContext>) => {
+    
+    return useMutation<OpenDayMutation, TError, OpenDayMutationVariables, TContext>(
+      {
+    mutationKey: ['OpenDay'],
+    mutationFn: (variables?: OpenDayMutationVariables) => graphqlFetcher<OpenDayMutation, OpenDayMutationVariables>(OpenDayDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useOpenDayMutation.fetcher = (variables: OpenDayMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<OpenDayMutation, OpenDayMutationVariables>(OpenDayDocument, variables, options);
+
+export const SubmitSettlementForReviewDocument = `
+    mutation SubmitSettlementForReview($settlementId: ID!) {
+  submitSettlementForReview(settlementId: $settlementId) {
+    id
+    status
+    reviewedBy
+    reviewedAt
+  }
+}
+    `;
+
+export const useSubmitSettlementForReviewMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<SubmitSettlementForReviewMutation, TError, SubmitSettlementForReviewMutationVariables, TContext>) => {
+    
+    return useMutation<SubmitSettlementForReviewMutation, TError, SubmitSettlementForReviewMutationVariables, TContext>(
+      {
+    mutationKey: ['SubmitSettlementForReview'],
+    mutationFn: (variables?: SubmitSettlementForReviewMutationVariables) => graphqlFetcher<SubmitSettlementForReviewMutation, SubmitSettlementForReviewMutationVariables>(SubmitSettlementForReviewDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useSubmitSettlementForReviewMutation.fetcher = (variables: SubmitSettlementForReviewMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<SubmitSettlementForReviewMutation, SubmitSettlementForReviewMutationVariables>(SubmitSettlementForReviewDocument, variables, options);
+
+export const CloseSettlementDocument = `
+    mutation CloseSettlement($input: CloseSettlementInput!) {
+  closeSettlement(input: $input) {
+    id
+    status
+    closedBy
+    closedAt
+    notes
+  }
+}
+    `;
+
+export const useCloseSettlementMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<CloseSettlementMutation, TError, CloseSettlementMutationVariables, TContext>) => {
+    
+    return useMutation<CloseSettlementMutation, TError, CloseSettlementMutationVariables, TContext>(
+      {
+    mutationKey: ['CloseSettlement'],
+    mutationFn: (variables?: CloseSettlementMutationVariables) => graphqlFetcher<CloseSettlementMutation, CloseSettlementMutationVariables>(CloseSettlementDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useCloseSettlementMutation.fetcher = (variables: CloseSettlementMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<CloseSettlementMutation, CloseSettlementMutationVariables>(CloseSettlementDocument, variables, options);
+
+export const ReopenSettlementDocument = `
+    mutation ReopenSettlement($input: ReopenSettlementInput!) {
+  reopenSettlement(input: $input) {
+    id
+    status
+  }
+}
+    `;
+
+export const useReopenSettlementMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<ReopenSettlementMutation, TError, ReopenSettlementMutationVariables, TContext>) => {
+    
+    return useMutation<ReopenSettlementMutation, TError, ReopenSettlementMutationVariables, TContext>(
+      {
+    mutationKey: ['ReopenSettlement'],
+    mutationFn: (variables?: ReopenSettlementMutationVariables) => graphqlFetcher<ReopenSettlementMutation, ReopenSettlementMutationVariables>(ReopenSettlementDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useReopenSettlementMutation.fetcher = (variables: ReopenSettlementMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<ReopenSettlementMutation, ReopenSettlementMutationVariables>(ReopenSettlementDocument, variables, options);
+
+export const UpdateSettlementTotalsDocument = `
+    mutation UpdateSettlementTotals($input: UpdateSettlementTotalsInput!) {
+  updateSettlementTotals(input: $input) {
+    id
+    totalGrossSales
+    totalDiscounts
+    totalNetSales
+    totalTax
+    totalServiceCharge
+    totalCash
+    totalCard
+    totalMemberAccount
+    totalOther
+    totalRefunds
+    totalVoids
+    expectedCash
+    transactionCount
+    refundCount
+    voidCount
+  }
+}
+    `;
+
+export const useUpdateSettlementTotalsMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<UpdateSettlementTotalsMutation, TError, UpdateSettlementTotalsMutationVariables, TContext>) => {
+    
+    return useMutation<UpdateSettlementTotalsMutation, TError, UpdateSettlementTotalsMutationVariables, TContext>(
+      {
+    mutationKey: ['UpdateSettlementTotals'],
+    mutationFn: (variables?: UpdateSettlementTotalsMutationVariables) => graphqlFetcher<UpdateSettlementTotalsMutation, UpdateSettlementTotalsMutationVariables>(UpdateSettlementTotalsDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useUpdateSettlementTotalsMutation.fetcher = (variables: UpdateSettlementTotalsMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<UpdateSettlementTotalsMutation, UpdateSettlementTotalsMutationVariables>(UpdateSettlementTotalsDocument, variables, options);
+
+export const RecordCashCountDocument = `
+    mutation RecordCashCount($input: RecordCashCountInput!) {
+  recordCashCount(input: $input) {
+    id
+    actualCash
+    cashVariance
+    exceptions {
+      id
+      type
+      severity
+      description
+      amount
+    }
+  }
+}
+    `;
+
+export const useRecordCashCountMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<RecordCashCountMutation, TError, RecordCashCountMutationVariables, TContext>) => {
+    
+    return useMutation<RecordCashCountMutation, TError, RecordCashCountMutationVariables, TContext>(
+      {
+    mutationKey: ['RecordCashCount'],
+    mutationFn: (variables?: RecordCashCountMutationVariables) => graphqlFetcher<RecordCashCountMutation, RecordCashCountMutationVariables>(RecordCashCountDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useRecordCashCountMutation.fetcher = (variables: RecordCashCountMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<RecordCashCountMutation, RecordCashCountMutationVariables>(RecordCashCountDocument, variables, options);
+
+export const RecalculateSettlementTotalsDocument = `
+    mutation RecalculateSettlementTotals($settlementId: ID!) {
+  recalculateSettlementTotals(settlementId: $settlementId) {
+    id
+    totalGrossSales
+    totalNetSales
+    totalCash
+    totalCard
+    totalMemberAccount
+    totalOther
+    totalRefunds
+    totalVoids
+    expectedCash
+    transactionCount
+    refundCount
+    voidCount
+  }
+}
+    `;
+
+export const useRecalculateSettlementTotalsMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<RecalculateSettlementTotalsMutation, TError, RecalculateSettlementTotalsMutationVariables, TContext>) => {
+    
+    return useMutation<RecalculateSettlementTotalsMutation, TError, RecalculateSettlementTotalsMutationVariables, TContext>(
+      {
+    mutationKey: ['RecalculateSettlementTotals'],
+    mutationFn: (variables?: RecalculateSettlementTotalsMutationVariables) => graphqlFetcher<RecalculateSettlementTotalsMutation, RecalculateSettlementTotalsMutationVariables>(RecalculateSettlementTotalsDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useRecalculateSettlementTotalsMutation.fetcher = (variables: RecalculateSettlementTotalsMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<RecalculateSettlementTotalsMutation, RecalculateSettlementTotalsMutationVariables>(RecalculateSettlementTotalsDocument, variables, options);
+
+export const CreateSettlementExceptionDocument = `
+    mutation CreateSettlementException($input: CreateExceptionInput!) {
+  createSettlementException(input: $input) {
+    id
+    settlementId
+    type
+    severity
+    resolution
+    description
+    amount
+    createdAt
+  }
+}
+    `;
+
+export const useCreateSettlementExceptionMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<CreateSettlementExceptionMutation, TError, CreateSettlementExceptionMutationVariables, TContext>) => {
+    
+    return useMutation<CreateSettlementExceptionMutation, TError, CreateSettlementExceptionMutationVariables, TContext>(
+      {
+    mutationKey: ['CreateSettlementException'],
+    mutationFn: (variables?: CreateSettlementExceptionMutationVariables) => graphqlFetcher<CreateSettlementExceptionMutation, CreateSettlementExceptionMutationVariables>(CreateSettlementExceptionDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useCreateSettlementExceptionMutation.fetcher = (variables: CreateSettlementExceptionMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<CreateSettlementExceptionMutation, CreateSettlementExceptionMutationVariables>(CreateSettlementExceptionDocument, variables, options);
+
+export const ResolveSettlementExceptionDocument = `
+    mutation ResolveSettlementException($input: ResolveExceptionInput!) {
+  resolveSettlementException(input: $input) {
+    id
+    resolution
+    resolvedBy
+    resolvedAt
+    resolutionNote
+  }
+}
+    `;
+
+export const useResolveSettlementExceptionMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<ResolveSettlementExceptionMutation, TError, ResolveSettlementExceptionMutationVariables, TContext>) => {
+    
+    return useMutation<ResolveSettlementExceptionMutation, TError, ResolveSettlementExceptionMutationVariables, TContext>(
+      {
+    mutationKey: ['ResolveSettlementException'],
+    mutationFn: (variables?: ResolveSettlementExceptionMutationVariables) => graphqlFetcher<ResolveSettlementExceptionMutation, ResolveSettlementExceptionMutationVariables>(ResolveSettlementExceptionDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useResolveSettlementExceptionMutation.fetcher = (variables: ResolveSettlementExceptionMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<ResolveSettlementExceptionMutation, ResolveSettlementExceptionMutationVariables>(ResolveSettlementExceptionDocument, variables, options);
 
 export const GetTeeSheetDocument = `
     query GetTeeSheet($courseId: ID!, $date: DateTime!) {
@@ -13185,3 +16593,2340 @@ export const useDeleteDependentMutation = <
 
 
 useDeleteDependentMutation.fetcher = (variables: DeleteDependentMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<DeleteDependentMutation, DeleteDependentMutationVariables>(DeleteDependentDocument, variables, options);
+
+export const GetMinimumSpendRequirementsDocument = `
+    query GetMinimumSpendRequirements($activeOnly: Boolean) {
+  minimumSpendRequirements(activeOnly: $activeOnly) {
+    id
+    clubId
+    name
+    description
+    membershipTypes
+    minimumAmount
+    period
+    includeFoodBeverage
+    includeGolf
+    includeSpa
+    includeRetail
+    includeEvents
+    includedCategories
+    excludedCategories
+    defaultShortfallAction
+    gracePeriodDays
+    allowPartialCredit
+    notifyAtPercent
+    notifyDaysBeforeEnd
+    isActive
+    effectiveFrom
+    effectiveTo
+    createdAt
+    updatedAt
+  }
+}
+    `;
+
+export const useGetMinimumSpendRequirementsQuery = <
+      TData = GetMinimumSpendRequirementsQuery,
+      TError = unknown
+    >(
+      variables?: GetMinimumSpendRequirementsQueryVariables,
+      options?: Omit<UseQueryOptions<GetMinimumSpendRequirementsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetMinimumSpendRequirementsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetMinimumSpendRequirementsQuery, TError, TData>(
+      {
+    queryKey: variables === undefined ? ['GetMinimumSpendRequirements'] : ['GetMinimumSpendRequirements', variables],
+    queryFn: graphqlFetcher<GetMinimumSpendRequirementsQuery, GetMinimumSpendRequirementsQueryVariables>(GetMinimumSpendRequirementsDocument, variables),
+    ...options
+  }
+    )};
+
+useGetMinimumSpendRequirementsQuery.getKey = (variables?: GetMinimumSpendRequirementsQueryVariables) => variables === undefined ? ['GetMinimumSpendRequirements'] : ['GetMinimumSpendRequirements', variables];
+
+export const useInfiniteGetMinimumSpendRequirementsQuery = <
+      TData = InfiniteData<GetMinimumSpendRequirementsQuery>,
+      TError = unknown
+    >(
+      variables: GetMinimumSpendRequirementsQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetMinimumSpendRequirementsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetMinimumSpendRequirementsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetMinimumSpendRequirementsQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? variables === undefined ? ['GetMinimumSpendRequirements.infinite'] : ['GetMinimumSpendRequirements.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetMinimumSpendRequirementsQuery, GetMinimumSpendRequirementsQueryVariables>(GetMinimumSpendRequirementsDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetMinimumSpendRequirementsQuery.getKey = (variables?: GetMinimumSpendRequirementsQueryVariables) => variables === undefined ? ['GetMinimumSpendRequirements.infinite'] : ['GetMinimumSpendRequirements.infinite', variables];
+
+
+useGetMinimumSpendRequirementsQuery.fetcher = (variables?: GetMinimumSpendRequirementsQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetMinimumSpendRequirementsQuery, GetMinimumSpendRequirementsQueryVariables>(GetMinimumSpendRequirementsDocument, variables, options);
+
+export const GetMinimumSpendRequirementDocument = `
+    query GetMinimumSpendRequirement($id: ID!) {
+  minimumSpendRequirement(id: $id) {
+    id
+    clubId
+    name
+    description
+    membershipTypes
+    minimumAmount
+    period
+    includeFoodBeverage
+    includeGolf
+    includeSpa
+    includeRetail
+    includeEvents
+    includedCategories
+    excludedCategories
+    defaultShortfallAction
+    gracePeriodDays
+    allowPartialCredit
+    notifyAtPercent
+    notifyDaysBeforeEnd
+    isActive
+    effectiveFrom
+    effectiveTo
+    createdAt
+    updatedAt
+  }
+}
+    `;
+
+export const useGetMinimumSpendRequirementQuery = <
+      TData = GetMinimumSpendRequirementQuery,
+      TError = unknown
+    >(
+      variables: GetMinimumSpendRequirementQueryVariables,
+      options?: Omit<UseQueryOptions<GetMinimumSpendRequirementQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetMinimumSpendRequirementQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetMinimumSpendRequirementQuery, TError, TData>(
+      {
+    queryKey: ['GetMinimumSpendRequirement', variables],
+    queryFn: graphqlFetcher<GetMinimumSpendRequirementQuery, GetMinimumSpendRequirementQueryVariables>(GetMinimumSpendRequirementDocument, variables),
+    ...options
+  }
+    )};
+
+useGetMinimumSpendRequirementQuery.getKey = (variables: GetMinimumSpendRequirementQueryVariables) => ['GetMinimumSpendRequirement', variables];
+
+export const useInfiniteGetMinimumSpendRequirementQuery = <
+      TData = InfiniteData<GetMinimumSpendRequirementQuery>,
+      TError = unknown
+    >(
+      variables: GetMinimumSpendRequirementQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetMinimumSpendRequirementQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetMinimumSpendRequirementQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetMinimumSpendRequirementQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetMinimumSpendRequirement.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetMinimumSpendRequirementQuery, GetMinimumSpendRequirementQueryVariables>(GetMinimumSpendRequirementDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetMinimumSpendRequirementQuery.getKey = (variables: GetMinimumSpendRequirementQueryVariables) => ['GetMinimumSpendRequirement.infinite', variables];
+
+
+useGetMinimumSpendRequirementQuery.fetcher = (variables: GetMinimumSpendRequirementQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetMinimumSpendRequirementQuery, GetMinimumSpendRequirementQueryVariables>(GetMinimumSpendRequirementDocument, variables, options);
+
+export const GetMemberMinimumSpendsDocument = `
+    query GetMemberMinimumSpends($input: GetMemberSpendsInput!) {
+  memberMinimumSpends(input: $input) {
+    id
+    clubId
+    memberId
+    requirementId
+    periodStart
+    periodEnd
+    periodLabel
+    requiredAmount
+    currentSpend
+    projectedSpend
+    shortfallAmount
+    carryForwardAmount
+    status
+    isExempt
+    exemptReason
+    exemptBy
+    exemptAt
+    shortfallAction
+    shortfallResolvedBy
+    shortfallResolvedAt
+    shortfallNote
+    shortfallInvoiceId
+    lastCalculatedAt
+    createdAt
+    updatedAt
+    requirement {
+      id
+      name
+      minimumAmount
+      period
+    }
+  }
+}
+    `;
+
+export const useGetMemberMinimumSpendsQuery = <
+      TData = GetMemberMinimumSpendsQuery,
+      TError = unknown
+    >(
+      variables: GetMemberMinimumSpendsQueryVariables,
+      options?: Omit<UseQueryOptions<GetMemberMinimumSpendsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetMemberMinimumSpendsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetMemberMinimumSpendsQuery, TError, TData>(
+      {
+    queryKey: ['GetMemberMinimumSpends', variables],
+    queryFn: graphqlFetcher<GetMemberMinimumSpendsQuery, GetMemberMinimumSpendsQueryVariables>(GetMemberMinimumSpendsDocument, variables),
+    ...options
+  }
+    )};
+
+useGetMemberMinimumSpendsQuery.getKey = (variables: GetMemberMinimumSpendsQueryVariables) => ['GetMemberMinimumSpends', variables];
+
+export const useInfiniteGetMemberMinimumSpendsQuery = <
+      TData = InfiniteData<GetMemberMinimumSpendsQuery>,
+      TError = unknown
+    >(
+      variables: GetMemberMinimumSpendsQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetMemberMinimumSpendsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetMemberMinimumSpendsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetMemberMinimumSpendsQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetMemberMinimumSpends.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetMemberMinimumSpendsQuery, GetMemberMinimumSpendsQueryVariables>(GetMemberMinimumSpendsDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetMemberMinimumSpendsQuery.getKey = (variables: GetMemberMinimumSpendsQueryVariables) => ['GetMemberMinimumSpends.infinite', variables];
+
+
+useGetMemberMinimumSpendsQuery.fetcher = (variables: GetMemberMinimumSpendsQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetMemberMinimumSpendsQuery, GetMemberMinimumSpendsQueryVariables>(GetMemberMinimumSpendsDocument, variables, options);
+
+export const GetMemberMinimumSpendDocument = `
+    query GetMemberMinimumSpend($id: ID!) {
+  memberMinimumSpend(id: $id) {
+    id
+    clubId
+    memberId
+    requirementId
+    periodStart
+    periodEnd
+    periodLabel
+    requiredAmount
+    currentSpend
+    projectedSpend
+    shortfallAmount
+    carryForwardAmount
+    status
+    isExempt
+    exemptReason
+    exemptBy
+    exemptAt
+    shortfallAction
+    shortfallResolvedBy
+    shortfallResolvedAt
+    shortfallNote
+    shortfallInvoiceId
+    lastCalculatedAt
+    createdAt
+    updatedAt
+    requirement {
+      id
+      name
+      minimumAmount
+      period
+      defaultShortfallAction
+    }
+  }
+}
+    `;
+
+export const useGetMemberMinimumSpendQuery = <
+      TData = GetMemberMinimumSpendQuery,
+      TError = unknown
+    >(
+      variables: GetMemberMinimumSpendQueryVariables,
+      options?: Omit<UseQueryOptions<GetMemberMinimumSpendQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetMemberMinimumSpendQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetMemberMinimumSpendQuery, TError, TData>(
+      {
+    queryKey: ['GetMemberMinimumSpend', variables],
+    queryFn: graphqlFetcher<GetMemberMinimumSpendQuery, GetMemberMinimumSpendQueryVariables>(GetMemberMinimumSpendDocument, variables),
+    ...options
+  }
+    )};
+
+useGetMemberMinimumSpendQuery.getKey = (variables: GetMemberMinimumSpendQueryVariables) => ['GetMemberMinimumSpend', variables];
+
+export const useInfiniteGetMemberMinimumSpendQuery = <
+      TData = InfiniteData<GetMemberMinimumSpendQuery>,
+      TError = unknown
+    >(
+      variables: GetMemberMinimumSpendQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetMemberMinimumSpendQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetMemberMinimumSpendQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetMemberMinimumSpendQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetMemberMinimumSpend.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetMemberMinimumSpendQuery, GetMemberMinimumSpendQueryVariables>(GetMemberMinimumSpendDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetMemberMinimumSpendQuery.getKey = (variables: GetMemberMinimumSpendQueryVariables) => ['GetMemberMinimumSpend.infinite', variables];
+
+
+useGetMemberMinimumSpendQuery.fetcher = (variables: GetMemberMinimumSpendQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetMemberMinimumSpendQuery, GetMemberMinimumSpendQueryVariables>(GetMemberMinimumSpendDocument, variables, options);
+
+export const GetCurrentMemberSpendDocument = `
+    query GetCurrentMemberSpend($memberId: ID!, $requirementId: ID!) {
+  currentMemberSpend(memberId: $memberId, requirementId: $requirementId) {
+    id
+    clubId
+    memberId
+    requirementId
+    periodStart
+    periodEnd
+    periodLabel
+    requiredAmount
+    currentSpend
+    projectedSpend
+    shortfallAmount
+    carryForwardAmount
+    status
+    isExempt
+    lastCalculatedAt
+    requirement {
+      id
+      name
+      minimumAmount
+      period
+    }
+  }
+}
+    `;
+
+export const useGetCurrentMemberSpendQuery = <
+      TData = GetCurrentMemberSpendQuery,
+      TError = unknown
+    >(
+      variables: GetCurrentMemberSpendQueryVariables,
+      options?: Omit<UseQueryOptions<GetCurrentMemberSpendQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetCurrentMemberSpendQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetCurrentMemberSpendQuery, TError, TData>(
+      {
+    queryKey: ['GetCurrentMemberSpend', variables],
+    queryFn: graphqlFetcher<GetCurrentMemberSpendQuery, GetCurrentMemberSpendQueryVariables>(GetCurrentMemberSpendDocument, variables),
+    ...options
+  }
+    )};
+
+useGetCurrentMemberSpendQuery.getKey = (variables: GetCurrentMemberSpendQueryVariables) => ['GetCurrentMemberSpend', variables];
+
+export const useInfiniteGetCurrentMemberSpendQuery = <
+      TData = InfiniteData<GetCurrentMemberSpendQuery>,
+      TError = unknown
+    >(
+      variables: GetCurrentMemberSpendQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetCurrentMemberSpendQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetCurrentMemberSpendQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetCurrentMemberSpendQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetCurrentMemberSpend.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetCurrentMemberSpendQuery, GetCurrentMemberSpendQueryVariables>(GetCurrentMemberSpendDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetCurrentMemberSpendQuery.getKey = (variables: GetCurrentMemberSpendQueryVariables) => ['GetCurrentMemberSpend.infinite', variables];
+
+
+useGetCurrentMemberSpendQuery.fetcher = (variables: GetCurrentMemberSpendQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetCurrentMemberSpendQuery, GetCurrentMemberSpendQueryVariables>(GetCurrentMemberSpendDocument, variables, options);
+
+export const CreateMinimumSpendRequirementDocument = `
+    mutation CreateMinimumSpendRequirement($input: CreateRequirementInput!) {
+  createMinimumSpendRequirement(input: $input) {
+    id
+    name
+    description
+    membershipTypes
+    minimumAmount
+    period
+    isActive
+    createdAt
+  }
+}
+    `;
+
+export const useCreateMinimumSpendRequirementMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<CreateMinimumSpendRequirementMutation, TError, CreateMinimumSpendRequirementMutationVariables, TContext>) => {
+    
+    return useMutation<CreateMinimumSpendRequirementMutation, TError, CreateMinimumSpendRequirementMutationVariables, TContext>(
+      {
+    mutationKey: ['CreateMinimumSpendRequirement'],
+    mutationFn: (variables?: CreateMinimumSpendRequirementMutationVariables) => graphqlFetcher<CreateMinimumSpendRequirementMutation, CreateMinimumSpendRequirementMutationVariables>(CreateMinimumSpendRequirementDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useCreateMinimumSpendRequirementMutation.fetcher = (variables: CreateMinimumSpendRequirementMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<CreateMinimumSpendRequirementMutation, CreateMinimumSpendRequirementMutationVariables>(CreateMinimumSpendRequirementDocument, variables, options);
+
+export const UpdateMinimumSpendRequirementDocument = `
+    mutation UpdateMinimumSpendRequirement($input: UpdateRequirementInput!) {
+  updateMinimumSpendRequirement(input: $input) {
+    id
+    name
+    description
+    membershipTypes
+    minimumAmount
+    period
+    isActive
+    updatedAt
+  }
+}
+    `;
+
+export const useUpdateMinimumSpendRequirementMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<UpdateMinimumSpendRequirementMutation, TError, UpdateMinimumSpendRequirementMutationVariables, TContext>) => {
+    
+    return useMutation<UpdateMinimumSpendRequirementMutation, TError, UpdateMinimumSpendRequirementMutationVariables, TContext>(
+      {
+    mutationKey: ['UpdateMinimumSpendRequirement'],
+    mutationFn: (variables?: UpdateMinimumSpendRequirementMutationVariables) => graphqlFetcher<UpdateMinimumSpendRequirementMutation, UpdateMinimumSpendRequirementMutationVariables>(UpdateMinimumSpendRequirementDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useUpdateMinimumSpendRequirementMutation.fetcher = (variables: UpdateMinimumSpendRequirementMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<UpdateMinimumSpendRequirementMutation, UpdateMinimumSpendRequirementMutationVariables>(UpdateMinimumSpendRequirementDocument, variables, options);
+
+export const DeleteMinimumSpendRequirementDocument = `
+    mutation DeleteMinimumSpendRequirement($id: ID!) {
+  deleteMinimumSpendRequirement(id: $id) {
+    id
+    isActive
+  }
+}
+    `;
+
+export const useDeleteMinimumSpendRequirementMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<DeleteMinimumSpendRequirementMutation, TError, DeleteMinimumSpendRequirementMutationVariables, TContext>) => {
+    
+    return useMutation<DeleteMinimumSpendRequirementMutation, TError, DeleteMinimumSpendRequirementMutationVariables, TContext>(
+      {
+    mutationKey: ['DeleteMinimumSpendRequirement'],
+    mutationFn: (variables?: DeleteMinimumSpendRequirementMutationVariables) => graphqlFetcher<DeleteMinimumSpendRequirementMutation, DeleteMinimumSpendRequirementMutationVariables>(DeleteMinimumSpendRequirementDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useDeleteMinimumSpendRequirementMutation.fetcher = (variables: DeleteMinimumSpendRequirementMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<DeleteMinimumSpendRequirementMutation, DeleteMinimumSpendRequirementMutationVariables>(DeleteMinimumSpendRequirementDocument, variables, options);
+
+export const RecordMinimumSpendDocument = `
+    mutation RecordMinimumSpend($input: RecordSpendInput!) {
+  recordMinimumSpend(input: $input) {
+    id
+    currentSpend
+    status
+    lastCalculatedAt
+    requirement {
+      id
+      name
+      minimumAmount
+    }
+  }
+}
+    `;
+
+export const useRecordMinimumSpendMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<RecordMinimumSpendMutation, TError, RecordMinimumSpendMutationVariables, TContext>) => {
+    
+    return useMutation<RecordMinimumSpendMutation, TError, RecordMinimumSpendMutationVariables, TContext>(
+      {
+    mutationKey: ['RecordMinimumSpend'],
+    mutationFn: (variables?: RecordMinimumSpendMutationVariables) => graphqlFetcher<RecordMinimumSpendMutation, RecordMinimumSpendMutationVariables>(RecordMinimumSpendDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useRecordMinimumSpendMutation.fetcher = (variables: RecordMinimumSpendMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<RecordMinimumSpendMutation, RecordMinimumSpendMutationVariables>(RecordMinimumSpendDocument, variables, options);
+
+export const ResolveMinimumSpendShortfallDocument = `
+    mutation ResolveMinimumSpendShortfall($input: ResolveShortfallInput!) {
+  resolveMinimumSpendShortfall(input: $input) {
+    id
+    status
+    shortfallAction
+    shortfallResolvedBy
+    shortfallResolvedAt
+    shortfallNote
+  }
+}
+    `;
+
+export const useResolveMinimumSpendShortfallMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<ResolveMinimumSpendShortfallMutation, TError, ResolveMinimumSpendShortfallMutationVariables, TContext>) => {
+    
+    return useMutation<ResolveMinimumSpendShortfallMutation, TError, ResolveMinimumSpendShortfallMutationVariables, TContext>(
+      {
+    mutationKey: ['ResolveMinimumSpendShortfall'],
+    mutationFn: (variables?: ResolveMinimumSpendShortfallMutationVariables) => graphqlFetcher<ResolveMinimumSpendShortfallMutation, ResolveMinimumSpendShortfallMutationVariables>(ResolveMinimumSpendShortfallDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useResolveMinimumSpendShortfallMutation.fetcher = (variables: ResolveMinimumSpendShortfallMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<ResolveMinimumSpendShortfallMutation, ResolveMinimumSpendShortfallMutationVariables>(ResolveMinimumSpendShortfallDocument, variables, options);
+
+export const ExemptMemberFromMinimumSpendDocument = `
+    mutation ExemptMemberFromMinimumSpend($input: ExemptMemberInput!) {
+  exemptMemberFromMinimumSpend(input: $input) {
+    id
+    status
+    isExempt
+    exemptReason
+    exemptBy
+    exemptAt
+  }
+}
+    `;
+
+export const useExemptMemberFromMinimumSpendMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<ExemptMemberFromMinimumSpendMutation, TError, ExemptMemberFromMinimumSpendMutationVariables, TContext>) => {
+    
+    return useMutation<ExemptMemberFromMinimumSpendMutation, TError, ExemptMemberFromMinimumSpendMutationVariables, TContext>(
+      {
+    mutationKey: ['ExemptMemberFromMinimumSpend'],
+    mutationFn: (variables?: ExemptMemberFromMinimumSpendMutationVariables) => graphqlFetcher<ExemptMemberFromMinimumSpendMutation, ExemptMemberFromMinimumSpendMutationVariables>(ExemptMemberFromMinimumSpendDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useExemptMemberFromMinimumSpendMutation.fetcher = (variables: ExemptMemberFromMinimumSpendMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<ExemptMemberFromMinimumSpendMutation, ExemptMemberFromMinimumSpendMutationVariables>(ExemptMemberFromMinimumSpendDocument, variables, options);
+
+export const RemoveMinimumSpendExemptionDocument = `
+    mutation RemoveMinimumSpendExemption($memberSpendId: ID!) {
+  removeMinimumSpendExemption(memberSpendId: $memberSpendId) {
+    id
+    status
+    isExempt
+  }
+}
+    `;
+
+export const useRemoveMinimumSpendExemptionMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<RemoveMinimumSpendExemptionMutation, TError, RemoveMinimumSpendExemptionMutationVariables, TContext>) => {
+    
+    return useMutation<RemoveMinimumSpendExemptionMutation, TError, RemoveMinimumSpendExemptionMutationVariables, TContext>(
+      {
+    mutationKey: ['RemoveMinimumSpendExemption'],
+    mutationFn: (variables?: RemoveMinimumSpendExemptionMutationVariables) => graphqlFetcher<RemoveMinimumSpendExemptionMutation, RemoveMinimumSpendExemptionMutationVariables>(RemoveMinimumSpendExemptionDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useRemoveMinimumSpendExemptionMutation.fetcher = (variables: RemoveMinimumSpendExemptionMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<RemoveMinimumSpendExemptionMutation, RemoveMinimumSpendExemptionMutationVariables>(RemoveMinimumSpendExemptionDocument, variables, options);
+
+export const CloseMinimumSpendPeriodDocument = `
+    mutation CloseMinimumSpendPeriod($input: ClosePeriodInput!) {
+  closeMinimumSpendPeriod(input: $input) {
+    id
+    status
+    shortfallAmount
+    shortfallAction
+  }
+}
+    `;
+
+export const useCloseMinimumSpendPeriodMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<CloseMinimumSpendPeriodMutation, TError, CloseMinimumSpendPeriodMutationVariables, TContext>) => {
+    
+    return useMutation<CloseMinimumSpendPeriodMutation, TError, CloseMinimumSpendPeriodMutationVariables, TContext>(
+      {
+    mutationKey: ['CloseMinimumSpendPeriod'],
+    mutationFn: (variables?: CloseMinimumSpendPeriodMutationVariables) => graphqlFetcher<CloseMinimumSpendPeriodMutation, CloseMinimumSpendPeriodMutationVariables>(CloseMinimumSpendPeriodDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useCloseMinimumSpendPeriodMutation.fetcher = (variables: CloseMinimumSpendPeriodMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<CloseMinimumSpendPeriodMutation, CloseMinimumSpendPeriodMutationVariables>(CloseMinimumSpendPeriodDocument, variables, options);
+
+export const RecalculateMemberSpendDocument = `
+    mutation RecalculateMemberSpend($memberSpendId: ID!) {
+  recalculateMemberSpend(memberSpendId: $memberSpendId) {
+    id
+    currentSpend
+    status
+    lastCalculatedAt
+  }
+}
+    `;
+
+export const useRecalculateMemberSpendMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<RecalculateMemberSpendMutation, TError, RecalculateMemberSpendMutationVariables, TContext>) => {
+    
+    return useMutation<RecalculateMemberSpendMutation, TError, RecalculateMemberSpendMutationVariables, TContext>(
+      {
+    mutationKey: ['RecalculateMemberSpend'],
+    mutationFn: (variables?: RecalculateMemberSpendMutationVariables) => graphqlFetcher<RecalculateMemberSpendMutation, RecalculateMemberSpendMutationVariables>(RecalculateMemberSpendDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useRecalculateMemberSpendMutation.fetcher = (variables: RecalculateMemberSpendMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<RecalculateMemberSpendMutation, RecalculateMemberSpendMutationVariables>(RecalculateMemberSpendDocument, variables, options);
+
+export const GetPosConfigDocument = `
+    query GetPOSConfig($outletId: ID!, $userRole: String!, $userPermissions: [String!]) {
+  posConfig(
+    outletId: $outletId
+    userRole: $userRole
+    userPermissions: $userPermissions
+  ) {
+    outlet {
+      id
+      clubId
+      name
+      outletType
+      isActive
+    }
+    template {
+      id
+      name
+      outletType
+    }
+    toolbarConfig
+    actionBarConfig
+    buttonStates {
+      buttonId
+      visible
+      enabled
+      requiresApproval
+    }
+  }
+}
+    `;
+
+export const useGetPosConfigQuery = <
+      TData = GetPosConfigQuery,
+      TError = unknown
+    >(
+      variables: GetPosConfigQueryVariables,
+      options?: Omit<UseQueryOptions<GetPosConfigQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetPosConfigQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetPosConfigQuery, TError, TData>(
+      {
+    queryKey: ['GetPOSConfig', variables],
+    queryFn: graphqlFetcher<GetPosConfigQuery, GetPosConfigQueryVariables>(GetPosConfigDocument, variables),
+    ...options
+  }
+    )};
+
+useGetPosConfigQuery.getKey = (variables: GetPosConfigQueryVariables) => ['GetPOSConfig', variables];
+
+export const useInfiniteGetPosConfigQuery = <
+      TData = InfiniteData<GetPosConfigQuery>,
+      TError = unknown
+    >(
+      variables: GetPosConfigQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetPosConfigQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetPosConfigQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetPosConfigQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetPOSConfig.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetPosConfigQuery, GetPosConfigQueryVariables>(GetPosConfigDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetPosConfigQuery.getKey = (variables: GetPosConfigQueryVariables) => ['GetPOSConfig.infinite', variables];
+
+
+useGetPosConfigQuery.fetcher = (variables: GetPosConfigQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetPosConfigQuery, GetPosConfigQueryVariables>(GetPosConfigDocument, variables, options);
+
+export const GetPosTemplatesDocument = `
+    query GetPOSTemplates {
+  posTemplates {
+    id
+    clubId
+    name
+    description
+    outletType
+    toolbarConfig
+    actionBarConfig
+    isDefault
+    createdAt
+    updatedAt
+  }
+}
+    `;
+
+export const useGetPosTemplatesQuery = <
+      TData = GetPosTemplatesQuery,
+      TError = unknown
+    >(
+      variables?: GetPosTemplatesQueryVariables,
+      options?: Omit<UseQueryOptions<GetPosTemplatesQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetPosTemplatesQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetPosTemplatesQuery, TError, TData>(
+      {
+    queryKey: variables === undefined ? ['GetPOSTemplates'] : ['GetPOSTemplates', variables],
+    queryFn: graphqlFetcher<GetPosTemplatesQuery, GetPosTemplatesQueryVariables>(GetPosTemplatesDocument, variables),
+    ...options
+  }
+    )};
+
+useGetPosTemplatesQuery.getKey = (variables?: GetPosTemplatesQueryVariables) => variables === undefined ? ['GetPOSTemplates'] : ['GetPOSTemplates', variables];
+
+export const useInfiniteGetPosTemplatesQuery = <
+      TData = InfiniteData<GetPosTemplatesQuery>,
+      TError = unknown
+    >(
+      variables: GetPosTemplatesQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetPosTemplatesQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetPosTemplatesQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetPosTemplatesQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? variables === undefined ? ['GetPOSTemplates.infinite'] : ['GetPOSTemplates.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetPosTemplatesQuery, GetPosTemplatesQueryVariables>(GetPosTemplatesDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetPosTemplatesQuery.getKey = (variables?: GetPosTemplatesQueryVariables) => variables === undefined ? ['GetPOSTemplates.infinite'] : ['GetPOSTemplates.infinite', variables];
+
+
+useGetPosTemplatesQuery.fetcher = (variables?: GetPosTemplatesQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetPosTemplatesQuery, GetPosTemplatesQueryVariables>(GetPosTemplatesDocument, variables, options);
+
+export const GetPosTemplateDocument = `
+    query GetPOSTemplate($id: ID!) {
+  posTemplate(id: $id) {
+    id
+    clubId
+    name
+    description
+    outletType
+    toolbarConfig
+    actionBarConfig
+    isDefault
+    createdAt
+    updatedAt
+    outlets {
+      id
+      name
+    }
+  }
+}
+    `;
+
+export const useGetPosTemplateQuery = <
+      TData = GetPosTemplateQuery,
+      TError = unknown
+    >(
+      variables: GetPosTemplateQueryVariables,
+      options?: Omit<UseQueryOptions<GetPosTemplateQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetPosTemplateQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetPosTemplateQuery, TError, TData>(
+      {
+    queryKey: ['GetPOSTemplate', variables],
+    queryFn: graphqlFetcher<GetPosTemplateQuery, GetPosTemplateQueryVariables>(GetPosTemplateDocument, variables),
+    ...options
+  }
+    )};
+
+useGetPosTemplateQuery.getKey = (variables: GetPosTemplateQueryVariables) => ['GetPOSTemplate', variables];
+
+export const useInfiniteGetPosTemplateQuery = <
+      TData = InfiniteData<GetPosTemplateQuery>,
+      TError = unknown
+    >(
+      variables: GetPosTemplateQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetPosTemplateQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetPosTemplateQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetPosTemplateQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetPOSTemplate.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetPosTemplateQuery, GetPosTemplateQueryVariables>(GetPosTemplateDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetPosTemplateQuery.getKey = (variables: GetPosTemplateQueryVariables) => ['GetPOSTemplate.infinite', variables];
+
+
+useGetPosTemplateQuery.fetcher = (variables: GetPosTemplateQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetPosTemplateQuery, GetPosTemplateQueryVariables>(GetPosTemplateDocument, variables, options);
+
+export const GetPosOutletsDocument = `
+    query GetPOSOutlets {
+  posOutlets {
+    id
+    clubId
+    name
+    outletType
+    templateId
+    customConfig
+    isActive
+    createdAt
+    updatedAt
+    template {
+      id
+      name
+    }
+  }
+}
+    `;
+
+export const useGetPosOutletsQuery = <
+      TData = GetPosOutletsQuery,
+      TError = unknown
+    >(
+      variables?: GetPosOutletsQueryVariables,
+      options?: Omit<UseQueryOptions<GetPosOutletsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetPosOutletsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetPosOutletsQuery, TError, TData>(
+      {
+    queryKey: variables === undefined ? ['GetPOSOutlets'] : ['GetPOSOutlets', variables],
+    queryFn: graphqlFetcher<GetPosOutletsQuery, GetPosOutletsQueryVariables>(GetPosOutletsDocument, variables),
+    ...options
+  }
+    )};
+
+useGetPosOutletsQuery.getKey = (variables?: GetPosOutletsQueryVariables) => variables === undefined ? ['GetPOSOutlets'] : ['GetPOSOutlets', variables];
+
+export const useInfiniteGetPosOutletsQuery = <
+      TData = InfiniteData<GetPosOutletsQuery>,
+      TError = unknown
+    >(
+      variables: GetPosOutletsQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetPosOutletsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetPosOutletsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetPosOutletsQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? variables === undefined ? ['GetPOSOutlets.infinite'] : ['GetPOSOutlets.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetPosOutletsQuery, GetPosOutletsQueryVariables>(GetPosOutletsDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetPosOutletsQuery.getKey = (variables?: GetPosOutletsQueryVariables) => variables === undefined ? ['GetPOSOutlets.infinite'] : ['GetPOSOutlets.infinite', variables];
+
+
+useGetPosOutletsQuery.fetcher = (variables?: GetPosOutletsQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetPosOutletsQuery, GetPosOutletsQueryVariables>(GetPosOutletsDocument, variables, options);
+
+export const GetPosOutletDocument = `
+    query GetPOSOutlet($id: ID!) {
+  posOutlet(id: $id) {
+    id
+    clubId
+    name
+    outletType
+    templateId
+    customConfig
+    isActive
+    createdAt
+    updatedAt
+    template {
+      id
+      name
+    }
+    roleConfigs {
+      id
+      role
+      buttonOverrides
+    }
+  }
+}
+    `;
+
+export const useGetPosOutletQuery = <
+      TData = GetPosOutletQuery,
+      TError = unknown
+    >(
+      variables: GetPosOutletQueryVariables,
+      options?: Omit<UseQueryOptions<GetPosOutletQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetPosOutletQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetPosOutletQuery, TError, TData>(
+      {
+    queryKey: ['GetPOSOutlet', variables],
+    queryFn: graphqlFetcher<GetPosOutletQuery, GetPosOutletQueryVariables>(GetPosOutletDocument, variables),
+    ...options
+  }
+    )};
+
+useGetPosOutletQuery.getKey = (variables: GetPosOutletQueryVariables) => ['GetPOSOutlet', variables];
+
+export const useInfiniteGetPosOutletQuery = <
+      TData = InfiniteData<GetPosOutletQuery>,
+      TError = unknown
+    >(
+      variables: GetPosOutletQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetPosOutletQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetPosOutletQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetPosOutletQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetPOSOutlet.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetPosOutletQuery, GetPosOutletQueryVariables>(GetPosOutletDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetPosOutletQuery.getKey = (variables: GetPosOutletQueryVariables) => ['GetPOSOutlet.infinite', variables];
+
+
+useGetPosOutletQuery.fetcher = (variables: GetPosOutletQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetPosOutletQuery, GetPosOutletQueryVariables>(GetPosOutletDocument, variables, options);
+
+export const GetPosButtonRegistryDocument = `
+    query GetPOSButtonRegistry {
+  posButtonRegistry {
+    clubId
+    registry
+  }
+}
+    `;
+
+export const useGetPosButtonRegistryQuery = <
+      TData = GetPosButtonRegistryQuery,
+      TError = unknown
+    >(
+      variables?: GetPosButtonRegistryQueryVariables,
+      options?: Omit<UseQueryOptions<GetPosButtonRegistryQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetPosButtonRegistryQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetPosButtonRegistryQuery, TError, TData>(
+      {
+    queryKey: variables === undefined ? ['GetPOSButtonRegistry'] : ['GetPOSButtonRegistry', variables],
+    queryFn: graphqlFetcher<GetPosButtonRegistryQuery, GetPosButtonRegistryQueryVariables>(GetPosButtonRegistryDocument, variables),
+    ...options
+  }
+    )};
+
+useGetPosButtonRegistryQuery.getKey = (variables?: GetPosButtonRegistryQueryVariables) => variables === undefined ? ['GetPOSButtonRegistry'] : ['GetPOSButtonRegistry', variables];
+
+export const useInfiniteGetPosButtonRegistryQuery = <
+      TData = InfiniteData<GetPosButtonRegistryQuery>,
+      TError = unknown
+    >(
+      variables: GetPosButtonRegistryQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetPosButtonRegistryQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetPosButtonRegistryQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetPosButtonRegistryQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? variables === undefined ? ['GetPOSButtonRegistry.infinite'] : ['GetPOSButtonRegistry.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetPosButtonRegistryQuery, GetPosButtonRegistryQueryVariables>(GetPosButtonRegistryDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetPosButtonRegistryQuery.getKey = (variables?: GetPosButtonRegistryQueryVariables) => variables === undefined ? ['GetPOSButtonRegistry.infinite'] : ['GetPOSButtonRegistry.infinite', variables];
+
+
+useGetPosButtonRegistryQuery.fetcher = (variables?: GetPosButtonRegistryQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetPosButtonRegistryQuery, GetPosButtonRegistryQueryVariables>(GetPosButtonRegistryDocument, variables, options);
+
+export const UpsertPosTemplateDocument = `
+    mutation UpsertPOSTemplate($id: ID, $input: POSTemplateInput!) {
+  upsertPOSTemplate(id: $id, input: $input) {
+    success
+    message
+    template {
+      id
+      name
+    }
+  }
+}
+    `;
+
+export const useUpsertPosTemplateMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<UpsertPosTemplateMutation, TError, UpsertPosTemplateMutationVariables, TContext>) => {
+    
+    return useMutation<UpsertPosTemplateMutation, TError, UpsertPosTemplateMutationVariables, TContext>(
+      {
+    mutationKey: ['UpsertPOSTemplate'],
+    mutationFn: (variables?: UpsertPosTemplateMutationVariables) => graphqlFetcher<UpsertPosTemplateMutation, UpsertPosTemplateMutationVariables>(UpsertPosTemplateDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useUpsertPosTemplateMutation.fetcher = (variables: UpsertPosTemplateMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<UpsertPosTemplateMutation, UpsertPosTemplateMutationVariables>(UpsertPosTemplateDocument, variables, options);
+
+export const ClonePosTemplateDocument = `
+    mutation ClonePOSTemplate($id: ID!, $newName: String!) {
+  clonePOSTemplate(id: $id, newName: $newName) {
+    success
+    message
+    template {
+      id
+      name
+    }
+  }
+}
+    `;
+
+export const useClonePosTemplateMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<ClonePosTemplateMutation, TError, ClonePosTemplateMutationVariables, TContext>) => {
+    
+    return useMutation<ClonePosTemplateMutation, TError, ClonePosTemplateMutationVariables, TContext>(
+      {
+    mutationKey: ['ClonePOSTemplate'],
+    mutationFn: (variables?: ClonePosTemplateMutationVariables) => graphqlFetcher<ClonePosTemplateMutation, ClonePosTemplateMutationVariables>(ClonePosTemplateDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useClonePosTemplateMutation.fetcher = (variables: ClonePosTemplateMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<ClonePosTemplateMutation, ClonePosTemplateMutationVariables>(ClonePosTemplateDocument, variables, options);
+
+export const AssignPosTemplateDocument = `
+    mutation AssignPOSTemplate($input: AssignTemplateInput!) {
+  assignPOSTemplate(input: $input) {
+    success
+    message
+    outlet {
+      id
+      name
+      templateId
+    }
+  }
+}
+    `;
+
+export const useAssignPosTemplateMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<AssignPosTemplateMutation, TError, AssignPosTemplateMutationVariables, TContext>) => {
+    
+    return useMutation<AssignPosTemplateMutation, TError, AssignPosTemplateMutationVariables, TContext>(
+      {
+    mutationKey: ['AssignPOSTemplate'],
+    mutationFn: (variables?: AssignPosTemplateMutationVariables) => graphqlFetcher<AssignPosTemplateMutation, AssignPosTemplateMutationVariables>(AssignPosTemplateDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useAssignPosTemplateMutation.fetcher = (variables: AssignPosTemplateMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<AssignPosTemplateMutation, AssignPosTemplateMutationVariables>(AssignPosTemplateDocument, variables, options);
+
+export const SetPosRoleOverridesDocument = `
+    mutation SetPOSRoleOverrides($outletId: ID!, $input: POSRoleOverridesInput!) {
+  setPOSRoleOverrides(outletId: $outletId, input: $input) {
+    success
+    message
+    roleConfig {
+      id
+      role
+      buttonOverrides
+    }
+  }
+}
+    `;
+
+export const useSetPosRoleOverridesMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<SetPosRoleOverridesMutation, TError, SetPosRoleOverridesMutationVariables, TContext>) => {
+    
+    return useMutation<SetPosRoleOverridesMutation, TError, SetPosRoleOverridesMutationVariables, TContext>(
+      {
+    mutationKey: ['SetPOSRoleOverrides'],
+    mutationFn: (variables?: SetPosRoleOverridesMutationVariables) => graphqlFetcher<SetPosRoleOverridesMutation, SetPosRoleOverridesMutationVariables>(SetPosRoleOverridesDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useSetPosRoleOverridesMutation.fetcher = (variables: SetPosRoleOverridesMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<SetPosRoleOverridesMutation, SetPosRoleOverridesMutationVariables>(SetPosRoleOverridesDocument, variables, options);
+
+export const UpdatePosButtonRegistryDocument = `
+    mutation UpdatePOSButtonRegistry($input: UpdateButtonRegistryInput!) {
+  updatePOSButtonRegistry(input: $input) {
+    success
+    message
+  }
+}
+    `;
+
+export const useUpdatePosButtonRegistryMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<UpdatePosButtonRegistryMutation, TError, UpdatePosButtonRegistryMutationVariables, TContext>) => {
+    
+    return useMutation<UpdatePosButtonRegistryMutation, TError, UpdatePosButtonRegistryMutationVariables, TContext>(
+      {
+    mutationKey: ['UpdatePOSButtonRegistry'],
+    mutationFn: (variables?: UpdatePosButtonRegistryMutationVariables) => graphqlFetcher<UpdatePosButtonRegistryMutation, UpdatePosButtonRegistryMutationVariables>(UpdatePosButtonRegistryDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useUpdatePosButtonRegistryMutation.fetcher = (variables: UpdatePosButtonRegistryMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<UpdatePosButtonRegistryMutation, UpdatePosButtonRegistryMutationVariables>(UpdatePosButtonRegistryDocument, variables, options);
+
+export const GetMemberPaymentMethodsDocument = `
+    query GetMemberPaymentMethods($memberId: ID!, $activeOnly: Boolean) {
+  memberPaymentMethods(memberId: $memberId, activeOnly: $activeOnly) {
+    id
+    clubId
+    memberId
+    stripeCustomerId
+    stripePaymentMethodId
+    type
+    brand
+    last4
+    expiryMonth
+    expiryYear
+    cardholderName
+    status
+    isDefault
+    isAutoPayEnabled
+    verifiedAt
+    lastUsedAt
+    failureCount
+    lastFailureReason
+    createdAt
+    updatedAt
+  }
+}
+    `;
+
+export const useGetMemberPaymentMethodsQuery = <
+      TData = GetMemberPaymentMethodsQuery,
+      TError = unknown
+    >(
+      variables: GetMemberPaymentMethodsQueryVariables,
+      options?: Omit<UseQueryOptions<GetMemberPaymentMethodsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetMemberPaymentMethodsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetMemberPaymentMethodsQuery, TError, TData>(
+      {
+    queryKey: ['GetMemberPaymentMethods', variables],
+    queryFn: graphqlFetcher<GetMemberPaymentMethodsQuery, GetMemberPaymentMethodsQueryVariables>(GetMemberPaymentMethodsDocument, variables),
+    ...options
+  }
+    )};
+
+useGetMemberPaymentMethodsQuery.getKey = (variables: GetMemberPaymentMethodsQueryVariables) => ['GetMemberPaymentMethods', variables];
+
+export const useInfiniteGetMemberPaymentMethodsQuery = <
+      TData = InfiniteData<GetMemberPaymentMethodsQuery>,
+      TError = unknown
+    >(
+      variables: GetMemberPaymentMethodsQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetMemberPaymentMethodsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetMemberPaymentMethodsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetMemberPaymentMethodsQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetMemberPaymentMethods.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetMemberPaymentMethodsQuery, GetMemberPaymentMethodsQueryVariables>(GetMemberPaymentMethodsDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetMemberPaymentMethodsQuery.getKey = (variables: GetMemberPaymentMethodsQueryVariables) => ['GetMemberPaymentMethods.infinite', variables];
+
+
+useGetMemberPaymentMethodsQuery.fetcher = (variables: GetMemberPaymentMethodsQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetMemberPaymentMethodsQuery, GetMemberPaymentMethodsQueryVariables>(GetMemberPaymentMethodsDocument, variables, options);
+
+export const GetPaymentMethodDocument = `
+    query GetPaymentMethod($id: ID!) {
+  paymentMethod(id: $id) {
+    id
+    clubId
+    memberId
+    stripeCustomerId
+    stripePaymentMethodId
+    type
+    brand
+    last4
+    expiryMonth
+    expiryYear
+    cardholderName
+    status
+    isDefault
+    isAutoPayEnabled
+    verifiedAt
+    lastUsedAt
+    failureCount
+    lastFailureReason
+    createdAt
+    updatedAt
+  }
+}
+    `;
+
+export const useGetPaymentMethodQuery = <
+      TData = GetPaymentMethodQuery,
+      TError = unknown
+    >(
+      variables: GetPaymentMethodQueryVariables,
+      options?: Omit<UseQueryOptions<GetPaymentMethodQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetPaymentMethodQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetPaymentMethodQuery, TError, TData>(
+      {
+    queryKey: ['GetPaymentMethod', variables],
+    queryFn: graphqlFetcher<GetPaymentMethodQuery, GetPaymentMethodQueryVariables>(GetPaymentMethodDocument, variables),
+    ...options
+  }
+    )};
+
+useGetPaymentMethodQuery.getKey = (variables: GetPaymentMethodQueryVariables) => ['GetPaymentMethod', variables];
+
+export const useInfiniteGetPaymentMethodQuery = <
+      TData = InfiniteData<GetPaymentMethodQuery>,
+      TError = unknown
+    >(
+      variables: GetPaymentMethodQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetPaymentMethodQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetPaymentMethodQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetPaymentMethodQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetPaymentMethod.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetPaymentMethodQuery, GetPaymentMethodQueryVariables>(GetPaymentMethodDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetPaymentMethodQuery.getKey = (variables: GetPaymentMethodQueryVariables) => ['GetPaymentMethod.infinite', variables];
+
+
+useGetPaymentMethodQuery.fetcher = (variables: GetPaymentMethodQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetPaymentMethodQuery, GetPaymentMethodQueryVariables>(GetPaymentMethodDocument, variables, options);
+
+export const GetMemberAutoPaySettingDocument = `
+    query GetMemberAutoPaySetting($memberId: ID!) {
+  memberAutoPaySetting(memberId: $memberId) {
+    id
+    clubId
+    memberId
+    paymentMethodId
+    isEnabled
+    schedule
+    paymentDayOfMonth
+    maxPaymentAmount
+    monthlyMaxAmount
+    requireApprovalAbove
+    payDuesOnly
+    excludeCategories
+    notifyBeforePayment
+    notifyDaysBefore
+    notifyOnSuccess
+    notifyOnFailure
+    maxRetryAttempts
+    retryIntervalDays
+    createdAt
+    updatedAt
+    paymentMethod {
+      id
+      brand
+      last4
+      isDefault
+    }
+  }
+}
+    `;
+
+export const useGetMemberAutoPaySettingQuery = <
+      TData = GetMemberAutoPaySettingQuery,
+      TError = unknown
+    >(
+      variables: GetMemberAutoPaySettingQueryVariables,
+      options?: Omit<UseQueryOptions<GetMemberAutoPaySettingQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetMemberAutoPaySettingQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetMemberAutoPaySettingQuery, TError, TData>(
+      {
+    queryKey: ['GetMemberAutoPaySetting', variables],
+    queryFn: graphqlFetcher<GetMemberAutoPaySettingQuery, GetMemberAutoPaySettingQueryVariables>(GetMemberAutoPaySettingDocument, variables),
+    ...options
+  }
+    )};
+
+useGetMemberAutoPaySettingQuery.getKey = (variables: GetMemberAutoPaySettingQueryVariables) => ['GetMemberAutoPaySetting', variables];
+
+export const useInfiniteGetMemberAutoPaySettingQuery = <
+      TData = InfiniteData<GetMemberAutoPaySettingQuery>,
+      TError = unknown
+    >(
+      variables: GetMemberAutoPaySettingQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetMemberAutoPaySettingQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetMemberAutoPaySettingQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetMemberAutoPaySettingQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetMemberAutoPaySetting.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetMemberAutoPaySettingQuery, GetMemberAutoPaySettingQueryVariables>(GetMemberAutoPaySettingDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetMemberAutoPaySettingQuery.getKey = (variables: GetMemberAutoPaySettingQueryVariables) => ['GetMemberAutoPaySetting.infinite', variables];
+
+
+useGetMemberAutoPaySettingQuery.fetcher = (variables: GetMemberAutoPaySettingQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetMemberAutoPaySettingQuery, GetMemberAutoPaySettingQueryVariables>(GetMemberAutoPaySettingDocument, variables, options);
+
+export const GetMemberAutoPayHistoryDocument = `
+    query GetMemberAutoPayHistory($input: GetAutoPayHistoryInput!) {
+  memberAutoPayHistory(input: $input) {
+    id
+    clubId
+    memberId
+    paymentMethodId
+    invoiceId
+    amount
+    attemptNumber
+    status
+    stripePaymentIntentId
+    stripeChargeId
+    processedAt
+    succeededAt
+    failedAt
+    failureCode
+    failureMessage
+    nextRetryAt
+    isManualRetry
+    paymentTransactionId
+    createdAt
+    updatedAt
+    paymentMethod {
+      id
+      brand
+      last4
+    }
+  }
+}
+    `;
+
+export const useGetMemberAutoPayHistoryQuery = <
+      TData = GetMemberAutoPayHistoryQuery,
+      TError = unknown
+    >(
+      variables: GetMemberAutoPayHistoryQueryVariables,
+      options?: Omit<UseQueryOptions<GetMemberAutoPayHistoryQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetMemberAutoPayHistoryQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetMemberAutoPayHistoryQuery, TError, TData>(
+      {
+    queryKey: ['GetMemberAutoPayHistory', variables],
+    queryFn: graphqlFetcher<GetMemberAutoPayHistoryQuery, GetMemberAutoPayHistoryQueryVariables>(GetMemberAutoPayHistoryDocument, variables),
+    ...options
+  }
+    )};
+
+useGetMemberAutoPayHistoryQuery.getKey = (variables: GetMemberAutoPayHistoryQueryVariables) => ['GetMemberAutoPayHistory', variables];
+
+export const useInfiniteGetMemberAutoPayHistoryQuery = <
+      TData = InfiniteData<GetMemberAutoPayHistoryQuery>,
+      TError = unknown
+    >(
+      variables: GetMemberAutoPayHistoryQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetMemberAutoPayHistoryQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetMemberAutoPayHistoryQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetMemberAutoPayHistoryQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetMemberAutoPayHistory.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetMemberAutoPayHistoryQuery, GetMemberAutoPayHistoryQueryVariables>(GetMemberAutoPayHistoryDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetMemberAutoPayHistoryQuery.getKey = (variables: GetMemberAutoPayHistoryQueryVariables) => ['GetMemberAutoPayHistory.infinite', variables];
+
+
+useGetMemberAutoPayHistoryQuery.fetcher = (variables: GetMemberAutoPayHistoryQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetMemberAutoPayHistoryQuery, GetMemberAutoPayHistoryQueryVariables>(GetMemberAutoPayHistoryDocument, variables, options);
+
+export const GetInvoiceAutoPayAttemptsDocument = `
+    query GetInvoiceAutoPayAttempts($invoiceId: ID!) {
+  invoiceAutoPayAttempts(invoiceId: $invoiceId) {
+    id
+    memberId
+    paymentMethodId
+    amount
+    attemptNumber
+    status
+    processedAt
+    succeededAt
+    failedAt
+    failureCode
+    failureMessage
+    createdAt
+    paymentMethod {
+      id
+      brand
+      last4
+    }
+  }
+}
+    `;
+
+export const useGetInvoiceAutoPayAttemptsQuery = <
+      TData = GetInvoiceAutoPayAttemptsQuery,
+      TError = unknown
+    >(
+      variables: GetInvoiceAutoPayAttemptsQueryVariables,
+      options?: Omit<UseQueryOptions<GetInvoiceAutoPayAttemptsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetInvoiceAutoPayAttemptsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetInvoiceAutoPayAttemptsQuery, TError, TData>(
+      {
+    queryKey: ['GetInvoiceAutoPayAttempts', variables],
+    queryFn: graphqlFetcher<GetInvoiceAutoPayAttemptsQuery, GetInvoiceAutoPayAttemptsQueryVariables>(GetInvoiceAutoPayAttemptsDocument, variables),
+    ...options
+  }
+    )};
+
+useGetInvoiceAutoPayAttemptsQuery.getKey = (variables: GetInvoiceAutoPayAttemptsQueryVariables) => ['GetInvoiceAutoPayAttempts', variables];
+
+export const useInfiniteGetInvoiceAutoPayAttemptsQuery = <
+      TData = InfiniteData<GetInvoiceAutoPayAttemptsQuery>,
+      TError = unknown
+    >(
+      variables: GetInvoiceAutoPayAttemptsQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetInvoiceAutoPayAttemptsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetInvoiceAutoPayAttemptsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetInvoiceAutoPayAttemptsQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetInvoiceAutoPayAttempts.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetInvoiceAutoPayAttemptsQuery, GetInvoiceAutoPayAttemptsQueryVariables>(GetInvoiceAutoPayAttemptsDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetInvoiceAutoPayAttemptsQuery.getKey = (variables: GetInvoiceAutoPayAttemptsQueryVariables) => ['GetInvoiceAutoPayAttempts.infinite', variables];
+
+
+useGetInvoiceAutoPayAttemptsQuery.fetcher = (variables: GetInvoiceAutoPayAttemptsQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetInvoiceAutoPayAttemptsQuery, GetInvoiceAutoPayAttemptsQueryVariables>(GetInvoiceAutoPayAttemptsDocument, variables, options);
+
+export const AddPaymentMethodDocument = `
+    mutation AddPaymentMethod($input: AddStoredPaymentInput!) {
+  addPaymentMethod(input: $input) {
+    id
+    memberId
+    brand
+    last4
+    expiryMonth
+    expiryYear
+    cardholderName
+    status
+    isDefault
+    isAutoPayEnabled
+    createdAt
+  }
+}
+    `;
+
+export const useAddPaymentMethodMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<AddPaymentMethodMutation, TError, AddPaymentMethodMutationVariables, TContext>) => {
+    
+    return useMutation<AddPaymentMethodMutation, TError, AddPaymentMethodMutationVariables, TContext>(
+      {
+    mutationKey: ['AddPaymentMethod'],
+    mutationFn: (variables?: AddPaymentMethodMutationVariables) => graphqlFetcher<AddPaymentMethodMutation, AddPaymentMethodMutationVariables>(AddPaymentMethodDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useAddPaymentMethodMutation.fetcher = (variables: AddPaymentMethodMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<AddPaymentMethodMutation, AddPaymentMethodMutationVariables>(AddPaymentMethodDocument, variables, options);
+
+export const UpdatePaymentMethodDocument = `
+    mutation UpdatePaymentMethod($input: UpdateStoredPaymentInput!) {
+  updatePaymentMethod(input: $input) {
+    id
+    isDefault
+    isAutoPayEnabled
+    updatedAt
+  }
+}
+    `;
+
+export const useUpdatePaymentMethodMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<UpdatePaymentMethodMutation, TError, UpdatePaymentMethodMutationVariables, TContext>) => {
+    
+    return useMutation<UpdatePaymentMethodMutation, TError, UpdatePaymentMethodMutationVariables, TContext>(
+      {
+    mutationKey: ['UpdatePaymentMethod'],
+    mutationFn: (variables?: UpdatePaymentMethodMutationVariables) => graphqlFetcher<UpdatePaymentMethodMutation, UpdatePaymentMethodMutationVariables>(UpdatePaymentMethodDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useUpdatePaymentMethodMutation.fetcher = (variables: UpdatePaymentMethodMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<UpdatePaymentMethodMutation, UpdatePaymentMethodMutationVariables>(UpdatePaymentMethodDocument, variables, options);
+
+export const RemovePaymentMethodDocument = `
+    mutation RemovePaymentMethod($id: ID!) {
+  removePaymentMethod(id: $id) {
+    success
+    error
+  }
+}
+    `;
+
+export const useRemovePaymentMethodMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<RemovePaymentMethodMutation, TError, RemovePaymentMethodMutationVariables, TContext>) => {
+    
+    return useMutation<RemovePaymentMethodMutation, TError, RemovePaymentMethodMutationVariables, TContext>(
+      {
+    mutationKey: ['RemovePaymentMethod'],
+    mutationFn: (variables?: RemovePaymentMethodMutationVariables) => graphqlFetcher<RemovePaymentMethodMutation, RemovePaymentMethodMutationVariables>(RemovePaymentMethodDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useRemovePaymentMethodMutation.fetcher = (variables: RemovePaymentMethodMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<RemovePaymentMethodMutation, RemovePaymentMethodMutationVariables>(RemovePaymentMethodDocument, variables, options);
+
+export const SetDefaultPaymentMethodDocument = `
+    mutation SetDefaultPaymentMethod($id: ID!) {
+  setDefaultPaymentMethod(id: $id) {
+    id
+    isDefault
+    updatedAt
+  }
+}
+    `;
+
+export const useSetDefaultPaymentMethodMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<SetDefaultPaymentMethodMutation, TError, SetDefaultPaymentMethodMutationVariables, TContext>) => {
+    
+    return useMutation<SetDefaultPaymentMethodMutation, TError, SetDefaultPaymentMethodMutationVariables, TContext>(
+      {
+    mutationKey: ['SetDefaultPaymentMethod'],
+    mutationFn: (variables?: SetDefaultPaymentMethodMutationVariables) => graphqlFetcher<SetDefaultPaymentMethodMutation, SetDefaultPaymentMethodMutationVariables>(SetDefaultPaymentMethodDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useSetDefaultPaymentMethodMutation.fetcher = (variables: SetDefaultPaymentMethodMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<SetDefaultPaymentMethodMutation, SetDefaultPaymentMethodMutationVariables>(SetDefaultPaymentMethodDocument, variables, options);
+
+export const UpsertAutoPaySettingDocument = `
+    mutation UpsertAutoPaySetting($input: AutoPaySettingInput!) {
+  upsertAutoPaySetting(input: $input) {
+    id
+    memberId
+    paymentMethodId
+    isEnabled
+    schedule
+    paymentDayOfMonth
+    maxPaymentAmount
+    monthlyMaxAmount
+    requireApprovalAbove
+    payDuesOnly
+    excludeCategories
+    notifyBeforePayment
+    notifyDaysBefore
+    notifyOnSuccess
+    notifyOnFailure
+    maxRetryAttempts
+    retryIntervalDays
+    createdAt
+    updatedAt
+    paymentMethod {
+      id
+      brand
+      last4
+    }
+  }
+}
+    `;
+
+export const useUpsertAutoPaySettingMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<UpsertAutoPaySettingMutation, TError, UpsertAutoPaySettingMutationVariables, TContext>) => {
+    
+    return useMutation<UpsertAutoPaySettingMutation, TError, UpsertAutoPaySettingMutationVariables, TContext>(
+      {
+    mutationKey: ['UpsertAutoPaySetting'],
+    mutationFn: (variables?: UpsertAutoPaySettingMutationVariables) => graphqlFetcher<UpsertAutoPaySettingMutation, UpsertAutoPaySettingMutationVariables>(UpsertAutoPaySettingDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useUpsertAutoPaySettingMutation.fetcher = (variables: UpsertAutoPaySettingMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<UpsertAutoPaySettingMutation, UpsertAutoPaySettingMutationVariables>(UpsertAutoPaySettingDocument, variables, options);
+
+export const DisableAutoPayDocument = `
+    mutation DisableAutoPay($memberId: ID!) {
+  disableAutoPay(memberId: $memberId) {
+    success
+    error
+  }
+}
+    `;
+
+export const useDisableAutoPayMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<DisableAutoPayMutation, TError, DisableAutoPayMutationVariables, TContext>) => {
+    
+    return useMutation<DisableAutoPayMutation, TError, DisableAutoPayMutationVariables, TContext>(
+      {
+    mutationKey: ['DisableAutoPay'],
+    mutationFn: (variables?: DisableAutoPayMutationVariables) => graphqlFetcher<DisableAutoPayMutation, DisableAutoPayMutationVariables>(DisableAutoPayDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useDisableAutoPayMutation.fetcher = (variables: DisableAutoPayMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<DisableAutoPayMutation, DisableAutoPayMutationVariables>(DisableAutoPayDocument, variables, options);
+
+export const ProcessAutoPayDocument = `
+    mutation ProcessAutoPay($input: ProcessAutoPayInput!) {
+  processAutoPay(input: $input) {
+    success
+    attemptId
+    message
+    stripePaymentIntentId
+    error
+  }
+}
+    `;
+
+export const useProcessAutoPayMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<ProcessAutoPayMutation, TError, ProcessAutoPayMutationVariables, TContext>) => {
+    
+    return useMutation<ProcessAutoPayMutation, TError, ProcessAutoPayMutationVariables, TContext>(
+      {
+    mutationKey: ['ProcessAutoPay'],
+    mutationFn: (variables?: ProcessAutoPayMutationVariables) => graphqlFetcher<ProcessAutoPayMutation, ProcessAutoPayMutationVariables>(ProcessAutoPayDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useProcessAutoPayMutation.fetcher = (variables: ProcessAutoPayMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<ProcessAutoPayMutation, ProcessAutoPayMutationVariables>(ProcessAutoPayDocument, variables, options);
+
+export const RetryAutoPayAttemptDocument = `
+    mutation RetryAutoPayAttempt($attemptId: ID!) {
+  retryAutoPayAttempt(attemptId: $attemptId) {
+    success
+    attemptId
+    message
+    stripePaymentIntentId
+    error
+  }
+}
+    `;
+
+export const useRetryAutoPayAttemptMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<RetryAutoPayAttemptMutation, TError, RetryAutoPayAttemptMutationVariables, TContext>) => {
+    
+    return useMutation<RetryAutoPayAttemptMutation, TError, RetryAutoPayAttemptMutationVariables, TContext>(
+      {
+    mutationKey: ['RetryAutoPayAttempt'],
+    mutationFn: (variables?: RetryAutoPayAttemptMutationVariables) => graphqlFetcher<RetryAutoPayAttemptMutation, RetryAutoPayAttemptMutationVariables>(RetryAutoPayAttemptDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useRetryAutoPayAttemptMutation.fetcher = (variables: RetryAutoPayAttemptMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<RetryAutoPayAttemptMutation, RetryAutoPayAttemptMutationVariables>(RetryAutoPayAttemptDocument, variables, options);
+
+export const GetSubAccountsDocument = `
+    query GetSubAccounts($status: SubAccountStatus) {
+  subAccounts(status: $status) {
+    id
+    clubId
+    memberId
+    name
+    relationship
+    email
+    phone
+    status
+    validFrom
+    validUntil
+    permissions
+    dailyLimit
+    weeklyLimit
+    monthlyLimit
+    perTransactionLimit
+    dailySpend
+    weeklySpend
+    monthlySpend
+    notifyPrimaryOnUse
+    notifyOnLimitReached
+    pinAttempts
+    pinLockedUntil
+    createdAt
+    updatedAt
+  }
+}
+    `;
+
+export const useGetSubAccountsQuery = <
+      TData = GetSubAccountsQuery,
+      TError = unknown
+    >(
+      variables?: GetSubAccountsQueryVariables,
+      options?: Omit<UseQueryOptions<GetSubAccountsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetSubAccountsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetSubAccountsQuery, TError, TData>(
+      {
+    queryKey: variables === undefined ? ['GetSubAccounts'] : ['GetSubAccounts', variables],
+    queryFn: graphqlFetcher<GetSubAccountsQuery, GetSubAccountsQueryVariables>(GetSubAccountsDocument, variables),
+    ...options
+  }
+    )};
+
+useGetSubAccountsQuery.getKey = (variables?: GetSubAccountsQueryVariables) => variables === undefined ? ['GetSubAccounts'] : ['GetSubAccounts', variables];
+
+export const useInfiniteGetSubAccountsQuery = <
+      TData = InfiniteData<GetSubAccountsQuery>,
+      TError = unknown
+    >(
+      variables: GetSubAccountsQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetSubAccountsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetSubAccountsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetSubAccountsQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? variables === undefined ? ['GetSubAccounts.infinite'] : ['GetSubAccounts.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetSubAccountsQuery, GetSubAccountsQueryVariables>(GetSubAccountsDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetSubAccountsQuery.getKey = (variables?: GetSubAccountsQueryVariables) => variables === undefined ? ['GetSubAccounts.infinite'] : ['GetSubAccounts.infinite', variables];
+
+
+useGetSubAccountsQuery.fetcher = (variables?: GetSubAccountsQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetSubAccountsQuery, GetSubAccountsQueryVariables>(GetSubAccountsDocument, variables, options);
+
+export const GetSubAccountDocument = `
+    query GetSubAccount($id: ID!) {
+  subAccount(id: $id) {
+    id
+    clubId
+    memberId
+    name
+    relationship
+    email
+    phone
+    status
+    validFrom
+    validUntil
+    permissions
+    dailyLimit
+    weeklyLimit
+    monthlyLimit
+    perTransactionLimit
+    dailySpend
+    weeklySpend
+    monthlySpend
+    lastResetDaily
+    lastResetWeekly
+    lastResetMonthly
+    notifyPrimaryOnUse
+    notifyOnLimitReached
+    pinAttempts
+    pinLockedUntil
+    createdAt
+    updatedAt
+  }
+}
+    `;
+
+export const useGetSubAccountQuery = <
+      TData = GetSubAccountQuery,
+      TError = unknown
+    >(
+      variables: GetSubAccountQueryVariables,
+      options?: Omit<UseQueryOptions<GetSubAccountQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetSubAccountQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetSubAccountQuery, TError, TData>(
+      {
+    queryKey: ['GetSubAccount', variables],
+    queryFn: graphqlFetcher<GetSubAccountQuery, GetSubAccountQueryVariables>(GetSubAccountDocument, variables),
+    ...options
+  }
+    )};
+
+useGetSubAccountQuery.getKey = (variables: GetSubAccountQueryVariables) => ['GetSubAccount', variables];
+
+export const useInfiniteGetSubAccountQuery = <
+      TData = InfiniteData<GetSubAccountQuery>,
+      TError = unknown
+    >(
+      variables: GetSubAccountQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetSubAccountQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetSubAccountQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetSubAccountQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetSubAccount.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetSubAccountQuery, GetSubAccountQueryVariables>(GetSubAccountDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetSubAccountQuery.getKey = (variables: GetSubAccountQueryVariables) => ['GetSubAccount.infinite', variables];
+
+
+useGetSubAccountQuery.fetcher = (variables: GetSubAccountQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetSubAccountQuery, GetSubAccountQueryVariables>(GetSubAccountDocument, variables, options);
+
+export const GetMemberSubAccountsDocument = `
+    query GetMemberSubAccounts($memberId: ID!, $activeOnly: Boolean) {
+  memberSubAccounts(memberId: $memberId, activeOnly: $activeOnly) {
+    id
+    name
+    relationship
+    status
+    permissions
+    dailyLimit
+    weeklyLimit
+    monthlyLimit
+    perTransactionLimit
+    dailySpend
+    weeklySpend
+    monthlySpend
+    validUntil
+    pinLockedUntil
+  }
+}
+    `;
+
+export const useGetMemberSubAccountsQuery = <
+      TData = GetMemberSubAccountsQuery,
+      TError = unknown
+    >(
+      variables: GetMemberSubAccountsQueryVariables,
+      options?: Omit<UseQueryOptions<GetMemberSubAccountsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetMemberSubAccountsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetMemberSubAccountsQuery, TError, TData>(
+      {
+    queryKey: ['GetMemberSubAccounts', variables],
+    queryFn: graphqlFetcher<GetMemberSubAccountsQuery, GetMemberSubAccountsQueryVariables>(GetMemberSubAccountsDocument, variables),
+    ...options
+  }
+    )};
+
+useGetMemberSubAccountsQuery.getKey = (variables: GetMemberSubAccountsQueryVariables) => ['GetMemberSubAccounts', variables];
+
+export const useInfiniteGetMemberSubAccountsQuery = <
+      TData = InfiniteData<GetMemberSubAccountsQuery>,
+      TError = unknown
+    >(
+      variables: GetMemberSubAccountsQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetMemberSubAccountsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetMemberSubAccountsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetMemberSubAccountsQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetMemberSubAccounts.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetMemberSubAccountsQuery, GetMemberSubAccountsQueryVariables>(GetMemberSubAccountsDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetMemberSubAccountsQuery.getKey = (variables: GetMemberSubAccountsQueryVariables) => ['GetMemberSubAccounts.infinite', variables];
+
+
+useGetMemberSubAccountsQuery.fetcher = (variables: GetMemberSubAccountsQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetMemberSubAccountsQuery, GetMemberSubAccountsQueryVariables>(GetMemberSubAccountsDocument, variables, options);
+
+export const CheckSubAccountLimitDocument = `
+    query CheckSubAccountLimit($input: CheckLimitInput!) {
+  checkSubAccountLimit(input: $input) {
+    allowed
+    reason
+    currentDaily
+    currentWeekly
+    currentMonthly
+    dailyLimit
+    weeklyLimit
+    monthlyLimit
+    perTransactionLimit
+  }
+}
+    `;
+
+export const useCheckSubAccountLimitQuery = <
+      TData = CheckSubAccountLimitQuery,
+      TError = unknown
+    >(
+      variables: CheckSubAccountLimitQueryVariables,
+      options?: Omit<UseQueryOptions<CheckSubAccountLimitQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<CheckSubAccountLimitQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<CheckSubAccountLimitQuery, TError, TData>(
+      {
+    queryKey: ['CheckSubAccountLimit', variables],
+    queryFn: graphqlFetcher<CheckSubAccountLimitQuery, CheckSubAccountLimitQueryVariables>(CheckSubAccountLimitDocument, variables),
+    ...options
+  }
+    )};
+
+useCheckSubAccountLimitQuery.getKey = (variables: CheckSubAccountLimitQueryVariables) => ['CheckSubAccountLimit', variables];
+
+export const useInfiniteCheckSubAccountLimitQuery = <
+      TData = InfiniteData<CheckSubAccountLimitQuery>,
+      TError = unknown
+    >(
+      variables: CheckSubAccountLimitQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<CheckSubAccountLimitQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<CheckSubAccountLimitQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<CheckSubAccountLimitQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['CheckSubAccountLimit.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<CheckSubAccountLimitQuery, CheckSubAccountLimitQueryVariables>(CheckSubAccountLimitDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteCheckSubAccountLimitQuery.getKey = (variables: CheckSubAccountLimitQueryVariables) => ['CheckSubAccountLimit.infinite', variables];
+
+
+useCheckSubAccountLimitQuery.fetcher = (variables: CheckSubAccountLimitQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<CheckSubAccountLimitQuery, CheckSubAccountLimitQueryVariables>(CheckSubAccountLimitDocument, variables, options);
+
+export const GetSubAccountTransactionsDocument = `
+    query GetSubAccountTransactions($input: GetTransactionsInput!) {
+  subAccountTransactions(input: $input) {
+    id
+    clubId
+    subAccountId
+    amount
+    description
+    category
+    paymentTransactionId
+    lineItemId
+    teeTimeId
+    verifiedAt
+    verifiedBy
+    locationName
+    notes
+    createdAt
+    subAccount {
+      id
+      name
+      memberId
+    }
+  }
+}
+    `;
+
+export const useGetSubAccountTransactionsQuery = <
+      TData = GetSubAccountTransactionsQuery,
+      TError = unknown
+    >(
+      variables: GetSubAccountTransactionsQueryVariables,
+      options?: Omit<UseQueryOptions<GetSubAccountTransactionsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetSubAccountTransactionsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetSubAccountTransactionsQuery, TError, TData>(
+      {
+    queryKey: ['GetSubAccountTransactions', variables],
+    queryFn: graphqlFetcher<GetSubAccountTransactionsQuery, GetSubAccountTransactionsQueryVariables>(GetSubAccountTransactionsDocument, variables),
+    ...options
+  }
+    )};
+
+useGetSubAccountTransactionsQuery.getKey = (variables: GetSubAccountTransactionsQueryVariables) => ['GetSubAccountTransactions', variables];
+
+export const useInfiniteGetSubAccountTransactionsQuery = <
+      TData = InfiniteData<GetSubAccountTransactionsQuery>,
+      TError = unknown
+    >(
+      variables: GetSubAccountTransactionsQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetSubAccountTransactionsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetSubAccountTransactionsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetSubAccountTransactionsQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetSubAccountTransactions.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetSubAccountTransactionsQuery, GetSubAccountTransactionsQueryVariables>(GetSubAccountTransactionsDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetSubAccountTransactionsQuery.getKey = (variables: GetSubAccountTransactionsQueryVariables) => ['GetSubAccountTransactions.infinite', variables];
+
+
+useGetSubAccountTransactionsQuery.fetcher = (variables: GetSubAccountTransactionsQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetSubAccountTransactionsQuery, GetSubAccountTransactionsQueryVariables>(GetSubAccountTransactionsDocument, variables, options);
+
+export const CreateSubAccountDocument = `
+    mutation CreateSubAccount($input: CreateSubAccountInput!) {
+  createSubAccount(input: $input) {
+    id
+    name
+    relationship
+    status
+    permissions
+    createdAt
+  }
+}
+    `;
+
+export const useCreateSubAccountMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<CreateSubAccountMutation, TError, CreateSubAccountMutationVariables, TContext>) => {
+    
+    return useMutation<CreateSubAccountMutation, TError, CreateSubAccountMutationVariables, TContext>(
+      {
+    mutationKey: ['CreateSubAccount'],
+    mutationFn: (variables?: CreateSubAccountMutationVariables) => graphqlFetcher<CreateSubAccountMutation, CreateSubAccountMutationVariables>(CreateSubAccountDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useCreateSubAccountMutation.fetcher = (variables: CreateSubAccountMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<CreateSubAccountMutation, CreateSubAccountMutationVariables>(CreateSubAccountDocument, variables, options);
+
+export const UpdateSubAccountDocument = `
+    mutation UpdateSubAccount($input: UpdateSubAccountInput!) {
+  updateSubAccount(input: $input) {
+    id
+    name
+    relationship
+    email
+    phone
+    permissions
+    dailyLimit
+    weeklyLimit
+    monthlyLimit
+    perTransactionLimit
+    validUntil
+    notifyPrimaryOnUse
+    notifyOnLimitReached
+    updatedAt
+  }
+}
+    `;
+
+export const useUpdateSubAccountMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<UpdateSubAccountMutation, TError, UpdateSubAccountMutationVariables, TContext>) => {
+    
+    return useMutation<UpdateSubAccountMutation, TError, UpdateSubAccountMutationVariables, TContext>(
+      {
+    mutationKey: ['UpdateSubAccount'],
+    mutationFn: (variables?: UpdateSubAccountMutationVariables) => graphqlFetcher<UpdateSubAccountMutation, UpdateSubAccountMutationVariables>(UpdateSubAccountDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useUpdateSubAccountMutation.fetcher = (variables: UpdateSubAccountMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<UpdateSubAccountMutation, UpdateSubAccountMutationVariables>(UpdateSubAccountDocument, variables, options);
+
+export const VerifySubAccountPinDocument = `
+    mutation VerifySubAccountPin($input: VerifyPinInput!) {
+  verifySubAccountPin(input: $input) {
+    success
+    message
+    remainingAttempts
+  }
+}
+    `;
+
+export const useVerifySubAccountPinMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<VerifySubAccountPinMutation, TError, VerifySubAccountPinMutationVariables, TContext>) => {
+    
+    return useMutation<VerifySubAccountPinMutation, TError, VerifySubAccountPinMutationVariables, TContext>(
+      {
+    mutationKey: ['VerifySubAccountPin'],
+    mutationFn: (variables?: VerifySubAccountPinMutationVariables) => graphqlFetcher<VerifySubAccountPinMutation, VerifySubAccountPinMutationVariables>(VerifySubAccountPinDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useVerifySubAccountPinMutation.fetcher = (variables: VerifySubAccountPinMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<VerifySubAccountPinMutation, VerifySubAccountPinMutationVariables>(VerifySubAccountPinDocument, variables, options);
+
+export const ChangeSubAccountPinDocument = `
+    mutation ChangeSubAccountPin($input: ChangePinInput!) {
+  changeSubAccountPin(input: $input) {
+    id
+    pinAttempts
+    pinLockedUntil
+  }
+}
+    `;
+
+export const useChangeSubAccountPinMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<ChangeSubAccountPinMutation, TError, ChangeSubAccountPinMutationVariables, TContext>) => {
+    
+    return useMutation<ChangeSubAccountPinMutation, TError, ChangeSubAccountPinMutationVariables, TContext>(
+      {
+    mutationKey: ['ChangeSubAccountPin'],
+    mutationFn: (variables?: ChangeSubAccountPinMutationVariables) => graphqlFetcher<ChangeSubAccountPinMutation, ChangeSubAccountPinMutationVariables>(ChangeSubAccountPinDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useChangeSubAccountPinMutation.fetcher = (variables: ChangeSubAccountPinMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<ChangeSubAccountPinMutation, ChangeSubAccountPinMutationVariables>(ChangeSubAccountPinDocument, variables, options);
+
+export const ChangeSubAccountStatusDocument = `
+    mutation ChangeSubAccountStatus($input: ChangeSubAccountStatusInput!) {
+  changeSubAccountStatus(input: $input) {
+    id
+    status
+    updatedAt
+  }
+}
+    `;
+
+export const useChangeSubAccountStatusMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<ChangeSubAccountStatusMutation, TError, ChangeSubAccountStatusMutationVariables, TContext>) => {
+    
+    return useMutation<ChangeSubAccountStatusMutation, TError, ChangeSubAccountStatusMutationVariables, TContext>(
+      {
+    mutationKey: ['ChangeSubAccountStatus'],
+    mutationFn: (variables?: ChangeSubAccountStatusMutationVariables) => graphqlFetcher<ChangeSubAccountStatusMutation, ChangeSubAccountStatusMutationVariables>(ChangeSubAccountStatusDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useChangeSubAccountStatusMutation.fetcher = (variables: ChangeSubAccountStatusMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<ChangeSubAccountStatusMutation, ChangeSubAccountStatusMutationVariables>(ChangeSubAccountStatusDocument, variables, options);
+
+export const UnlockSubAccountPinDocument = `
+    mutation UnlockSubAccountPin($subAccountId: ID!) {
+  unlockSubAccountPin(subAccountId: $subAccountId) {
+    id
+    pinAttempts
+    pinLockedUntil
+  }
+}
+    `;
+
+export const useUnlockSubAccountPinMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<UnlockSubAccountPinMutation, TError, UnlockSubAccountPinMutationVariables, TContext>) => {
+    
+    return useMutation<UnlockSubAccountPinMutation, TError, UnlockSubAccountPinMutationVariables, TContext>(
+      {
+    mutationKey: ['UnlockSubAccountPin'],
+    mutationFn: (variables?: UnlockSubAccountPinMutationVariables) => graphqlFetcher<UnlockSubAccountPinMutation, UnlockSubAccountPinMutationVariables>(UnlockSubAccountPinDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useUnlockSubAccountPinMutation.fetcher = (variables: UnlockSubAccountPinMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<UnlockSubAccountPinMutation, UnlockSubAccountPinMutationVariables>(UnlockSubAccountPinDocument, variables, options);
+
+export const DeleteSubAccountDocument = `
+    mutation DeleteSubAccount($id: ID!) {
+  deleteSubAccount(id: $id) {
+    id
+    status
+  }
+}
+    `;
+
+export const useDeleteSubAccountMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<DeleteSubAccountMutation, TError, DeleteSubAccountMutationVariables, TContext>) => {
+    
+    return useMutation<DeleteSubAccountMutation, TError, DeleteSubAccountMutationVariables, TContext>(
+      {
+    mutationKey: ['DeleteSubAccount'],
+    mutationFn: (variables?: DeleteSubAccountMutationVariables) => graphqlFetcher<DeleteSubAccountMutation, DeleteSubAccountMutationVariables>(DeleteSubAccountDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useDeleteSubAccountMutation.fetcher = (variables: DeleteSubAccountMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<DeleteSubAccountMutation, DeleteSubAccountMutationVariables>(DeleteSubAccountDocument, variables, options);
+
+export const RecordSubAccountTransactionDocument = `
+    mutation RecordSubAccountTransaction($input: RecordTransactionInput!) {
+  recordSubAccountTransaction(input: $input) {
+    id
+    amount
+    description
+    category
+    verifiedAt
+    createdAt
+  }
+}
+    `;
+
+export const useRecordSubAccountTransactionMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<RecordSubAccountTransactionMutation, TError, RecordSubAccountTransactionMutationVariables, TContext>) => {
+    
+    return useMutation<RecordSubAccountTransactionMutation, TError, RecordSubAccountTransactionMutationVariables, TContext>(
+      {
+    mutationKey: ['RecordSubAccountTransaction'],
+    mutationFn: (variables?: RecordSubAccountTransactionMutationVariables) => graphqlFetcher<RecordSubAccountTransactionMutation, RecordSubAccountTransactionMutationVariables>(RecordSubAccountTransactionDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useRecordSubAccountTransactionMutation.fetcher = (variables: RecordSubAccountTransactionMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<RecordSubAccountTransactionMutation, RecordSubAccountTransactionMutationVariables>(RecordSubAccountTransactionDocument, variables, options);
+
+export const ResetSubAccountSpendingDocument = `
+    mutation ResetSubAccountSpending($subAccountId: ID!) {
+  resetSubAccountSpending(subAccountId: $subAccountId) {
+    id
+    dailySpend
+    weeklySpend
+    monthlySpend
+    lastResetDaily
+    lastResetWeekly
+    lastResetMonthly
+  }
+}
+    `;
+
+export const useResetSubAccountSpendingMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<ResetSubAccountSpendingMutation, TError, ResetSubAccountSpendingMutationVariables, TContext>) => {
+    
+    return useMutation<ResetSubAccountSpendingMutation, TError, ResetSubAccountSpendingMutationVariables, TContext>(
+      {
+    mutationKey: ['ResetSubAccountSpending'],
+    mutationFn: (variables?: ResetSubAccountSpendingMutationVariables) => graphqlFetcher<ResetSubAccountSpendingMutation, ResetSubAccountSpendingMutationVariables>(ResetSubAccountSpendingDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useResetSubAccountSpendingMutation.fetcher = (variables: ResetSubAccountSpendingMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<ResetSubAccountSpendingMutation, ResetSubAccountSpendingMutationVariables>(ResetSubAccountSpendingDocument, variables, options);
