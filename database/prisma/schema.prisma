@@ -243,6 +243,14 @@ model Member {
   user                  User?
   waitlistEntries       WaitlistEntry[]
 
+  // Credit Limit Settings
+  creditLimit           Decimal?                @db.Decimal(12, 2)
+  creditLimitEnabled    Boolean                 @default(false)
+  creditAlertThreshold  Int                     @default(80)
+  creditBlockEnabled    Boolean                 @default(true)
+  creditOverrideAllowed Boolean                 @default(false)
+  creditLimitOverrides  CreditLimitOverride[]
+
   @@unique([clubId, memberId])
   @@unique([clubId, email])
   @@index([clubId])
@@ -250,6 +258,27 @@ model Member {
   @@index([membershipTypeId])
   @@index([householdId])
   @@map("members")
+}
+
+/// Credit limit override record for temporary limit increases
+model CreditLimitOverride {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  memberId      String    @db.Uuid
+  previousLimit Decimal   @db.Decimal(12, 2)
+  newLimit      Decimal   @db.Decimal(12, 2)
+  reason        String    @db.VarChar(500)
+  approvedBy    String    @db.Uuid
+  approvedAt    DateTime  @default(now())
+  expiresAt     DateTime?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  member        Member    @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@index([memberId])
+  @@index([memberId, isActive])
+  @@map("credit_limit_overrides")
 }
 
 /// Dependent family member
