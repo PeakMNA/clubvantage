@@ -2263,6 +2263,7 @@ model ProductModifierGroup {
 
   @@unique([productId, modifierGroupId])
   @@index([productId])
+  @@index([modifierGroupId])
   @@map("product_modifier_groups")
 }
 
