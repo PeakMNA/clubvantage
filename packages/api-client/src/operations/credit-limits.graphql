@@ -1,0 +1,106 @@
+# Credit Limit Queries
+
+query CheckMemberCredit($input: CheckCreditInput!) {
+  checkMemberCredit(input: $input) {
+    allowed
+    currentBalance
+    creditLimit
+    availableCredit
+    chargeAmount
+    newBalance
+    usagePercent
+    warning
+    shortfall
+  }
+}
+
+query GetMemberCreditStatus($memberId: ID!) {
+  memberCreditStatus(memberId: $memberId) {
+    creditLimit
+    currentBalance
+    availableCredit
+    usagePercent
+    alertThreshold
+    isBlocked
+    overrideAllowed
+  }
+}
+
+query GetMemberCreditSettings($memberId: ID!) {
+  memberCreditSettings(memberId: $memberId) {
+    creditLimit
+    creditLimitEnabled
+    creditAlertThreshold
+    creditBlockEnabled
+    creditOverrideAllowed
+  }
+}
+
+query GetMemberCreditOverrides($memberId: ID!) {
+  memberCreditOverrides(memberId: $memberId) {
+    id
+    memberId
+    previousLimit
+    newLimit
+    reason
+    approvedBy
+    approvedAt
+    expiresAt
+    isActive
+    createdAt
+  }
+}
+
+query GetMemberCreditOverrideHistory($memberId: ID!, $limit: Int) {
+  memberCreditOverrideHistory(memberId: $memberId, limit: $limit) {
+    id
+    memberId
+    previousLimit
+    newLimit
+    reason
+    approvedBy
+    approvedAt
+    expiresAt
+    isActive
+    createdAt
+  }
+}
+
+query GetMembersAtCreditRisk {
+  membersAtCreditRisk {
+    id
+    memberId
+    firstName
+    lastName
+    creditLimit
+    outstandingBalance
+    usagePercent
+    isAtRisk
+    isExceeded
+  }
+}
+
+# Credit Limit Mutations
+
+mutation CreateCreditOverride($input: CreateCreditOverrideInput!) {
+  createCreditOverride(input: $input) {
+    id
+    memberId
+    previousLimit
+    newLimit
+    reason
+    approvedBy
+    approvedAt
+    expiresAt
+    isActive
+    createdAt
+  }
+}
+
+mutation RevertCreditOverride($overrideId: ID!) {
+  revertCreditOverride(overrideId: $overrideId)
+}
+
+mutation UpdateMemberCreditSettings($input: UpdateCreditSettingsInput!) {
+  updateMemberCreditSettings(input: $input)
+}

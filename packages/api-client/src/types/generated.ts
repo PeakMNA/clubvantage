@@ -492,6 +492,11 @@ export type ChargeTypeType = {
   name: Scalars['String']['output'];
 };
 
+export type CheckCreditInput = {
+  chargeAmount: Scalars['Float']['input'];
+  memberId: Scalars['ID']['input'];
+};
+
 export type CheckInAllPlayersInput = {
   cartNumber?: InputMaybe<Scalars['String']['input']>;
   notes?: InputMaybe<Scalars['String']['input']>;
@@ -706,6 +711,13 @@ export type CreateCartRateInput = {
   rateConfigId: Scalars['ID']['input'];
   taxRate?: Scalars['Float']['input'];
   taxType?: Scalars['String']['input'];
+};
+
+export type CreateCreditOverrideInput = {
+  expiresAt?: InputMaybe<Scalars['DateTime']['input']>;
+  memberId: Scalars['ID']['input'];
+  newLimit: Scalars['Float']['input'];
+  reason: Scalars['String']['input'];
 };
 
 export type CreateDependentInput = {
@@ -976,6 +988,58 @@ export type CreateWaitlistEntryInput = {
   timeRangeEnd: Scalars['String']['input'];
   timeRangeStart: Scalars['String']['input'];
 };
+
+export type CreditCheckResultType = {
+  __typename?: 'CreditCheckResultType';
+  allowed: Scalars['Boolean']['output'];
+  availableCredit: Scalars['Float']['output'];
+  chargeAmount: Scalars['Float']['output'];
+  creditLimit: Scalars['Float']['output'];
+  currentBalance: Scalars['Float']['output'];
+  newBalance: Scalars['Float']['output'];
+  shortfall?: Maybe<Scalars['Float']['output']>;
+  usagePercent: Scalars['Float']['output'];
+  warning?: Maybe<CreditWarningLevel>;
+};
+
+export type CreditLimitOverrideType = {
+  __typename?: 'CreditLimitOverrideType';
+  approvedAt: Scalars['DateTime']['output'];
+  approvedBy: Scalars['ID']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  expiresAt?: Maybe<Scalars['DateTime']['output']>;
+  id: Scalars['ID']['output'];
+  isActive: Scalars['Boolean']['output'];
+  memberId: Scalars['ID']['output'];
+  newLimit: Scalars['Float']['output'];
+  previousLimit: Scalars['Float']['output'];
+  reason: Scalars['String']['output'];
+};
+
+export type CreditSettingsType = {
+  __typename?: 'CreditSettingsType';
+  creditAlertThreshold: Scalars['Float']['output'];
+  creditBlockEnabled: Scalars['Boolean']['output'];
+  creditLimit?: Maybe<Scalars['Float']['output']>;
+  creditLimitEnabled: Scalars['Boolean']['output'];
+  creditOverrideAllowed: Scalars['Boolean']['output'];
+};
+
+export type CreditStatusType = {
+  __typename?: 'CreditStatusType';
+  alertThreshold: Scalars['Float']['output'];
+  availableCredit: Scalars['Float']['output'];
+  creditLimit: Scalars['Float']['output'];
+  currentBalance: Scalars['Float']['output'];
+  isBlocked: Scalars['Boolean']['output'];
+  overrideAllowed: Scalars['Boolean']['output'];
+  usagePercent: Scalars['Float']['output'];
+};
+
+/** Warning level for credit limit status */
+export type CreditWarningLevel =
+  | 'APPROACHING_LIMIT'
+  | 'EXCEEDED';
 
 export type DailyCheckInReportType = {
   __typename?: 'DailyCheckInReportType';
@@ -1681,6 +1745,19 @@ export type LotteryType =
   | 'PRIME_TIME'
   | 'SPECIAL_EVENT';
 
+export type MemberAtRiskType = {
+  __typename?: 'MemberAtRiskType';
+  creditLimit: Scalars['Float']['output'];
+  firstName: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  isAtRisk: Scalars['Boolean']['output'];
+  isExceeded: Scalars['Boolean']['output'];
+  lastName: Scalars['String']['output'];
+  memberId: Scalars['String']['output'];
+  outstandingBalance: Scalars['Float']['output'];
+  usagePercent: Scalars['Float']['output'];
+};
+
 export type MemberConnection = {
   __typename?: 'MemberConnection';
   edges: Array<MemberTypeEdge>;
@@ -1909,6 +1986,8 @@ export type Mutation = {
   createCheckInPaymentMethod: CheckInPaymentMethodType;
   /** Create a course schedule */
   createCourseSchedule: ScheduleMutationResponse;
+  /** Create a credit limit override (temporary or permanent increase) */
+  createCreditOverride: CreditLimitOverrideType;
   /** Create default schedule configuration for a course */
   createDefaultScheduleConfig: ScheduleConfigMutationResponse;
   /** Add a dependent to a member */
@@ -2039,6 +2118,8 @@ export type Mutation = {
   rescheduleBooking: CreateBookingResponseType;
   /** Reset all check-in settings to defaults */
   resetCheckInSettings: CheckInSettingsType;
+  /** Revert a credit limit override */
+  revertCreditOverride: Scalars['Boolean']['output'];
   /** Save cart draft for a tee time */
   saveCartDraft: CartDraftType;
   /** Send an invoice */
@@ -2087,6 +2168,8 @@ export type Mutation = {
   updateLottery: LotteryMutationResponse;
   /** Update an existing member */
   updateMember: MemberType;
+  /** Update credit limit settings for a member */
+  updateMemberCreditSettings: Scalars['Boolean']['output'];
   /** Update POS integration settings */
   updatePOSConfig: CheckInSettingsType;
   /** Update a single player rental status (cart/caddy) */
@@ -2287,6 +2370,11 @@ export type MutationCreateCheckInPaymentMethodArgs = {
 
 export type MutationCreateCourseScheduleArgs = {
   input: CreateScheduleInput;
+};
+
+
+export type MutationCreateCreditOverrideArgs = {
+  input: CreateCreditOverrideInput;
 };
 
 
@@ -2615,6 +2703,11 @@ export type MutationRescheduleBookingArgs = {
 };
 
 
+export type MutationRevertCreditOverrideArgs = {
+  overrideId: Scalars['ID']['input'];
+};
+
+
 export type MutationSaveCartDraftArgs = {
   input: SaveCartDraftInput;
 };
@@ -2745,6 +2838,11 @@ export type MutationUpdateLotteryArgs = {
 export type MutationUpdateMemberArgs = {
   id: Scalars['ID']['input'];
   input: UpdateMemberInput;
+};
+
+
+export type MutationUpdateMemberCreditSettingsArgs = {
+  input: UpdateCreditSettingsInput;
 };
 
 
@@ -3198,6 +3296,8 @@ export type Query = {
   checkInPaymentMethod?: Maybe<CheckInPaymentMethodType>;
   /** Get all payment methods for check-in */
   checkInPaymentMethods: Array<CheckInPaymentMethodType>;
+  /** Check if a charge is allowed for a member based on their credit limit */
+  checkMemberCredit: CreditCheckResultType;
   /** Get club golf settings including cart, rental, and caddy policies */
   clubGolfSettings?: Maybe<ClubGolfSettingsType>;
   /** Get schedules for a course */
@@ -3248,6 +3348,14 @@ export type Query = {
   lottery: GolfLotteryType;
   /** Get a single member by ID */
   member: MemberType;
+  /** Get credit limit override history for a member */
+  memberCreditOverrideHistory: Array<CreditLimitOverrideType>;
+  /** Get active credit limit overrides for a member */
+  memberCreditOverrides: Array<CreditLimitOverrideType>;
+  /** Get credit settings for a member */
+  memberCreditSettings?: Maybe<CreditSettingsType>;
+  /** Get credit status for a member (for display in UI) */
+  memberCreditStatus?: Maybe<CreditStatusType>;
   /** Get member dependents */
   memberDependents: Array<DependentType>;
   /** Get member statistics */
@@ -3256,6 +3364,8 @@ export type Query = {
   memberTransactions: MemberTransactionsType;
   /** Get paginated list of members */
   members: MemberConnection;
+  /** Get members approaching or exceeding their credit limits */
+  membersAtCreditRisk: Array<MemberAtRiskType>;
   /** Get all membership types */
   membershipTypes: Array<MembershipTypeType>;
   /** Get current member's invoices */
@@ -3404,6 +3514,11 @@ export type QueryCheckInPaymentMethodArgs = {
 };
 
 
+export type QueryCheckMemberCreditArgs = {
+  input: CheckCreditInput;
+};
+
+
 export type QueryCourseSchedulesArgs = {
   courseId: Scalars['ID']['input'];
 };
@@ -3537,6 +3652,27 @@ export type QueryLotteryArgs = {
 
 export type QueryMemberArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type QueryMemberCreditOverrideHistoryArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  memberId: Scalars['ID']['input'];
+};
+
+
+export type QueryMemberCreditOverridesArgs = {
+  memberId: Scalars['ID']['input'];
+};
+
+
+export type QueryMemberCreditSettingsArgs = {
+  memberId: Scalars['ID']['input'];
+};
+
+
+export type QueryMemberCreditStatusArgs = {
+  memberId: Scalars['ID']['input'];
 };
 
 
@@ -4419,6 +4555,15 @@ export type UpdateCartRateInput = {
   taxType?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type UpdateCreditSettingsInput = {
+  creditAlertThreshold?: InputMaybe<Scalars['Float']['input']>;
+  creditBlockEnabled?: InputMaybe<Scalars['Boolean']['input']>;
+  creditLimit?: InputMaybe<Scalars['Float']['input']>;
+  creditLimitEnabled?: InputMaybe<Scalars['Boolean']['input']>;
+  creditOverrideAllowed?: InputMaybe<Scalars['Boolean']['input']>;
+  memberId: Scalars['ID']['input'];
+};
+
 export type UpdateDependentInput = {
   dateOfBirth?: InputMaybe<Scalars['DateTime']['input']>;
   email?: InputMaybe<Scalars['String']['input']>;
@@ -5110,6 +5255,68 @@ export type DeclineWaitlistOfferMutationVariables = Exact<{
 
 
 export type DeclineWaitlistOfferMutation = { __typename?: 'Mutation', declineWaitlistOffer: { __typename?: 'WaitlistResponseType', success: boolean, message?: string | null | undefined, error?: string | null | undefined, entry?: { __typename?: 'WaitlistEntryType', id: string, status: WaitlistStatus } | null | undefined } };
+
+export type CheckMemberCreditQueryVariables = Exact<{
+  input: CheckCreditInput;
+}>;
+
+
+export type CheckMemberCreditQuery = { __typename?: 'Query', checkMemberCredit: { __typename?: 'CreditCheckResultType', allowed: boolean, currentBalance: number, creditLimit: number, availableCredit: number, chargeAmount: number, newBalance: number, usagePercent: number, warning?: CreditWarningLevel | null | undefined, shortfall?: number | null | undefined } };
+
+export type GetMemberCreditStatusQueryVariables = Exact<{
+  memberId: Scalars['ID']['input'];
+}>;
+
+
+export type GetMemberCreditStatusQuery = { __typename?: 'Query', memberCreditStatus?: { __typename?: 'CreditStatusType', creditLimit: number, currentBalance: number, availableCredit: number, usagePercent: number, alertThreshold: number, isBlocked: boolean, overrideAllowed: boolean } | null | undefined };
+
+export type GetMemberCreditSettingsQueryVariables = Exact<{
+  memberId: Scalars['ID']['input'];
+}>;
+
+
+export type GetMemberCreditSettingsQuery = { __typename?: 'Query', memberCreditSettings?: { __typename?: 'CreditSettingsType', creditLimit?: number | null | undefined, creditLimitEnabled: boolean, creditAlertThreshold: number, creditBlockEnabled: boolean, creditOverrideAllowed: boolean } | null | undefined };
+
+export type GetMemberCreditOverridesQueryVariables = Exact<{
+  memberId: Scalars['ID']['input'];
+}>;
+
+
+export type GetMemberCreditOverridesQuery = { __typename?: 'Query', memberCreditOverrides: Array<{ __typename?: 'CreditLimitOverrideType', id: string, memberId: string, previousLimit: number, newLimit: number, reason: string, approvedBy: string, approvedAt: string, expiresAt?: string | null | undefined, isActive: boolean, createdAt: string }> };
+
+export type GetMemberCreditOverrideHistoryQueryVariables = Exact<{
+  memberId: Scalars['ID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type GetMemberCreditOverrideHistoryQuery = { __typename?: 'Query', memberCreditOverrideHistory: Array<{ __typename?: 'CreditLimitOverrideType', id: string, memberId: string, previousLimit: number, newLimit: number, reason: string, approvedBy: string, approvedAt: string, expiresAt?: string | null | undefined, isActive: boolean, createdAt: string }> };
+
+export type GetMembersAtCreditRiskQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetMembersAtCreditRiskQuery = { __typename?: 'Query', membersAtCreditRisk: Array<{ __typename?: 'MemberAtRiskType', id: string, memberId: string, firstName: string, lastName: string, creditLimit: number, outstandingBalance: number, usagePercent: number, isAtRisk: boolean, isExceeded: boolean }> };
+
+export type CreateCreditOverrideMutationVariables = Exact<{
+  input: CreateCreditOverrideInput;
+}>;
+
+
+export type CreateCreditOverrideMutation = { __typename?: 'Mutation', createCreditOverride: { __typename?: 'CreditLimitOverrideType', id: string, memberId: string, previousLimit: number, newLimit: number, reason: string, approvedBy: string, approvedAt: string, expiresAt?: string | null | undefined, isActive: boolean, createdAt: string } };
+
+export type RevertCreditOverrideMutationVariables = Exact<{
+  overrideId: Scalars['ID']['input'];
+}>;
+
+
+export type RevertCreditOverrideMutation = { __typename?: 'Mutation', revertCreditOverride: boolean };
+
+export type UpdateMemberCreditSettingsMutationVariables = Exact<{
+  input: UpdateCreditSettingsInput;
+}>;
+
+
+export type UpdateMemberCreditSettingsMutation = { __typename?: 'Mutation', updateMemberCreditSettings: boolean };
 
 export type GetDiscountsQueryVariables = Exact<{
   first?: InputMaybe<Scalars['Int']['input']>;

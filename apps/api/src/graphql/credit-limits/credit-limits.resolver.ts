@@ -1,4 +1,4 @@
-import { Resolver, Query, Mutation, Args, ID } from '@nestjs/graphql';
+import { Resolver, Query, Mutation, Args, ID, Int } from '@nestjs/graphql';
 import { UseGuards } from '@nestjs/common';
 import { GqlAuthGuard } from '../guards/gql-auth.guard';
 import { GqlCurrentUser } from '../common/decorators/gql-current-user.decorator';
@@ -97,7 +97,7 @@ export class CreditLimitResolver {
   })
   async getMemberCreditOverrideHistory(
     @Args('memberId', { type: () => ID }) memberId: string,
-    @Args('limit', { nullable: true, defaultValue: 10 }) limit: number,
+    @Args('limit', { type: () => Int, nullable: true, defaultValue: 10 }) limit: number,
   ): Promise<CreditLimitOverrideType[]> {
     const overrides = await this.creditLimitService.getOverrideHistory(memberId, limit);
     return overrides.map(this.mapOverrideToGraphQL);

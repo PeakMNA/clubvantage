@@ -496,6 +496,11 @@ export type ChargeTypeType = {
   name: Scalars['String']['output'];
 };
 
+export type CheckCreditInput = {
+  chargeAmount: Scalars['Float']['input'];
+  memberId: Scalars['ID']['input'];
+};
+
 export type CheckInAllPlayersInput = {
   cartNumber?: InputMaybe<Scalars['String']['input']>;
   notes?: InputMaybe<Scalars['String']['input']>;
@@ -710,6 +715,13 @@ export type CreateCartRateInput = {
   rateConfigId: Scalars['ID']['input'];
   taxRate?: Scalars['Float']['input'];
   taxType?: Scalars['String']['input'];
+};
+
+export type CreateCreditOverrideInput = {
+  expiresAt?: InputMaybe<Scalars['DateTime']['input']>;
+  memberId: Scalars['ID']['input'];
+  newLimit: Scalars['Float']['input'];
+  reason: Scalars['String']['input'];
 };
 
 export type CreateDependentInput = {
@@ -980,6 +992,58 @@ export type CreateWaitlistEntryInput = {
   timeRangeEnd: Scalars['String']['input'];
   timeRangeStart: Scalars['String']['input'];
 };
+
+export type CreditCheckResultType = {
+  __typename?: 'CreditCheckResultType';
+  allowed: Scalars['Boolean']['output'];
+  availableCredit: Scalars['Float']['output'];
+  chargeAmount: Scalars['Float']['output'];
+  creditLimit: Scalars['Float']['output'];
+  currentBalance: Scalars['Float']['output'];
+  newBalance: Scalars['Float']['output'];
+  shortfall?: Maybe<Scalars['Float']['output']>;
+  usagePercent: Scalars['Float']['output'];
+  warning?: Maybe<CreditWarningLevel>;
+};
+
+export type CreditLimitOverrideType = {
+  __typename?: 'CreditLimitOverrideType';
+  approvedAt: Scalars['DateTime']['output'];
+  approvedBy: Scalars['ID']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  expiresAt?: Maybe<Scalars['DateTime']['output']>;
+  id: Scalars['ID']['output'];
+  isActive: Scalars['Boolean']['output'];
+  memberId: Scalars['ID']['output'];
+  newLimit: Scalars['Float']['output'];
+  previousLimit: Scalars['Float']['output'];
+  reason: Scalars['String']['output'];
+};
+
+export type CreditSettingsType = {
+  __typename?: 'CreditSettingsType';
+  creditAlertThreshold: Scalars['Float']['output'];
+  creditBlockEnabled: Scalars['Boolean']['output'];
+  creditLimit?: Maybe<Scalars['Float']['output']>;
+  creditLimitEnabled: Scalars['Boolean']['output'];
+  creditOverrideAllowed: Scalars['Boolean']['output'];
+};
+
+export type CreditStatusType = {
+  __typename?: 'CreditStatusType';
+  alertThreshold: Scalars['Float']['output'];
+  availableCredit: Scalars['Float']['output'];
+  creditLimit: Scalars['Float']['output'];
+  currentBalance: Scalars['Float']['output'];
+  isBlocked: Scalars['Boolean']['output'];
+  overrideAllowed: Scalars['Boolean']['output'];
+  usagePercent: Scalars['Float']['output'];
+};
+
+/** Warning level for credit limit status */
+export type CreditWarningLevel =
+  | 'APPROACHING_LIMIT'
+  | 'EXCEEDED';
 
 export type DailyCheckInReportType = {
   __typename?: 'DailyCheckInReportType';
@@ -1685,6 +1749,19 @@ export type LotteryType =
   | 'PRIME_TIME'
   | 'SPECIAL_EVENT';
 
+export type MemberAtRiskType = {
+  __typename?: 'MemberAtRiskType';
+  creditLimit: Scalars['Float']['output'];
+  firstName: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  isAtRisk: Scalars['Boolean']['output'];
+  isExceeded: Scalars['Boolean']['output'];
+  lastName: Scalars['String']['output'];
+  memberId: Scalars['String']['output'];
+  outstandingBalance: Scalars['Float']['output'];
+  usagePercent: Scalars['Float']['output'];
+};
+
 export type MemberConnection = {
   __typename?: 'MemberConnection';
   edges: Array<MemberTypeEdge>;
@@ -1913,6 +1990,8 @@ export type Mutation = {
   createCheckInPaymentMethod: CheckInPaymentMethodType;
   /** Create a course schedule */
   createCourseSchedule: ScheduleMutationResponse;
+  /** Create a credit limit override (temporary or permanent increase) */
+  createCreditOverride: CreditLimitOverrideType;
   /** Create default schedule configuration for a course */
   createDefaultScheduleConfig: ScheduleConfigMutationResponse;
   /** Add a dependent to a member */
@@ -2043,6 +2122,8 @@ export type Mutation = {
   rescheduleBooking: CreateBookingResponseType;
   /** Reset all check-in settings to defaults */
   resetCheckInSettings: CheckInSettingsType;
+  /** Revert a credit limit override */
+  revertCreditOverride: Scalars['Boolean']['output'];
   /** Save cart draft for a tee time */
   saveCartDraft: CartDraftType;
   /** Send an invoice */
@@ -2091,6 +2172,8 @@ export type Mutation = {
   updateLottery: LotteryMutationResponse;
   /** Update an existing member */
   updateMember: MemberType;
+  /** Update credit limit settings for a member */
+  updateMemberCreditSettings: Scalars['Boolean']['output'];
   /** Update POS integration settings */
   updatePOSConfig: CheckInSettingsType;
   /** Update a single player rental status (cart/caddy) */
@@ -2291,6 +2374,11 @@ export type MutationCreateCheckInPaymentMethodArgs = {
 
 export type MutationCreateCourseScheduleArgs = {
   input: CreateScheduleInput;
+};
+
+
+export type MutationCreateCreditOverrideArgs = {
+  input: CreateCreditOverrideInput;
 };
 
 
@@ -2619,6 +2707,11 @@ export type MutationRescheduleBookingArgs = {
 };
 
 
+export type MutationRevertCreditOverrideArgs = {
+  overrideId: Scalars['ID']['input'];
+};
+
+
 export type MutationSaveCartDraftArgs = {
   input: SaveCartDraftInput;
 };
@@ -2749,6 +2842,11 @@ export type MutationUpdateLotteryArgs = {
 export type MutationUpdateMemberArgs = {
   id: Scalars['ID']['input'];
   input: UpdateMemberInput;
+};
+
+
+export type MutationUpdateMemberCreditSettingsArgs = {
+  input: UpdateCreditSettingsInput;
 };
 
 
@@ -3202,6 +3300,8 @@ export type Query = {
   checkInPaymentMethod?: Maybe<CheckInPaymentMethodType>;
   /** Get all payment methods for check-in */
   checkInPaymentMethods: Array<CheckInPaymentMethodType>;
+  /** Check if a charge is allowed for a member based on their credit limit */
+  checkMemberCredit: CreditCheckResultType;
   /** Get club golf settings including cart, rental, and caddy policies */
   clubGolfSettings?: Maybe<ClubGolfSettingsType>;
   /** Get schedules for a course */
@@ -3252,6 +3352,14 @@ export type Query = {
   lottery: GolfLotteryType;
   /** Get a single member by ID */
   member: MemberType;
+  /** Get credit limit override history for a member */
+  memberCreditOverrideHistory: Array<CreditLimitOverrideType>;
+  /** Get active credit limit overrides for a member */
+  memberCreditOverrides: Array<CreditLimitOverrideType>;
+  /** Get credit settings for a member */
+  memberCreditSettings?: Maybe<CreditSettingsType>;
+  /** Get credit status for a member (for display in UI) */
+  memberCreditStatus?: Maybe<CreditStatusType>;
   /** Get member dependents */
   memberDependents: Array<DependentType>;
   /** Get member statistics */
@@ -3260,6 +3368,8 @@ export type Query = {
   memberTransactions: MemberTransactionsType;
   /** Get paginated list of members */
   members: MemberConnection;
+  /** Get members approaching or exceeding their credit limits */
+  membersAtCreditRisk: Array<MemberAtRiskType>;
   /** Get all membership types */
   membershipTypes: Array<MembershipTypeType>;
   /** Get current member's invoices */
@@ -3408,6 +3518,11 @@ export type QueryCheckInPaymentMethodArgs = {
 };
 
 
+export type QueryCheckMemberCreditArgs = {
+  input: CheckCreditInput;
+};
+
+
 export type QueryCourseSchedulesArgs = {
   courseId: Scalars['ID']['input'];
 };
@@ -3541,6 +3656,27 @@ export type QueryLotteryArgs = {
 
 export type QueryMemberArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type QueryMemberCreditOverrideHistoryArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  memberId: Scalars['ID']['input'];
+};
+
+
+export type QueryMemberCreditOverridesArgs = {
+  memberId: Scalars['ID']['input'];
+};
+
+
+export type QueryMemberCreditSettingsArgs = {
+  memberId: Scalars['ID']['input'];
+};
+
+
+export type QueryMemberCreditStatusArgs = {
+  memberId: Scalars['ID']['input'];
 };
 
 
@@ -4423,6 +4559,15 @@ export type UpdateCartRateInput = {
   taxType?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type UpdateCreditSettingsInput = {
+  creditAlertThreshold?: InputMaybe<Scalars['Float']['input']>;
+  creditBlockEnabled?: InputMaybe<Scalars['Boolean']['input']>;
+  creditLimit?: InputMaybe<Scalars['Float']['input']>;
+  creditLimitEnabled?: InputMaybe<Scalars['Boolean']['input']>;
+  creditOverrideAllowed?: InputMaybe<Scalars['Boolean']['input']>;
+  memberId: Scalars['ID']['input'];
+};
+
 export type UpdateDependentInput = {
   dateOfBirth?: InputMaybe<Scalars['DateTime']['input']>;
   email?: InputMaybe<Scalars['String']['input']>;
@@ -5114,6 +5259,68 @@ export type DeclineWaitlistOfferMutationVariables = Exact<{
 
 
 export type DeclineWaitlistOfferMutation = { __typename?: 'Mutation', declineWaitlistOffer: { __typename?: 'WaitlistResponseType', success: boolean, message?: string | null | undefined, error?: string | null | undefined, entry?: { __typename?: 'WaitlistEntryType', id: string, status: WaitlistStatus } | null | undefined } };
+
+export type CheckMemberCreditQueryVariables = Exact<{
+  input: CheckCreditInput;
+}>;
+
+
+export type CheckMemberCreditQuery = { __typename?: 'Query', checkMemberCredit: { __typename?: 'CreditCheckResultType', allowed: boolean, currentBalance: number, creditLimit: number, availableCredit: number, chargeAmount: number, newBalance: number, usagePercent: number, warning?: CreditWarningLevel | null | undefined, shortfall?: number | null | undefined } };
+
+export type GetMemberCreditStatusQueryVariables = Exact<{
+  memberId: Scalars['ID']['input'];
+}>;
+
+
+export type GetMemberCreditStatusQuery = { __typename?: 'Query', memberCreditStatus?: { __typename?: 'CreditStatusType', creditLimit: number, currentBalance: number, availableCredit: number, usagePercent: number, alertThreshold: number, isBlocked: boolean, overrideAllowed: boolean } | null | undefined };
+
+export type GetMemberCreditSettingsQueryVariables = Exact<{
+  memberId: Scalars['ID']['input'];
+}>;
+
+
+export type GetMemberCreditSettingsQuery = { __typename?: 'Query', memberCreditSettings?: { __typename?: 'CreditSettingsType', creditLimit?: number | null | undefined, creditLimitEnabled: boolean, creditAlertThreshold: number, creditBlockEnabled: boolean, creditOverrideAllowed: boolean } | null | undefined };
+
+export type GetMemberCreditOverridesQueryVariables = Exact<{
+  memberId: Scalars['ID']['input'];
+}>;
+
+
+export type GetMemberCreditOverridesQuery = { __typename?: 'Query', memberCreditOverrides: Array<{ __typename?: 'CreditLimitOverrideType', id: string, memberId: string, previousLimit: number, newLimit: number, reason: string, approvedBy: string, approvedAt: string, expiresAt?: string | null | undefined, isActive: boolean, createdAt: string }> };
+
+export type GetMemberCreditOverrideHistoryQueryVariables = Exact<{
+  memberId: Scalars['ID']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type GetMemberCreditOverrideHistoryQuery = { __typename?: 'Query', memberCreditOverrideHistory: Array<{ __typename?: 'CreditLimitOverrideType', id: string, memberId: string, previousLimit: number, newLimit: number, reason: string, approvedBy: string, approvedAt: string, expiresAt?: string | null | undefined, isActive: boolean, createdAt: string }> };
+
+export type GetMembersAtCreditRiskQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetMembersAtCreditRiskQuery = { __typename?: 'Query', membersAtCreditRisk: Array<{ __typename?: 'MemberAtRiskType', id: string, memberId: string, firstName: string, lastName: string, creditLimit: number, outstandingBalance: number, usagePercent: number, isAtRisk: boolean, isExceeded: boolean }> };
+
+export type CreateCreditOverrideMutationVariables = Exact<{
+  input: CreateCreditOverrideInput;
+}>;
+
+
+export type CreateCreditOverrideMutation = { __typename?: 'Mutation', createCreditOverride: { __typename?: 'CreditLimitOverrideType', id: string, memberId: string, previousLimit: number, newLimit: number, reason: string, approvedBy: string, approvedAt: string, expiresAt?: string | null | undefined, isActive: boolean, createdAt: string } };
+
+export type RevertCreditOverrideMutationVariables = Exact<{
+  overrideId: Scalars['ID']['input'];
+}>;
+
+
+export type RevertCreditOverrideMutation = { __typename?: 'Mutation', revertCreditOverride: boolean };
+
+export type UpdateMemberCreditSettingsMutationVariables = Exact<{
+  input: UpdateCreditSettingsInput;
+}>;
+
+
+export type UpdateMemberCreditSettingsMutation = { __typename?: 'Mutation', updateMemberCreditSettings: boolean };
 
 export type GetDiscountsQueryVariables = Exact<{
   first?: InputMaybe<Scalars['Int']['input']>;
@@ -7981,6 +8188,427 @@ export const useDeclineWaitlistOfferMutation = <
 
 
 useDeclineWaitlistOfferMutation.fetcher = (variables: DeclineWaitlistOfferMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<DeclineWaitlistOfferMutation, DeclineWaitlistOfferMutationVariables>(DeclineWaitlistOfferDocument, variables, options);
+
+export const CheckMemberCreditDocument = `
+    query CheckMemberCredit($input: CheckCreditInput!) {
+  checkMemberCredit(input: $input) {
+    allowed
+    currentBalance
+    creditLimit
+    availableCredit
+    chargeAmount
+    newBalance
+    usagePercent
+    warning
+    shortfall
+  }
+}
+    `;
+
+export const useCheckMemberCreditQuery = <
+      TData = CheckMemberCreditQuery,
+      TError = unknown
+    >(
+      variables: CheckMemberCreditQueryVariables,
+      options?: Omit<UseQueryOptions<CheckMemberCreditQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<CheckMemberCreditQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<CheckMemberCreditQuery, TError, TData>(
+      {
+    queryKey: ['CheckMemberCredit', variables],
+    queryFn: graphqlFetcher<CheckMemberCreditQuery, CheckMemberCreditQueryVariables>(CheckMemberCreditDocument, variables),
+    ...options
+  }
+    )};
+
+useCheckMemberCreditQuery.getKey = (variables: CheckMemberCreditQueryVariables) => ['CheckMemberCredit', variables];
+
+export const useInfiniteCheckMemberCreditQuery = <
+      TData = InfiniteData<CheckMemberCreditQuery>,
+      TError = unknown
+    >(
+      variables: CheckMemberCreditQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<CheckMemberCreditQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<CheckMemberCreditQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<CheckMemberCreditQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['CheckMemberCredit.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<CheckMemberCreditQuery, CheckMemberCreditQueryVariables>(CheckMemberCreditDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteCheckMemberCreditQuery.getKey = (variables: CheckMemberCreditQueryVariables) => ['CheckMemberCredit.infinite', variables];
+
+
+useCheckMemberCreditQuery.fetcher = (variables: CheckMemberCreditQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<CheckMemberCreditQuery, CheckMemberCreditQueryVariables>(CheckMemberCreditDocument, variables, options);
+
+export const GetMemberCreditStatusDocument = `
+    query GetMemberCreditStatus($memberId: ID!) {
+  memberCreditStatus(memberId: $memberId) {
+    creditLimit
+    currentBalance
+    availableCredit
+    usagePercent
+    alertThreshold
+    isBlocked
+    overrideAllowed
+  }
+}
+    `;
+
+export const useGetMemberCreditStatusQuery = <
+      TData = GetMemberCreditStatusQuery,
+      TError = unknown
+    >(
+      variables: GetMemberCreditStatusQueryVariables,
+      options?: Omit<UseQueryOptions<GetMemberCreditStatusQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetMemberCreditStatusQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetMemberCreditStatusQuery, TError, TData>(
+      {
+    queryKey: ['GetMemberCreditStatus', variables],
+    queryFn: graphqlFetcher<GetMemberCreditStatusQuery, GetMemberCreditStatusQueryVariables>(GetMemberCreditStatusDocument, variables),
+    ...options
+  }
+    )};
+
+useGetMemberCreditStatusQuery.getKey = (variables: GetMemberCreditStatusQueryVariables) => ['GetMemberCreditStatus', variables];
+
+export const useInfiniteGetMemberCreditStatusQuery = <
+      TData = InfiniteData<GetMemberCreditStatusQuery>,
+      TError = unknown
+    >(
+      variables: GetMemberCreditStatusQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetMemberCreditStatusQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetMemberCreditStatusQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetMemberCreditStatusQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetMemberCreditStatus.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetMemberCreditStatusQuery, GetMemberCreditStatusQueryVariables>(GetMemberCreditStatusDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetMemberCreditStatusQuery.getKey = (variables: GetMemberCreditStatusQueryVariables) => ['GetMemberCreditStatus.infinite', variables];
+
+
+useGetMemberCreditStatusQuery.fetcher = (variables: GetMemberCreditStatusQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetMemberCreditStatusQuery, GetMemberCreditStatusQueryVariables>(GetMemberCreditStatusDocument, variables, options);
+
+export const GetMemberCreditSettingsDocument = `
+    query GetMemberCreditSettings($memberId: ID!) {
+  memberCreditSettings(memberId: $memberId) {
+    creditLimit
+    creditLimitEnabled
+    creditAlertThreshold
+    creditBlockEnabled
+    creditOverrideAllowed
+  }
+}
+    `;
+
+export const useGetMemberCreditSettingsQuery = <
+      TData = GetMemberCreditSettingsQuery,
+      TError = unknown
+    >(
+      variables: GetMemberCreditSettingsQueryVariables,
+      options?: Omit<UseQueryOptions<GetMemberCreditSettingsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetMemberCreditSettingsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetMemberCreditSettingsQuery, TError, TData>(
+      {
+    queryKey: ['GetMemberCreditSettings', variables],
+    queryFn: graphqlFetcher<GetMemberCreditSettingsQuery, GetMemberCreditSettingsQueryVariables>(GetMemberCreditSettingsDocument, variables),
+    ...options
+  }
+    )};
+
+useGetMemberCreditSettingsQuery.getKey = (variables: GetMemberCreditSettingsQueryVariables) => ['GetMemberCreditSettings', variables];
+
+export const useInfiniteGetMemberCreditSettingsQuery = <
+      TData = InfiniteData<GetMemberCreditSettingsQuery>,
+      TError = unknown
+    >(
+      variables: GetMemberCreditSettingsQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetMemberCreditSettingsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetMemberCreditSettingsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetMemberCreditSettingsQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetMemberCreditSettings.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetMemberCreditSettingsQuery, GetMemberCreditSettingsQueryVariables>(GetMemberCreditSettingsDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetMemberCreditSettingsQuery.getKey = (variables: GetMemberCreditSettingsQueryVariables) => ['GetMemberCreditSettings.infinite', variables];
+
+
+useGetMemberCreditSettingsQuery.fetcher = (variables: GetMemberCreditSettingsQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetMemberCreditSettingsQuery, GetMemberCreditSettingsQueryVariables>(GetMemberCreditSettingsDocument, variables, options);
+
+export const GetMemberCreditOverridesDocument = `
+    query GetMemberCreditOverrides($memberId: ID!) {
+  memberCreditOverrides(memberId: $memberId) {
+    id
+    memberId
+    previousLimit
+    newLimit
+    reason
+    approvedBy
+    approvedAt
+    expiresAt
+    isActive
+    createdAt
+  }
+}
+    `;
+
+export const useGetMemberCreditOverridesQuery = <
+      TData = GetMemberCreditOverridesQuery,
+      TError = unknown
+    >(
+      variables: GetMemberCreditOverridesQueryVariables,
+      options?: Omit<UseQueryOptions<GetMemberCreditOverridesQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetMemberCreditOverridesQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetMemberCreditOverridesQuery, TError, TData>(
+      {
+    queryKey: ['GetMemberCreditOverrides', variables],
+    queryFn: graphqlFetcher<GetMemberCreditOverridesQuery, GetMemberCreditOverridesQueryVariables>(GetMemberCreditOverridesDocument, variables),
+    ...options
+  }
+    )};
+
+useGetMemberCreditOverridesQuery.getKey = (variables: GetMemberCreditOverridesQueryVariables) => ['GetMemberCreditOverrides', variables];
+
+export const useInfiniteGetMemberCreditOverridesQuery = <
+      TData = InfiniteData<GetMemberCreditOverridesQuery>,
+      TError = unknown
+    >(
+      variables: GetMemberCreditOverridesQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetMemberCreditOverridesQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetMemberCreditOverridesQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetMemberCreditOverridesQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetMemberCreditOverrides.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetMemberCreditOverridesQuery, GetMemberCreditOverridesQueryVariables>(GetMemberCreditOverridesDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetMemberCreditOverridesQuery.getKey = (variables: GetMemberCreditOverridesQueryVariables) => ['GetMemberCreditOverrides.infinite', variables];
+
+
+useGetMemberCreditOverridesQuery.fetcher = (variables: GetMemberCreditOverridesQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetMemberCreditOverridesQuery, GetMemberCreditOverridesQueryVariables>(GetMemberCreditOverridesDocument, variables, options);
+
+export const GetMemberCreditOverrideHistoryDocument = `
+    query GetMemberCreditOverrideHistory($memberId: ID!, $limit: Int) {
+  memberCreditOverrideHistory(memberId: $memberId, limit: $limit) {
+    id
+    memberId
+    previousLimit
+    newLimit
+    reason
+    approvedBy
+    approvedAt
+    expiresAt
+    isActive
+    createdAt
+  }
+}
+    `;
+
+export const useGetMemberCreditOverrideHistoryQuery = <
+      TData = GetMemberCreditOverrideHistoryQuery,
+      TError = unknown
+    >(
+      variables: GetMemberCreditOverrideHistoryQueryVariables,
+      options?: Omit<UseQueryOptions<GetMemberCreditOverrideHistoryQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetMemberCreditOverrideHistoryQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetMemberCreditOverrideHistoryQuery, TError, TData>(
+      {
+    queryKey: ['GetMemberCreditOverrideHistory', variables],
+    queryFn: graphqlFetcher<GetMemberCreditOverrideHistoryQuery, GetMemberCreditOverrideHistoryQueryVariables>(GetMemberCreditOverrideHistoryDocument, variables),
+    ...options
+  }
+    )};
+
+useGetMemberCreditOverrideHistoryQuery.getKey = (variables: GetMemberCreditOverrideHistoryQueryVariables) => ['GetMemberCreditOverrideHistory', variables];
+
+export const useInfiniteGetMemberCreditOverrideHistoryQuery = <
+      TData = InfiniteData<GetMemberCreditOverrideHistoryQuery>,
+      TError = unknown
+    >(
+      variables: GetMemberCreditOverrideHistoryQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetMemberCreditOverrideHistoryQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetMemberCreditOverrideHistoryQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetMemberCreditOverrideHistoryQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetMemberCreditOverrideHistory.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetMemberCreditOverrideHistoryQuery, GetMemberCreditOverrideHistoryQueryVariables>(GetMemberCreditOverrideHistoryDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetMemberCreditOverrideHistoryQuery.getKey = (variables: GetMemberCreditOverrideHistoryQueryVariables) => ['GetMemberCreditOverrideHistory.infinite', variables];
+
+
+useGetMemberCreditOverrideHistoryQuery.fetcher = (variables: GetMemberCreditOverrideHistoryQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetMemberCreditOverrideHistoryQuery, GetMemberCreditOverrideHistoryQueryVariables>(GetMemberCreditOverrideHistoryDocument, variables, options);
+
+export const GetMembersAtCreditRiskDocument = `
+    query GetMembersAtCreditRisk {
+  membersAtCreditRisk {
+    id
+    memberId
+    firstName
+    lastName
+    creditLimit
+    outstandingBalance
+    usagePercent
+    isAtRisk
+    isExceeded
+  }
+}
+    `;
+
+export const useGetMembersAtCreditRiskQuery = <
+      TData = GetMembersAtCreditRiskQuery,
+      TError = unknown
+    >(
+      variables?: GetMembersAtCreditRiskQueryVariables,
+      options?: Omit<UseQueryOptions<GetMembersAtCreditRiskQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetMembersAtCreditRiskQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetMembersAtCreditRiskQuery, TError, TData>(
+      {
+    queryKey: variables === undefined ? ['GetMembersAtCreditRisk'] : ['GetMembersAtCreditRisk', variables],
+    queryFn: graphqlFetcher<GetMembersAtCreditRiskQuery, GetMembersAtCreditRiskQueryVariables>(GetMembersAtCreditRiskDocument, variables),
+    ...options
+  }
+    )};
+
+useGetMembersAtCreditRiskQuery.getKey = (variables?: GetMembersAtCreditRiskQueryVariables) => variables === undefined ? ['GetMembersAtCreditRisk'] : ['GetMembersAtCreditRisk', variables];
+
+export const useInfiniteGetMembersAtCreditRiskQuery = <
+      TData = InfiniteData<GetMembersAtCreditRiskQuery>,
+      TError = unknown
+    >(
+      variables: GetMembersAtCreditRiskQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetMembersAtCreditRiskQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetMembersAtCreditRiskQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetMembersAtCreditRiskQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? variables === undefined ? ['GetMembersAtCreditRisk.infinite'] : ['GetMembersAtCreditRisk.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetMembersAtCreditRiskQuery, GetMembersAtCreditRiskQueryVariables>(GetMembersAtCreditRiskDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetMembersAtCreditRiskQuery.getKey = (variables?: GetMembersAtCreditRiskQueryVariables) => variables === undefined ? ['GetMembersAtCreditRisk.infinite'] : ['GetMembersAtCreditRisk.infinite', variables];
+
+
+useGetMembersAtCreditRiskQuery.fetcher = (variables?: GetMembersAtCreditRiskQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetMembersAtCreditRiskQuery, GetMembersAtCreditRiskQueryVariables>(GetMembersAtCreditRiskDocument, variables, options);
+
+export const CreateCreditOverrideDocument = `
+    mutation CreateCreditOverride($input: CreateCreditOverrideInput!) {
+  createCreditOverride(input: $input) {
+    id
+    memberId
+    previousLimit
+    newLimit
+    reason
+    approvedBy
+    approvedAt
+    expiresAt
+    isActive
+    createdAt
+  }
+}
+    `;
+
+export const useCreateCreditOverrideMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<CreateCreditOverrideMutation, TError, CreateCreditOverrideMutationVariables, TContext>) => {
+    
+    return useMutation<CreateCreditOverrideMutation, TError, CreateCreditOverrideMutationVariables, TContext>(
+      {
+    mutationKey: ['CreateCreditOverride'],
+    mutationFn: (variables?: CreateCreditOverrideMutationVariables) => graphqlFetcher<CreateCreditOverrideMutation, CreateCreditOverrideMutationVariables>(CreateCreditOverrideDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useCreateCreditOverrideMutation.fetcher = (variables: CreateCreditOverrideMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<CreateCreditOverrideMutation, CreateCreditOverrideMutationVariables>(CreateCreditOverrideDocument, variables, options);
+
+export const RevertCreditOverrideDocument = `
+    mutation RevertCreditOverride($overrideId: ID!) {
+  revertCreditOverride(overrideId: $overrideId)
+}
+    `;
+
+export const useRevertCreditOverrideMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<RevertCreditOverrideMutation, TError, RevertCreditOverrideMutationVariables, TContext>) => {
+    
+    return useMutation<RevertCreditOverrideMutation, TError, RevertCreditOverrideMutationVariables, TContext>(
+      {
+    mutationKey: ['RevertCreditOverride'],
+    mutationFn: (variables?: RevertCreditOverrideMutationVariables) => graphqlFetcher<RevertCreditOverrideMutation, RevertCreditOverrideMutationVariables>(RevertCreditOverrideDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useRevertCreditOverrideMutation.fetcher = (variables: RevertCreditOverrideMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<RevertCreditOverrideMutation, RevertCreditOverrideMutationVariables>(RevertCreditOverrideDocument, variables, options);
+
+export const UpdateMemberCreditSettingsDocument = `
+    mutation UpdateMemberCreditSettings($input: UpdateCreditSettingsInput!) {
+  updateMemberCreditSettings(input: $input)
+}
+    `;
+
+export const useUpdateMemberCreditSettingsMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<UpdateMemberCreditSettingsMutation, TError, UpdateMemberCreditSettingsMutationVariables, TContext>) => {
+    
+    return useMutation<UpdateMemberCreditSettingsMutation, TError, UpdateMemberCreditSettingsMutationVariables, TContext>(
+      {
+    mutationKey: ['UpdateMemberCreditSettings'],
+    mutationFn: (variables?: UpdateMemberCreditSettingsMutationVariables) => graphqlFetcher<UpdateMemberCreditSettingsMutation, UpdateMemberCreditSettingsMutationVariables>(UpdateMemberCreditSettingsDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useUpdateMemberCreditSettingsMutation.fetcher = (variables: UpdateMemberCreditSettingsMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<UpdateMemberCreditSettingsMutation, UpdateMemberCreditSettingsMutationVariables>(UpdateMemberCreditSettingsDocument, variables, options);
 
 export const GetDiscountsDocument = `
     query GetDiscounts($first: Int, $skip: Int, $search: String, $type: DiscountType, $scope: DiscountScope, $isActive: Boolean, $sortBy: String, $sortOrder: String) {
