@@ -80,26 +80,31 @@ export class GqlAuthGuard implements CanActivate {
   }
 
   private extractToken(request: any): string | null {
-    // Debug: log all cookies received
-    this.logger.debug('Cookies received:', JSON.stringify(request.cookies || {}));
-    this.logger.debug('Headers:', JSON.stringify(request.headers || {}));
+    const accessCookieName = this.configService.get<string>('supabase.cookie.accessName') || 'sb-access-token';
+
+    // Debug logging for development
+    if (process.env.NODE_ENV !== 'production') {
+      const cookieNames = request.cookies ? Object.keys(request.cookies) : [];
+      this.logger.debug(`[Auth Debug] Cookie names received: [${cookieNames.join(', ')}]`);
+      this.logger.debug(`[Auth Debug] Looking for cookie: ${accessCookieName}`);
+      this.logger.debug(`[Auth Debug] Origin header: ${request.headers?.origin || 'none'}`);
+      this.logger.debug(`[Auth Debug] Referer: ${request.headers?.referer || 'none'}`);
+    }
 
     // Try HttpOnly cookie first
-    const accessCookieName = this.configService.get<string>('supabase.cookie.accessName') || 'sb-access-token';
-    this.logger.debug(`Looking for cookie: ${accessCookieName}`);
     if (request.cookies && request.cookies[accessCookieName]) {
-      this.logger.debug('Found access token in cookie');
+      this.logger.debug('[Auth Debug] Found access token in cookie');
       return request.cookies[accessCookieName];
     }
 
     // Fallback to Authorization header
     const authHeader = request.headers?.authorization;
     if (authHeader && authHeader.startsWith('Bearer ')) {
-      this.logger.debug('Found access token in Authorization header');
+      this.logger.debug('[Auth Debug] Found access token in Authorization header');
       return authHeader.slice(7);
     }
 
-    this.logger.debug('No access token found');
+    this.logger.warn('[Auth Debug] No access token found in cookies or headers');
     return null;
   }
 

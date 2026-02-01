@@ -52,6 +52,30 @@ import {
 } from './golf.input';
 import { encodeCursor } from '../common/pagination';
 import { PUBSUB_TOKEN, SubscriptionEvents } from '../common/pubsub';
+import { RatesService } from './rates.service';
+import {
+  RateConfigType,
+  GreenFeeRateType,
+  CartRateType,
+  CaddyRateType,
+  RateConfigMutationResponse,
+  GreenFeeRateMutationResponse,
+  CartRateMutationResponse,
+  CaddyRateMutationResponse,
+  DeleteRateMutationResponse,
+} from './rates.types';
+import {
+  CreateRateConfigInput,
+  UpdateRateConfigInput,
+  CreateGreenFeeRateInput,
+  UpdateGreenFeeRateInput,
+  CreateCartRateInput,
+  UpdateCartRateInput,
+  CreateCaddyRateInput,
+  UpdateCaddyRateInput,
+  RateConfigsQueryArgs,
+} from './rates.input';
+import { LineItemGeneratorService } from './line-item-generator.service';
 
 @Resolver(() => TeeTimeType)
 @UseGuards(GqlAuthGuard)
@@ -60,6 +84,8 @@ export class GolfResolver {
     private readonly golfService: GolfService,
     private readonly teeTicketService: TeeTicketService,
     private readonly prisma: PrismaService,
+    private readonly ratesService: RatesService,
+    private readonly lineItemGenerator: LineItemGeneratorService,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     @Inject(PUBSUB_TOKEN) private readonly pubSub: any,
   ) {}
@@ -422,6 +448,24 @@ export class GolfResolver {
     );
     // Return raw Prisma data - GraphQL will serialize it
     return player as unknown as TeeTimePlayerType;
+  }
+
+  @Mutation(() => Boolean, { name: 'regenerateLineItems', description: 'Manually regenerate line items for a tee time' })
+  async regenerateLineItems(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('teeTimeId', { type: () => ID }) teeTimeId: string,
+  ): Promise<boolean> {
+    // Verify tee time belongs to tenant
+    const teeTime = await this.prisma.teeTime.findFirst({
+      where: { id: teeTimeId, clubId: user.tenantId },
+    });
+
+    if (!teeTime) {
+      throw new Error('Tee time not found');
+    }
+
+    await this.lineItemGenerator.generateLineItemsForFlight(teeTimeId);
+    return true;
   }
 
   @Mutation(() => FlightCheckInResponseType, { name: 'checkIn', description: 'Check in all players for a tee time' })
@@ -1070,6 +1114,327 @@ export class GolfResolver {
         teeInterval: block.course.teeInterval,
         isActive: block.course.isActive,
       } : undefined,
+    };
+  }
+
+  // ============================================
+  // Rate Configuration Queries & Mutations (Task #17)
+  // ============================================
+
+  @Query(() => [RateConfigType], { name: 'golfRates', description: 'Get rate configurations for a course' })
+  async getGolfRates(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args() args: RateConfigsQueryArgs,
+  ): Promise<RateConfigType[]> {
+    const configs = await this.ratesService.getRateConfigs(
+      user.tenantId,
+      args.courseId,
+      args.activeOnly,
+    );
+    return configs.map(this.transformRateConfig);
+  }
+
+  @Query(() => RateConfigType, { name: 'rateConfig', description: 'Get a single rate configuration by ID' })
+  async getRateConfig(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('id', { type: () => ID }) id: string,
+  ): Promise<RateConfigType> {
+    const config = await this.ratesService.getRateConfig(user.tenantId, id);
+    return this.transformRateConfig(config);
+  }
+
+  @Mutation(() => RateConfigMutationResponse, { name: 'createRateConfig', description: 'Create a rate configuration' })
+  async createRateConfig(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('input') input: CreateRateConfigInput,
+  ): Promise<RateConfigMutationResponse> {
+    try {
+      const config = await this.ratesService.createRateConfig(user.tenantId, input);
+      return {
+        success: true,
+        rateConfig: this.transformRateConfig(config),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message,
+      };
+    }
+  }
+
+  @Mutation(() => RateConfigMutationResponse, { name: 'updateRateConfig', description: 'Update a rate configuration' })
+  async updateRateConfig(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('id', { type: () => ID }) id: string,
+    @Args('input') input: UpdateRateConfigInput,
+  ): Promise<RateConfigMutationResponse> {
+    try {
+      const config = await this.ratesService.updateRateConfig(user.tenantId, id, input);
+      return {
+        success: true,
+        rateConfig: this.transformRateConfig(config),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message,
+      };
+    }
+  }
+
+  @Mutation(() => DeleteRateMutationResponse, { name: 'deleteRateConfig', description: 'Delete a rate configuration' })
+  async deleteRateConfig(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('id', { type: () => ID }) id: string,
+  ): Promise<DeleteRateMutationResponse> {
+    try {
+      await this.ratesService.deleteRateConfig(user.tenantId, id);
+      return {
+        success: true,
+        message: 'Rate configuration deleted successfully',
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message,
+      };
+    }
+  }
+
+  // Green Fee Rate Mutations
+
+  @Mutation(() => GreenFeeRateMutationResponse, { name: 'createGreenFeeRate', description: 'Create a green fee rate' })
+  async createGreenFeeRate(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('input') input: CreateGreenFeeRateInput,
+  ): Promise<GreenFeeRateMutationResponse> {
+    try {
+      const rate = await this.ratesService.createGreenFeeRate(user.tenantId, input);
+      return {
+        success: true,
+        greenFeeRate: this.transformGreenFeeRate(rate),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message,
+      };
+    }
+  }
+
+  @Mutation(() => GreenFeeRateMutationResponse, { name: 'updateGreenFeeRate', description: 'Update a green fee rate' })
+  async updateGreenFeeRate(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('id', { type: () => ID }) id: string,
+    @Args('input') input: UpdateGreenFeeRateInput,
+  ): Promise<GreenFeeRateMutationResponse> {
+    try {
+      const rate = await this.ratesService.updateGreenFeeRate(user.tenantId, id, input);
+      return {
+        success: true,
+        greenFeeRate: this.transformGreenFeeRate(rate),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message,
+      };
+    }
+  }
+
+  @Mutation(() => DeleteRateMutationResponse, { name: 'deleteGreenFeeRate', description: 'Delete a green fee rate' })
+  async deleteGreenFeeRate(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('id', { type: () => ID }) id: string,
+  ): Promise<DeleteRateMutationResponse> {
+    try {
+      await this.ratesService.deleteGreenFeeRate(user.tenantId, id);
+      return {
+        success: true,
+        message: 'Green fee rate deleted successfully',
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message,
+      };
+    }
+  }
+
+  // Cart Rate Mutations
+
+  @Mutation(() => CartRateMutationResponse, { name: 'createCartRate', description: 'Create a cart rate' })
+  async createCartRate(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('input') input: CreateCartRateInput,
+  ): Promise<CartRateMutationResponse> {
+    try {
+      const rate = await this.ratesService.createCartRate(user.tenantId, input);
+      return {
+        success: true,
+        cartRate: this.transformCartRate(rate),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message,
+      };
+    }
+  }
+
+  @Mutation(() => CartRateMutationResponse, { name: 'updateCartRate', description: 'Update a cart rate' })
+  async updateCartRate(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('id', { type: () => ID }) id: string,
+    @Args('input') input: UpdateCartRateInput,
+  ): Promise<CartRateMutationResponse> {
+    try {
+      const rate = await this.ratesService.updateCartRate(user.tenantId, id, input);
+      return {
+        success: true,
+        cartRate: this.transformCartRate(rate),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message,
+      };
+    }
+  }
+
+  @Mutation(() => DeleteRateMutationResponse, { name: 'deleteCartRate', description: 'Delete a cart rate' })
+  async deleteCartRate(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('id', { type: () => ID }) id: string,
+  ): Promise<DeleteRateMutationResponse> {
+    try {
+      await this.ratesService.deleteCartRate(user.tenantId, id);
+      return {
+        success: true,
+        message: 'Cart rate deleted successfully',
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message,
+      };
+    }
+  }
+
+  // Caddy Rate Mutations
+
+  @Mutation(() => CaddyRateMutationResponse, { name: 'createCaddyRate', description: 'Create a caddy rate' })
+  async createCaddyRate(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('input') input: CreateCaddyRateInput,
+  ): Promise<CaddyRateMutationResponse> {
+    try {
+      const rate = await this.ratesService.createCaddyRate(user.tenantId, input);
+      return {
+        success: true,
+        caddyRate: this.transformCaddyRate(rate),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message,
+      };
+    }
+  }
+
+  @Mutation(() => CaddyRateMutationResponse, { name: 'updateCaddyRate', description: 'Update a caddy rate' })
+  async updateCaddyRate(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('id', { type: () => ID }) id: string,
+    @Args('input') input: UpdateCaddyRateInput,
+  ): Promise<CaddyRateMutationResponse> {
+    try {
+      const rate = await this.ratesService.updateCaddyRate(user.tenantId, id, input);
+      return {
+        success: true,
+        caddyRate: this.transformCaddyRate(rate),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message,
+      };
+    }
+  }
+
+  @Mutation(() => DeleteRateMutationResponse, { name: 'deleteCaddyRate', description: 'Delete a caddy rate' })
+  async deleteCaddyRate(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('id', { type: () => ID }) id: string,
+  ): Promise<DeleteRateMutationResponse> {
+    try {
+      await this.ratesService.deleteCaddyRate(user.tenantId, id);
+      return {
+        success: true,
+        message: 'Caddy rate deleted successfully',
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message,
+      };
+    }
+  }
+
+  // Helper transformation methods for rate types
+
+  private transformRateConfig(config: any): RateConfigType {
+    return {
+      id: config.id,
+      courseId: config.courseId,
+      name: config.name,
+      description: config.description,
+      isActive: config.isActive,
+      effectiveFrom: config.effectiveFrom,
+      effectiveTo: config.effectiveTo,
+      greenFeeRates: config.greenFeeRates?.map(this.transformGreenFeeRate) || [],
+      cartRates: config.cartRates?.map(this.transformCartRate) || [],
+      caddyRates: config.caddyRates?.map(this.transformCaddyRate) || [],
+      createdAt: config.createdAt,
+      updatedAt: config.updatedAt,
+    };
+  }
+
+  private transformGreenFeeRate(rate: any): GreenFeeRateType {
+    return {
+      id: rate.id,
+      playerType: rate.playerType,
+      holes: rate.holes,
+      timeCategory: rate.timeCategory,
+      amount: rate.amount.toNumber ? rate.amount.toNumber() : rate.amount,
+      taxType: rate.taxType,
+      taxRate: rate.taxRate.toNumber ? rate.taxRate.toNumber() : rate.taxRate,
+      createdAt: rate.createdAt,
+      updatedAt: rate.updatedAt,
+    };
+  }
+
+  private transformCartRate(rate: any): CartRateType {
+    return {
+      id: rate.id,
+      cartType: rate.cartType,
+      amount: rate.amount.toNumber ? rate.amount.toNumber() : rate.amount,
+      taxType: rate.taxType,
+      taxRate: rate.taxRate.toNumber ? rate.taxRate.toNumber() : rate.taxRate,
+      createdAt: rate.createdAt,
+      updatedAt: rate.updatedAt,
+    };
+  }
+
+  private transformCaddyRate(rate: any): CaddyRateType {
+    return {
+      id: rate.id,
+      caddyType: rate.caddyType,
+      amount: rate.amount.toNumber ? rate.amount.toNumber() : rate.amount,
+      taxType: rate.taxType,
+      taxRate: rate.taxRate.toNumber ? rate.taxRate.toNumber() : rate.taxRate,
+      createdAt: rate.createdAt,
+      updatedAt: rate.updatedAt,
     };
   }
 }

@@ -188,6 +188,8 @@ export class UpdateTeeTimeInput {
 @InputType()
 export class MoveTeeTimeInput {
   @Field()
+  @IsDate()
+  @Type(() => Date)
   newTeeDate: Date;
 
   @Field()
