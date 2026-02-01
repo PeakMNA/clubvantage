@@ -67,6 +67,8 @@ model Club {
   waitlistEntries        WaitlistEntry[]
   discounts              Discount[]
   cashDrawers            CashDrawer[]
+  productCategories      ProductCategory[]
+  products               Product[]
 
   @@index([slug])
   @@index([isActive])
@@ -2082,6 +2084,119 @@ enum DiscountType {
 enum DiscountScope {
   LINE_ITEM
   ORDER
+}
+
+// =============================================================================
+// PRODUCT CATALOG
+// =============================================================================
+
+enum ProductType {
+  SIMPLE      // Add to cart immediately
+  VARIABLE    // Show variant picker
+  SERVICE     // May trigger booking flow
+  COMPOSITE   // Bundle/combo
+}
+
+model ProductCategory {
+  id          String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId      String            @db.Uuid
+  parentId    String?           @db.Uuid
+
+  name        String            @db.VarChar(100)
+  description String?           @db.VarChar(500)
+  color       String?           @db.VarChar(7)  // Hex color for POS button
+  iconName    String?           @db.VarChar(50) // Lucide icon name
+
+  sortOrder   Int               @default(0)
+  isActive    Boolean           @default(true)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  club        Club              @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  parent      ProductCategory?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    ProductCategory[] @relation("CategoryHierarchy")
+  products    Product[]
+  // outletCategoryConfigs OutletCategoryConfig[]  // Added in Task 3
+
+  @@index([clubId])
+  @@index([clubId, parentId])
+  @@index([clubId, isActive])
+  @@map("product_categories")
+}
+
+model Product {
+  id                   String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId               String           @db.Uuid
+  categoryId           String           @db.Uuid
+
+  name                 String           @db.VarChar(200)
+  description          String?          @db.VarChar(1000)
+  sku                  String?          @db.VarChar(50)
+  productType          ProductType      @default(SIMPLE)
+
+  // Pricing
+  basePrice            Decimal          @db.Decimal(10, 2)
+  costPrice            Decimal?         @db.Decimal(10, 2)
+  taxRate              Decimal          @default(0) @db.Decimal(5, 2)
+  taxType              TaxType          @default(ADD)
+
+  // Service-specific (null for retail)
+  durationMinutes      Int?
+  bufferMinutes        Int?             @default(0)
+  requiredCapabilities String[]         @default([])
+
+  // Inventory (null for services)
+  trackInventory       Boolean          @default(false)
+  stockQuantity        Int?
+  lowStockThreshold    Int?
+
+  // Display
+  imageUrl             String?          @db.VarChar(500)
+  thumbnailUrl         String?          @db.VarChar(500)
+  sortPriority         Int              @default(50)
+
+  // Status
+  isActive             Boolean          @default(true)
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  // Relations
+  club                 Club             @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  category             ProductCategory  @relation(fields: [categoryId], references: [id])
+  variants             ProductVariant[]
+  // modifierGroups       ProductModifierGroup[]   // Added in Task 2
+  // outletConfigs        OutletProductConfig[]    // Added in Task 3
+  // salesMetrics         ProductSalesMetric[]     // Added in Task 4
+  // staffUsage           StaffProductUsage[]      // Added in Task 4
+
+  @@unique([clubId, sku])
+  @@index([clubId])
+  @@index([clubId, categoryId])
+  @@index([clubId, isActive])
+  @@index([clubId, productType])
+  @@map("products")
+}
+
+model ProductVariant {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productId       String   @db.Uuid
+
+  name            String   @db.VarChar(100)
+  sku             String?  @db.VarChar(50)
+  priceAdjustment Decimal  @default(0) @db.Decimal(10, 2)
+  attributes      Json     @default("{}")
+
+  stockQuantity   Int?
+  imageUrl        String?  @db.VarChar(500)
+  sortOrder       Int      @default(0)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@map("product_variants")
 }
 
 // ─────────────────────────────────────────────────────────────
