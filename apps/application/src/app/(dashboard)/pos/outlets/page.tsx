@@ -1,52 +1,17 @@
-import { Plus, Settings, MoreHorizontal, MapPin, Monitor } from 'lucide-react'
+'use client'
+
+import { useState } from 'react'
+import { Plus, Settings, MapPin, Monitor, Loader2, Link2 } from 'lucide-react'
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@clubvantage/ui'
+import {
+  useGetPosOutletsQuery,
+  useGetPosTemplatesQuery,
+  useAssignPosTemplateMutation,
+} from '@clubvantage/api-client'
+import { useQueryClient } from '@tanstack/react-query'
 
-// Mock outlet data
-const mockOutlets = [
-  {
-    id: '1',
-    name: 'Pro Shop',
-    location: 'Clubhouse - Ground Floor',
-    template: 'Golf Pro Shop',
-    status: 'active',
-    terminals: 2,
-    todaySales: 45000,
-    transactions: 23,
-  },
-  {
-    id: '2',
-    name: 'Main Restaurant',
-    location: 'Clubhouse - First Floor',
-    template: 'Restaurant & Bar',
-    status: 'active',
-    terminals: 3,
-    todaySales: 128500,
-    transactions: 67,
-  },
-  {
-    id: '3',
-    name: 'Poolside Bar',
-    location: 'Pool Area',
-    template: 'Restaurant & Bar',
-    status: 'active',
-    terminals: 1,
-    todaySales: 32000,
-    transactions: 18,
-  },
-  {
-    id: '4',
-    name: 'Fitness Center',
-    location: 'Sports Complex',
-    template: 'Fitness Center',
-    status: 'inactive',
-    terminals: 1,
-    todaySales: 0,
-    transactions: 0,
-  },
-]
-
-function StatusBadge({ status }: { status: 'active' | 'inactive' }) {
-  if (status === 'active') {
+function StatusBadge({ isActive }: { isActive: boolean }) {
+  if (isActive) {
     return (
       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5" />
@@ -62,15 +27,71 @@ function StatusBadge({ status }: { status: 'active' | 'inactive' }) {
   )
 }
 
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('th-TH', {
-    style: 'currency',
-    currency: 'THB',
-    minimumFractionDigits: 0,
-  }).format(amount)
-}
-
 export default function POSOutletsPage() {
+  const queryClient = useQueryClient()
+  const [assigningOutletId, setAssigningOutletId] = useState<string | null>(null)
+
+  // Fetch outlets and templates
+  const { data: outletsData, isLoading: outletsLoading, error: outletsError } = useGetPosOutletsQuery()
+  const { data: templatesData } = useGetPosTemplatesQuery()
+
+  const outlets = outletsData?.posOutlets ?? []
+  const templates = templatesData?.posTemplates ?? []
+
+  // Assign template mutation
+  const assignMutation = useAssignPosTemplateMutation({
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['GetPosOutlets'] })
+      setAssigningOutletId(null)
+    },
+    onError: (error) => {
+      console.error('Failed to assign template:', error)
+      setAssigningOutletId(null)
+    },
+  })
+
+  const handleAssignTemplate = async (outletId: string, templateId: string) => {
+    setAssigningOutletId(outletId)
+    await assignMutation.mutateAsync({
+      input: { outletId, templateId },
+    })
+  }
+
+  const handleSettings = (outletId: string) => {
+    // TODO: Open outlet settings modal
+    console.log('Settings for outlet:', outletId)
+    alert('Outlet settings coming soon!')
+  }
+
+  const handleAddOutlet = () => {
+    // TODO: Open create outlet modal
+    console.log('Add new outlet')
+    alert('Create outlet coming soon!')
+  }
+
+  if (outletsLoading) {
+    return (
+      <div className="p-6 flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
+      </div>
+    )
+  }
+
+  if (outletsError) {
+    return (
+      <div className="p-6">
+        <Card className="py-12">
+          <div className="text-center">
+            <p className="text-red-500">Failed to load outlets</p>
+            <p className="text-sm text-stone-500 mt-1">{String(outletsError)}</p>
+          </div>
+        </Card>
+      </div>
+    )
+  }
+
+  const activeCount = outlets.filter((o) => o.isActive).length
+
   return (
     <div className="p-6 space-y-6">
       {/* Page Header */}
@@ -81,42 +102,33 @@ export default function POSOutletsPage() {
             Manage outlet locations and their assigned templates
           </p>
         </div>
-        <Button className="bg-gradient-to-br from-amber-500 to-amber-600 text-white">
+        <Button
+          onClick={handleAddOutlet}
+          className="bg-gradient-to-br from-amber-500 to-amber-600 text-white"
+        >
           <Plus className="mr-2 h-4 w-4" />
           Add Outlet
         </Button>
       </div>
 
       {/* Summary Stats */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardContent className="pt-6">
-            <div className="text-2xl font-bold text-stone-900">{mockOutlets.length}</div>
+            <div className="text-2xl font-bold text-stone-900">{outlets.length}</div>
             <p className="text-sm text-stone-500">Total Outlets</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <div className="text-2xl font-bold text-emerald-600">
-              {mockOutlets.filter((o) => o.status === 'active').length}
-            </div>
+            <div className="text-2xl font-bold text-emerald-600">{activeCount}</div>
             <p className="text-sm text-stone-500">Active Outlets</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <div className="text-2xl font-bold text-stone-900">
-              {mockOutlets.reduce((sum, o) => sum + o.terminals, 0)}
-            </div>
-            <p className="text-sm text-stone-500">Total Terminals</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-2xl font-bold text-amber-600">
-              {formatCurrency(mockOutlets.reduce((sum, o) => sum + o.todaySales, 0))}
-            </div>
-            <p className="text-sm text-stone-500">Today's Sales</p>
+            <div className="text-2xl font-bold text-stone-900">{templates.length}</div>
+            <p className="text-sm text-stone-500">Available Templates</p>
           </CardContent>
         </Card>
       </div>
@@ -127,65 +139,99 @@ export default function POSOutletsPage() {
           <CardTitle>All Outlets</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b text-left text-sm text-stone-500">
-                  <th className="pb-3 font-medium">Outlet</th>
-                  <th className="pb-3 font-medium">Location</th>
-                  <th className="pb-3 font-medium">Template</th>
-                  <th className="pb-3 font-medium">Terminals</th>
-                  <th className="pb-3 font-medium">Status</th>
-                  <th className="pb-3 font-medium text-right">Today's Sales</th>
-                  <th className="pb-3 font-medium text-right">Transactions</th>
-                  <th className="pb-3 font-medium"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {mockOutlets.map((outlet) => (
-                  <tr key={outlet.id} className="hover:bg-stone-50">
-                    <td className="py-4">
-                      <div className="font-medium text-stone-900">{outlet.name}</div>
-                    </td>
-                    <td className="py-4">
-                      <div className="flex items-center gap-1.5 text-sm text-stone-600">
-                        <MapPin className="h-3.5 w-3.5" />
-                        {outlet.location}
-                      </div>
-                    </td>
-                    <td className="py-4">
-                      <span className="text-sm text-stone-600">{outlet.template}</span>
-                    </td>
-                    <td className="py-4">
-                      <div className="flex items-center gap-1.5 text-sm text-stone-600">
-                        <Monitor className="h-3.5 w-3.5" />
-                        {outlet.terminals}
-                      </div>
-                    </td>
-                    <td className="py-4">
-                      <StatusBadge status={outlet.status as 'active' | 'inactive'} />
-                    </td>
-                    <td className="py-4 text-right font-medium text-stone-900">
-                      {formatCurrency(outlet.todaySales)}
-                    </td>
-                    <td className="py-4 text-right text-stone-600">
-                      {outlet.transactions}
-                    </td>
-                    <td className="py-4">
-                      <div className="flex justify-end gap-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <Settings className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </td>
+          {outlets.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b text-left text-sm text-stone-500">
+                    <th className="pb-3 font-medium">Outlet</th>
+                    <th className="pb-3 font-medium">Type</th>
+                    <th className="pb-3 font-medium">Template</th>
+                    <th className="pb-3 font-medium">Status</th>
+                    <th className="pb-3 font-medium">Role Configs</th>
+                    <th className="pb-3 font-medium"></th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y">
+                  {outlets.map((outlet) => (
+                    <tr key={outlet.id} className="hover:bg-stone-50">
+                      <td className="py-4">
+                        <div className="font-medium text-stone-900">{outlet.name}</div>
+                      </td>
+                      <td className="py-4">
+                        <span className="text-sm text-stone-600 capitalize">{outlet.outletType}</span>
+                      </td>
+                      <td className="py-4">
+                        {outlet.template ? (
+                          <span className="inline-flex items-center gap-1.5 text-sm text-stone-600">
+                            <Link2 className="h-3.5 w-3.5" />
+                            {outlet.template.name}
+                          </span>
+                        ) : (
+                          <select
+                            className="text-sm border rounded px-2 py-1 text-stone-600"
+                            value=""
+                            onChange={(e) => handleAssignTemplate(outlet.id, e.target.value)}
+                            disabled={assigningOutletId === outlet.id}
+                          >
+                            <option value="" disabled>
+                              {assigningOutletId === outlet.id ? 'Assigning...' : 'Select template'}
+                            </option>
+                            {templates
+                              .filter((t) => t.outletType === outlet.outletType)
+                              .map((t) => (
+                                <option key={t.id} value={t.id}>
+                                  {t.name}
+                                </option>
+                              ))}
+                          </select>
+                        )}
+                      </td>
+                      <td className="py-4">
+                        <StatusBadge isActive={outlet.isActive} />
+                      </td>
+                      <td className="py-4">
+                        <span className="text-sm text-stone-600">
+                          {/* Role configs count would come from outlet.roleConfigs if included in query */}
+                          —
+                        </span>
+                      </td>
+                      <td className="py-4">
+                        <div className="flex justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => handleSettings(outlet.id)}
+                            title="Outlet settings"
+                          >
+                            <Settings className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <div className="mx-auto h-12 w-12 rounded-full bg-stone-100 flex items-center justify-center mb-4">
+                <MapPin className="h-6 w-6 text-stone-400" />
+              </div>
+              <h3 className="text-lg font-medium text-stone-900">No outlets configured</h3>
+              <p className="text-sm text-stone-500 mt-1 max-w-sm mx-auto">
+                Add your first POS outlet to start configuring point of sale locations.
+              </p>
+              <Button
+                onClick={handleAddOutlet}
+                className="mt-4 bg-gradient-to-br from-amber-500 to-amber-600 text-white"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Add Outlet
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
