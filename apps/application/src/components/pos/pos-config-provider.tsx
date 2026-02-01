@@ -196,7 +196,7 @@ export function POSConfigProvider({
     isLoading: isConfigLoading,
     error: configError,
   } = useQuery<GetPOSConfigResponse>({
-    queryKey: ['GetPOSConfig', outlet, userRole, userPermissions],
+    queryKey: ['GetPOSConfig', outlet, userRole, JSON.stringify(userPermissions?.sort() || [])],
     queryFn: async () => {
       return request<GetPOSConfigResponse>(GET_POS_CONFIG_QUERY, {
         outletId: outlet,
@@ -300,9 +300,10 @@ export function POSConfigProvider({
 
       // Check if approval is required
       if (buttonState.requiresApproval) {
-        // TODO: Show approval modal and wait for approval
-        // For now, we'll just log and continue
-        console.warn(`Button "${buttonId}" requires approval - approval flow not yet implemented`);
+        const approved = await requestApproval(buttonId);
+        if (!approved) {
+          return { success: false, message: 'Manager approval required' };
+        }
       }
 
       // Get the button definition for action type
@@ -331,6 +332,7 @@ export function POSConfigProvider({
           return { success: true };
         } catch (err) {
           const message = err instanceof Error ? err.message : 'Action failed';
+          console.error(`POS action handler error for button "${buttonId}":`, err);
           return { success: false, message };
         }
       }
