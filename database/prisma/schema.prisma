@@ -2162,7 +2162,7 @@ model Product {
 
   // Relations
   club                 Club             @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  category             ProductCategory  @relation(fields: [categoryId], references: [id])
+  category             ProductCategory  @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   variants             ProductVariant[]
   // modifierGroups       ProductModifierGroup[]   // Added in Task 2
   // outletConfigs        OutletProductConfig[]    // Added in Task 3
@@ -2195,6 +2195,7 @@ model ProductVariant {
 
   product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
+  @@unique([productId, sku])
   @@index([productId])
   @@map("product_variants")
 }
