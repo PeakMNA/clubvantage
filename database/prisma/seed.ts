@@ -1983,6 +1983,9 @@ async function main() {
 
   console.log(`✅ Created ${createdTeeTimeCount} tee times with ${createdPlayerCount} players`);
 
+  // Seed products
+  await seedProducts(demoClub.id);
+
   console.log('');
   console.log('🎉 Database seed completed successfully!');
   console.log('');
@@ -2000,6 +2003,218 @@ async function main() {
   console.log('');
   console.log('  Member Portal (http://localhost:3004):');
   console.log('    member@demo.com / Member123!');
+}
+
+// ============================================================================
+// PRODUCT CATEGORIES & PRODUCTS
+// ============================================================================
+
+async function seedProducts(clubId: string) {
+  console.log('Seeding product categories and products...');
+
+  // Create categories
+  const categories = await Promise.all([
+    prisma.productCategory.create({
+      data: {
+        clubId,
+        name: 'Apparel',
+        color: '#3B82F6',
+        iconName: 'shirt',
+        sortOrder: 1,
+      },
+    }),
+    prisma.productCategory.create({
+      data: {
+        clubId,
+        name: 'Equipment',
+        color: '#10B981',
+        iconName: 'golf',
+        sortOrder: 2,
+      },
+    }),
+    prisma.productCategory.create({
+      data: {
+        clubId,
+        name: 'Accessories',
+        color: '#8B5CF6',
+        iconName: 'package',
+        sortOrder: 3,
+      },
+    }),
+    prisma.productCategory.create({
+      data: {
+        clubId,
+        name: 'Food & Beverage',
+        color: '#F59E0B',
+        iconName: 'utensils',
+        sortOrder: 4,
+      },
+    }),
+    prisma.productCategory.create({
+      data: {
+        clubId,
+        name: 'Golf Balls',
+        color: '#14B8A6',
+        iconName: 'circle',
+        sortOrder: 5,
+      },
+    }),
+  ]);
+
+  const [apparel, equipment, accessories, fnb, balls] = categories;
+
+  // Create products
+  const products = [
+    // Apparel - with variants
+    {
+      clubId,
+      categoryId: apparel.id,
+      name: 'Club Logo Polo Shirt',
+      sku: 'APP-001',
+      productType: 'VARIABLE' as const,
+      basePrice: 85.0,
+      trackInventory: true,
+      stockQuantity: 50,
+      sortPriority: 10,
+    },
+    {
+      clubId,
+      categoryId: apparel.id,
+      name: 'Golf Shorts - Navy',
+      sku: 'APP-002',
+      productType: 'SIMPLE' as const,
+      basePrice: 65.0,
+      trackInventory: true,
+      stockQuantity: 30,
+      sortPriority: 20,
+    },
+    // Equipment
+    {
+      clubId,
+      categoryId: equipment.id,
+      name: 'Titleist TSR3 Driver',
+      sku: 'EQP-001',
+      productType: 'SIMPLE' as const,
+      basePrice: 599.0,
+      trackInventory: true,
+      stockQuantity: 4,
+      sortPriority: 30,
+    },
+    // Accessories
+    {
+      clubId,
+      categoryId: accessories.id,
+      name: 'Golf Bag - Stand',
+      sku: 'ACC-001',
+      productType: 'SIMPLE' as const,
+      basePrice: 289.0,
+      trackInventory: true,
+      stockQuantity: 7,
+      sortPriority: 40,
+    },
+    // F&B - with modifiers (will be linked later)
+    {
+      clubId,
+      categoryId: fnb.id,
+      name: 'Club Burger',
+      sku: 'FNB-001',
+      productType: 'SIMPLE' as const,
+      basePrice: 18.0,
+      trackInventory: false,
+      sortPriority: 10,
+    },
+    {
+      clubId,
+      categoryId: fnb.id,
+      name: 'Bottled Water',
+      sku: 'FNB-002',
+      productType: 'SIMPLE' as const,
+      basePrice: 3.5,
+      trackInventory: true,
+      stockQuantity: 200,
+      sortPriority: 5,
+    },
+    // Golf Balls
+    {
+      clubId,
+      categoryId: balls.id,
+      name: 'Titleist Pro V1 (Dozen)',
+      sku: 'BALL-001',
+      productType: 'SIMPLE' as const,
+      basePrice: 54.99,
+      trackInventory: true,
+      stockQuantity: 30,
+      sortPriority: 10,
+    },
+  ];
+
+  const createdProducts = await Promise.all(
+    products.map((p) => prisma.product.create({ data: p })),
+  );
+
+  // Add variants to polo shirt
+  const poloShirt = createdProducts[0];
+  await prisma.productVariant.createMany({
+    data: [
+      { productId: poloShirt.id, name: 'Small', sku: 'APP-001-S', priceAdjustment: 0, stockQuantity: 10, sortOrder: 1 },
+      { productId: poloShirt.id, name: 'Medium', sku: 'APP-001-M', priceAdjustment: 0, stockQuantity: 15, sortOrder: 2 },
+      { productId: poloShirt.id, name: 'Large', sku: 'APP-001-L', priceAdjustment: 0, stockQuantity: 15, sortOrder: 3 },
+      { productId: poloShirt.id, name: 'XL', sku: 'APP-001-XL', priceAdjustment: 5, stockQuantity: 10, sortOrder: 4 },
+    ],
+  });
+
+  // Create modifier groups for F&B
+  const cookingTempGroup = await prisma.modifierGroup.create({
+    data: {
+      clubId,
+      name: 'Cooking Temperature',
+      selectionType: 'SINGLE',
+      minSelections: 1,
+      maxSelections: 1,
+    },
+  });
+
+  await prisma.modifier.createMany({
+    data: [
+      { groupId: cookingTempGroup.id, name: 'Rare', priceAdjustment: 0, sortOrder: 1 },
+      { groupId: cookingTempGroup.id, name: 'Medium Rare', priceAdjustment: 0, isDefault: true, sortOrder: 2 },
+      { groupId: cookingTempGroup.id, name: 'Medium', priceAdjustment: 0, sortOrder: 3 },
+      { groupId: cookingTempGroup.id, name: 'Medium Well', priceAdjustment: 0, sortOrder: 4 },
+      { groupId: cookingTempGroup.id, name: 'Well Done', priceAdjustment: 0, sortOrder: 5 },
+    ],
+  });
+
+  const toppingsGroup = await prisma.modifierGroup.create({
+    data: {
+      clubId,
+      name: 'Burger Toppings',
+      selectionType: 'MULTIPLE',
+      minSelections: 0,
+      maxSelections: null,
+    },
+  });
+
+  await prisma.modifier.createMany({
+    data: [
+      { groupId: toppingsGroup.id, name: 'Add Bacon', priceAdjustment: 3, sortOrder: 1 },
+      { groupId: toppingsGroup.id, name: 'Add Cheese', priceAdjustment: 2, sortOrder: 2 },
+      { groupId: toppingsGroup.id, name: 'Add Avocado', priceAdjustment: 2.5, sortOrder: 3 },
+      { groupId: toppingsGroup.id, name: 'No Onions', priceAdjustment: 0, sortOrder: 4 },
+      { groupId: toppingsGroup.id, name: 'No Pickles', priceAdjustment: 0, sortOrder: 5 },
+    ],
+  });
+
+  // Link burger to modifier groups
+  const burger = createdProducts.find((p) => p.name === 'Club Burger')!;
+  await prisma.productModifierGroup.createMany({
+    data: [
+      { productId: burger.id, modifierGroupId: cookingTempGroup.id, isRequired: true, sortOrder: 1 },
+      { productId: burger.id, modifierGroupId: toppingsGroup.id, isRequired: false, sortOrder: 2 },
+    ],
+  });
+
+  console.log(`✅ Created ${createdProducts.length} products`);
+  return createdProducts;
 }
 
 main()
