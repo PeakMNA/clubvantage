@@ -5,3 +5,5 @@ export * from './pos-button';
 export * from './pos-toolbar';
 export * from './pos-action-bar';
 export * from './pos-receipt-totals';
+export * from './pos-sales-header';
+export * from './pos-line-item-panel';
