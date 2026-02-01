@@ -17,6 +17,7 @@ import { ApplicationsGraphqlModule } from './applications/applications.module';
 import { ScheduleConfigGraphqlModule } from './schedule-config/schedule-config.module';
 import { DiscountsModule } from './discounts/discounts.module';
 import { CreditLimitsModule } from './credit-limits/credit-limits.module';
+import { CashDrawerModule } from './cash-drawer/cash-drawer.module';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { CreditLimitsModule } from './credit-limits/credit-limits.module';
     ScheduleConfigGraphqlModule,
     DiscountsModule,
     CreditLimitsModule,
+    CashDrawerModule,
   ],
 })
 export class GraphqlModule {}

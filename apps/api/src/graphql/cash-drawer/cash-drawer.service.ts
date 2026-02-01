@@ -31,13 +31,13 @@ export interface ShiftSummary {
 export interface OpenShiftInput {
   cashDrawerId: string;
   openingFloat: number;
-  denominations?: Record<string, number>;
+  denominations?: string; // JSON string
 }
 
 export interface CloseShiftInput {
   shiftId: string;
   closingCount: number;
-  denominations?: Record<string, number>;
+  denominations?: string; // JSON string
   varianceNote?: string;
 }
 
@@ -158,7 +158,7 @@ export class CashDrawerService {
         cashDrawerId: input.cashDrawerId,
         openedBy,
         openingFloat: input.openingFloat,
-        openingDenominations: input.denominations || {},
+        openingDenominations: input.denominations ? JSON.parse(input.denominations) : {},
         status: CashDrawerStatus.OPEN,
       },
     });
@@ -239,7 +239,7 @@ export class CashDrawerService {
         closedBy,
         closedAt: new Date(),
         closingCount: input.closingCount,
-        closingDenominations: input.denominations || {},
+        closingDenominations: input.denominations ? JSON.parse(input.denominations) : {},
         expectedCash,
         actualCash: input.closingCount,
         variance,
