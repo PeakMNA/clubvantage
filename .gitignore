@@ -41,3 +41,6 @@ prisma/*.db-journal
 
 # Docker Supabase volumes
 docker/supabase/volumes/
+
+# Git worktrees
+.worktrees/
