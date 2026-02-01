@@ -23,6 +23,7 @@ import { MinimumSpendModule } from './minimum-spend/minimum-spend.module';
 import { SubAccountsModule } from './sub-accounts/sub-accounts.module';
 import { StoredPaymentsModule } from './stored-payments/stored-payments.module';
 import { POSConfigModule } from './pos-config/pos-config.module';
+import { ProductsModule } from './products/products.module';
 
 @Module({
   imports: [
@@ -72,6 +73,7 @@ import { POSConfigModule } from './pos-config/pos-config.module';
     SubAccountsModule,
     StoredPaymentsModule,
     POSConfigModule,
+    ProductsModule,
   ],
 })
 export class GraphqlModule {}
