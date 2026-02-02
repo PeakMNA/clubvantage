@@ -81,5 +81,13 @@ export {
 // Payment Recording
 export { PaymentRecordModal } from './payment-record-modal'
 
+// Credit Notes
+export {
+  CreditNoteModal,
+  type CreditNoteFormData,
+  type CreditNoteType,
+  type CreditNoteReason,
+} from './credit-note-modal'
+
 // Legacy (to be deprecated)
 export { InvoicesTable } from './invoices-table'
