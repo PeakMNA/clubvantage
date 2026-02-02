@@ -95,5 +95,16 @@ export {
   type CreditNoteStatus,
 } from './credit-note-list'
 
+// Statements
+export {
+  MemberStatement,
+  type StatementTransaction,
+  type StatementMember,
+} from './member-statement'
+export {
+  StatementModal,
+  type StatementFormData,
+} from './statement-modal'
+
 // Legacy (to be deprecated)
 export { InvoicesTable } from './invoices-table'

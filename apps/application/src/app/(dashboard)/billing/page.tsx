@@ -23,6 +23,8 @@ import { InvoiceCreateModal, type InvoiceFormData } from '@/components/billing/i
 import { type ChargeType } from '@/components/billing/invoice-line-item-row'
 import { PaymentRecordModal } from '@/components/billing/payment-record-modal'
 import { CreditNoteModal, type CreditNoteFormData } from '@/components/billing/credit-note-modal'
+import { StatementModal, type StatementFormData } from '@/components/billing/statement-modal'
+import { type StatementTransaction, type StatementMember } from '@/components/billing/member-statement'
 import { type MemberSelectionData } from '@/components/billing/member-selection-card'
 import { type AllocationInvoice } from '@/components/billing/allocation-table-row'
 import { type MemberSearchResult } from '@/components/billing/receipt-form'
@@ -315,6 +317,7 @@ export default function BillingPage() {
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false)
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
   const [isCreditNoteModalOpen, setIsCreditNoteModalOpen] = useState(false)
+  const [isStatementModalOpen, setIsStatementModalOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Fetch invoices from API
@@ -404,6 +407,45 @@ export default function BillingPage() {
   const handleNewCreditNote = () => {
     setIsCreditNoteModalOpen(true)
   }
+
+  const handleGenerateStatement = () => {
+    setIsStatementModalOpen(true)
+  }
+
+  const handleFetchStatement = useCallback(async (data: StatementFormData): Promise<{
+    member: StatementMember
+    openingBalance: number
+    closingBalance: number
+    transactions: StatementTransaction[]
+  }> => {
+    // Mock statement data - TODO: replace with actual API call
+    const memberData = mockMemberOptions.find((m) => m.id === data.memberId)
+    const memberInvoices = mockInvoices.filter((inv) => inv.memberId === data.memberId)
+
+    // Generate mock transactions from invoices
+    const transactions: StatementTransaction[] = memberInvoices.map((inv) => ({
+      id: inv.id,
+      date: inv.date,
+      type: 'INVOICE' as const,
+      description: `Invoice ${inv.invoiceNumber}`,
+      reference: inv.invoiceNumber,
+      debit: inv.amount,
+      runningBalance: inv.balance,
+    }))
+
+    return {
+      member: {
+        id: data.memberId,
+        name: memberData ? `${memberData.firstName} ${memberData.lastName}` : 'Unknown',
+        memberNumber: memberData?.memberId || data.memberId,
+        membershipType: 'Golf Premium',
+        email: memberData?.email,
+      },
+      openingBalance: 0,
+      closingBalance: transactions.reduce((sum, t) => sum + (t.debit || 0) - (t.credit || 0), 0),
+      transactions,
+    }
+  }, [])
 
   const handleInvoiceSubmit = useCallback(async (data: InvoiceFormData) => {
     setIsSubmitting(true)
@@ -544,6 +586,24 @@ export default function BillingPage() {
             }}
           />
         )
+      case 'statements':
+        return (
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <FileText className="h-16 w-16 text-muted-foreground/50 mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">Member Statements</h3>
+            <p className="text-sm text-muted-foreground max-w-md mb-6">
+              Generate account statements for members showing their transaction history,
+              invoices, payments, and running balance for any date range.
+            </p>
+            <Button
+              onClick={handleGenerateStatement}
+              className="bg-gradient-to-br from-amber-500 to-amber-600 text-white"
+            >
+              <FileText className="mr-2 h-4 w-4" />
+              Generate Statement
+            </Button>
+          </div>
+        )
       case 'wht-certificates':
         return (
           <WhtCertificatesTab
@@ -641,6 +701,17 @@ export default function BillingPage() {
             New Credit Note
           </Button>
         )
+      case 'statements':
+        return (
+          <Button
+            size="sm"
+            onClick={handleGenerateStatement}
+            className="bg-gradient-to-br from-amber-500 to-amber-600 text-white"
+          >
+            <FileText className="mr-2 h-4 w-4" />
+            Generate Statement
+          </Button>
+        )
       default:
         return null
     }
@@ -690,6 +761,25 @@ export default function BillingPage() {
         isLoadingMembers={false}
         onMemberSearch={(query) => console.log('Search members:', query)}
         onSubmit={handleCreditNoteSubmit}
+        isSubmitting={isSubmitting}
+      />
+
+      {/* Statement Modal */}
+      <StatementModal
+        open={isStatementModalOpen}
+        onOpenChange={setIsStatementModalOpen}
+        members={mockMemberOptions}
+        isLoadingMembers={false}
+        onMemberSearch={(query) => console.log('Search members:', query)}
+        onFetchStatement={handleFetchStatement}
+        onDownload={async (data) => {
+          console.log('Download statement PDF:', data)
+          // TODO: Implement PDF generation
+        }}
+        onEmail={async (data) => {
+          console.log('Email statement:', data)
+          // TODO: Implement email sending
+        }}
         isSubmitting={isSubmitting}
       />
     </>
