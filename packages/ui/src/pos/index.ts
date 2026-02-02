@@ -8,3 +8,4 @@ export * from './pos-receipt-totals';
 export * from './pos-sales-header';
 export * from './pos-line-item-panel';
 export * from './pos-product-tile';
+export * from './pos-quick-keys-bar';
