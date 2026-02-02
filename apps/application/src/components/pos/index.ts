@@ -83,3 +83,11 @@ export type {
   GetPOSConfigResponse,
   GetPOSButtonRegistryResponse,
 } from './types';
+
+// Template Editor Modal
+export {
+  TemplateEditorModal,
+  type TemplateEditorModalProps,
+  type POSTemplateData,
+  type POSTemplateInput,
+} from './template-editor-modal';
