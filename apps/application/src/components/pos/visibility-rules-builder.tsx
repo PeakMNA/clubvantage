@@ -633,11 +633,3 @@ export function VisibilityRulesBuilder({
   )
 }
 
-// ============================================================================
-// Export Types
-// ============================================================================
-
-export type {
-  VisibilityRule,
-  VisibilityRulesBuilderProps,
-}
