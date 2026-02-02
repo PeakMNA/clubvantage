@@ -78,5 +78,8 @@ export {
   type LineItemData,
 } from './invoice-line-item-row'
 
+// Payment Recording
+export { PaymentRecordModal } from './payment-record-modal'
+
 // Legacy (to be deprecated)
 export { InvoicesTable } from './invoices-table'
