@@ -2,7 +2,7 @@
 
 import { cn } from '@clubvantage/ui'
 
-export type BillingTab = 'invoices' | 'receipts' | 'wht-certificates' | 'aging'
+export type BillingTab = 'invoices' | 'receipts' | 'credit-notes' | 'wht-certificates' | 'aging'
 
 interface TabConfig {
   id: BillingTab
@@ -13,6 +13,7 @@ interface TabConfig {
 const defaultTabs: TabConfig[] = [
   { id: 'invoices', label: 'Invoices' },
   { id: 'receipts', label: 'Receipts' },
+  { id: 'credit-notes', label: 'Credit Notes' },
   { id: 'wht-certificates', label: 'WHT Certificates' },
   { id: 'aging', label: 'Aging' },
 ]

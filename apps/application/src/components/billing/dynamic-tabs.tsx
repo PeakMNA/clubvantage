@@ -141,3 +141,12 @@ export const DynamicAgingDashboardTab = dynamic(
   () => import('./aging-dashboard-tab').then((mod) => mod.AgingDashboardTab),
   { loading: () => <AgingLoadingSkeleton />, ssr: false }
 )
+
+/**
+ * Dynamically imported CreditNoteList component
+ * Only loaded when the Credit Notes tab is active
+ */
+export const DynamicCreditNoteList = dynamic(
+  () => import('./credit-note-list').then((mod) => mod.CreditNoteList),
+  { loading: () => <TabLoadingSkeleton />, ssr: false }
+)

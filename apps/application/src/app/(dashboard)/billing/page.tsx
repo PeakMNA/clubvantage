@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Wand2 } from 'lucide-react'
+import { Plus, Wand2, FileText } from 'lucide-react'
 import { Button } from '@clubvantage/ui'
 
 // Direct imports to optimize bundle size (avoid barrel imports)
@@ -15,7 +15,17 @@ import {
   DynamicReceiptRegister as ReceiptRegister,
   DynamicWhtCertificatesTab as WhtCertificatesTab,
   DynamicAgingDashboardTab as AgingDashboardTab,
+  DynamicCreditNoteList as CreditNoteList,
 } from '@/components/billing/dynamic-tabs'
+
+// Modal imports
+import { InvoiceCreateModal, type InvoiceFormData } from '@/components/billing/invoice-create-modal'
+import { type ChargeType } from '@/components/billing/invoice-line-item-row'
+import { PaymentRecordModal } from '@/components/billing/payment-record-modal'
+import { CreditNoteModal, type CreditNoteFormData } from '@/components/billing/credit-note-modal'
+import { type MemberSelectionData } from '@/components/billing/member-selection-card'
+import { type AllocationInvoice } from '@/components/billing/allocation-table-row'
+import { type MemberSearchResult } from '@/components/billing/receipt-form'
 
 // Type-only imports for data structures
 import type {
@@ -25,7 +35,6 @@ import type {
 import type {
   ReceiptRegisterItem,
   ReceiptRegisterSummary,
-  ReceiptAllocation,
 } from '@/components/billing/receipt-register'
 import type {
   WhtCertificateItem,
@@ -36,8 +45,15 @@ import type {
   AgingMember,
   ReinstatedMember,
 } from '@/components/billing/aging-dashboard-tab'
+import type {
+  CreditNoteListItem,
+  CreditNoteSummary,
+  CreditNoteStatus as ListCreditNoteStatus,
+  CreditNoteType as ListCreditNoteType,
+} from '@/components/billing/credit-note-list'
 
 import { useInvoices } from '@/hooks/use-billing'
+import { type MemberOption } from '@clubvantage/ui'
 
 // Fallback mock invoice data (used when API unavailable)
 const mockInvoices: InvoiceRegisterItem[] = [
@@ -199,35 +215,52 @@ const mockWhtSummary: WhtCertificatesSummary = {
   totalAmount: 55500,
 }
 
-// Mock aging data
-const mockAgingBuckets: AgingBucket[] = [
-  { id: 'current', label: 'Current', memberCount: 45, totalAmount: 800000, percentage: 58 },
-  { id: '30', label: '1-30 Days', memberCount: 18, totalAmount: 250000, percentage: 18 },
-  { id: '60', label: '31-60 Days', memberCount: 12, totalAmount: 150000, percentage: 11 },
-  { id: '90', label: '61-90 Days', memberCount: 5, totalAmount: 50000, percentage: 4 },
-  { id: 'suspended', label: '91+ Days', memberCount: 3, totalAmount: 120000, percentage: 9 },
+// Mock credit note data
+const mockCreditNotes: CreditNoteListItem[] = [
+  {
+    id: '1',
+    creditNoteNumber: 'CN-2024-000001',
+    memberId: 'M002',
+    memberName: 'Sarah Johnson',
+    issueDate: new Date('2024-01-20'),
+    type: 'adjustment',
+    reason: 'Billing error correction',
+    totalAmount: 5000,
+    appliedAmount: 5000,
+    status: 'applied',
+  },
+  {
+    id: '2',
+    creditNoteNumber: 'CN-2024-000002',
+    memberId: 'M003',
+    memberName: 'Michael Chen',
+    issueDate: new Date('2024-01-22'),
+    type: 'courtesy',
+    reason: 'Service compensation',
+    totalAmount: 15000,
+    appliedAmount: 0,
+    status: 'pending_approval',
+  },
+  {
+    id: '3',
+    creditNoteNumber: 'CN-2024-000003',
+    memberId: 'M005',
+    memberName: 'Robert Wilson',
+    issueDate: new Date('2024-01-25'),
+    type: 'promo',
+    reason: 'New year promotion',
+    totalAmount: 10000,
+    appliedAmount: 3000,
+    status: 'partially_applied',
+  },
 ]
 
-const mockAgingMembers: AgingMember[] = [
-  {
-    id: 'M005',
-    name: 'Robert Wilson',
-    membershipType: 'Golf Premium',
-    balance: 120000,
-    oldestInvoiceDate: new Date('2023-09-15'),
-    daysOutstanding: 125,
-    status: 'suspended',
-  },
-  {
-    id: 'M003',
-    name: 'Michael Chen',
-    membershipType: 'Golf Standard',
-    balance: 55000,
-    oldestInvoiceDate: new Date('2023-11-01'),
-    daysOutstanding: 78,
-    status: '90',
-  },
-]
+const mockCreditNoteSummary: CreditNoteSummary = {
+  totalIssued: 150000,
+  pendingApproval: 15000,
+  applied: 85000,
+  availableBalance: 50000,
+}
 
 const mockReinstatedMembers: ReinstatedMember[] = [
   {
@@ -240,10 +273,49 @@ const mockReinstatedMembers: ReinstatedMember[] = [
   },
 ]
 
+// Mock charge types for invoice creation
+const mockChargeTypes: ChargeType[] = [
+  { id: 'ct1', code: 'DUES', name: 'Monthly Dues', defaultPrice: 15000, taxable: true, taxRate: 7 },
+  { id: 'ct2', code: 'F&B', name: 'Food & Beverage', defaultPrice: 0, taxable: true, taxRate: 7 },
+  { id: 'ct3', code: 'GOLF', name: 'Green Fees', defaultPrice: 3500, taxable: true, taxRate: 7 },
+  { id: 'ct4', code: 'CART', name: 'Cart Rental', defaultPrice: 800, taxable: true, taxRate: 7 },
+  { id: 'ct5', code: 'CADDY', name: 'Caddy Fee', defaultPrice: 500, taxable: false, taxRate: 0 },
+]
+
+// Mock member options for combobox
+const mockMemberOptions: MemberOption[] = [
+  { id: 'M001', memberId: 'M001', firstName: 'John', lastName: 'Smith', email: 'john@example.com' },
+  { id: 'M002', memberId: 'M002', firstName: 'Sarah', lastName: 'Johnson', email: 'sarah@example.com' },
+  { id: 'M003', memberId: 'M003', firstName: 'Michael', lastName: 'Chen', email: 'michael@example.com' },
+  { id: 'M004', memberId: 'M004', firstName: 'Emily', lastName: 'Davis', email: 'emily@example.com' },
+  { id: 'M005', memberId: 'M005', firstName: 'Robert', lastName: 'Wilson', email: 'robert@example.com' },
+]
+
+// Mock member search results
+const mockMemberSearchResults: MemberSearchResult[] = [
+  { id: 'M001', name: 'John Smith', memberNumber: 'M001', membershipType: 'Golf Premium', agingStatus: 'current', creditBalance: 0 },
+  { id: 'M002', name: 'Sarah Johnson', memberNumber: 'M002', membershipType: 'Golf Standard', agingStatus: '30', creditBalance: 0 },
+  { id: 'M003', name: 'Michael Chen', memberNumber: 'M003', membershipType: 'Golf Premium', agingStatus: '90', creditBalance: 0 },
+]
+
+// Mock outlets for payment
+const mockOutlets = [
+  { id: 'o1', name: 'Main Office' },
+  { id: 'o2', name: 'Pro Shop' },
+  { id: 'o3', name: 'Restaurant' },
+  { id: 'o4', name: 'Fitness Center' },
+]
+
 export default function BillingPage() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<BillingTab>('invoices')
   const [currentPage, setCurrentPage] = useState(1)
+
+  // Modal states
+  const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false)
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
+  const [isCreditNoteModalOpen, setIsCreditNoteModalOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Fetch invoices from API
   const {
@@ -315,13 +387,92 @@ export default function BillingPage() {
   const tabBadges: Partial<Record<BillingTab, number>> = {
     invoices: invoiceTotalCount,
     receipts: mockReceipts.length,
+    'credit-notes': mockCreditNotes.filter((c) => c.status === 'pending_approval').length,
     'wht-certificates': mockWhtCertificates.filter((c) => c.status === 'pending').length,
     aging: agingMembers.length,
   }
 
+  // Modal handlers
   const handleNewReceipt = () => {
-    router.push('/billing/receipts/new')
+    setIsPaymentModalOpen(true)
   }
+
+  const handleNewInvoice = () => {
+    setIsInvoiceModalOpen(true)
+  }
+
+  const handleNewCreditNote = () => {
+    setIsCreditNoteModalOpen(true)
+  }
+
+  const handleInvoiceSubmit = useCallback(async (data: InvoiceFormData) => {
+    setIsSubmitting(true)
+    try {
+      // TODO: Call GraphQL mutation
+      console.log('Creating invoice:', data)
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+      setIsInvoiceModalOpen(false)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }, [])
+
+  const handlePaymentSubmit = useCallback(async (data: unknown) => {
+    setIsSubmitting(true)
+    try {
+      // TODO: Call GraphQL mutation
+      console.log('Recording payment:', data)
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+      setIsPaymentModalOpen(false)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }, [])
+
+  const handleCreditNoteSubmit = useCallback(async (data: CreditNoteFormData) => {
+    setIsSubmitting(true)
+    try {
+      // TODO: Call GraphQL mutation
+      console.log('Creating credit note:', data)
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+      setIsCreditNoteModalOpen(false)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }, [])
+
+  const handleMemberSelect = useCallback(async (memberId: string): Promise<{
+    member: MemberSelectionData
+    invoices: AllocationInvoice[]
+  }> => {
+    // Mock member selection - return member data and their pending invoices
+    const memberData = mockMemberOptions.find((m) => m.id === memberId)
+    const memberInvoices = mockInvoices
+      .filter((inv) => inv.memberId === memberId && inv.balance > 0)
+      .map((inv) => ({
+        id: inv.id,
+        invoiceNumber: inv.invoiceNumber,
+        date: inv.date instanceof Date ? inv.date : new Date(inv.date),
+        dueDate: inv.dueDate instanceof Date ? inv.dueDate : new Date(inv.dueDate),
+        amount: inv.amount,
+        balance: inv.balance,
+        agingStatus: inv.agingStatus,
+      }))
+
+    const agingStatus = memberInvoices[0]?.agingStatus || 'current'
+
+    return {
+      member: {
+        id: memberId,
+        name: memberData ? `${memberData.firstName} ${memberData.lastName}` : 'Unknown',
+        memberNumber: memberData?.memberId || memberId,
+        membershipType: 'Golf Premium',
+        agingStatus: agingStatus as AgingStatus,
+        creditBalance: 0,
+      },
+      invoices: memberInvoices,
+    }
+  }, [])
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -335,7 +486,7 @@ export default function BillingPage() {
             totalCount={invoiceTotalCount}
             pageSize={20}
             isLoading={isInvoicesLoading}
-            onCreateInvoice={() => console.log('Create invoice')}
+            onCreateInvoice={handleNewInvoice}
             onRowAction={(action, id) => {
               if (action === 'view') {
                 router.push(`/billing/invoices/${id}`)
@@ -363,6 +514,32 @@ export default function BillingPage() {
                 console.log('Download receipt PDF:', id)
               } else if (action === 'void') {
                 console.log('Void receipt:', id)
+              }
+            }}
+          />
+        )
+      case 'credit-notes':
+        return (
+          <CreditNoteList
+            creditNotes={mockCreditNotes}
+            summary={mockCreditNoteSummary}
+            currentPage={1}
+            totalPages={1}
+            totalCount={mockCreditNotes.length}
+            pageSize={20}
+            isLoading={false}
+            onCreateCreditNote={handleNewCreditNote}
+            onRowAction={(action, id) => {
+              if (action === 'view') {
+                router.push(`/billing/credit-notes/${id}`)
+              } else if (action === 'approve') {
+                console.log('Approve credit note:', id)
+              } else if (action === 'apply-balance') {
+                console.log('Apply to balance:', id)
+              } else if (action === 'apply-invoice') {
+                console.log('Apply to invoice:', id)
+              } else if (action === 'void') {
+                console.log('Void credit note:', id)
               }
             }}
           />
@@ -422,24 +599,28 @@ export default function BillingPage() {
     }
   }
 
-  return (
-    <BillingTabsLayout
-      activeTab={activeTab}
-      onTabChange={setActiveTab}
-      tabBadges={tabBadges}
-      actions={
-        activeTab === 'invoices' ? (
+  // Render action buttons based on active tab
+  const renderActions = () => {
+    switch (activeTab) {
+      case 'invoices':
+        return (
           <div className="flex gap-2">
             <Button variant="outline" size="sm">
               <Wand2 className="mr-2 h-4 w-4" />
               Generate Monthly
             </Button>
-            <Button size="sm" className="bg-gradient-to-br from-amber-500 to-amber-600 text-white">
+            <Button
+              size="sm"
+              className="bg-gradient-to-br from-amber-500 to-amber-600 text-white"
+              onClick={handleNewInvoice}
+            >
               <Plus className="mr-2 h-4 w-4" />
               New Invoice
             </Button>
           </div>
-        ) : activeTab === 'receipts' ? (
+        )
+      case 'receipts':
+        return (
           <Button
             size="sm"
             onClick={handleNewReceipt}
@@ -448,10 +629,69 @@ export default function BillingPage() {
             <Plus className="mr-2 h-4 w-4" />
             Record Payment
           </Button>
-        ) : null
-      }
-    >
-      {renderTabContent()}
-    </BillingTabsLayout>
+        )
+      case 'credit-notes':
+        return (
+          <Button
+            size="sm"
+            onClick={handleNewCreditNote}
+            className="bg-gradient-to-br from-amber-500 to-amber-600 text-white"
+          >
+            <FileText className="mr-2 h-4 w-4" />
+            New Credit Note
+          </Button>
+        )
+      default:
+        return null
+    }
+  }
+
+  return (
+    <>
+      <BillingTabsLayout
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        tabBadges={tabBadges}
+        actions={renderActions()}
+      >
+        {renderTabContent()}
+      </BillingTabsLayout>
+
+      {/* Invoice Create Modal */}
+      <InvoiceCreateModal
+        open={isInvoiceModalOpen}
+        onOpenChange={setIsInvoiceModalOpen}
+        members={mockMemberOptions}
+        chargeTypes={mockChargeTypes}
+        isLoadingMembers={false}
+        onMemberSearch={(query) => console.log('Search members:', query)}
+        onSubmit={handleInvoiceSubmit}
+        isSubmitting={isSubmitting}
+      />
+
+      {/* Payment Record Modal */}
+      <PaymentRecordModal
+        open={isPaymentModalOpen}
+        onOpenChange={setIsPaymentModalOpen}
+        onMemberSearch={(query) => console.log('Search members:', query)}
+        memberSearchResults={mockMemberSearchResults}
+        isSearchingMembers={false}
+        onMemberSelect={handleMemberSelect}
+        outlets={mockOutlets}
+        onSubmit={handlePaymentSubmit}
+        isSubmitting={isSubmitting}
+      />
+
+      {/* Credit Note Modal */}
+      <CreditNoteModal
+        open={isCreditNoteModalOpen}
+        onOpenChange={setIsCreditNoteModalOpen}
+        members={mockMemberOptions}
+        isLoadingMembers={false}
+        onMemberSearch={(query) => console.log('Search members:', query)}
+        onSubmit={handleCreditNoteSubmit}
+        isSubmitting={isSubmitting}
+      />
+    </>
   )
 }

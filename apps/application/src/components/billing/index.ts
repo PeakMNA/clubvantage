@@ -88,6 +88,12 @@ export {
   type CreditNoteType,
   type CreditNoteReason,
 } from './credit-note-modal'
+export {
+  CreditNoteList,
+  type CreditNoteListItem,
+  type CreditNoteSummary,
+  type CreditNoteStatus,
+} from './credit-note-list'
 
 // Legacy (to be deprecated)
 export { InvoicesTable } from './invoices-table'
