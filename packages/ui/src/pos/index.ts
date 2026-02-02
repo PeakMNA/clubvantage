@@ -11,3 +11,4 @@ export * from './pos-product-tile';
 export * from './pos-quick-keys-bar';
 export * from './pos-suggestions-row';
 export * from './pos-category-nav';
+export * from './pos-variant-picker';
