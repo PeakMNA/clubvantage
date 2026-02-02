@@ -1,0 +1,202 @@
+# Product Panel Operations
+
+# Main query for outlet product panel
+query OutletProductPanel($outletId: ID!) {
+  outletGridConfig(outletId: $outletId) {
+    id
+    gridColumns
+    gridRows
+    tileSize
+    showImages
+    showPrices
+    categoryStyle
+    showAllCategory
+    quickKeysEnabled
+    quickKeysCount
+    quickKeysPosition
+  }
+
+  productCategories(outletId: $outletId) {
+    id
+    name
+    color
+    iconName
+    sortOrder
+    parentId
+  }
+
+  outletProducts(outletId: $outletId) {
+    id
+    name
+    sku
+    productType
+    basePrice
+    imageUrl
+    thumbnailUrl
+    trackInventory
+    stockQuantity
+    lowStockThreshold
+    category {
+      id
+      name
+      color
+    }
+    variants {
+      id
+      name
+      sku
+      priceAdjustment
+      attributes
+      stockQuantity
+      imageUrl
+      isActive
+    }
+    modifierGroups {
+      id
+      modifierGroup {
+        id
+        name
+        selectionType
+        minSelections
+        maxSelections
+        modifiers {
+          id
+          name
+          priceAdjustment
+          isDefault
+          isActive
+        }
+      }
+      isRequired
+      sortOrder
+    }
+    outletConfig {
+      displayName
+      buttonColor
+      sortPriority
+      gridPosition
+      isVisible
+      isQuickKey
+      quickKeyPosition
+    }
+  }
+
+  quickKeys(outletId: $outletId) {
+    id
+    name
+    basePrice
+    imageUrl
+    productType
+    category {
+      id
+      color
+    }
+  }
+}
+
+# Smart suggestions (separate query, refreshed on interval)
+query SmartSuggestions($outletId: ID!, $staffId: ID) {
+  smartSuggestions(outletId: $outletId, staffId: $staffId) {
+    id
+    name
+    basePrice
+    imageUrl
+    productType
+    category {
+      id
+      color
+    }
+  }
+}
+
+# Record sale for metrics
+mutation RecordProductSale($outletId: ID!, $productId: ID!, $staffId: ID, $quantity: Int!) {
+  recordProductSale(
+    outletId: $outletId
+    productId: $productId
+    staffId: $staffId
+    quantity: $quantity
+  ) {
+    success
+  }
+}
+
+# Admin: Get all products for outlet config
+query OutletProductConfigs($outletId: ID!) {
+  outletProductConfigs(outletId: $outletId) {
+    id
+    productId
+    displayName
+    buttonColor
+    sortPriority
+    gridPosition
+    isVisible
+    visibilityRules
+    isQuickKey
+    quickKeyPosition
+    product {
+      id
+      name
+      sku
+      productType
+      basePrice
+      imageUrl
+      category {
+        id
+        name
+        color
+      }
+    }
+  }
+}
+
+# Admin: Update outlet product config
+mutation UpdateOutletProductConfig($outletId: ID!, $productId: ID!, $input: UpdateOutletProductConfigInput!) {
+  updateOutletProductConfig(outletId: $outletId, productId: $productId, input: $input) {
+    id
+    displayName
+    buttonColor
+    sortPriority
+    isVisible
+    isQuickKey
+    quickKeyPosition
+  }
+}
+
+# Admin: Bulk update product visibility
+mutation BulkUpdateOutletProductConfigs($outletId: ID!, $input: BulkOutletProductConfigInput!) {
+  bulkUpdateOutletProductConfigs(outletId: $outletId, input: $input) {
+    id
+    isVisible
+    isQuickKey
+  }
+}
+
+# Admin: Update outlet grid config
+mutation UpdateOutletGridConfig($outletId: ID!, $input: UpdateOutletGridConfigInput!) {
+  updateOutletGridConfig(outletId: $outletId, input: $input) {
+    id
+    gridColumns
+    gridRows
+    tileSize
+    showImages
+    showPrices
+    categoryStyle
+    quickKeysEnabled
+    quickKeysCount
+    quickKeysPosition
+  }
+}
+
+# Admin: Update smart suggestion config
+mutation UpdateSmartSuggestionConfig($outletId: ID!, $input: UpdateSmartSuggestionConfigInput!) {
+  updateSmartSuggestionConfig(outletId: $outletId, input: $input) {
+    id
+    enabled
+    suggestionCount
+    position
+    timeOfDayWeight
+    salesVelocityWeight
+    staffHistoryWeight
+  }
+}
