@@ -41,17 +41,18 @@ export class OutletConfigService {
     productId: string,
     input: UpdateOutletProductConfigInput,
   ) {
+    const { visibilityRules, ...rest } = input;
     return this.prisma.outletProductConfig.upsert({
       where: { outletId_productId: { outletId, productId } },
       create: {
         outletId,
         productId,
-        ...input,
-        visibilityRules: input.visibilityRules || {},
+        ...rest,
+        visibilityRules: visibilityRules ? JSON.parse(JSON.stringify(visibilityRules)) : {},
       },
       update: {
-        ...input,
-        ...(input.visibilityRules && { visibilityRules: input.visibilityRules }),
+        ...rest,
+        ...(visibilityRules && { visibilityRules: JSON.parse(JSON.stringify(visibilityRules)) }),
       },
     });
   }
