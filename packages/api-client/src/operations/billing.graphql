@@ -275,3 +275,162 @@ mutation RecordPayment($input: CreatePaymentInput!) {
     }
   }
 }
+
+# Credit Note Queries
+
+query GetCreditNotes(
+  $first: Int
+  $skip: Int
+  $memberId: ID
+  $status: CreditNoteStatus
+  $startDate: DateTime
+  $endDate: DateTime
+) {
+  creditNotes(
+    first: $first
+    skip: $skip
+    memberId: $memberId
+    status: $status
+    startDate: $startDate
+    endDate: $endDate
+  ) {
+    edges {
+      node {
+        id
+        creditNoteNumber
+        issueDate
+        type
+        reason
+        reasonDetail
+        subtotal
+        taxAmount
+        totalAmount
+        appliedToBalance
+        refundedAmount
+        status
+        createdAt
+        member {
+          id
+          memberId
+          firstName
+          lastName
+        }
+      }
+      cursor
+    }
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      startCursor
+      endCursor
+    }
+    totalCount
+  }
+}
+
+query GetCreditNote($id: ID!) {
+  creditNote(id: $id) {
+    id
+    creditNoteNumber
+    issueDate
+    type
+    reason
+    reasonDetail
+    subtotal
+    taxAmount
+    totalAmount
+    appliedToBalance
+    refundedAmount
+    status
+    internalNotes
+    memberVisibleNotes
+    approvedAt
+    voidedAt
+    createdAt
+    updatedAt
+    member {
+      id
+      memberId
+      firstName
+      lastName
+    }
+    lineItems {
+      id
+      description
+      quantity
+      unitPrice
+      lineTotal
+      taxable
+      taxRate
+      taxAmount
+      chargeType {
+        id
+        name
+        code
+      }
+    }
+    applications {
+      id
+      amountApplied
+      appliedAt
+      invoice {
+        id
+        invoiceNumber
+        totalAmount
+        balanceDue
+      }
+    }
+  }
+}
+
+# Credit Note Mutations
+
+mutation CreateCreditNote($input: CreateCreditNoteInput!) {
+  createCreditNote(input: $input) {
+    id
+    creditNoteNumber
+    totalAmount
+    status
+  }
+}
+
+mutation ApproveCreditNote($id: ID!) {
+  approveCreditNote(id: $id) {
+    id
+    creditNoteNumber
+    status
+    approvedAt
+  }
+}
+
+mutation ApplyCreditNoteToBalance($id: ID!) {
+  applyCreditNoteToBalance(id: $id) {
+    id
+    creditNoteNumber
+    status
+    appliedToBalance
+  }
+}
+
+mutation ApplyCreditNoteToInvoice($id: ID!, $input: ApplyCreditNoteInput!) {
+  applyCreditNoteToInvoice(id: $id, input: $input) {
+    id
+    creditNoteNumber
+    status
+    appliedToBalance
+    applications {
+      id
+      amountApplied
+      appliedAt
+    }
+  }
+}
+
+mutation VoidCreditNote($id: ID!, $input: VoidCreditNoteInput!) {
+  voidCreditNote(id: $id, input: $input) {
+    id
+    creditNoteNumber
+    status
+    voidedAt
+  }
+}

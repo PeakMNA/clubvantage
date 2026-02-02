@@ -365,3 +365,167 @@ export class ArAgingReportType {
   @Field()
   totalCount: number;
 }
+
+// Credit Note types
+export enum CreditNoteType {
+  REFUND = 'REFUND',
+  ADJUSTMENT = 'ADJUSTMENT',
+  COURTESY = 'COURTESY',
+  PROMO = 'PROMO',
+  WRITE_OFF = 'WRITE_OFF',
+  RETURN = 'RETURN',
+  CANCELLATION = 'CANCELLATION',
+}
+
+export enum CreditNoteReason {
+  BILLING_ERROR = 'BILLING_ERROR',
+  DUPLICATE_CHARGE = 'DUPLICATE_CHARGE',
+  SERVICE_NOT_RENDERED = 'SERVICE_NOT_RENDERED',
+  MEMBERSHIP_CANCELLATION = 'MEMBERSHIP_CANCELLATION',
+  PRODUCT_RETURN = 'PRODUCT_RETURN',
+  PRICE_ADJUSTMENT = 'PRICE_ADJUSTMENT',
+  CUSTOMER_SATISFACTION = 'CUSTOMER_SATISFACTION',
+  EVENT_CANCELLATION = 'EVENT_CANCELLATION',
+  RAIN_CHECK = 'RAIN_CHECK',
+  OVERPAYMENT = 'OVERPAYMENT',
+  OTHER = 'OTHER',
+}
+
+export enum CreditNoteStatus {
+  DRAFT = 'DRAFT',
+  PENDING_APPROVAL = 'PENDING_APPROVAL',
+  APPROVED = 'APPROVED',
+  APPLIED = 'APPLIED',
+  PARTIALLY_APPLIED = 'PARTIALLY_APPLIED',
+  REFUNDED = 'REFUNDED',
+  VOIDED = 'VOIDED',
+}
+
+registerEnumType(CreditNoteType, {
+  name: 'CreditNoteType',
+  description: 'Credit note type options',
+});
+
+registerEnumType(CreditNoteReason, {
+  name: 'CreditNoteReason',
+  description: 'Credit note reason options',
+});
+
+registerEnumType(CreditNoteStatus, {
+  name: 'CreditNoteStatus',
+  description: 'Credit note status options',
+});
+
+@ObjectType()
+export class CreditNoteLineItemType {
+  @Field(() => ID)
+  id: string;
+
+  @Field()
+  description: string;
+
+  @Field()
+  quantity: number;
+
+  @Field()
+  unitPrice: string;
+
+  @Field()
+  lineTotal: string;
+
+  @Field()
+  taxable: boolean;
+
+  @Field()
+  taxRate: string;
+
+  @Field()
+  taxAmount: string;
+
+  @Field(() => ChargeTypeType, { nullable: true })
+  chargeType?: ChargeTypeType;
+}
+
+@ObjectType()
+export class CreditNoteApplicationType {
+  @Field(() => ID)
+  id: string;
+
+  @Field()
+  amountApplied: string;
+
+  @Field()
+  appliedAt: Date;
+
+  @Field(() => InvoiceType, { nullable: true })
+  invoice?: InvoiceType;
+}
+
+@ObjectType()
+export class CreditNoteGraphQLType {
+  @Field(() => ID)
+  id: string;
+
+  @Field()
+  creditNoteNumber: string;
+
+  @Field()
+  issueDate: Date;
+
+  @Field(() => CreditNoteType)
+  type: CreditNoteType;
+
+  @Field(() => CreditNoteReason)
+  reason: CreditNoteReason;
+
+  @Field({ nullable: true })
+  reasonDetail?: string;
+
+  @Field()
+  subtotal: string;
+
+  @Field()
+  taxAmount: string;
+
+  @Field()
+  totalAmount: string;
+
+  @Field()
+  appliedToBalance: string;
+
+  @Field()
+  refundedAmount: string;
+
+  @Field(() => CreditNoteStatus)
+  status: CreditNoteStatus;
+
+  @Field({ nullable: true })
+  internalNotes?: string;
+
+  @Field({ nullable: true })
+  memberVisibleNotes?: string;
+
+  @Field({ nullable: true })
+  approvedAt?: Date;
+
+  @Field({ nullable: true })
+  voidedAt?: Date;
+
+  @Field()
+  createdAt: Date;
+
+  @Field()
+  updatedAt: Date;
+
+  @Field(() => MemberSummaryBillingType, { nullable: true })
+  member?: MemberSummaryBillingType;
+
+  @Field(() => [CreditNoteLineItemType])
+  lineItems: CreditNoteLineItemType[];
+
+  @Field(() => [CreditNoteApplicationType], { nullable: true })
+  applications?: CreditNoteApplicationType[];
+}
+
+@ObjectType()
+export class CreditNoteConnection extends Paginated(CreditNoteGraphQLType) {}

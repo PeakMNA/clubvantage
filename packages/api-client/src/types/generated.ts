@@ -152,6 +152,11 @@ export type AppliedDiscountType = {
   transactionId?: Maybe<Scalars['String']['output']>;
 };
 
+export type ApplyCreditNoteInput = {
+  amount: Scalars['Float']['input'];
+  invoiceId: Scalars['ID']['input'];
+};
+
 export type ApplyDiscountByCodeInput = {
   code: Scalars['String']['input'];
   lineItemId?: InputMaybe<Scalars['ID']['input']>;
@@ -993,6 +998,17 @@ export type CreateCashDrawerInput = {
   name: Scalars['String']['input'];
 };
 
+export type CreateCreditNoteInput = {
+  internalNotes?: InputMaybe<Scalars['String']['input']>;
+  lineItems: Array<CreditNoteLineItemInput>;
+  memberId: Scalars['ID']['input'];
+  memberVisibleNotes?: InputMaybe<Scalars['String']['input']>;
+  reason: CreditNoteReason;
+  reasonDetail?: InputMaybe<Scalars['String']['input']>;
+  sourceInvoiceId?: InputMaybe<Scalars['ID']['input']>;
+  type: CreditNoteType;
+};
+
 export type CreateCreditOverrideInput = {
   expiresAt?: InputMaybe<Scalars['DateTime']['input']>;
   memberId: Scalars['ID']['input'];
@@ -1403,6 +1419,108 @@ export type CreditLimitOverrideType = {
   previousLimit: Scalars['Float']['output'];
   reason: Scalars['String']['output'];
 };
+
+export type CreditNoteApplicationType = {
+  __typename?: 'CreditNoteApplicationType';
+  amountApplied: Scalars['String']['output'];
+  appliedAt: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  invoice?: Maybe<InvoiceType>;
+};
+
+export type CreditNoteConnection = {
+  __typename?: 'CreditNoteConnection';
+  edges: Array<CreditNoteGraphQlTypeEdge>;
+  pageInfo: PageInfo;
+  totalCount: Scalars['Int']['output'];
+};
+
+export type CreditNoteGraphQlType = {
+  __typename?: 'CreditNoteGraphQLType';
+  applications?: Maybe<Array<CreditNoteApplicationType>>;
+  appliedToBalance: Scalars['String']['output'];
+  approvedAt?: Maybe<Scalars['DateTime']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  creditNoteNumber: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  internalNotes?: Maybe<Scalars['String']['output']>;
+  issueDate: Scalars['DateTime']['output'];
+  lineItems: Array<CreditNoteLineItemType>;
+  member?: Maybe<MemberSummaryBillingType>;
+  memberVisibleNotes?: Maybe<Scalars['String']['output']>;
+  reason: CreditNoteReason;
+  reasonDetail?: Maybe<Scalars['String']['output']>;
+  refundedAmount: Scalars['String']['output'];
+  status: CreditNoteStatus;
+  subtotal: Scalars['String']['output'];
+  taxAmount: Scalars['String']['output'];
+  totalAmount: Scalars['String']['output'];
+  type: CreditNoteType;
+  updatedAt: Scalars['DateTime']['output'];
+  voidedAt?: Maybe<Scalars['DateTime']['output']>;
+};
+
+export type CreditNoteGraphQlTypeEdge = {
+  __typename?: 'CreditNoteGraphQLTypeEdge';
+  cursor: Scalars['String']['output'];
+  node: CreditNoteGraphQlType;
+};
+
+export type CreditNoteLineItemInput = {
+  chargeTypeId?: InputMaybe<Scalars['ID']['input']>;
+  description: Scalars['String']['input'];
+  quantity?: Scalars['Float']['input'];
+  taxRate?: InputMaybe<Scalars['Float']['input']>;
+  taxable?: InputMaybe<Scalars['Boolean']['input']>;
+  unitPrice: Scalars['Float']['input'];
+};
+
+export type CreditNoteLineItemType = {
+  __typename?: 'CreditNoteLineItemType';
+  chargeType?: Maybe<ChargeTypeType>;
+  description: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  lineTotal: Scalars['String']['output'];
+  quantity: Scalars['Float']['output'];
+  taxAmount: Scalars['String']['output'];
+  taxRate: Scalars['String']['output'];
+  taxable: Scalars['Boolean']['output'];
+  unitPrice: Scalars['String']['output'];
+};
+
+/** Credit note reason options */
+export type CreditNoteReason =
+  | 'BILLING_ERROR'
+  | 'CUSTOMER_SATISFACTION'
+  | 'DUPLICATE_CHARGE'
+  | 'EVENT_CANCELLATION'
+  | 'MEMBERSHIP_CANCELLATION'
+  | 'OTHER'
+  | 'OVERPAYMENT'
+  | 'PRICE_ADJUSTMENT'
+  | 'PRODUCT_RETURN'
+  | 'RAIN_CHECK'
+  | 'SERVICE_NOT_RENDERED';
+
+/** Credit note status options */
+export type CreditNoteStatus =
+  | 'APPLIED'
+  | 'APPROVED'
+  | 'DRAFT'
+  | 'PARTIALLY_APPLIED'
+  | 'PENDING_APPROVAL'
+  | 'REFUNDED'
+  | 'VOIDED';
+
+/** Credit note type options */
+export type CreditNoteType =
+  | 'ADJUSTMENT'
+  | 'CANCELLATION'
+  | 'COURTESY'
+  | 'PROMO'
+  | 'REFUND'
+  | 'RETURN'
+  | 'WRITE_OFF';
 
 export type CreditSettingsType = {
   __typename?: 'CreditSettingsType';
@@ -2517,10 +2635,16 @@ export type Mutation = {
   addLineItem: BookingLineItemType;
   /** Add a new stored payment method */
   addPaymentMethod: StoredPaymentMethod;
+  /** Apply credit note to member balance */
+  applyCreditNoteToBalance: CreditNoteGraphQlType;
+  /** Apply credit note to a specific invoice */
+  applyCreditNoteToInvoice: CreditNoteGraphQlType;
   /** Apply a discount to a line item or transaction */
   applyDiscount: ApplyDiscountResultType;
   /** Apply a discount using a promo code */
   applyDiscountByCode: ApplyDiscountResultType;
+  /** Approve a credit note */
+  approveCreditNote: CreditNoteGraphQlType;
   /** Approve a pending discount that requires manager approval */
   approveDiscount: AppliedDiscountType;
   /** Auto-assign players to flights */
@@ -2590,6 +2714,8 @@ export type Mutation = {
   createCheckInPaymentMethod: CheckInPaymentMethodType;
   /** Create a course schedule */
   createCourseSchedule: ScheduleMutationResponse;
+  /** Create a new credit note */
+  createCreditNote: CreditNoteGraphQlType;
   /** Create a credit limit override (temporary or permanent increase) */
   createCreditOverride: CreditLimitOverrideType;
   /** Create default schedule configuration for a course */
@@ -2899,6 +3025,8 @@ export type Mutation = {
   upsertPOSTemplate: UpsertTemplateMutationResponse;
   /** Verify a sub-account PIN */
   verifySubAccountPin: PinVerificationResult;
+  /** Void a credit note */
+  voidCreditNote: CreditNoteGraphQlType;
   /** Void an invoice */
   voidInvoice: InvoiceType;
 };
@@ -2925,6 +3053,17 @@ export type MutationAddPaymentMethodArgs = {
 };
 
 
+export type MutationApplyCreditNoteToBalanceArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationApplyCreditNoteToInvoiceArgs = {
+  id: Scalars['ID']['input'];
+  input: ApplyCreditNoteInput;
+};
+
+
 export type MutationApplyDiscountArgs = {
   input: ApplyDiscountInput;
 };
@@ -2932,6 +3071,11 @@ export type MutationApplyDiscountArgs = {
 
 export type MutationApplyDiscountByCodeArgs = {
   input: ApplyDiscountByCodeInput;
+};
+
+
+export type MutationApproveCreditNoteArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -3115,6 +3259,11 @@ export type MutationCreateCheckInPaymentMethodArgs = {
 
 export type MutationCreateCourseScheduleArgs = {
   input: CreateScheduleInput;
+};
+
+
+export type MutationCreateCreditNoteArgs = {
+  input: CreateCreditNoteInput;
 };
 
 
@@ -3954,6 +4103,12 @@ export type MutationVerifySubAccountPinArgs = {
 };
 
 
+export type MutationVoidCreditNoteArgs = {
+  id: Scalars['ID']['input'];
+  input: VoidCreditNoteInput;
+};
+
+
 export type MutationVoidInvoiceArgs = {
   id: Scalars['ID']['input'];
   input: VoidInvoiceInput;
@@ -4550,6 +4705,10 @@ export type Query = {
   courseSchedules: Array<GolfCourseScheduleType>;
   /** Get all golf courses */
   courses: Array<GolfCourseType>;
+  /** Get a single credit note by ID */
+  creditNote: CreditNoteGraphQlType;
+  /** Get paginated list of credit notes */
+  creditNotes: CreditNoteConnection;
   /** Get or create current period spend for a member and requirement */
   currentMemberSpend: MemberMinimumSpend;
   /** Get the current open shift for a drawer */
@@ -4867,6 +5026,22 @@ export type QueryCheckSubAccountLimitArgs = {
 
 export type QueryCourseSchedulesArgs = {
   courseId: Scalars['ID']['input'];
+};
+
+
+export type QueryCreditNoteArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryCreditNotesArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  endDate?: InputMaybe<Scalars['DateTime']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  memberId?: InputMaybe<Scalars['ID']['input']>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  startDate?: InputMaybe<Scalars['DateTime']['input']>;
+  status?: InputMaybe<CreditNoteStatus>;
 };
 
 
@@ -6850,6 +7025,10 @@ export type VisibilityRulesInput = {
   timeRules?: InputMaybe<Array<TimeRuleInput>>;
 };
 
+export type VoidCreditNoteInput = {
+  reason: Scalars['String']['input'];
+};
+
 export type VoidInvoiceInput = {
   reason: Scalars['String']['input'];
 };
@@ -7084,6 +7263,62 @@ export type RecordPaymentMutationVariables = Exact<{
 
 
 export type RecordPaymentMutation = { __typename?: 'Mutation', recordPayment: { __typename?: 'PaymentType', id: string, receiptNumber: string, amount: string, method: PaymentMethod, paymentDate: string, member?: { __typename?: 'MemberSummaryBillingType', id: string, memberId: string, firstName: string, lastName: string } | null | undefined } };
+
+export type GetCreditNotesQueryVariables = Exact<{
+  first?: InputMaybe<Scalars['Int']['input']>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  memberId?: InputMaybe<Scalars['ID']['input']>;
+  status?: InputMaybe<CreditNoteStatus>;
+  startDate?: InputMaybe<Scalars['DateTime']['input']>;
+  endDate?: InputMaybe<Scalars['DateTime']['input']>;
+}>;
+
+
+export type GetCreditNotesQuery = { __typename?: 'Query', creditNotes: { __typename?: 'CreditNoteConnection', totalCount: number, edges: Array<{ __typename?: 'CreditNoteGraphQLTypeEdge', cursor: string, node: { __typename?: 'CreditNoteGraphQLType', id: string, creditNoteNumber: string, issueDate: string, type: CreditNoteType, reason: CreditNoteReason, reasonDetail?: string | null | undefined, subtotal: string, taxAmount: string, totalAmount: string, appliedToBalance: string, refundedAmount: string, status: CreditNoteStatus, createdAt: string, member?: { __typename?: 'MemberSummaryBillingType', id: string, memberId: string, firstName: string, lastName: string } | null | undefined } }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean, startCursor?: string | null | undefined, endCursor?: string | null | undefined } } };
+
+export type GetCreditNoteQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetCreditNoteQuery = { __typename?: 'Query', creditNote: { __typename?: 'CreditNoteGraphQLType', id: string, creditNoteNumber: string, issueDate: string, type: CreditNoteType, reason: CreditNoteReason, reasonDetail?: string | null | undefined, subtotal: string, taxAmount: string, totalAmount: string, appliedToBalance: string, refundedAmount: string, status: CreditNoteStatus, internalNotes?: string | null | undefined, memberVisibleNotes?: string | null | undefined, approvedAt?: string | null | undefined, voidedAt?: string | null | undefined, createdAt: string, updatedAt: string, member?: { __typename?: 'MemberSummaryBillingType', id: string, memberId: string, firstName: string, lastName: string } | null | undefined, lineItems: Array<{ __typename?: 'CreditNoteLineItemType', id: string, description: string, quantity: number, unitPrice: string, lineTotal: string, taxable: boolean, taxRate: string, taxAmount: string, chargeType?: { __typename?: 'ChargeTypeType', id: string, name: string, code: string } | null | undefined }>, applications?: Array<{ __typename?: 'CreditNoteApplicationType', id: string, amountApplied: string, appliedAt: string, invoice?: { __typename?: 'InvoiceType', id: string, invoiceNumber: string, totalAmount: string, balanceDue: string } | null | undefined }> | null | undefined } };
+
+export type CreateCreditNoteMutationVariables = Exact<{
+  input: CreateCreditNoteInput;
+}>;
+
+
+export type CreateCreditNoteMutation = { __typename?: 'Mutation', createCreditNote: { __typename?: 'CreditNoteGraphQLType', id: string, creditNoteNumber: string, totalAmount: string, status: CreditNoteStatus } };
+
+export type ApproveCreditNoteMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type ApproveCreditNoteMutation = { __typename?: 'Mutation', approveCreditNote: { __typename?: 'CreditNoteGraphQLType', id: string, creditNoteNumber: string, status: CreditNoteStatus, approvedAt?: string | null | undefined } };
+
+export type ApplyCreditNoteToBalanceMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type ApplyCreditNoteToBalanceMutation = { __typename?: 'Mutation', applyCreditNoteToBalance: { __typename?: 'CreditNoteGraphQLType', id: string, creditNoteNumber: string, status: CreditNoteStatus, appliedToBalance: string } };
+
+export type ApplyCreditNoteToInvoiceMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  input: ApplyCreditNoteInput;
+}>;
+
+
+export type ApplyCreditNoteToInvoiceMutation = { __typename?: 'Mutation', applyCreditNoteToInvoice: { __typename?: 'CreditNoteGraphQLType', id: string, creditNoteNumber: string, status: CreditNoteStatus, appliedToBalance: string, applications?: Array<{ __typename?: 'CreditNoteApplicationType', id: string, amountApplied: string, appliedAt: string }> | null | undefined } };
+
+export type VoidCreditNoteMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  input: VoidCreditNoteInput;
+}>;
+
+
+export type VoidCreditNoteMutation = { __typename?: 'Mutation', voidCreditNote: { __typename?: 'CreditNoteGraphQLType', id: string, creditNoteNumber: string, status: CreditNoteStatus, voidedAt?: string | null | undefined } };
 
 export type GetBookingsQueryVariables = Exact<{
   facilityId?: InputMaybe<Scalars['ID']['input']>;

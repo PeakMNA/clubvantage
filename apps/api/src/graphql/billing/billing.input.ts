@@ -10,7 +10,7 @@ import {
   Min,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { InvoiceStatus, PaymentMethod } from './billing.types';
+import { InvoiceStatus, PaymentMethod, CreditNoteType, CreditNoteReason, CreditNoteStatus } from './billing.types';
 import { PaginationArgs } from '../common/pagination';
 
 @InputType()
@@ -211,4 +211,118 @@ export class VoidInvoiceInput {
   @Field()
   @IsString()
   reason: string;
+}
+
+// Credit Note inputs
+@InputType()
+export class CreditNoteLineItemInput {
+  @Field()
+  @IsString()
+  description: string;
+
+  @Field(() => Float, { defaultValue: 1 })
+  @IsNumber()
+  @Min(0)
+  quantity: number;
+
+  @Field(() => Float)
+  @IsNumber()
+  @Min(0)
+  unitPrice: number;
+
+  @Field({ nullable: true, defaultValue: false })
+  @IsOptional()
+  taxable?: boolean;
+
+  @Field(() => Float, { nullable: true, defaultValue: 0 })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  taxRate?: number;
+
+  @Field(() => ID, { nullable: true })
+  @IsOptional()
+  @IsUUID()
+  chargeTypeId?: string;
+}
+
+@InputType()
+export class CreateCreditNoteInput {
+  @Field(() => ID)
+  @IsUUID()
+  memberId: string;
+
+  @Field(() => CreditNoteType)
+  @IsEnum(CreditNoteType)
+  type: CreditNoteType;
+
+  @Field(() => CreditNoteReason)
+  @IsEnum(CreditNoteReason)
+  reason: CreditNoteReason;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  reasonDetail?: string;
+
+  @Field(() => ID, { nullable: true })
+  @IsOptional()
+  @IsUUID()
+  sourceInvoiceId?: string;
+
+  @Field(() => [CreditNoteLineItemInput])
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreditNoteLineItemInput)
+  lineItems: CreditNoteLineItemInput[];
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  internalNotes?: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  memberVisibleNotes?: string;
+}
+
+@InputType()
+export class ApplyCreditNoteInput {
+  @Field(() => ID)
+  @IsUUID()
+  invoiceId: string;
+
+  @Field(() => Float)
+  @IsNumber()
+  @Min(0)
+  amount: number;
+}
+
+@InputType()
+export class VoidCreditNoteInput {
+  @Field()
+  @IsString()
+  reason: string;
+}
+
+@ArgsType()
+export class CreditNotesQueryArgs extends PaginationArgs {
+  @Field(() => ID, { nullable: true })
+  @IsOptional()
+  @IsUUID()
+  memberId?: string;
+
+  @Field(() => CreditNoteStatus, { nullable: true })
+  @IsOptional()
+  @IsEnum(CreditNoteStatus)
+  status?: CreditNoteStatus;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  startDate?: Date;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  endDate?: Date;
 }

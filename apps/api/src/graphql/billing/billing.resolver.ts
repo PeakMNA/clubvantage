@@ -17,12 +17,21 @@ import {
   AgingBucketType,
   AgingMemberType,
   ReinstatedMemberType,
+  CreditNoteGraphQLType,
+  CreditNoteConnection,
+  CreditNoteLineItemType,
+  CreditNoteApplicationType,
+  CreditNoteStatus,
 } from './billing.types';
 import {
   CreateInvoiceInput,
   CreatePaymentInput,
   InvoicesQueryArgs,
   VoidInvoiceInput,
+  CreateCreditNoteInput,
+  CreditNotesQueryArgs,
+  ApplyCreditNoteInput,
+  VoidCreditNoteInput,
 } from './billing.input';
 import { encodeCursor } from '../common/pagination';
 
@@ -604,6 +613,425 @@ export class BillingResolver {
         firstName: payment.member.firstName,
         lastName: payment.member.lastName,
       } : undefined,
+    };
+  }
+
+  // Credit Note Queries
+  @Query(() => CreditNoteConnection, { name: 'creditNotes', description: 'Get paginated list of credit notes' })
+  async getCreditNotes(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args() args: CreditNotesQueryArgs,
+  ): Promise<CreditNoteConnection> {
+    const { first, skip, memberId, status, startDate, endDate } = args;
+    const page = skip ? Math.floor(skip / (first || 20)) + 1 : 1;
+    const limit = first || 20;
+
+    const where: any = {
+      clubId: user.tenantId,
+    };
+
+    if (memberId) {
+      where.memberId = memberId;
+    }
+    if (status) {
+      where.status = status;
+    }
+    if (startDate || endDate) {
+      where.issueDate = {};
+      if (startDate) where.issueDate.gte = startDate;
+      if (endDate) where.issueDate.lte = endDate;
+    }
+
+    const [creditNotes, totalCount] = await Promise.all([
+      this.prisma.creditNote.findMany({
+        where,
+        include: {
+          member: true,
+          lineItems: {
+            include: { chargeType: true },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.creditNote.count({ where }),
+    ]);
+
+    const edges = creditNotes.map((cn) => ({
+      node: this.transformCreditNote(cn),
+      cursor: encodeCursor(cn.id),
+    }));
+
+    const totalPages = Math.ceil(totalCount / limit);
+
+    return {
+      edges,
+      pageInfo: {
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+        startCursor: edges.length > 0 ? edges[0].cursor : null,
+        endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
+      },
+      totalCount,
+    };
+  }
+
+  @Query(() => CreditNoteGraphQLType, { name: 'creditNote', description: 'Get a single credit note by ID' })
+  async getCreditNote(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('id', { type: () => ID }) id: string,
+  ): Promise<CreditNoteGraphQLType> {
+    const creditNote = await this.prisma.creditNote.findFirst({
+      where: { id, clubId: user.tenantId },
+      include: {
+        member: true,
+        lineItems: {
+          include: { chargeType: true },
+        },
+        applications: {
+          include: {
+            invoice: true,
+          },
+        },
+      },
+    });
+
+    if (!creditNote) {
+      throw new Error('Credit note not found');
+    }
+
+    return this.transformCreditNote(creditNote);
+  }
+
+  // Credit Note Mutations
+  @Mutation(() => CreditNoteGraphQLType, { name: 'createCreditNote', description: 'Create a new credit note' })
+  async createCreditNote(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('input') input: CreateCreditNoteInput,
+  ): Promise<CreditNoteGraphQLType> {
+    // Generate credit note number
+    const year = new Date().getFullYear();
+    const prefix = `CN-${year}-`;
+
+    const lastCreditNote = await this.prisma.creditNote.findFirst({
+      where: {
+        clubId: user.tenantId,
+        creditNoteNumber: { startsWith: prefix },
+      },
+      orderBy: { creditNoteNumber: 'desc' },
+    });
+
+    let nextNumber = 1;
+    if (lastCreditNote) {
+      const lastNumber = parseInt(lastCreditNote.creditNoteNumber.split('-').pop() || '0', 10);
+      nextNumber = lastNumber + 1;
+    }
+    const creditNoteNumber = `${prefix}${nextNumber.toString().padStart(6, '0')}`;
+
+    // Calculate totals
+    let subtotal = 0;
+    let taxAmount = 0;
+    const lineItemsData = input.lineItems.map((item) => {
+      const lineTotal = item.quantity * item.unitPrice;
+      const lineTax = item.taxable ? lineTotal * ((item.taxRate || 0) / 100) : 0;
+      subtotal += lineTotal;
+      taxAmount += lineTax;
+
+      return {
+        description: item.description,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        lineTotal,
+        taxable: item.taxable || false,
+        taxRate: item.taxRate || 0,
+        taxAmount: lineTax,
+        chargeTypeId: item.chargeTypeId,
+      };
+    });
+
+    const totalAmount = subtotal + taxAmount;
+
+    const creditNote = await this.prisma.creditNote.create({
+      data: {
+        clubId: user.tenantId,
+        memberId: input.memberId,
+        creditNoteNumber,
+        type: input.type,
+        reason: input.reason,
+        reasonDetail: input.reasonDetail,
+        sourceInvoiceId: input.sourceInvoiceId,
+        subtotal,
+        taxAmount,
+        totalAmount,
+        status: 'PENDING_APPROVAL',
+        internalNotes: input.internalNotes,
+        memberVisibleNotes: input.memberVisibleNotes,
+        createdBy: user.sub,
+        lineItems: {
+          create: lineItemsData,
+        },
+      },
+      include: {
+        member: true,
+        lineItems: {
+          include: { chargeType: true },
+        },
+      },
+    });
+
+    return this.transformCreditNote(creditNote);
+  }
+
+  @Mutation(() => CreditNoteGraphQLType, { name: 'approveCreditNote', description: 'Approve a credit note' })
+  async approveCreditNote(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('id', { type: () => ID }) id: string,
+  ): Promise<CreditNoteGraphQLType> {
+    const creditNote = await this.prisma.creditNote.findFirst({
+      where: { id, clubId: user.tenantId },
+    });
+
+    if (!creditNote) {
+      throw new Error('Credit note not found');
+    }
+
+    if (creditNote.status !== 'PENDING_APPROVAL') {
+      throw new Error('Credit note is not pending approval');
+    }
+
+    const updated = await this.prisma.creditNote.update({
+      where: { id },
+      data: {
+        status: 'APPROVED',
+        approvedBy: user.sub,
+        approvedAt: new Date(),
+      },
+      include: {
+        member: true,
+        lineItems: {
+          include: { chargeType: true },
+        },
+      },
+    });
+
+    return this.transformCreditNote(updated);
+  }
+
+  @Mutation(() => CreditNoteGraphQLType, { name: 'applyCreditNoteToBalance', description: 'Apply credit note to member balance' })
+  async applyCreditNoteToBalance(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('id', { type: () => ID }) id: string,
+  ): Promise<CreditNoteGraphQLType> {
+    const creditNote = await this.prisma.creditNote.findFirst({
+      where: { id, clubId: user.tenantId },
+    });
+
+    if (!creditNote) {
+      throw new Error('Credit note not found');
+    }
+
+    if (creditNote.status !== 'APPROVED') {
+      throw new Error('Credit note must be approved before applying');
+    }
+
+    const updated = await this.prisma.$transaction(async (tx) => {
+      // Update member credit balance
+      await tx.member.update({
+        where: { id: creditNote.memberId },
+        data: {
+          creditBalance: {
+            increment: creditNote.totalAmount,
+          },
+        },
+      });
+
+      // Update credit note status
+      return tx.creditNote.update({
+        where: { id },
+        data: {
+          status: 'APPLIED',
+          appliedToBalance: creditNote.totalAmount,
+        },
+        include: {
+          member: true,
+          lineItems: {
+            include: { chargeType: true },
+          },
+        },
+      });
+    });
+
+    return this.transformCreditNote(updated);
+  }
+
+  @Mutation(() => CreditNoteGraphQLType, { name: 'applyCreditNoteToInvoice', description: 'Apply credit note to a specific invoice' })
+  async applyCreditNoteToInvoice(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('id', { type: () => ID }) id: string,
+    @Args('input') input: ApplyCreditNoteInput,
+  ): Promise<CreditNoteGraphQLType> {
+    const creditNote = await this.prisma.creditNote.findFirst({
+      where: { id, clubId: user.tenantId },
+    });
+
+    if (!creditNote) {
+      throw new Error('Credit note not found');
+    }
+
+    if (creditNote.status !== 'APPROVED') {
+      throw new Error('Credit note must be approved before applying');
+    }
+
+    const remainingAmount = creditNote.totalAmount.toNumber() - creditNote.appliedToBalance.toNumber() - creditNote.refundedAmount.toNumber();
+    if (input.amount > remainingAmount) {
+      throw new Error('Application amount exceeds remaining credit');
+    }
+
+    const invoice = await this.prisma.invoice.findFirst({
+      where: { id: input.invoiceId, clubId: user.tenantId },
+    });
+
+    if (!invoice) {
+      throw new Error('Invoice not found');
+    }
+
+    if (invoice.balanceDue.toNumber() < input.amount) {
+      throw new Error('Application amount exceeds invoice balance');
+    }
+
+    const updated = await this.prisma.$transaction(async (tx) => {
+      // Create application record
+      await tx.creditNoteApplication.create({
+        data: {
+          creditNoteId: id,
+          invoiceId: input.invoiceId,
+          amountApplied: input.amount,
+          appliedBy: user.sub,
+        },
+      });
+
+      // Update invoice balance
+      const newInvoiceBalance = invoice.balanceDue.toNumber() - input.amount;
+      const newInvoicePaid = (invoice.paidAmount?.toNumber() || 0) + input.amount;
+
+      await tx.invoice.update({
+        where: { id: input.invoiceId },
+        data: {
+          balanceDue: newInvoiceBalance,
+          paidAmount: newInvoicePaid,
+          status: newInvoiceBalance <= 0 ? 'PAID' : newInvoicePaid > 0 ? 'PARTIALLY_PAID' : invoice.status,
+          paidDate: newInvoiceBalance <= 0 ? new Date() : undefined,
+        },
+      });
+
+      // Update credit note applied amount
+      const newApplied = creditNote.appliedToBalance.toNumber() + input.amount;
+      const newStatus = newApplied >= creditNote.totalAmount.toNumber() ? 'APPLIED' : 'PARTIALLY_APPLIED';
+
+      return tx.creditNote.update({
+        where: { id },
+        data: {
+          appliedToBalance: newApplied,
+          status: newStatus,
+        },
+        include: {
+          member: true,
+          lineItems: {
+            include: { chargeType: true },
+          },
+          applications: {
+            include: { invoice: true },
+          },
+        },
+      });
+    });
+
+    return this.transformCreditNote(updated);
+  }
+
+  @Mutation(() => CreditNoteGraphQLType, { name: 'voidCreditNote', description: 'Void a credit note' })
+  async voidCreditNote(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('id', { type: () => ID }) id: string,
+    @Args('input') input: VoidCreditNoteInput,
+  ): Promise<CreditNoteGraphQLType> {
+    const creditNote = await this.prisma.creditNote.findFirst({
+      where: { id, clubId: user.tenantId },
+    });
+
+    if (!creditNote) {
+      throw new Error('Credit note not found');
+    }
+
+    if (creditNote.status === 'APPLIED' || creditNote.status === 'PARTIALLY_APPLIED' || creditNote.status === 'REFUNDED') {
+      throw new Error('Cannot void a credit note that has been applied or refunded');
+    }
+
+    const updated = await this.prisma.creditNote.update({
+      where: { id },
+      data: {
+        status: 'VOIDED',
+        voidedAt: new Date(),
+        voidedBy: user.sub,
+        internalNotes: creditNote.internalNotes
+          ? `${creditNote.internalNotes}\n\nVoided: ${input.reason}`
+          : `Voided: ${input.reason}`,
+      },
+      include: {
+        member: true,
+        lineItems: {
+          include: { chargeType: true },
+        },
+      },
+    });
+
+    return this.transformCreditNote(updated);
+  }
+
+  private transformCreditNote(creditNote: any): CreditNoteGraphQLType {
+    return {
+      id: creditNote.id,
+      creditNoteNumber: creditNote.creditNoteNumber,
+      issueDate: creditNote.issueDate,
+      type: creditNote.type,
+      reason: creditNote.reason,
+      reasonDetail: creditNote.reasonDetail,
+      subtotal: creditNote.subtotal?.toString() || '0',
+      taxAmount: creditNote.taxAmount?.toString() || '0',
+      totalAmount: creditNote.totalAmount?.toString() || '0',
+      appliedToBalance: creditNote.appliedToBalance?.toString() || '0',
+      refundedAmount: creditNote.refundedAmount?.toString() || '0',
+      status: creditNote.status,
+      internalNotes: creditNote.internalNotes,
+      memberVisibleNotes: creditNote.memberVisibleNotes,
+      approvedAt: creditNote.approvedAt,
+      voidedAt: creditNote.voidedAt,
+      createdAt: creditNote.createdAt,
+      updatedAt: creditNote.updatedAt,
+      member: creditNote.member ? {
+        id: creditNote.member.id,
+        memberId: creditNote.member.memberId,
+        firstName: creditNote.member.firstName,
+        lastName: creditNote.member.lastName,
+      } : undefined,
+      lineItems: creditNote.lineItems?.map((li: any) => ({
+        id: li.id,
+        description: li.description,
+        quantity: li.quantity?.toNumber?.() || li.quantity || 0,
+        unitPrice: li.unitPrice?.toString() || '0',
+        lineTotal: li.lineTotal?.toString() || '0',
+        taxable: li.taxable,
+        taxRate: li.taxRate?.toString() || '0',
+        taxAmount: li.taxAmount?.toString() || '0',
+        chargeType: li.chargeType,
+      })) || [],
+      applications: creditNote.applications?.map((app: any) => ({
+        id: app.id,
+        amountApplied: app.amountApplied?.toString() || '0',
+        appliedAt: app.appliedAt,
+        invoice: app.invoice ? this.transformInvoice(app.invoice) : undefined,
+      })) || [],
     };
   }
 }
