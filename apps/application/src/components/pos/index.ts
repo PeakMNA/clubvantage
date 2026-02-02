@@ -91,3 +91,12 @@ export {
   type POSTemplateData,
   type POSTemplateInput,
 } from './template-editor-modal';
+
+// Visibility Rules Builder
+export {
+  VisibilityRulesBuilder,
+  type VisibilityRule,
+  type VisibilityRuleType,
+  type VisibilityRuleOperator,
+  type VisibilityRulesBuilderProps,
+} from './visibility-rules-builder';
