@@ -1,22 +1,46 @@
 # Product Panel Operations
 
 # Main query for outlet product panel
-query OutletProductPanel($outletId: ID!) {
-  outletGridConfig(outletId: $outletId) {
-    id
-    gridColumns
-    gridRows
-    tileSize
-    showImages
-    showPrices
-    categoryStyle
-    showAllCategory
-    quickKeysEnabled
-    quickKeysCount
-    quickKeysPosition
+query GetOutletProductPanel($outletId: ID!) {
+  outletProductPanel(outletId: $outletId) {
+    gridConfig {
+      id
+      gridColumns
+      gridRows
+      tileSize
+      showImages
+      showPrices
+      categoryStyle
+      showAllCategory
+      quickKeysEnabled
+      quickKeysCount
+      quickKeysPosition
+    }
+    quickKeys {
+      id
+      name
+      basePrice
+      imageUrl
+      productType
+      category {
+        id
+        color
+      }
+    }
+    suggestions {
+      id
+      name
+      basePrice
+      imageUrl
+      productType
+      category {
+        id
+        color
+      }
+    }
   }
 
-  productCategories(outletId: $outletId) {
+  productCategories {
     id
     name
     color
@@ -24,79 +48,11 @@ query OutletProductPanel($outletId: ID!) {
     sortOrder
     parentId
   }
-
-  outletProducts(outletId: $outletId) {
-    id
-    name
-    sku
-    productType
-    basePrice
-    imageUrl
-    thumbnailUrl
-    trackInventory
-    stockQuantity
-    lowStockThreshold
-    category {
-      id
-      name
-      color
-    }
-    variants {
-      id
-      name
-      sku
-      priceAdjustment
-      attributes
-      stockQuantity
-      imageUrl
-      isActive
-    }
-    modifierGroups {
-      id
-      modifierGroup {
-        id
-        name
-        selectionType
-        minSelections
-        maxSelections
-        modifiers {
-          id
-          name
-          priceAdjustment
-          isDefault
-          isActive
-        }
-      }
-      isRequired
-      sortOrder
-    }
-    outletConfig {
-      displayName
-      buttonColor
-      sortPriority
-      gridPosition
-      isVisible
-      isQuickKey
-      quickKeyPosition
-    }
-  }
-
-  quickKeys(outletId: $outletId) {
-    id
-    name
-    basePrice
-    imageUrl
-    productType
-    category {
-      id
-      color
-    }
-  }
 }
 
 # Smart suggestions (separate query, refreshed on interval)
-query SmartSuggestions($outletId: ID!, $staffId: ID) {
-  smartSuggestions(outletId: $outletId, staffId: $staffId) {
+query SmartSuggestions($outletId: ID!) {
+  smartSuggestions(outletId: $outletId) {
     id
     name
     basePrice
@@ -106,18 +62,6 @@ query SmartSuggestions($outletId: ID!, $staffId: ID) {
       id
       color
     }
-  }
-}
-
-# Record sale for metrics
-mutation RecordProductSale($outletId: ID!, $productId: ID!, $staffId: ID, $quantity: Int!) {
-  recordProductSale(
-    outletId: $outletId
-    productId: $productId
-    staffId: $staffId
-    quantity: $quantity
-  ) {
-    success
   }
 }
 

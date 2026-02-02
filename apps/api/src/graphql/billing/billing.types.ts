@@ -44,6 +44,15 @@ export class ChargeTypeType {
 
   @Field({ nullable: true })
   description?: string;
+
+  @Field({ nullable: true })
+  defaultPrice?: string;
+
+  @Field()
+  taxable: boolean;
+
+  @Field({ nullable: true })
+  category?: string;
 }
 
 @ObjectType()

@@ -407,6 +407,13 @@ enum BookingTypeEnum {
   SERVICE
 }
 
+input BulkOutletProductConfigInput {
+  categoryId: ID
+  isQuickKey: Boolean
+  isVisible: Boolean
+  productIds: [ID!]!
+}
+
 input BulkRemoveLineItemsInput {
   lineItemIds: [ID!]!
 }
@@ -622,6 +629,12 @@ enum CashMovementType {
   PAID_OUT
 }
 
+enum CategoryDisplayStyle {
+  DROPDOWN
+  SIDEBAR
+  TABS
+}
+
 input ChangeApplicationStatusInput {
   rejectionReason: String
   reviewNotes: String
@@ -644,10 +657,13 @@ input ChangeSubAccountStatusInput {
 }
 
 type ChargeTypeType {
+  category: String
   code: String!
+  defaultPrice: String
   description: String
   id: ID!
   name: String!
+  taxable: Boolean!
 }
 
 input CheckCreditInput {
@@ -978,6 +994,7 @@ input CreateInvoiceInput {
   lineItems: [InvoiceLineItemInput!]!
   memberId: ID!
   notes: String
+  sendEmail: Boolean = false
 }
 
 input CreateLotteryInput {
@@ -1023,6 +1040,21 @@ input CreateMemberInput {
   referredById: ID
   status: MemberStatus
   tags: [String!]
+}
+
+input CreateModifierGroupInput {
+  maxSelections: Int
+  minSelections: Int
+  modifiers: [CreateModifierInput!]
+  name: String!
+  selectionType: ModifierSelectionType
+}
+
+input CreateModifierInput {
+  isDefault: Boolean
+  name: String!
+  priceAdjustment: Float
+  sortOrder: Int
 }
 
 input CreatePaymentInput {
@@ -1071,6 +1103,47 @@ input CreateProShopVariantInput {
   name: String!
   priceAdjustment: Float = 0
   sku: String
+}
+
+input CreateProductCategoryInput {
+  color: String
+  description: String
+  iconName: String
+  name: String!
+  parentId: ID
+  sortOrder: Int
+}
+
+input CreateProductInput {
+  basePrice: Float!
+  bufferMinutes: Int
+  categoryId: ID!
+  costPrice: Float
+  description: String
+  durationMinutes: Int
+  imageUrl: String
+  lowStockThreshold: Int
+  modifierGroupIds: [ID!]
+  name: String!
+  productType: ProductType
+  requiredCapabilities: [String!]
+  sku: String
+  sortPriority: Int
+  stockQuantity: Int
+  taxRate: Float
+  thumbnailUrl: String
+  trackInventory: Boolean
+  variants: [CreateProductVariantInput!]
+}
+
+input CreateProductVariantInput {
+  attributes: JSON
+  imageUrl: String
+  name: String!
+  priceAdjustment: Float
+  sku: String
+  sortOrder: Int
+  stockQuantity: Int
 }
 
 input CreateRateConfigInput {
@@ -2279,6 +2352,31 @@ type MinimumSpendRequirement {
   updatedAt: DateTime!
 }
 
+type Modifier {
+  id: ID!
+  isActive: Boolean!
+  isDefault: Boolean!
+  name: String!
+  priceAdjustment: Float!
+  sortOrder: Int!
+}
+
+type ModifierGroup {
+  id: ID!
+  isActive: Boolean!
+  maxSelections: Int
+  minSelections: Int!
+  modifiers: [Modifier!]!
+  name: String!
+  selectionType: ModifierSelectionType!
+  sortOrder: Int!
+}
+
+enum ModifierSelectionType {
+  MULTIPLE
+  SINGLE
+}
+
 input MoveTeeTimeInput {
   newCourseId: ID
   newTeeDate: DateTime!
@@ -2318,6 +2416,7 @@ type Mutation {
 
   """Transfer multiple line items to another player"""
   bulkTransferLineItems(input: BulkTransferLineItemsInput!): BulkTransferResultType!
+  bulkUpdateOutletProductConfigs(input: BulkOutletProductConfigInput!, outletId: ID!): [OutletProductConfig!]!
 
   """Bulk update multiple pro shop products"""
   bulkUpdateProShopProducts(ids: [ID!]!, input: BulkUpdateProShopProductInput!): [ProShopProductType!]!
@@ -2438,12 +2537,15 @@ type Mutation {
 
   """Create a new minimum spend requirement"""
   createMinimumSpendRequirement(input: CreateRequirementInput!): MinimumSpendRequirement!
+  createModifierGroup(input: CreateModifierGroupInput!): ModifierGroup!
 
   """Create a new pro shop category"""
   createProShopCategory(input: CreateProShopCategoryInput!): ProShopCategoryType!
 
   """Create a new pro shop product"""
   createProShopProduct(input: CreateProShopProductInput!): ProShopProductType!
+  createProduct(input: CreateProductInput!): Product!
+  createProductCategory(input: CreateProductCategoryInput!): ProductCategory!
 
   """Create a rate configuration"""
   createRateConfig(input: CreateRateConfigInput!): RateConfigMutationResponse!
@@ -2527,6 +2629,8 @@ type Mutation {
 
   """Delete a pro shop product"""
   deleteProShopProduct(id: ID!): Boolean!
+  deleteProduct(id: ID!): Boolean!
+  deleteProductCategory(id: ID!, moveProductsTo: ID): Boolean!
 
   """Delete a rate configuration"""
   deleteRateConfig(id: ID!): DeleteRateMutationResponse!
@@ -2779,6 +2883,9 @@ type Mutation {
 
   """Update a minimum spend requirement"""
   updateMinimumSpendRequirement(input: UpdateRequirementInput!): MinimumSpendRequirement!
+  updateModifierGroup(id: ID!, input: UpdateModifierGroupInput!): ModifierGroup!
+  updateOutletGridConfig(input: UpdateOutletGridConfigInput!, outletId: ID!): OutletGridConfig!
+  updateOutletProductConfig(input: UpdateOutletProductConfigInput!, outletId: ID!, productId: ID!): OutletProductConfig!
 
   """Update the button registry for the club"""
   updatePOSButtonRegistry(input: UpdateButtonRegistryInput!): UpdateButtonRegistryMutationResponse!
@@ -2800,6 +2907,8 @@ type Mutation {
 
   """Update an existing pro shop product"""
   updateProShopProduct(id: ID!, input: UpdateProShopProductInput!): ProShopProductType!
+  updateProduct(id: ID!, input: UpdateProductInput!): Product!
+  updateProductCategory(id: ID!, input: UpdateProductCategoryInput!): ProductCategory!
 
   """Update a rate configuration"""
   updateRateConfig(id: ID!, input: UpdateRateConfigInput!): RateConfigMutationResponse!
@@ -2815,6 +2924,7 @@ type Mutation {
 
   """Update settlement totals"""
   updateSettlementTotals(input: UpdateSettlementTotalsInput!): DailySettlementGraphQLType!
+  updateSmartSuggestionConfig(input: UpdateSmartSuggestionConfigInput!, outletId: ID!): SmartSuggestionConfig!
 
   """Update a special day"""
   updateSpecialDay(id: ID!, input: UpdateSpecialDayInput!): SpecialDayMutationResponse!
@@ -2875,6 +2985,43 @@ input OpenShiftInput {
   """JSON string of denomination counts"""
   denominations: String
   openingFloat: Float!
+}
+
+type OutletGridConfig {
+  categoryStyle: CategoryDisplayStyle!
+  gridColumns: Int!
+  gridRows: Int!
+  id: ID!
+  outletId: ID!
+  quickKeysCount: Int!
+  quickKeysEnabled: Boolean!
+  quickKeysPosition: QuickKeysPosition!
+  showAllCategory: Boolean!
+  showImages: Boolean!
+  showPrices: Boolean!
+  tileSize: TileSize!
+}
+
+type OutletProductConfig {
+  buttonColor: String
+  displayName: String
+  gridPosition: JSON
+  id: ID!
+  isQuickKey: Boolean!
+  isVisible: Boolean!
+  outletId: ID!
+  product: Product
+  productId: ID!
+  quickKeyPosition: Int
+  sortPriority: Int
+  visibilityRules: JSON!
+}
+
+type OutletProductPanel {
+  gridConfig: OutletGridConfig!
+  quickKeys: [Product!]!
+  suggestionConfig: SmartSuggestionConfig
+  suggestions: [Product!]!
 }
 
 type POSButtonRegistryGraphQLType {
@@ -3257,6 +3404,86 @@ input ProcessSettlementInput {
   teeTimeId: ID!
 }
 
+type Product {
+  basePrice: Float!
+  bufferMinutes: Int
+  category: ProductCategory!
+  costPrice: Float
+  description: String
+  durationMinutes: Int
+  hasModifiers: Boolean!
+  hasVariants: Boolean!
+  id: ID!
+  imageUrl: String
+  isActive: Boolean!
+  isInStock: Boolean!
+  lowStockThreshold: Int
+  modifierGroups: [ModifierGroup!]!
+  name: String!
+  productType: ProductType!
+  sku: String
+  sortPriority: Int!
+  stockQuantity: Int
+  taxRate: Float!
+  thumbnailUrl: String
+  trackInventory: Boolean!
+  variants: [ProductVariant!]!
+}
+
+type ProductCategory {
+  children: [ProductCategory!]
+  color: String
+  description: String
+  iconName: String
+  id: ID!
+  isActive: Boolean!
+  name: String!
+  parentId: ID
+  productCount: Int
+  sortOrder: Int!
+}
+
+type ProductConnection {
+  edges: [ProductEdge!]!
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  totalCount: Int!
+}
+
+type ProductEdge {
+  cursor: String!
+  node: Product!
+}
+
+input ProductFilterInput {
+  after: String
+  categoryId: ID
+  first: Int
+  isActive: Boolean
+  productType: ProductType
+  search: String
+  trackInventory: Boolean
+}
+
+enum ProductType {
+  COMPOSITE
+  SERVICE
+  SIMPLE
+  VARIABLE
+}
+
+type ProductVariant {
+  attributes: JSON
+  id: ID!
+  imageUrl: String
+  isActive: Boolean!
+  name: String!
+  priceAdjustment: Float!
+  sku: String
+  sortOrder: Int!
+  stockQuantity: Int
+}
+
 type Query {
   """Get all active discounts for POS use"""
   activeDiscounts: [DiscountGraphQLType!]!
@@ -3305,6 +3532,9 @@ type Query {
 
   """Get all cash drawers for the current club"""
   cashDrawers(activeOnly: Boolean = true): [CashDrawerGraphQLType!]!
+
+  """Get available charge types"""
+  chargeTypes: [ChargeTypeType!]!
 
   """Get check-in audit history"""
   checkInHistory(filter: CheckInHistoryFilterInput): [CheckInAuditEntryType!]!
@@ -3462,6 +3692,7 @@ type Query {
 
   """Get all minimum spend requirements for the club"""
   minimumSpendRequirements(activeOnly: Boolean = true): [MinimumSpendRequirement!]!
+  modifierGroups: [ModifierGroup!]!
 
   """Get current member's invoices"""
   myInvoices(after: String, endDate: DateTime, first: Int = 10, memberId: ID, search: String, skip: Int, sortBy: String = "invoiceDate", sortOrder: String = "desc", startDate: DateTime, status: InvoiceStatus): InvoiceConnection!
@@ -3477,6 +3708,9 @@ type Query {
 
   """Get open lotteries for member portal"""
   openLotteries: [GolfLotteryType!]!
+  outletGridConfig(outletId: ID!): OutletGridConfig
+  outletProductConfigs(outletId: ID!): [OutletProductConfig!]!
+  outletProductPanel(outletId: ID!): OutletProductPanel!
 
   """Get a single stored payment method"""
   paymentMethod(id: ID!): StoredPaymentMethod
@@ -3513,9 +3747,18 @@ type Query {
 
   """Get pro shop products with filtering and pagination"""
   proShopProducts(filter: ProShopProductFilterInput): ProShopProductConnectionType!
+  product(id: ID!): Product
+
+  """Get all product categories"""
+  productCategories(includeInactive: Boolean): [ProductCategory!]!
+  productCategory(id: ID!): ProductCategory
+
+  """Get products with filtering and pagination"""
+  products(filter: ProductFilterInput): ProductConnection!
 
   """Get products marked as quick add for check-in"""
   quickAddProducts: [ProShopProductType!]!
+  quickKeyProducts(outletId: ID!): [Product!]!
 
   """Get a single rate configuration by ID"""
   rateConfig(id: ID!): RateConfigType!
@@ -3555,6 +3798,8 @@ type Query {
 
   """Get cart for a specific player/slot"""
   slotCart(playerId: ID!): SlotCartType
+  smartSuggestionConfig(outletId: ID!): SmartSuggestionConfig
+  smartSuggestions(outletId: ID!): [Product!]!
 
   """Get starter ticket by ID"""
   starterTicket(ticketId: ID!): StarterTicketResponseType
@@ -3626,6 +3871,11 @@ type Query {
   Get week view occupancy data showing player positions for each time slot
   """
   weekViewOccupancy(input: WeekViewOccupancyInput!): WeekViewOccupancyResponse!
+}
+
+enum QuickKeysPosition {
+  LEFT
+  TOP
 }
 
 type RateConfigMutationResponse {
@@ -3750,6 +4000,11 @@ enum ResourceTypeEnum {
   ROOM
   SPA
   STUDIO
+}
+
+input RoleRulesInput {
+  allowedRoles: [String!]
+  deniedRoles: [String!]
 }
 
 input SaveCartDraftInput {
@@ -3954,6 +4209,18 @@ type SlotPaymentResultType {
   isSettled: Boolean!
   newBalance: Float!
   playerId: ID!
+}
+
+type SmartSuggestionConfig {
+  enabled: Boolean!
+  id: ID!
+  outletId: ID!
+  position: SuggestionPosition!
+  refreshIntervalMinutes: Int!
+  salesVelocityWeight: Int!
+  staffHistoryWeight: Int!
+  suggestionCount: Int!
+  timeOfDayWeight: Int!
 }
 
 type SpecialDayMutationResponse {
@@ -4186,6 +4453,12 @@ type Subscription {
 
   """Subscribe to tee time updates for a specific course and date"""
   teeTimeUpdated(courseId: ID, date: DateTime): TeeTimeType!
+}
+
+enum SuggestionPosition {
+  FLOATING
+  SIDEBAR
+  TOP_ROW
 }
 
 input TaxConfigInput {
@@ -4434,10 +4707,22 @@ type TierDiscountType {
   tierName: String!
 }
 
+enum TileSize {
+  LARGE
+  MEDIUM
+  SMALL
+}
+
 type TimePeriodMutationResponse {
   message: String
   success: Boolean!
   timePeriod: GolfTimePeriodType
+}
+
+input TimeRuleInput {
+  daysOfWeek: [Int!]!
+  endTime: String!
+  startTime: String!
 }
 
 """Payment transaction status"""
@@ -4638,6 +4923,39 @@ input UpdateMemberInput {
   tags: [String!]
 }
 
+input UpdateModifierGroupInput {
+  isActive: Boolean
+  maxSelections: Int
+  minSelections: Int
+  modifiers: [CreateModifierInput!]
+  name: String
+  selectionType: ModifierSelectionType
+}
+
+input UpdateOutletGridConfigInput {
+  categoryStyle: CategoryDisplayStyle
+  gridColumns: Int
+  gridRows: Int
+  quickKeysCount: Int
+  quickKeysEnabled: Boolean
+  quickKeysPosition: QuickKeysPosition
+  showAllCategory: Boolean
+  showImages: Boolean
+  showPrices: Boolean
+  tileSize: TileSize
+}
+
+input UpdateOutletProductConfigInput {
+  buttonColor: String
+  displayName: String
+  gridPosition: JSON
+  isQuickKey: Boolean
+  isVisible: Boolean
+  quickKeyPosition: Int
+  sortPriority: Int
+  visibilityRules: VisibilityRulesInput
+}
+
 input UpdatePaymentMethodInput {
   icon: String
   isEnabled: Boolean
@@ -4684,6 +5002,39 @@ input UpdateProShopVariantInput {
   name: String!
   priceAdjustment: Float = 0
   sku: String
+}
+
+input UpdateProductCategoryInput {
+  color: String
+  description: String
+  iconName: String
+  isActive: Boolean
+  name: String
+  parentId: ID
+  sortOrder: Int
+}
+
+input UpdateProductInput {
+  basePrice: Float
+  bufferMinutes: Int
+  categoryId: ID
+  costPrice: Float
+  description: String
+  durationMinutes: Int
+  imageUrl: String
+  isActive: Boolean
+  lowStockThreshold: Int
+  modifierGroupIds: [ID!]
+  name: String
+  productType: ProductType
+  requiredCapabilities: [String!]
+  sku: String
+  sortPriority: Int
+  stockQuantity: Int
+  taxRate: Float
+  thumbnailUrl: String
+  trackInventory: Boolean
+  variants: [CreateProductVariantInput!]
 }
 
 type UpdateQuantityResultType {
@@ -4801,6 +5152,16 @@ input UpdateSettlementTotalsInput {
   voidCount: Int
 }
 
+input UpdateSmartSuggestionConfigInput {
+  enabled: Boolean
+  position: SuggestionPosition
+  refreshIntervalMinutes: Int
+  salesVelocityWeight: Int
+  staffHistoryWeight: Int
+  suggestionCount: Int
+  timeOfDayWeight: Int
+}
+
 input UpdateSpecialDayInput {
   bookingMode: BookingMode
   customFirstTee: String
@@ -4896,6 +5257,13 @@ input ValidateDiscountInput {
 input VerifyPinInput {
   pin: String!
   subAccountId: String!
+}
+
+input VisibilityRulesInput {
+  inventoryRule: String
+  memberOnly: Boolean
+  roleRules: RoleRulesInput
+  timeRules: [TimeRuleInput!]
 }
 
 input VoidInvoiceInput {

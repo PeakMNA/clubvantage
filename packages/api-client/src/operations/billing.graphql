@@ -188,6 +188,18 @@ query GetMemberTransactions($memberId: ID!) {
   }
 }
 
+query GetChargeTypes {
+  chargeTypes {
+    id
+    name
+    code
+    description
+    defaultPrice
+    taxable
+    category
+  }
+}
+
 # Billing Mutations
 
 mutation CreateInvoice($input: CreateInvoiceInput!) {

@@ -439,6 +439,13 @@ export type BookingTypeEnum =
   | 'FACILITY'
   | 'SERVICE';
 
+export type BulkOutletProductConfigInput = {
+  categoryId?: InputMaybe<Scalars['ID']['input']>;
+  isQuickKey?: InputMaybe<Scalars['Boolean']['input']>;
+  isVisible?: InputMaybe<Scalars['Boolean']['input']>;
+  productIds: Array<Scalars['ID']['input']>;
+};
+
 export type BulkRemoveLineItemsInput = {
   lineItemIds: Array<Scalars['ID']['input']>;
 };
@@ -663,6 +670,11 @@ export type CashMovementType =
   | 'PAID_IN'
   | 'PAID_OUT';
 
+export type CategoryDisplayStyle =
+  | 'DROPDOWN'
+  | 'SIDEBAR'
+  | 'TABS';
+
 export type ChangeApplicationStatusInput = {
   rejectionReason?: InputMaybe<Scalars['String']['input']>;
   reviewNotes?: InputMaybe<Scalars['String']['input']>;
@@ -686,10 +698,13 @@ export type ChangeSubAccountStatusInput = {
 
 export type ChargeTypeType = {
   __typename?: 'ChargeTypeType';
+  category?: Maybe<Scalars['String']['output']>;
   code: Scalars['String']['output'];
+  defaultPrice?: Maybe<Scalars['String']['output']>;
   description?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
+  taxable: Scalars['Boolean']['output'];
 };
 
 export type CheckCreditInput = {
@@ -1029,6 +1044,7 @@ export type CreateInvoiceInput = {
   lineItems: Array<InvoiceLineItemInput>;
   memberId: Scalars['ID']['input'];
   notes?: InputMaybe<Scalars['String']['input']>;
+  sendEmail?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type CreateLotteryInput = {
@@ -1074,6 +1090,21 @@ export type CreateMemberInput = {
   referredById?: InputMaybe<Scalars['ID']['input']>;
   status?: InputMaybe<MemberStatus>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+export type CreateModifierGroupInput = {
+  maxSelections?: InputMaybe<Scalars['Int']['input']>;
+  minSelections?: InputMaybe<Scalars['Int']['input']>;
+  modifiers?: InputMaybe<Array<CreateModifierInput>>;
+  name: Scalars['String']['input'];
+  selectionType?: InputMaybe<ModifierSelectionType>;
+};
+
+export type CreateModifierInput = {
+  isDefault?: InputMaybe<Scalars['Boolean']['input']>;
+  name: Scalars['String']['input'];
+  priceAdjustment?: InputMaybe<Scalars['Float']['input']>;
+  sortOrder?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type CreatePaymentInput = {
@@ -1122,6 +1153,47 @@ export type CreateProShopVariantInput = {
   name: Scalars['String']['input'];
   priceAdjustment?: InputMaybe<Scalars['Float']['input']>;
   sku?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type CreateProductCategoryInput = {
+  color?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  iconName?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+  parentId?: InputMaybe<Scalars['ID']['input']>;
+  sortOrder?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type CreateProductInput = {
+  basePrice: Scalars['Float']['input'];
+  bufferMinutes?: InputMaybe<Scalars['Int']['input']>;
+  categoryId: Scalars['ID']['input'];
+  costPrice?: InputMaybe<Scalars['Float']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  durationMinutes?: InputMaybe<Scalars['Int']['input']>;
+  imageUrl?: InputMaybe<Scalars['String']['input']>;
+  lowStockThreshold?: InputMaybe<Scalars['Int']['input']>;
+  modifierGroupIds?: InputMaybe<Array<Scalars['ID']['input']>>;
+  name: Scalars['String']['input'];
+  productType?: InputMaybe<ProductType>;
+  requiredCapabilities?: InputMaybe<Array<Scalars['String']['input']>>;
+  sku?: InputMaybe<Scalars['String']['input']>;
+  sortPriority?: InputMaybe<Scalars['Int']['input']>;
+  stockQuantity?: InputMaybe<Scalars['Int']['input']>;
+  taxRate?: InputMaybe<Scalars['Float']['input']>;
+  thumbnailUrl?: InputMaybe<Scalars['String']['input']>;
+  trackInventory?: InputMaybe<Scalars['Boolean']['input']>;
+  variants?: InputMaybe<Array<CreateProductVariantInput>>;
+};
+
+export type CreateProductVariantInput = {
+  attributes?: InputMaybe<Scalars['JSON']['input']>;
+  imageUrl?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+  priceAdjustment?: InputMaybe<Scalars['Float']['input']>;
+  sku?: InputMaybe<Scalars['String']['input']>;
+  sortOrder?: InputMaybe<Scalars['Int']['input']>;
+  stockQuantity?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type CreateRateConfigInput = {
@@ -2373,6 +2445,32 @@ export type MinimumSpendRequirement = {
   updatedAt: Scalars['DateTime']['output'];
 };
 
+export type Modifier = {
+  __typename?: 'Modifier';
+  id: Scalars['ID']['output'];
+  isActive: Scalars['Boolean']['output'];
+  isDefault: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  priceAdjustment: Scalars['Float']['output'];
+  sortOrder: Scalars['Int']['output'];
+};
+
+export type ModifierGroup = {
+  __typename?: 'ModifierGroup';
+  id: Scalars['ID']['output'];
+  isActive: Scalars['Boolean']['output'];
+  maxSelections?: Maybe<Scalars['Int']['output']>;
+  minSelections: Scalars['Int']['output'];
+  modifiers: Array<Modifier>;
+  name: Scalars['String']['output'];
+  selectionType: ModifierSelectionType;
+  sortOrder: Scalars['Int']['output'];
+};
+
+export type ModifierSelectionType =
+  | 'MULTIPLE'
+  | 'SINGLE';
+
 export type MoveTeeTimeInput = {
   newCourseId?: InputMaybe<Scalars['ID']['input']>;
   newTeeDate: Scalars['DateTime']['input'];
@@ -2403,6 +2501,7 @@ export type Mutation = {
   bulkRemoveLineItems: BulkRemoveResultType;
   /** Transfer multiple line items to another player */
   bulkTransferLineItems: BulkTransferResultType;
+  bulkUpdateOutletProductConfigs: Array<OutletProductConfig>;
   /** Bulk update multiple pro shop products */
   bulkUpdateProShopProducts: Array<ProShopProductType>;
   /** Cancel a booking */
@@ -2483,10 +2582,13 @@ export type Mutation = {
   createMember: MemberType;
   /** Create a new minimum spend requirement */
   createMinimumSpendRequirement: MinimumSpendRequirement;
+  createModifierGroup: ModifierGroup;
   /** Create a new pro shop category */
   createProShopCategory: ProShopCategoryType;
   /** Create a new pro shop product */
   createProShopProduct: ProShopProductType;
+  createProduct: Product;
+  createProductCategory: ProductCategory;
   /** Create a rate configuration */
   createRateConfig: RateConfigMutationResponse;
   /** Create a season */
@@ -2541,6 +2643,8 @@ export type Mutation = {
   deleteProShopCategory: Scalars['Boolean']['output'];
   /** Delete a pro shop product */
   deleteProShopProduct: Scalars['Boolean']['output'];
+  deleteProduct: Scalars['Boolean']['output'];
+  deleteProductCategory: Scalars['Boolean']['output'];
   /** Delete a rate configuration */
   deleteRateConfig: DeleteRateMutationResponse;
   /** Delete a season */
@@ -2709,6 +2813,9 @@ export type Mutation = {
   updateMemberCreditSettings: Scalars['Boolean']['output'];
   /** Update a minimum spend requirement */
   updateMinimumSpendRequirement: MinimumSpendRequirement;
+  updateModifierGroup: ModifierGroup;
+  updateOutletGridConfig: OutletGridConfig;
+  updateOutletProductConfig: OutletProductConfig;
   /** Update the button registry for the club */
   updatePOSButtonRegistry: UpdateButtonRegistryMutationResponse;
   /** Update POS integration settings */
@@ -2723,6 +2830,8 @@ export type Mutation = {
   updateProShopConfig: CheckInSettingsType;
   /** Update an existing pro shop product */
   updateProShopProduct: ProShopProductType;
+  updateProduct: Product;
+  updateProductCategory: ProductCategory;
   /** Update a rate configuration */
   updateRateConfig: RateConfigMutationResponse;
   /** Update schedule configuration */
@@ -2733,6 +2842,7 @@ export type Mutation = {
   updateService: ServiceResponseType;
   /** Update settlement totals */
   updateSettlementTotals: DailySettlementGraphQlType;
+  updateSmartSuggestionConfig: SmartSuggestionConfig;
   /** Update a special day */
   updateSpecialDay: SpecialDayMutationResponse;
   /** Update a staff member */
@@ -2818,6 +2928,12 @@ export type MutationBulkRemoveLineItemsArgs = {
 
 export type MutationBulkTransferLineItemsArgs = {
   input: BulkTransferLineItemsInput;
+};
+
+
+export type MutationBulkUpdateOutletProductConfigsArgs = {
+  input: BulkOutletProductConfigInput;
+  outletId: Scalars['ID']['input'];
 };
 
 
@@ -3027,6 +3143,11 @@ export type MutationCreateMinimumSpendRequirementArgs = {
 };
 
 
+export type MutationCreateModifierGroupArgs = {
+  input: CreateModifierGroupInput;
+};
+
+
 export type MutationCreateProShopCategoryArgs = {
   input: CreateProShopCategoryInput;
 };
@@ -3034,6 +3155,16 @@ export type MutationCreateProShopCategoryArgs = {
 
 export type MutationCreateProShopProductArgs = {
   input: CreateProShopProductInput;
+};
+
+
+export type MutationCreateProductArgs = {
+  input: CreateProductInput;
+};
+
+
+export type MutationCreateProductCategoryArgs = {
+  input: CreateProductCategoryInput;
 };
 
 
@@ -3173,6 +3304,17 @@ export type MutationDeleteProShopCategoryArgs = {
 
 export type MutationDeleteProShopProductArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteProductArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteProductCategoryArgs = {
+  id: Scalars['ID']['input'];
+  moveProductsTo?: InputMaybe<Scalars['ID']['input']>;
 };
 
 
@@ -3607,6 +3749,25 @@ export type MutationUpdateMinimumSpendRequirementArgs = {
 };
 
 
+export type MutationUpdateModifierGroupArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateModifierGroupInput;
+};
+
+
+export type MutationUpdateOutletGridConfigArgs = {
+  input: UpdateOutletGridConfigInput;
+  outletId: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdateOutletProductConfigArgs = {
+  input: UpdateOutletProductConfigInput;
+  outletId: Scalars['ID']['input'];
+  productId: Scalars['ID']['input'];
+};
+
+
 export type MutationUpdatePosButtonRegistryArgs = {
   input: UpdateButtonRegistryInput;
 };
@@ -3645,6 +3806,18 @@ export type MutationUpdateProShopProductArgs = {
 };
 
 
+export type MutationUpdateProductArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateProductInput;
+};
+
+
+export type MutationUpdateProductCategoryArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateProductCategoryInput;
+};
+
+
 export type MutationUpdateRateConfigArgs = {
   id: Scalars['ID']['input'];
   input: UpdateRateConfigInput;
@@ -3670,6 +3843,12 @@ export type MutationUpdateServiceArgs = {
 
 export type MutationUpdateSettlementTotalsArgs = {
   input: UpdateSettlementTotalsInput;
+};
+
+
+export type MutationUpdateSmartSuggestionConfigArgs = {
+  input: UpdateSmartSuggestionConfigInput;
+  outletId: Scalars['ID']['input'];
 };
 
 
@@ -3764,6 +3943,46 @@ export type OpenShiftInput = {
   /** JSON string of denomination counts */
   denominations?: InputMaybe<Scalars['String']['input']>;
   openingFloat: Scalars['Float']['input'];
+};
+
+export type OutletGridConfig = {
+  __typename?: 'OutletGridConfig';
+  categoryStyle: CategoryDisplayStyle;
+  gridColumns: Scalars['Int']['output'];
+  gridRows: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  outletId: Scalars['ID']['output'];
+  quickKeysCount: Scalars['Int']['output'];
+  quickKeysEnabled: Scalars['Boolean']['output'];
+  quickKeysPosition: QuickKeysPosition;
+  showAllCategory: Scalars['Boolean']['output'];
+  showImages: Scalars['Boolean']['output'];
+  showPrices: Scalars['Boolean']['output'];
+  tileSize: TileSize;
+};
+
+export type OutletProductConfig = {
+  __typename?: 'OutletProductConfig';
+  buttonColor?: Maybe<Scalars['String']['output']>;
+  displayName?: Maybe<Scalars['String']['output']>;
+  gridPosition?: Maybe<Scalars['JSON']['output']>;
+  id: Scalars['ID']['output'];
+  isQuickKey: Scalars['Boolean']['output'];
+  isVisible: Scalars['Boolean']['output'];
+  outletId: Scalars['ID']['output'];
+  product?: Maybe<Product>;
+  productId: Scalars['ID']['output'];
+  quickKeyPosition?: Maybe<Scalars['Int']['output']>;
+  sortPriority?: Maybe<Scalars['Int']['output']>;
+  visibilityRules: Scalars['JSON']['output'];
+};
+
+export type OutletProductPanel = {
+  __typename?: 'OutletProductPanel';
+  gridConfig: OutletGridConfig;
+  quickKeys: Array<Product>;
+  suggestionConfig?: Maybe<SmartSuggestionConfig>;
+  suggestions: Array<Product>;
 };
 
 export type PosButtonRegistryGraphQlType = {
@@ -4163,6 +4382,90 @@ export type ProcessSettlementInput = {
   teeTimeId: Scalars['ID']['input'];
 };
 
+export type Product = {
+  __typename?: 'Product';
+  basePrice: Scalars['Float']['output'];
+  bufferMinutes?: Maybe<Scalars['Int']['output']>;
+  category: ProductCategory;
+  costPrice?: Maybe<Scalars['Float']['output']>;
+  description?: Maybe<Scalars['String']['output']>;
+  durationMinutes?: Maybe<Scalars['Int']['output']>;
+  hasModifiers: Scalars['Boolean']['output'];
+  hasVariants: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  imageUrl?: Maybe<Scalars['String']['output']>;
+  isActive: Scalars['Boolean']['output'];
+  isInStock: Scalars['Boolean']['output'];
+  lowStockThreshold?: Maybe<Scalars['Int']['output']>;
+  modifierGroups: Array<ModifierGroup>;
+  name: Scalars['String']['output'];
+  productType: ProductType;
+  sku?: Maybe<Scalars['String']['output']>;
+  sortPriority: Scalars['Int']['output'];
+  stockQuantity?: Maybe<Scalars['Int']['output']>;
+  taxRate: Scalars['Float']['output'];
+  thumbnailUrl?: Maybe<Scalars['String']['output']>;
+  trackInventory: Scalars['Boolean']['output'];
+  variants: Array<ProductVariant>;
+};
+
+export type ProductCategory = {
+  __typename?: 'ProductCategory';
+  children?: Maybe<Array<ProductCategory>>;
+  color?: Maybe<Scalars['String']['output']>;
+  description?: Maybe<Scalars['String']['output']>;
+  iconName?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  isActive: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  parentId?: Maybe<Scalars['ID']['output']>;
+  productCount?: Maybe<Scalars['Int']['output']>;
+  sortOrder: Scalars['Int']['output'];
+};
+
+export type ProductConnection = {
+  __typename?: 'ProductConnection';
+  edges: Array<ProductEdge>;
+  hasNextPage: Scalars['Boolean']['output'];
+  hasPreviousPage: Scalars['Boolean']['output'];
+  totalCount: Scalars['Int']['output'];
+};
+
+export type ProductEdge = {
+  __typename?: 'ProductEdge';
+  cursor: Scalars['String']['output'];
+  node: Product;
+};
+
+export type ProductFilterInput = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  categoryId?: InputMaybe<Scalars['ID']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  isActive?: InputMaybe<Scalars['Boolean']['input']>;
+  productType?: InputMaybe<ProductType>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  trackInventory?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+export type ProductType =
+  | 'COMPOSITE'
+  | 'SERVICE'
+  | 'SIMPLE'
+  | 'VARIABLE';
+
+export type ProductVariant = {
+  __typename?: 'ProductVariant';
+  attributes?: Maybe<Scalars['JSON']['output']>;
+  id: Scalars['ID']['output'];
+  imageUrl?: Maybe<Scalars['String']['output']>;
+  isActive: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  priceAdjustment: Scalars['Float']['output'];
+  sku?: Maybe<Scalars['String']['output']>;
+  sortOrder: Scalars['Int']['output'];
+  stockQuantity?: Maybe<Scalars['Int']['output']>;
+};
+
 export type Query = {
   __typename?: 'Query';
   /** Get all active discounts for POS use */
@@ -4197,6 +4500,8 @@ export type Query = {
   cashDrawerShift?: Maybe<CashDrawerShiftGraphQlType>;
   /** Get all cash drawers for the current club */
   cashDrawers: Array<CashDrawerGraphQlType>;
+  /** Get available charge types */
+  chargeTypes: Array<ChargeTypeType>;
   /** Get check-in audit history */
   checkInHistory: Array<CheckInAuditEntryType>;
   /** Get a single payment method by ID */
@@ -4299,6 +4604,7 @@ export type Query = {
   minimumSpendRequirement?: Maybe<MinimumSpendRequirement>;
   /** Get all minimum spend requirements for the club */
   minimumSpendRequirements: Array<MinimumSpendRequirement>;
+  modifierGroups: Array<ModifierGroup>;
   /** Get current member's invoices */
   myInvoices: InvoiceConnection;
   /** Get current user lottery requests */
@@ -4309,6 +4615,9 @@ export type Query = {
   myWaitlistEntries: Array<GolfWaitlistType>;
   /** Get open lotteries for member portal */
   openLotteries: Array<GolfLotteryType>;
+  outletGridConfig?: Maybe<OutletGridConfig>;
+  outletProductConfigs: Array<OutletProductConfig>;
+  outletProductPanel: OutletProductPanel;
   /** Get a single stored payment method */
   paymentMethod?: Maybe<StoredPaymentMethod>;
   /** Get detailed payment info for a single player */
@@ -4333,8 +4642,15 @@ export type Query = {
   proShopProduct?: Maybe<ProShopProductType>;
   /** Get pro shop products with filtering and pagination */
   proShopProducts: ProShopProductConnectionType;
+  product?: Maybe<Product>;
+  /** Get all product categories */
+  productCategories: Array<ProductCategory>;
+  productCategory?: Maybe<ProductCategory>;
+  /** Get products with filtering and pagination */
+  products: ProductConnection;
   /** Get products marked as quick add for check-in */
   quickAddProducts: Array<ProShopProductType>;
+  quickKeyProducts: Array<Product>;
   /** Get a single rate configuration by ID */
   rateConfig: RateConfigType;
   /** Get HTML template for a receipt */
@@ -4361,6 +4677,8 @@ export type Query = {
   shiftSummary: ShiftSummaryGraphQlType;
   /** Get cart for a specific player/slot */
   slotCart?: Maybe<SlotCartType>;
+  smartSuggestionConfig?: Maybe<SmartSuggestionConfig>;
+  smartSuggestions: Array<Product>;
   /** Get starter ticket by ID */
   starterTicket?: Maybe<StarterTicketResponseType>;
   /** Get starter ticket for a tee time */
@@ -4760,6 +5078,21 @@ export type QueryMyInvoicesArgs = {
 };
 
 
+export type QueryOutletGridConfigArgs = {
+  outletId: Scalars['ID']['input'];
+};
+
+
+export type QueryOutletProductConfigsArgs = {
+  outletId: Scalars['ID']['input'];
+};
+
+
+export type QueryOutletProductPanelArgs = {
+  outletId: Scalars['ID']['input'];
+};
+
+
 export type QueryPaymentMethodArgs = {
   id: Scalars['ID']['input'];
 };
@@ -4799,6 +5132,31 @@ export type QueryProShopProductArgs = {
 
 export type QueryProShopProductsArgs = {
   filter?: InputMaybe<ProShopProductFilterInput>;
+};
+
+
+export type QueryProductArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryProductCategoriesArgs = {
+  includeInactive?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+
+export type QueryProductCategoryArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryProductsArgs = {
+  filter?: InputMaybe<ProductFilterInput>;
+};
+
+
+export type QueryQuickKeyProductsArgs = {
+  outletId: Scalars['ID']['input'];
 };
 
 
@@ -4869,6 +5227,16 @@ export type QueryShiftSummaryArgs = {
 
 export type QuerySlotCartArgs = {
   playerId: Scalars['ID']['input'];
+};
+
+
+export type QuerySmartSuggestionConfigArgs = {
+  outletId: Scalars['ID']['input'];
+};
+
+
+export type QuerySmartSuggestionsArgs = {
+  outletId: Scalars['ID']['input'];
 };
 
 
@@ -4999,6 +5367,10 @@ export type QueryWeekViewOccupancyArgs = {
   input: WeekViewOccupancyInput;
 };
 
+export type QuickKeysPosition =
+  | 'LEFT'
+  | 'TOP';
+
 export type RateConfigMutationResponse = {
   __typename?: 'RateConfigMutationResponse';
   message?: Maybe<Scalars['String']['output']>;
@@ -5124,6 +5496,11 @@ export type ResourceTypeEnum =
   | 'ROOM'
   | 'SPA'
   | 'STUDIO';
+
+export type RoleRulesInput = {
+  allowedRoles?: InputMaybe<Array<Scalars['String']['input']>>;
+  deniedRoles?: InputMaybe<Array<Scalars['String']['input']>>;
+};
 
 export type SaveCartDraftInput = {
   /** JSON stringified draft data */
@@ -5340,6 +5717,19 @@ export type SlotPaymentResultType = {
   isSettled: Scalars['Boolean']['output'];
   newBalance: Scalars['Float']['output'];
   playerId: Scalars['ID']['output'];
+};
+
+export type SmartSuggestionConfig = {
+  __typename?: 'SmartSuggestionConfig';
+  enabled: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  outletId: Scalars['ID']['output'];
+  position: SuggestionPosition;
+  refreshIntervalMinutes: Scalars['Int']['output'];
+  salesVelocityWeight: Scalars['Int']['output'];
+  staffHistoryWeight: Scalars['Int']['output'];
+  suggestionCount: Scalars['Int']['output'];
+  timeOfDayWeight: Scalars['Int']['output'];
 };
 
 export type SpecialDayMutationResponse = {
@@ -5588,6 +5978,11 @@ export type SubscriptionTeeTimeUpdatedArgs = {
   courseId?: InputMaybe<Scalars['ID']['input']>;
   date?: InputMaybe<Scalars['DateTime']['input']>;
 };
+
+export type SuggestionPosition =
+  | 'FLOATING'
+  | 'SIDEBAR'
+  | 'TOP_ROW';
 
 export type TaxConfigInput = {
   defaultRate?: InputMaybe<Scalars['Float']['input']>;
@@ -5845,11 +6240,22 @@ export type TierDiscountType = {
   tierName: Scalars['String']['output'];
 };
 
+export type TileSize =
+  | 'LARGE'
+  | 'MEDIUM'
+  | 'SMALL';
+
 export type TimePeriodMutationResponse = {
   __typename?: 'TimePeriodMutationResponse';
   message?: Maybe<Scalars['String']['output']>;
   success: Scalars['Boolean']['output'];
   timePeriod?: Maybe<GolfTimePeriodType>;
+};
+
+export type TimeRuleInput = {
+  daysOfWeek: Array<Scalars['Int']['input']>;
+  endTime: Scalars['String']['input'];
+  startTime: Scalars['String']['input'];
 };
 
 /** Payment transaction status */
@@ -6051,6 +6457,39 @@ export type UpdateMemberInput = {
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
+export type UpdateModifierGroupInput = {
+  isActive?: InputMaybe<Scalars['Boolean']['input']>;
+  maxSelections?: InputMaybe<Scalars['Int']['input']>;
+  minSelections?: InputMaybe<Scalars['Int']['input']>;
+  modifiers?: InputMaybe<Array<CreateModifierInput>>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  selectionType?: InputMaybe<ModifierSelectionType>;
+};
+
+export type UpdateOutletGridConfigInput = {
+  categoryStyle?: InputMaybe<CategoryDisplayStyle>;
+  gridColumns?: InputMaybe<Scalars['Int']['input']>;
+  gridRows?: InputMaybe<Scalars['Int']['input']>;
+  quickKeysCount?: InputMaybe<Scalars['Int']['input']>;
+  quickKeysEnabled?: InputMaybe<Scalars['Boolean']['input']>;
+  quickKeysPosition?: InputMaybe<QuickKeysPosition>;
+  showAllCategory?: InputMaybe<Scalars['Boolean']['input']>;
+  showImages?: InputMaybe<Scalars['Boolean']['input']>;
+  showPrices?: InputMaybe<Scalars['Boolean']['input']>;
+  tileSize?: InputMaybe<TileSize>;
+};
+
+export type UpdateOutletProductConfigInput = {
+  buttonColor?: InputMaybe<Scalars['String']['input']>;
+  displayName?: InputMaybe<Scalars['String']['input']>;
+  gridPosition?: InputMaybe<Scalars['JSON']['input']>;
+  isQuickKey?: InputMaybe<Scalars['Boolean']['input']>;
+  isVisible?: InputMaybe<Scalars['Boolean']['input']>;
+  quickKeyPosition?: InputMaybe<Scalars['Int']['input']>;
+  sortPriority?: InputMaybe<Scalars['Int']['input']>;
+  visibilityRules?: InputMaybe<VisibilityRulesInput>;
+};
+
 export type UpdatePaymentMethodInput = {
   icon?: InputMaybe<Scalars['String']['input']>;
   isEnabled?: InputMaybe<Scalars['Boolean']['input']>;
@@ -6096,6 +6535,39 @@ export type UpdateProShopVariantInput = {
   name: Scalars['String']['input'];
   priceAdjustment?: InputMaybe<Scalars['Float']['input']>;
   sku?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateProductCategoryInput = {
+  color?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  iconName?: InputMaybe<Scalars['String']['input']>;
+  isActive?: InputMaybe<Scalars['Boolean']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  parentId?: InputMaybe<Scalars['ID']['input']>;
+  sortOrder?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type UpdateProductInput = {
+  basePrice?: InputMaybe<Scalars['Float']['input']>;
+  bufferMinutes?: InputMaybe<Scalars['Int']['input']>;
+  categoryId?: InputMaybe<Scalars['ID']['input']>;
+  costPrice?: InputMaybe<Scalars['Float']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  durationMinutes?: InputMaybe<Scalars['Int']['input']>;
+  imageUrl?: InputMaybe<Scalars['String']['input']>;
+  isActive?: InputMaybe<Scalars['Boolean']['input']>;
+  lowStockThreshold?: InputMaybe<Scalars['Int']['input']>;
+  modifierGroupIds?: InputMaybe<Array<Scalars['ID']['input']>>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  productType?: InputMaybe<ProductType>;
+  requiredCapabilities?: InputMaybe<Array<Scalars['String']['input']>>;
+  sku?: InputMaybe<Scalars['String']['input']>;
+  sortPriority?: InputMaybe<Scalars['Int']['input']>;
+  stockQuantity?: InputMaybe<Scalars['Int']['input']>;
+  taxRate?: InputMaybe<Scalars['Float']['input']>;
+  thumbnailUrl?: InputMaybe<Scalars['String']['input']>;
+  trackInventory?: InputMaybe<Scalars['Boolean']['input']>;
+  variants?: InputMaybe<Array<CreateProductVariantInput>>;
 };
 
 export type UpdateQuantityResultType = {
@@ -6214,6 +6686,16 @@ export type UpdateSettlementTotalsInput = {
   voidCount?: InputMaybe<Scalars['Int']['input']>;
 };
 
+export type UpdateSmartSuggestionConfigInput = {
+  enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  position?: InputMaybe<SuggestionPosition>;
+  refreshIntervalMinutes?: InputMaybe<Scalars['Int']['input']>;
+  salesVelocityWeight?: InputMaybe<Scalars['Int']['input']>;
+  staffHistoryWeight?: InputMaybe<Scalars['Int']['input']>;
+  suggestionCount?: InputMaybe<Scalars['Int']['input']>;
+  timeOfDayWeight?: InputMaybe<Scalars['Int']['input']>;
+};
+
 export type UpdateSpecialDayInput = {
   bookingMode?: InputMaybe<BookingMode>;
   customFirstTee?: InputMaybe<Scalars['String']['input']>;
@@ -6310,6 +6792,13 @@ export type ValidateDiscountInput = {
 export type VerifyPinInput = {
   pin: Scalars['String']['input'];
   subAccountId: Scalars['String']['input'];
+};
+
+export type VisibilityRulesInput = {
+  inventoryRule?: InputMaybe<Scalars['String']['input']>;
+  memberOnly?: InputMaybe<Scalars['Boolean']['input']>;
+  roleRules?: InputMaybe<RoleRulesInput>;
+  timeRules?: InputMaybe<Array<TimeRuleInput>>;
 };
 
 export type VoidInvoiceInput = {
@@ -6503,6 +6992,11 @@ export type GetMemberTransactionsQueryVariables = Exact<{
 
 
 export type GetMemberTransactionsQuery = { __typename?: 'Query', memberTransactions: { __typename?: 'MemberTransactionsType', currentBalance: string, transactions: Array<{ __typename?: 'MemberTransactionType', id: string, date: string, type: string, description: string, invoiceNumber?: string | null | undefined, amount: string, runningBalance: string }> } };
+
+export type GetChargeTypesQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetChargeTypesQuery = { __typename?: 'Query', chargeTypes: Array<{ __typename?: 'ChargeTypeType', id: string, name: string, code: string, description?: string | null | undefined, defaultPrice?: string | null | undefined, taxable: boolean, category?: string | null | undefined }> };
 
 export type CreateInvoiceMutationVariables = Exact<{
   input: CreateInvoiceInput;
@@ -7888,6 +8382,60 @@ export type UpdatePosButtonRegistryMutationVariables = Exact<{
 
 
 export type UpdatePosButtonRegistryMutation = { __typename?: 'Mutation', updatePOSButtonRegistry: { __typename?: 'UpdateButtonRegistryMutationResponse', success: boolean, message?: string | null | undefined } };
+
+export type GetOutletProductPanelQueryVariables = Exact<{
+  outletId: Scalars['ID']['input'];
+}>;
+
+
+export type GetOutletProductPanelQuery = { __typename?: 'Query', outletProductPanel: { __typename?: 'OutletProductPanel', gridConfig: { __typename?: 'OutletGridConfig', id: string, gridColumns: number, gridRows: number, tileSize: TileSize, showImages: boolean, showPrices: boolean, categoryStyle: CategoryDisplayStyle, showAllCategory: boolean, quickKeysEnabled: boolean, quickKeysCount: number, quickKeysPosition: QuickKeysPosition }, quickKeys: Array<{ __typename?: 'Product', id: string, name: string, basePrice: number, imageUrl?: string | null | undefined, productType: ProductType, category: { __typename?: 'ProductCategory', id: string, color?: string | null | undefined } }>, suggestions: Array<{ __typename?: 'Product', id: string, name: string, basePrice: number, imageUrl?: string | null | undefined, productType: ProductType, category: { __typename?: 'ProductCategory', id: string, color?: string | null | undefined } }> }, productCategories: Array<{ __typename?: 'ProductCategory', id: string, name: string, color?: string | null | undefined, iconName?: string | null | undefined, sortOrder: number, parentId?: string | null | undefined }> };
+
+export type SmartSuggestionsQueryVariables = Exact<{
+  outletId: Scalars['ID']['input'];
+}>;
+
+
+export type SmartSuggestionsQuery = { __typename?: 'Query', smartSuggestions: Array<{ __typename?: 'Product', id: string, name: string, basePrice: number, imageUrl?: string | null | undefined, productType: ProductType, category: { __typename?: 'ProductCategory', id: string, color?: string | null | undefined } }> };
+
+export type OutletProductConfigsQueryVariables = Exact<{
+  outletId: Scalars['ID']['input'];
+}>;
+
+
+export type OutletProductConfigsQuery = { __typename?: 'Query', outletProductConfigs: Array<{ __typename?: 'OutletProductConfig', id: string, productId: string, displayName?: string | null | undefined, buttonColor?: string | null | undefined, sortPriority?: number | null | undefined, gridPosition?: any | null | undefined, isVisible: boolean, visibilityRules: any, isQuickKey: boolean, quickKeyPosition?: number | null | undefined, product?: { __typename?: 'Product', id: string, name: string, sku?: string | null | undefined, productType: ProductType, basePrice: number, imageUrl?: string | null | undefined, category: { __typename?: 'ProductCategory', id: string, name: string, color?: string | null | undefined } } | null | undefined }> };
+
+export type UpdateOutletProductConfigMutationVariables = Exact<{
+  outletId: Scalars['ID']['input'];
+  productId: Scalars['ID']['input'];
+  input: UpdateOutletProductConfigInput;
+}>;
+
+
+export type UpdateOutletProductConfigMutation = { __typename?: 'Mutation', updateOutletProductConfig: { __typename?: 'OutletProductConfig', id: string, displayName?: string | null | undefined, buttonColor?: string | null | undefined, sortPriority?: number | null | undefined, isVisible: boolean, isQuickKey: boolean, quickKeyPosition?: number | null | undefined } };
+
+export type BulkUpdateOutletProductConfigsMutationVariables = Exact<{
+  outletId: Scalars['ID']['input'];
+  input: BulkOutletProductConfigInput;
+}>;
+
+
+export type BulkUpdateOutletProductConfigsMutation = { __typename?: 'Mutation', bulkUpdateOutletProductConfigs: Array<{ __typename?: 'OutletProductConfig', id: string, isVisible: boolean, isQuickKey: boolean }> };
+
+export type UpdateOutletGridConfigMutationVariables = Exact<{
+  outletId: Scalars['ID']['input'];
+  input: UpdateOutletGridConfigInput;
+}>;
+
+
+export type UpdateOutletGridConfigMutation = { __typename?: 'Mutation', updateOutletGridConfig: { __typename?: 'OutletGridConfig', id: string, gridColumns: number, gridRows: number, tileSize: TileSize, showImages: boolean, showPrices: boolean, categoryStyle: CategoryDisplayStyle, quickKeysEnabled: boolean, quickKeysCount: number, quickKeysPosition: QuickKeysPosition } };
+
+export type UpdateSmartSuggestionConfigMutationVariables = Exact<{
+  outletId: Scalars['ID']['input'];
+  input: UpdateSmartSuggestionConfigInput;
+}>;
+
+
+export type UpdateSmartSuggestionConfigMutation = { __typename?: 'Mutation', updateSmartSuggestionConfig: { __typename?: 'SmartSuggestionConfig', id: string, enabled: boolean, suggestionCount: number, position: SuggestionPosition, timeOfDayWeight: number, salesVelocityWeight: number, staffHistoryWeight: number } };
 
 export type GetMemberPaymentMethodsQueryVariables = Exact<{
   memberId: Scalars['ID']['input'];

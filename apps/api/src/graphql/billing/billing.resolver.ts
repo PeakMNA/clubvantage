@@ -12,6 +12,7 @@ import {
   BillingStatsType,
   MemberTransactionsType,
   MemberTransactionType,
+  ChargeTypeType,
 } from './billing.types';
 import {
   CreateInvoiceInput,
@@ -188,6 +189,24 @@ export class BillingResolver {
       paidCount,
       overdueCount: overdueInvoices._count || 0,
     };
+  }
+
+  @Query(() => [ChargeTypeType], { name: 'chargeTypes', description: 'Get available charge types' })
+  async getChargeTypes(@GqlCurrentUser() user: JwtPayload): Promise<ChargeTypeType[]> {
+    const chargeTypes = await this.prisma.chargeType.findMany({
+      where: { clubId: user.tenantId, isActive: true },
+      orderBy: { name: 'asc' },
+    });
+
+    return chargeTypes.map((ct) => ({
+      id: ct.id,
+      name: ct.name,
+      code: ct.code,
+      description: ct.description ?? undefined,
+      defaultPrice: ct.defaultPrice?.toString() ?? undefined,
+      taxable: ct.taxable,
+      category: ct.category ?? undefined,
+    }));
   }
 
   @Query(() => MemberTransactionsType, { name: 'memberTransactions', description: 'Get transaction history for a member' })

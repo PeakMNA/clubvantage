@@ -84,6 +84,10 @@ export class CreateInvoiceInput {
   @ValidateNested({ each: true })
   @Type(() => InvoiceLineItemInput)
   lineItems: InvoiceLineItemInput[];
+
+  @Field({ nullable: true, defaultValue: false })
+  @IsOptional()
+  sendEmail?: boolean;
 }
 
 @InputType()
