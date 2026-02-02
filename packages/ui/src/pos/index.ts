@@ -13,3 +13,4 @@ export * from './pos-suggestions-row';
 export * from './pos-category-nav';
 export * from './pos-variant-picker';
 export * from './pos-modifier-modal';
+export * from './pos-product-panel';
