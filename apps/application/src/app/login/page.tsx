@@ -9,7 +9,7 @@ import { useAuth } from '@clubvantage/api-client';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { signIn, isLoading: isAuthLoading } = useAuth();
+  const { signIn } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -17,6 +17,9 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Don't use isAuthLoading - login page should always be interactive
+  const isLoading = isSubmitting;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,8 +43,6 @@ export default function LoginPage() {
       setIsSubmitting(false);
     }
   };
-
-  const isLoading = isSubmitting || isAuthLoading;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-stone-50 to-stone-100 dark:from-stone-900 dark:to-stone-950 p-4">

@@ -15,6 +15,7 @@ import {
   AssignTemplateMutationResponse,
   SetRoleOverridesMutationResponse,
   UpdateButtonRegistryMutationResponse,
+  DeleteTemplateMutationResponse,
 } from './pos-config.types';
 import {
   POSTemplateInput,
@@ -184,6 +185,28 @@ export class POSConfigResolver {
       return {
         success: false,
         message: error.message || 'Failed to clone template',
+      };
+    }
+  }
+
+  @Mutation(() => DeleteTemplateMutationResponse, {
+    name: 'deletePOSTemplate',
+    description: 'Delete a POS template',
+  })
+  async deletePOSTemplate(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('id', { type: () => ID }) id: string,
+  ): Promise<DeleteTemplateMutationResponse> {
+    try {
+      await this.posConfigService.deleteTemplate(id, user.tenantId);
+      return {
+        success: true,
+        message: 'Template deleted successfully',
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message || 'Failed to delete template',
       };
     }
   }

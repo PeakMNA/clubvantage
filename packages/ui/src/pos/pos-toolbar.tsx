@@ -177,10 +177,10 @@ function NewTicketButton({ onClick }: NewTicketButtonProps) {
       variant="default"
       size="sm"
       onClick={onClick}
-      className="gap-2"
+      className="gap-1.5"
     >
       <Plus className="h-4 w-4" />
-      <span>New Ticket</span>
+      <span>New</span>
     </Button>
   )
 }
@@ -231,22 +231,24 @@ export function POSToolbar({
   return (
     <div
       className={cn(
-        'flex items-center justify-between gap-4 px-4 py-2 border-b border-stone-200 bg-white',
+        'flex items-center gap-4 px-4 py-2 border-b border-stone-200 bg-white',
         className
       )}
     >
-      {/* Left zone */}
-      <div className="flex items-center gap-2">
+      {/* Left zone - fixed width */}
+      <div className="flex items-center gap-2 flex-shrink-0">
         {zones.left?.map(renderItem)}
       </div>
 
-      {/* Center zone */}
-      <div className="flex items-center gap-2">
-        {zones.center?.map(renderItem)}
+      {/* Center zone - flexible, can shrink and scroll */}
+      <div className="flex-1 min-w-0 overflow-x-auto">
+        <div className="flex items-center gap-2 justify-center">
+          {zones.center?.map(renderItem)}
+        </div>
       </div>
 
-      {/* Right zone */}
-      <div className="flex items-center gap-2">
+      {/* Right zone - fixed width */}
+      <div className="flex items-center gap-2 flex-shrink-0">
         {zones.right?.map(renderItem)}
       </div>
     </div>

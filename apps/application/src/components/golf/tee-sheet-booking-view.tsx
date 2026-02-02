@@ -169,6 +169,9 @@ export function TeeSheetBookingView({
   // Context menu handlers
   const handlePlayerContextMenu = (e: React.MouseEvent, bookingId: string, status: string) => {
     e.preventDefault()
+    e.stopPropagation()
+    // Close slot context menu first
+    setSlotContextMenu((prev) => ({ ...prev, isOpen: false }))
     setBookingContextMenu({
       isOpen: true,
       position: { x: e.clientX, y: e.clientY },
@@ -179,6 +182,8 @@ export function TeeSheetBookingView({
 
   const handleRowContextMenu = (e: React.MouseEvent, teeTime: string) => {
     e.preventDefault()
+    // Close booking context menu first
+    setBookingContextMenu((prev) => ({ ...prev, isOpen: false }))
     setSlotContextMenu({
       isOpen: true,
       position: { x: e.clientX, y: e.clientY },

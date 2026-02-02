@@ -356,6 +356,181 @@ export function RemovePlayerDialog({
 }
 
 // ============================================================================
+// Move/Copy Booking Dialog
+// ============================================================================
+
+export interface MoveBookingDialogProps {
+  isOpen: boolean
+  isProcessing?: boolean
+  action: 'move' | 'copy'
+  playerNames: string[]
+  sourceTeeTime: string
+  targetTeeTime: string
+  date: string
+  onClose: () => void
+  onConfirm: () => void
+}
+
+export function MoveBookingDialog({
+  isOpen,
+  isProcessing = false,
+  action,
+  playerNames,
+  sourceTeeTime,
+  targetTeeTime,
+  date,
+  onClose,
+  onConfirm,
+}: MoveBookingDialogProps) {
+  // Handle Escape key
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !isProcessing) {
+        onClose()
+      }
+    },
+    [onClose, isProcessing]
+  )
+
+  useEffect(() => {
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown)
+      return () => document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isOpen, handleKeyDown])
+
+  // Prevent body scroll when open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+      return () => {
+        document.body.style.overflow = ''
+      }
+    }
+  }, [isOpen])
+
+  if (!isOpen) return null
+
+  const isMove = action === 'move'
+  const actionVerb = isMove ? 'Move' : 'Copy'
+  const actionVerbLower = isMove ? 'move' : 'copy'
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50"
+        onClick={isProcessing ? undefined : onClose}
+      />
+
+      {/* Dialog */}
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div
+          className="w-full max-w-md bg-white dark:bg-stone-900 rounded-2xl shadow-2xl dark:shadow-black/40 animate-in fade-in zoom-in-95 duration-200"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="flex items-start justify-between p-6 pb-0">
+            <h2 className="text-xl font-semibold text-stone-900 dark:text-stone-100">
+              {actionVerb} Booking
+            </h2>
+            <button
+              onClick={onClose}
+              disabled={isProcessing}
+              className="p-2 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg transition-colors -mr-2 -mt-2 disabled:opacity-50"
+            >
+              <X className="h-5 w-5 text-stone-500 dark:text-stone-400" />
+            </button>
+          </div>
+
+          {/* Content */}
+          <div className="p-6 space-y-4">
+            <p className="text-stone-600 dark:text-stone-400">
+              {isMove
+                ? `Are you sure you want to ${actionVerbLower} this booking to ${targetTeeTime}?`
+                : `Create a copy of this booking at ${targetTeeTime}?`}
+            </p>
+
+            {/* Booking Details */}
+            <div className="space-y-3 p-4 bg-stone-50 dark:bg-stone-800 rounded-lg">
+              <div>
+                <span className="text-sm text-stone-500 dark:text-stone-400">Players</span>
+                <div className="mt-1">
+                  {playerNames.map((name, index) => (
+                    <div key={index} className="text-stone-900 dark:text-stone-100 font-medium">
+                      {name}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <span className="text-sm text-stone-500 dark:text-stone-400">From</span>
+                  <div className="text-stone-900 dark:text-stone-100 font-medium">{sourceTeeTime}</div>
+                </div>
+                <div>
+                  <span className="text-sm text-stone-500 dark:text-stone-400">To</span>
+                  <div className={cn(
+                    'font-medium',
+                    isMove ? 'text-blue-600 dark:text-blue-400' : 'text-purple-600 dark:text-purple-400'
+                  )}>
+                    {targetTeeTime}
+                  </div>
+                </div>
+              </div>
+              <div>
+                <span className="text-sm text-stone-500 dark:text-stone-400">Date</span>
+                <div className="text-stone-900 dark:text-stone-100 font-medium">{date}</div>
+              </div>
+            </div>
+
+            {/* Info message */}
+            {isMove && (
+              <div className="flex items-start gap-3 p-3 bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 rounded-lg">
+                <AlertTriangle className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-blue-800 dark:text-blue-200">
+                  The original time slot will become available for new bookings.
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className="flex justify-end gap-3 p-6 pt-0">
+            <button
+              onClick={onClose}
+              disabled={isProcessing}
+              className={cn(
+                'px-4 py-2 rounded-lg font-medium transition-colors',
+                'border border-stone-300 dark:border-stone-600 text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800',
+                'disabled:opacity-50 disabled:cursor-not-allowed'
+              )}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onConfirm}
+              disabled={isProcessing}
+              className={cn(
+                'px-4 py-2 rounded-lg font-medium transition-colors',
+                isMove
+                  ? 'bg-blue-600 text-white hover:bg-blue-700'
+                  : 'bg-purple-600 text-white hover:bg-purple-700',
+                'disabled:opacity-50 disabled:cursor-not-allowed',
+                'flex items-center gap-2'
+              )}
+            >
+              {isProcessing && <Loader2 className="h-4 w-4 animate-spin" />}
+              {actionVerb} Booking
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
+  )
+}
+
+// ============================================================================
 // Release Block Dialog
 // ============================================================================
 

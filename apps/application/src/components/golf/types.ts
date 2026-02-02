@@ -79,6 +79,8 @@ export interface Flight {
   // Cross Booking Mode
   startingHole?: 1 | 10 // Which tee the flight starts from (1 = Hole 1, 10 = Hole 10)
   holes?: 9 | 18 // Number of holes booked (always selectable at booking time)
+  // Shopping Cart Model
+  hasDraft?: boolean // Whether there's a cart draft for this tee time
 }
 
 export interface Course {
@@ -474,6 +476,7 @@ export interface PlacementModeState {
     playerCount: number
     sourceTeeTime: string
     sourceDate: string
+    sourceFlightId?: string // Flight ID for reliable matching
     playerIds?: string[] // Player IDs for conflict detection
   } | null
 }

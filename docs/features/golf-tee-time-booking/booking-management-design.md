@@ -205,14 +205,29 @@ Staff opens Golf page
 ```
 Staff has booking modal open for 06:00
   → Clicks [Move]
-  → Modal minimizes
-  → Banner: "Moving: John, Mary (2 players)"
-  → 06:08 shows green highlight (valid)
-  → 06:16 shows red (full - 4 players)
-  → Staff clicks 06:08
-  → Confirmation: "Move booking to 06:08?"
-  → Confirms
-  → Tee sheet updates, booking now at 06:08
+  → Modal closes, placement mode activates
+  → Blue banner: "Moving from 06:00 AM: John, Mary (2 players) → Click a green slot to place"
+  → Source slot (06:00) shows amber highlight
+  → 06:08 shows green highlight (valid - has room)
+  → 06:16 shows red/dimmed (full - 4 players)
+  → Staff clicks 06:08 (green slot)
+  → Confirmation dialog: "Move Booking - Move 2 players from 06:00 AM to 06:08 AM?"
+  → Staff clicks [Move Booking]
+  → API call persists the move
+  → Tee sheet refetches, booking now at 06:08
+  → Placement mode exits
+
+Alternative: Copy a Booking
+  → Staff clicks [Copy] instead of [Move]
+  → Purple banner: "Copying from 06:00 AM: John, Mary (2 players)"
+  → Same slot highlighting behavior
+  → Click destination → Confirmation dialog shows "Copy Booking"
+  → Creates new tee time with same players at destination
+  → Original booking remains at source
+
+Cancel placement mode:
+  → Press Escape key, or
+  → Click [Cancel] in the banner
 ```
 
 ### Flow 4: Cancel One Booking in Multi-Booking Slot
@@ -308,15 +323,45 @@ Course is backing up, need to create gap
 
 ### Placement Mode
 
+**Move Mode Banner (Blue theme):**
 ```
-┌──────────────────────────────────────────────────────────┐
-│ 📋 Moving: John Smith, Mary Lee (2 players)    [Cancel] │
-├──────────────────────────────────────────────────────────┤
-│ 06:00  │ (Original)                            │ 2/4 ▸  │
-│ 06:08  │ ✓ Available                           │ 0/4    │ ← Green
-│ 06:16  │ ✗ Full                                │ 4/4    │ ← Red
-└──────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│ 📋 Moving from 06:00 AM: John Smith, Mary Lee (2 players) → Click a green slot   │
+│    to place                                                           [Cancel]    │
+└───────────────────────────────────────────────────────────────────────────────────┘
 ```
+
+**Copy Mode Banner (Purple theme):**
+```
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│ 📄 Copying from 06:00 AM: John Smith, Mary Lee (2 players) → Click a green slot  │
+│    to place                                                           [Cancel]    │
+└───────────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Slot Highlighting:**
+| Slot State | Visual Style | Cursor |
+|------------|--------------|--------|
+| Source (original booking) | Amber ring + amber background | Default |
+| Valid target (has room) | Emerald ring + green background | Pointer |
+| Invalid target (full/blocked) | Dimmed + red tint | Not-allowed |
+
+**Confirmation Dialog:**
+```
+┌────────────────────────────────────────────┐
+│  Move Booking                        [X]   │
+├────────────────────────────────────────────┤
+│  Move 2 players from 06:00 AM to 06:08 AM  │
+│  on Jan 30, 2026?                          │
+│                                            │
+│  Players: John Smith, Mary Lee             │
+├────────────────────────────────────────────┤
+│                    [Cancel] [Move Booking] │
+└────────────────────────────────────────────┘
+```
+
+**Keyboard Shortcuts:**
+- `Escape` - Cancel placement mode
 
 ---
 
@@ -579,43 +624,45 @@ type TeeTimePlayer {
 
 ## Implementation Plan
 
-### Phase 1: Foundation (Week 1-2)
+### Phase 1: Foundation (Week 1-2) ✅ COMPLETE
 
-1. **Database schema updates**
+1. **Database schema updates** ✅
    - Add `booking_number` column with generation logic
    - Add audit trail table
    - Add block table
 
-2. **API updates**
+2. **API updates** ✅
    - Modify `getTeeSheet` to return nested bookings
    - Add `getBooking`, `getBookings` queries
    - Add booking lifecycle mutations
 
-3. **Core UI components**
+3. **Core UI components** ✅
    - BookingStatusBadge
    - BookingChip
    - TimeSlotRow (modified)
 
-### Phase 2: Booking Management (Week 3-4)
+### Phase 2: Booking Management (Week 3-4) ✅ COMPLETE
 
-1. **Booking Detail Modal**
+1. **Booking Detail Modal** ✅
    - Modal structure
    - Players section with cart/caddy
    - Action buttons
 
-2. **Bookings Tab**
+2. **Bookings Tab** ✅
    - List view
    - Search and filters
 
-3. **Booking actions**
+3. **Booking actions** ✅
    - Check In, Cancel with confirmation
    - Edit booking modal
 
-### Phase 3: Advanced Features (Week 5-6)
+### Phase 3: Advanced Features (Week 5-6) ✅ COMPLETE
 
-1. **Placement Mode**
-   - Move/Copy workflow
-   - Visual slot highlighting
+1. **Placement Mode** ✅
+   - Move/Copy workflow with confirmation dialog
+   - Visual slot highlighting (green=valid, red=invalid, amber=source)
+   - Escape key to cancel, banner with booking info
+   - Database persistence via `moveTeeTime` and `createTeeTime` mutations
 
 2. **Audit Trail**
    - History tab in modal
@@ -632,9 +679,9 @@ type TeeTimePlayer {
    - Visual connectors
    - Party management
 
-2. **Context menus**
-   - Right-click actions
-   - Keyboard shortcuts
+2. **Context menus** ✅
+   - Right-click actions on bookings and time slots
+   - Move/Copy available from context menu
 
 3. **Refinements**
    - Performance optimization

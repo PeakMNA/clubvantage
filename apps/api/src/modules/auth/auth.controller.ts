@@ -31,14 +31,28 @@ export class AuthController {
   ) {}
 
   private getCookieOptions(maxAgeSeconds: number = 900) {
-    return {
+    const domain = this.configService.get('supabase.cookie.domain');
+    const options: {
+      httpOnly: boolean;
+      secure: boolean;
+      sameSite: 'strict' | 'lax' | 'none';
+      maxAge: number;
+      path: string;
+      domain?: string;
+    } = {
       httpOnly: true,
       secure: this.configService.get('supabase.cookie.secure') ?? false,
       sameSite: this.configService.get('supabase.cookie.sameSite') ?? 'lax',
       maxAge: maxAgeSeconds * 1000,
       path: '/',
-      domain: this.configService.get('supabase.cookie.domain'),
-    } as const;
+    };
+
+    // Only include domain if explicitly configured
+    if (domain) {
+      options.domain = domain;
+    }
+
+    return options;
   }
 
   @Public()
@@ -159,9 +173,22 @@ export class AuthController {
   ) {
     const accessCookieName = this.configService.get<string>('supabase.cookie.accessName') || 'sb-access-token';
     const refreshCookieName = this.configService.get<string>('supabase.cookie.refreshName') || 'sb-refresh-token';
+    // Use 7 days for access token cookie (the JWT inside will still expire, but cookie persists for refresh)
+    const accessCookieOptions = this.getCookieOptions(7 * 24 * 60 * 60);
 
-    // Set access token cookie (15 minute expiry)
-    res.cookie(accessCookieName, dto.accessToken, this.getCookieOptions(15 * 60));
+    // Debug logging for development
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[Auth] Setting session cookies:', {
+        accessCookieName,
+        refreshCookieName,
+        cookieOptions: { ...accessCookieOptions, maxAge: `${accessCookieOptions.maxAge / 1000}s` },
+        hasAccessToken: !!dto.accessToken,
+        hasRefreshToken: !!dto.refreshToken,
+      });
+    }
+
+    // Set access token cookie (7 day cookie expiry - JWT expiration is checked separately)
+    res.cookie(accessCookieName, dto.accessToken, accessCookieOptions);
 
     // Set refresh token cookie (30 day expiry)
     res.cookie(refreshCookieName, dto.refreshToken, this.getCookieOptions(30 * 24 * 60 * 60));
@@ -212,7 +239,8 @@ export class AuthController {
     const accessCookieName = this.configService.get<string>('supabase.cookie.accessName') || 'sb-access-token';
     const refreshCookieName = this.configService.get<string>('supabase.cookie.refreshName') || 'sb-refresh-token';
 
-    res.cookie(accessCookieName, result.accessToken, this.getCookieOptions(result.expiresIn));
+    // Use 7 days for access token cookie (JWT expiration is checked separately, cookie persists for refresh)
+    res.cookie(accessCookieName, result.accessToken, this.getCookieOptions(7 * 24 * 60 * 60));
     res.cookie(refreshCookieName, result.refreshToken, this.getCookieOptions(30 * 24 * 60 * 60));
 
     // Return user info but not tokens (they're in cookies)
@@ -256,8 +284,8 @@ export class AuthController {
 
     const result = await this.authService.refreshSupabaseSession(refreshToken);
 
-    // Set new cookies
-    res.cookie(accessCookieName, result.accessToken, this.getCookieOptions(result.expiresIn));
+    // Set new cookies (use 7 days for access token cookie - JWT expiration is checked separately)
+    res.cookie(accessCookieName, result.accessToken, this.getCookieOptions(7 * 24 * 60 * 60));
     res.cookie(refreshCookieName, result.refreshToken, this.getCookieOptions(30 * 24 * 60 * 60));
 
     return {

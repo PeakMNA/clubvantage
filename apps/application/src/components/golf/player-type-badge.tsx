@@ -44,7 +44,9 @@ const typeConfig: Record<PlayerType, {
 }
 
 export function PlayerTypeBadge({ type, className, showLabel = false, size = 'md' }: PlayerTypeBadgeProps) {
-  const config = typeConfig[type]
+  // Normalize type to lowercase and handle WALK_UP -> walkup
+  const normalizedType = (type?.toLowerCase().replace('_', '') || 'member') as PlayerType
+  const config = typeConfig[normalizedType] || typeConfig.member
 
   const sizeClasses = {
     xs: showLabel ? 'px-1 py-0 h-3.5 text-[8px]' : 'w-3.5 h-3.5 text-[8px]',

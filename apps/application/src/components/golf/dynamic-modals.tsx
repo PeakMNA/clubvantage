@@ -21,11 +21,6 @@ export const DynamicBookTeeTimeModal = dynamic(
   { loading: () => <ModalLoadingFallback />, ssr: false }
 )
 
-export const DynamicCheckInModal = dynamic(
-  () => import('./check-in-modal').then((mod) => mod.CheckInModal),
-  { loading: () => <ModalLoadingFallback />, ssr: false }
-)
-
 export const DynamicSettlementModal = dynamic(
   () => import('./settlement-modal').then((mod) => mod.SettlementModal),
   { loading: () => <ModalLoadingFallback />, ssr: false }

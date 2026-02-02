@@ -37,6 +37,33 @@ export {
   usePOSModal,
 } from './pos-config-provider';
 
+// Action hooks
+export { usePOSActions } from './hooks';
+
+// Config mappers and utilities
+export {
+  // Mappers
+  mapToolbarConfig,
+  mapActionBarConfig,
+  mapTemplateToComponentConfig,
+  createButtonRegistry,
+  createButtonStates,
+  // Constants
+  DEFAULT_BUTTON_REGISTRY,
+  // Action Types
+  POS_ACTION_TYPES,
+  ACTION_TYPE_METADATA,
+  getActionTypesByCategory,
+  getActionTypeOptions,
+  getActionTypeIcon,
+  actionRequiresSelection,
+  actionRequiresMember,
+  isActionDangerous,
+  // Action Handlers
+  executeAction,
+  createActionExecutor,
+} from './utils';
+
 // Types
 export type {
   // Outlet & Template

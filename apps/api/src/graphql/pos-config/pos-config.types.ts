@@ -202,3 +202,12 @@ export class UpdateButtonRegistryMutationResponse {
   @Field(() => POSButtonRegistryGraphQLType, { nullable: true })
   buttonRegistry?: POSButtonRegistryGraphQLType;
 }
+
+@ObjectType()
+export class DeleteTemplateMutationResponse {
+  @Field()
+  success: boolean;
+
+  @Field({ nullable: true })
+  message?: string;
+}

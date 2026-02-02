@@ -154,6 +154,34 @@ export class POSConfigService {
     });
   }
 
+  /**
+   * Delete a template with tenant isolation
+   * Fails if template is assigned to any outlets
+   */
+  async deleteTemplate(id: string, clubId: string) {
+    const template = await this.prisma.pOSTemplate.findFirst({
+      where: { id, clubId },
+      include: { outlets: true },
+    });
+
+    if (!template) {
+      throw new NotFoundException('POS Template not found');
+    }
+
+    if (template.outlets && template.outlets.length > 0) {
+      const outletNames = template.outlets.map((o) => o.name).join(', ');
+      throw new BadRequestException(
+        `Cannot delete template. It is assigned to outlets: ${outletNames}`,
+      );
+    }
+
+    await this.prisma.pOSTemplate.delete({
+      where: { id },
+    });
+
+    return { success: true };
+  }
+
   // ============================================================================
   // OUTLET OPERATIONS
   // ============================================================================

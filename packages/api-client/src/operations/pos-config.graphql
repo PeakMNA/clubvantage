@@ -133,6 +133,13 @@ mutation ClonePOSTemplate($id: ID!, $newName: String!) {
   }
 }
 
+mutation DeletePOSTemplate($id: ID!) {
+  deletePOSTemplate(id: $id) {
+    success
+    message
+  }
+}
+
 mutation AssignPOSTemplate($input: AssignTemplateInput!) {
   assignPOSTemplate(input: $input) {
     success

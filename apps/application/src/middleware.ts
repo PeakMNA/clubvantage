@@ -23,10 +23,11 @@ export function middleware(request: NextRequest) {
   const accessToken = request.cookies.get('sb-access-token')?.value;
   const isAuthenticated = !!accessToken;
 
-  // Redirect authenticated users away from login page
-  if (isPublicRoute && isAuthenticated) {
-    return NextResponse.redirect(new URL('/', request.url));
-  }
+  // Don't redirect from login page - let user log in even with stale cookies
+  // The client-side auth will handle token validation
+  // if (isPublicRoute && isAuthenticated) {
+  //   return NextResponse.redirect(new URL('/', request.url));
+  // }
 
   // Redirect unauthenticated users to login
   if (!isPublicRoute && !isAuthenticated) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@clubvantage/api-client';
 
@@ -17,26 +17,33 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const router = useRouter();
   const { user, signOut, isLoading, isAuthenticated } = useAuth();
+  const hasRedirected = useRef(false);
 
   const handleLogout = async () => {
     await signOut();
-    router.push('/login');
+    window.location.href = '/login';
   };
 
-  // Redirect to login if not authenticated (in useEffect to avoid setState during render)
+  // Redirect to login if not authenticated
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/login');
+    if (!isLoading && !isAuthenticated && !hasRedirected.current) {
+      hasRedirected.current = true;
+      router.replace('/login');
     }
   }, [isLoading, isAuthenticated, router]);
 
-  // Show loading state while checking auth or redirecting
-  if (isLoading || !isAuthenticated) {
+  // Show loading while checking auth
+  if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500" />
       </div>
     );
+  }
+
+  // Show nothing while redirecting to login
+  if (!isAuthenticated) {
+    return null;
   }
 
   return (

@@ -1433,6 +1433,12 @@ export type DeleteResponseType = {
   success: Scalars['Boolean']['output'];
 };
 
+export type DeleteTemplateMutationResponse = {
+  __typename?: 'DeleteTemplateMutationResponse';
+  message?: Maybe<Scalars['String']['output']>;
+  success: Scalars['Boolean']['output'];
+};
+
 export type DependentType = {
   __typename?: 'DependentType';
   dateOfBirth?: Maybe<Scalars['DateTime']['output']>;
@@ -2529,6 +2535,8 @@ export type Mutation = {
   deleteMember: DeleteMemberResponseType;
   /** Delete (deactivate) a minimum spend requirement */
   deleteMinimumSpendRequirement: MinimumSpendRequirement;
+  /** Delete a POS template */
+  deletePOSTemplate: DeleteTemplateMutationResponse;
   /** Delete a pro shop category. If category has products, provide moveProductsTo. */
   deleteProShopCategory: Scalars['Boolean']['output'];
   /** Delete a pro shop product */
@@ -3148,6 +3156,11 @@ export type MutationDeleteMemberArgs = {
 
 
 export type MutationDeleteMinimumSpendRequirementArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeletePosTemplateArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -7846,6 +7859,13 @@ export type ClonePosTemplateMutationVariables = Exact<{
 
 
 export type ClonePosTemplateMutation = { __typename?: 'Mutation', clonePOSTemplate: { __typename?: 'CloneTemplateMutationResponse', success: boolean, message?: string | null | undefined, template?: { __typename?: 'POSTemplateGraphQLType', id: string, name: string } | null | undefined } };
+
+export type DeletePosTemplateMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type DeletePosTemplateMutation = { __typename?: 'Mutation', deletePOSTemplate: { __typename?: 'DeleteTemplateMutationResponse', success: boolean, message?: string | null | undefined } };
 
 export type AssignPosTemplateMutationVariables = Exact<{
   input: AssignTemplateInput;

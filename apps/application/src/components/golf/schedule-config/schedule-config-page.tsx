@@ -27,7 +27,7 @@ function createDefaultConfig(courseId: string): ScheduleConfig {
     weekdayFirstTee: '06:00',
     weekdayLastTee: '17:00',
     weekdayBookingMode: 'EIGHTEEN',
-    weekendFirstTee: '05:30',
+    weekendFirstTee: '06:00',  // Same as weekday by default
     weekendLastTee: '17:30',
     weekendBookingMode: 'EIGHTEEN',
     twilightMode: 'FIXED',

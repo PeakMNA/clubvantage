@@ -15,3 +15,4 @@ export * from './pos-variant-picker';
 export * from './pos-modifier-modal';
 export * from './pos-product-panel';
 export * from './pos-grid-preview';
+export * from './pos-product-grid';

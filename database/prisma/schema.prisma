@@ -32,6 +32,7 @@ model Club {
   maxUsers               Int                     @default(10)
   features               Json                    @default("{}")
   settings               Json                    @default("{}")
+  posButtonRegistry      Json                    @default("{}") // Extensible button definitions for POS
   isActive               Boolean                 @default(true)
   createdAt              DateTime                @default(now())
   updatedAt              DateTime                @updatedAt
@@ -70,7 +71,11 @@ model Club {
   productCategories      ProductCategory[]
   products               Product[]
   modifierGroups         ModifierGroup[]
+  dailySettlements       DailySettlement[]
+  posTemplates           POSTemplate[]
   posOutlets             POSOutlet[]
+  creditNotes            CreditNote[]
+  collectionActions      CollectionAction[]
 
   @@index([slug])
   @@index([isActive])
@@ -243,18 +248,23 @@ model Member {
   sponsoredApplications MembershipApplication[] @relation("ApplicationSponsor")
   notifications         Notification[]
   payments              Payment[]
-  paidTransactions      PaymentTransaction[]  // Transactions where this member paid for others
+  paidTransactions      PaymentTransaction[] // Transactions where this member paid for others
   teeTimePlayers        TeeTimePlayer[]
   user                  User?
   waitlistEntries       WaitlistEntry[]
 
   // Credit Limit Settings
-  creditLimit           Decimal?                @db.Decimal(12, 2)
-  creditLimitEnabled    Boolean                 @default(false)
-  creditAlertThreshold  Int                     @default(80)
-  creditBlockEnabled    Boolean                 @default(true)
-  creditOverrideAllowed Boolean                 @default(false)
+  creditLimit           Decimal?              @db.Decimal(12, 2)
+  creditLimitEnabled    Boolean               @default(false)
+  creditAlertThreshold  Int                   @default(80)
+  creditBlockEnabled    Boolean               @default(true)
+  creditOverrideAllowed Boolean               @default(false)
   creditLimitOverrides  CreditLimitOverride[]
+  minimumSpends         MemberMinimumSpend[]
+  subAccounts           SubAccount[]
+  storedPaymentMethods  StoredPaymentMethod[]
+  creditNotes           CreditNote[]
+  collectionActions     CollectionAction[]
 
   @@unique([clubId, memberId])
   @@unique([clubId, email])
@@ -279,7 +289,7 @@ model CreditLimitOverride {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  member        Member    @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
   @@index([memberId])
   @@index([memberId, isActive])
@@ -320,8 +330,9 @@ model ChargeType {
   isActive     Boolean           @default(true)
   createdAt    DateTime          @default(now())
   updatedAt    DateTime          @updatedAt
-  club         Club              @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  lineItems    InvoiceLineItem[]
+  club                 Club                   @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  lineItems            InvoiceLineItem[]
+  creditNoteLineItems  CreditNoteLineItem[]
 
   @@unique([clubId, code])
   @@index([clubId])
@@ -330,32 +341,36 @@ model ChargeType {
 
 /// Invoice for member billing
 model Invoice {
-  id             String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clubId         String              @db.Uuid
-  invoiceNumber  String              @db.VarChar(30)
-  memberId       String              @db.Uuid
-  invoiceDate    DateTime            @db.Date
-  dueDate        DateTime            @db.Date
-  paidDate       DateTime?           @db.Date
-  subtotal       Decimal             @db.Decimal(12, 2)
-  taxAmount      Decimal             @default(0) @db.Decimal(12, 2)
-  discountAmount Decimal             @default(0) @db.Decimal(12, 2)
-  totalAmount    Decimal             @db.Decimal(12, 2)
-  paidAmount     Decimal             @default(0) @db.Decimal(12, 2)
-  balanceDue     Decimal             @db.Decimal(12, 2)
-  status         InvoiceStatus       @default(DRAFT)
-  notes          String?
-  internalNotes  String?
-  billingPeriod  String?             @db.VarChar(50)
-  sentAt         DateTime?
-  viewedAt       DateTime?
-  createdAt      DateTime            @default(now())
-  updatedAt      DateTime            @updatedAt
-  deletedAt      DateTime?
-  lineItems      InvoiceLineItem[]
-  club           Club                @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  member         Member              @relation(fields: [memberId], references: [id])
-  payments       PaymentAllocation[]
+  id              String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId          String              @db.Uuid
+  invoiceNumber   String              @db.VarChar(30)
+  memberId        String              @db.Uuid
+  invoiceDate     DateTime            @db.Date
+  dueDate         DateTime            @db.Date
+  paidDate        DateTime?           @db.Date
+  subtotal        Decimal             @db.Decimal(12, 2)
+  taxAmount       Decimal             @default(0) @db.Decimal(12, 2)
+  discountAmount  Decimal             @default(0) @db.Decimal(12, 2)
+  totalAmount     Decimal             @db.Decimal(12, 2)
+  paidAmount      Decimal             @default(0) @db.Decimal(12, 2)
+  balanceDue      Decimal             @db.Decimal(12, 2)
+  status          InvoiceStatus       @default(DRAFT)
+  notes           String?
+  internalNotes   String?
+  billingPeriod   String?             @db.VarChar(50)
+  sentAt          DateTime?
+  viewedAt        DateTime?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  deletedAt       DateTime?
+  lineItems            InvoiceLineItem[]
+  club                 Club                    @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  member               Member                  @relation(fields: [memberId], references: [id])
+  payments             PaymentAllocation[]
+  autoPayAttempts      AutoPayAttempt[]
+  creditNoteSources    CreditNote[]            @relation("CreditNoteSource")
+  creditNoteApps       CreditNoteApplication[]
+  collectionActions    CollectionAction[]
 
   @@unique([clubId, invoiceNumber])
   @@index([clubId])
@@ -873,7 +888,7 @@ model GolfScheduleConfig {
   weekdayFirstTee             String                   @default("06:00") @db.VarChar(5)
   weekdayLastTee              String                   @default("17:00") @db.VarChar(5)
   weekdayBookingMode          BookingMode              @default(EIGHTEEN)
-  weekendFirstTee             String                   @default("06:00") @db.VarChar(5)  // Same as weekday by default
+  weekendFirstTee             String                   @default("06:00") @db.VarChar(5) // Same as weekday by default
   weekendLastTee              String                   @default("17:30") @db.VarChar(5)
   weekendBookingMode          BookingMode              @default(EIGHTEEN)
   twilightMode                TwilightMode             @default(FIXED)
@@ -1239,32 +1254,32 @@ model Caddy {
 
 /// Tee time booking
 model TeeTime {
-  id              String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clubId          String               @db.Uuid
-  teeTimeNumber   String               @db.VarChar(30)
-  courseId        String               @db.Uuid
-  teeDate         DateTime             @db.Date
-  teeTime         String               @db.VarChar(5)
-  holes           Int                  @default(18)
-  startingHole    Int                  @default(1)
-  status          BookingStatus        @default(PENDING)
-  confirmedAt     DateTime?
-  checkedInAt     DateTime?
-  startedAt       DateTime?
-  completedAt     DateTime?
-  notes           String?
-  internalNotes   String?
-  cancelReason    String?              @db.VarChar(500)
-  cancelledAt     DateTime?
-  cancelledBy     String?              @db.Uuid
-  createdAt       DateTime             @default(now())
-  updatedAt       DateTime             @updatedAt
-  cartDraft       CartDraft?
-  transactions    PaymentTransaction[]
-  starterTickets  StarterTicket[]
-  players         TeeTimePlayer[]
-  club            Club                 @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  course          GolfCourse           @relation(fields: [courseId], references: [id])
+  id             String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId         String               @db.Uuid
+  teeTimeNumber  String               @db.VarChar(30)
+  courseId       String               @db.Uuid
+  teeDate        DateTime             @db.Date
+  teeTime        String               @db.VarChar(5)
+  holes          Int                  @default(18)
+  startingHole   Int                  @default(1)
+  status         BookingStatus        @default(PENDING)
+  confirmedAt    DateTime?
+  checkedInAt    DateTime?
+  startedAt      DateTime?
+  completedAt    DateTime?
+  notes          String?
+  internalNotes  String?
+  cancelReason   String?              @db.VarChar(500)
+  cancelledAt    DateTime?
+  cancelledBy    String?              @db.Uuid
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  cartDraft      CartDraft?
+  transactions   PaymentTransaction[]
+  starterTickets StarterTicket[]
+  players        TeeTimePlayer[]
+  club           Club                 @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  course         GolfCourse           @relation(fields: [courseId], references: [id])
 
   @@unique([clubId, teeTimeNumber])
   @@index([courseId, teeDate, teeTime])
@@ -1303,17 +1318,17 @@ model TeeTimePlayer {
   checkedInAt        DateTime?
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
-  lineItems              BookingLineItem[]
-  guests                 Guest[]
-  checkInRecord          PlayerCheckInRecord?
-  caddy                  Caddy?               @relation(fields: [caddyId], references: [id])
-  dependent              Dependent?           @relation(fields: [dependentId], references: [id])
-  member                 Member?              @relation(fields: [memberId], references: [id])
-  teeTime                TeeTime              @relation(fields: [teeTimeId], references: [id], onDelete: Cascade)
+  lineItems          BookingLineItem[]
+  guests             Guest[]
+  checkInRecord      PlayerCheckInRecord?
+  caddy              Caddy?               @relation(fields: [caddyId], references: [id])
+  dependent          Dependent?           @relation(fields: [dependentId], references: [id])
+  member             Member?              @relation(fields: [memberId], references: [id])
+  teeTime            TeeTime              @relation(fields: [teeTimeId], references: [id], onDelete: Cascade)
 
   // Transfer relations (shopping cart model)
-  itemsTransferredFrom   BookingLineItem[]    @relation("TransferredFromPlayer")
-  itemsTransferredTo     BookingLineItem[]    @relation("TransferredToPlayer")
+  itemsTransferredFrom BookingLineItem[] @relation("TransferredFromPlayer")
+  itemsTransferredTo   BookingLineItem[] @relation("TransferredToPlayer")
 
   @@unique([teeTimeId, position])
   @@index([teeTimeId])
@@ -1326,7 +1341,7 @@ model TeeTimePlayer {
 model CartDraft {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   teeTimeId String   @unique @db.Uuid
-  draftData Json     // { slots: [...], pendingTransfers: [...] }
+  draftData Json // { slots: [...], pendingTransfers: [...] }
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   createdBy String   @db.Uuid
@@ -1338,40 +1353,40 @@ model CartDraft {
 
 /// Booking line item - tracks individual charges per player
 model BookingLineItem {
-  id                       String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  teeTimePlayerId          String                @db.Uuid
-  type                     LineItemType
-  description              String                @db.VarChar(200)
-  baseAmount               Decimal               @db.Decimal(10, 2)
-  taxType                  TaxType
-  taxRate                  Decimal               @db.Decimal(5, 2)
-  taxAmount                Decimal               @db.Decimal(10, 2)
-  totalAmount              Decimal               @db.Decimal(10, 2)
-  isPaid                   Boolean               @default(false)
-  paidAt                   DateTime?
-  paymentMethodId          String?               @map("paidViaId") @db.Uuid
-  reference                String?               @db.VarChar(100)
-  productId                String?               @db.Uuid
-  variantId                String?               @db.Uuid
-  quantity                 Int                   @default(1)
+  id              String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  teeTimePlayerId String       @db.Uuid
+  type            LineItemType
+  description     String       @db.VarChar(200)
+  baseAmount      Decimal      @db.Decimal(10, 2)
+  taxType         TaxType
+  taxRate         Decimal      @db.Decimal(5, 2)
+  taxAmount       Decimal      @db.Decimal(10, 2)
+  totalAmount     Decimal      @db.Decimal(10, 2)
+  isPaid          Boolean      @default(false)
+  paidAt          DateTime?
+  paymentMethodId String?      @map("paidViaId") @db.Uuid
+  reference       String?      @db.VarChar(100)
+  productId       String?      @db.Uuid
+  variantId       String?      @db.Uuid
+  quantity        Int          @default(1)
 
   // Transfer tracking (shopping cart model)
-  isTransferred            Boolean               @default(false)
-  transferredFromPlayerId  String?               @db.Uuid
-  transferredToPlayerId    String?               @db.Uuid
-  transferredAt            DateTime?
-  originalPlayerId         String?               @db.Uuid
+  isTransferred           Boolean   @default(false)
+  transferredFromPlayerId String?   @db.Uuid
+  transferredToPlayerId   String?   @db.Uuid
+  transferredAt           DateTime?
+  originalPlayerId        String?   @db.Uuid
 
-  createdAt                DateTime              @default(now())
-  updatedAt                DateTime              @updatedAt
-  paymentMethod            CheckInPaymentMethod? @relation(fields: [paymentMethodId], references: [id])
-  product                  ProshopProduct?       @relation(fields: [productId], references: [id])
-  teeTimePlayer            TeeTimePlayer         @relation(fields: [teeTimePlayerId], references: [id], onDelete: Cascade)
-  variant                  ProshopVariant?       @relation(fields: [variantId], references: [id])
-  transactionItems         TransactionLineItem[]
-  transferredFromPlayer    TeeTimePlayer?        @relation("TransferredFromPlayer", fields: [transferredFromPlayerId], references: [id])
-  transferredToPlayer      TeeTimePlayer?        @relation("TransferredToPlayer", fields: [transferredToPlayerId], references: [id])
-  appliedDiscounts         AppliedDiscount[]
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  paymentMethod         CheckInPaymentMethod? @relation(fields: [paymentMethodId], references: [id])
+  product               ProshopProduct?       @relation(fields: [productId], references: [id])
+  teeTimePlayer         TeeTimePlayer         @relation(fields: [teeTimePlayerId], references: [id], onDelete: Cascade)
+  variant               ProshopVariant?       @relation(fields: [variantId], references: [id])
+  transactionItems      TransactionLineItem[]
+  transferredFromPlayer TeeTimePlayer?        @relation("TransferredFromPlayer", fields: [transferredFromPlayerId], references: [id])
+  transferredToPlayer   TeeTimePlayer?        @relation("TransferredToPlayer", fields: [transferredToPlayerId], references: [id])
+  appliedDiscounts      AppliedDiscount[]
 
   @@index([teeTimePlayerId])
   @@index([teeTimePlayerId, isPaid])
@@ -1381,19 +1396,19 @@ model BookingLineItem {
 
 /// Player check-in record - tracks check-in and settlement
 model PlayerCheckInRecord {
-  id                       String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  teeTimePlayerId          String                @unique @db.Uuid
-  checkedInAt              DateTime              @default(now())
-  checkedInBy              String                @db.Uuid
-  settledAt                DateTime?
-  settledViaId             String?               @db.Uuid
-  settledBy                String?               @db.Uuid
-  totalPaid                Decimal               @default(0) @db.Decimal(10, 2)
-  notes                    String?
-  createdAt                DateTime              @default(now())
-  updatedAt                DateTime              @updatedAt
-  settledVia               CheckInPaymentMethod? @relation(fields: [settledViaId], references: [id])
-  teeTimePlayer            TeeTimePlayer         @relation(fields: [teeTimePlayerId], references: [id], onDelete: Cascade)
+  id              String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  teeTimePlayerId String                @unique @db.Uuid
+  checkedInAt     DateTime              @default(now())
+  checkedInBy     String                @db.Uuid
+  settledAt       DateTime?
+  settledViaId    String?               @db.Uuid
+  settledBy       String?               @db.Uuid
+  totalPaid       Decimal               @default(0) @db.Decimal(10, 2)
+  notes           String?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  settledVia      CheckInPaymentMethod? @relation(fields: [settledViaId], references: [id])
+  teeTimePlayer   TeeTimePlayer         @relation(fields: [teeTimePlayerId], references: [id], onDelete: Cascade)
 
   @@index([teeTimePlayerId])
   @@map("player_check_in_records")
@@ -1424,40 +1439,40 @@ model CheckInPaymentMethod {
 
 /// Payment transaction record
 model PaymentTransaction {
-  id                 String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clubId             String                @db.Uuid
-  transactionNumber  String                @unique
-  teeTimeId          String?               @db.Uuid
-  amount             Decimal               @db.Decimal(10, 2)
-  paymentMethodId    String                @db.Uuid
-  status             String                @default("COMPLETED")
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId             String    @db.Uuid
+  transactionNumber  String    @unique
+  teeTimeId          String?   @db.Uuid
+  amount             Decimal   @db.Decimal(10, 2)
+  paymentMethodId    String    @db.Uuid
+  status             String    @default("COMPLETED")
   reference          String?
-  paidAt             DateTime              @default(now())
+  paidAt             DateTime  @default(now())
   paidBy             String
   voidedAt           DateTime?
   voidedBy           String?
   voidReason         String?
   refundedAt         DateTime?
   refundedBy         String?
-  refundAmount       Decimal?              @db.Decimal(10, 2)
+  refundAmount       Decimal?  @db.Decimal(10, 2)
   refundReason       String?
-  allocatedToRevenue Boolean               @default(false)
+  allocatedToRevenue Boolean   @default(false)
   allocatedAt        DateTime?
   metadata           Json?
 
   // Batch payment support (shopping cart model)
-  isBatchPayment     Boolean               @default(false)
-  batchPlayerIds     String[]              @default([])  // Array of player IDs in batch
-  paidByMemberId     String?               @db.Uuid
+  isBatchPayment Boolean  @default(false)
+  batchPlayerIds String[] @default([]) // Array of player IDs in batch
+  paidByMemberId String?  @db.Uuid
 
-  createdAt          DateTime              @default(now())
-  updatedAt          DateTime              @updatedAt
-  club               Club                  @relation(fields: [clubId], references: [id])
-  paymentMethod      CheckInPaymentMethod  @relation(fields: [paymentMethodId], references: [id])
-  paidByMember       Member?               @relation(fields: [paidByMemberId], references: [id])
-  teeTime            TeeTime?              @relation(fields: [teeTimeId], references: [id])
-  lineItemPayments   TransactionLineItem[]
-  appliedDiscounts   AppliedDiscount[]
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  club             Club                  @relation(fields: [clubId], references: [id])
+  paymentMethod    CheckInPaymentMethod  @relation(fields: [paymentMethodId], references: [id])
+  paidByMember     Member?               @relation(fields: [paidByMemberId], references: [id])
+  teeTime          TeeTime?              @relation(fields: [teeTimeId], references: [id])
+  lineItemPayments TransactionLineItem[]
+  appliedDiscounts AppliedDiscount[]
 
   @@index([teeTimeId])
   @@index([clubId, paidAt])
@@ -1640,18 +1655,18 @@ model Notification {
 }
 
 model ProshopCategory {
-  id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clubId           String           @db.Uuid
-  name             String           @db.VarChar(100)
-  description      String?          @db.VarChar(500)
-  defaultTaxRate   Decimal          @default(7) @db.Decimal(5, 2)
-  defaultTaxType   TaxType          @default(ADD)
-  sortOrder        Int              @default(0)
-  isActive         Boolean          @default(true)
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
-  club             Club             @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  products         ProshopProduct[]
+  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId         String           @db.Uuid
+  name           String           @db.VarChar(100)
+  description    String?          @db.VarChar(500)
+  defaultTaxRate Decimal          @default(7) @db.Decimal(5, 2)
+  defaultTaxType TaxType          @default(ADD)
+  sortOrder      Int              @default(0)
+  isActive       Boolean          @default(true)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  club           Club             @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  products       ProshopProduct[]
 
   @@index([clubId])
   @@index([clubId, isActive])
@@ -1747,36 +1762,36 @@ model TaxOverride {
 
 /// Discount configuration for club
 model Discount {
-  id                    String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clubId                String            @db.Uuid
-  name                  String            @db.VarChar(100)
-  code                  String?           @db.VarChar(50)
-  type                  DiscountType
-  value                 Decimal           @db.Decimal(10, 2)
-  scope                 DiscountScope
+  id     String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId String        @db.Uuid
+  name   String        @db.VarChar(100)
+  code   String?       @db.VarChar(50)
+  type   DiscountType
+  value  Decimal       @db.Decimal(10, 2)
+  scope  DiscountScope
 
   // Conditions
-  minimumAmount         Decimal?          @db.Decimal(10, 2)
-  maximumDiscount       Decimal?          @db.Decimal(10, 2)
-  membershipTypeIds     String[]          @default([])
-  playerTypes           PlayerType[]      @default([])
+  minimumAmount     Decimal?     @db.Decimal(10, 2)
+  maximumDiscount   Decimal?     @db.Decimal(10, 2)
+  membershipTypeIds String[]     @default([])
+  playerTypes       PlayerType[] @default([])
 
   // Validity
-  validFrom             DateTime?
-  validTo               DateTime?
-  usageLimit            Int?
-  usageCount            Int               @default(0)
+  validFrom  DateTime?
+  validTo    DateTime?
+  usageLimit Int?
+  usageCount Int       @default(0)
 
   // Approval
-  requiresApproval      Boolean           @default(false)
-  approvalThreshold     Decimal?          @db.Decimal(10, 2)
+  requiresApproval  Boolean  @default(false)
+  approvalThreshold Decimal? @db.Decimal(10, 2)
 
-  isActive              Boolean           @default(true)
-  createdAt             DateTime          @default(now())
-  updatedAt             DateTime          @updatedAt
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  club                  Club              @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  appliedDiscounts      AppliedDiscount[]
+  club             Club              @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  appliedDiscounts AppliedDiscount[]
 
   @@unique([clubId, code])
   @@index([clubId])
@@ -1786,24 +1801,24 @@ model Discount {
 
 /// Applied discount record - tracks when discounts are used
 model AppliedDiscount {
-  id                    String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  discountId            String              @db.Uuid
-  lineItemId            String?             @db.Uuid
-  transactionId         String?             @db.Uuid
+  id            String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  discountId    String  @db.Uuid
+  lineItemId    String? @db.Uuid
+  transactionId String? @db.Uuid
 
-  discountType          DiscountType
-  discountValue         Decimal             @db.Decimal(10, 2)
-  calculatedAmount      Decimal             @db.Decimal(10, 2)
+  discountType     DiscountType
+  discountValue    Decimal      @db.Decimal(10, 2)
+  calculatedAmount Decimal      @db.Decimal(10, 2)
 
-  appliedBy             String              @db.Uuid
-  approvedBy            String?             @db.Uuid
-  approvalNote          String?             @db.VarChar(500)
+  appliedBy    String  @db.Uuid
+  approvedBy   String? @db.Uuid
+  approvalNote String? @db.VarChar(500)
 
-  createdAt             DateTime            @default(now())
+  createdAt DateTime @default(now())
 
-  discount              Discount            @relation(fields: [discountId], references: [id])
-  lineItem              BookingLineItem?    @relation(fields: [lineItemId], references: [id])
-  transaction           PaymentTransaction? @relation(fields: [transactionId], references: [id])
+  discount    Discount            @relation(fields: [discountId], references: [id])
+  lineItem    BookingLineItem?    @relation(fields: [lineItemId], references: [id])
+  transaction PaymentTransaction? @relation(fields: [transactionId], references: [id])
 
   @@index([discountId])
   @@index([lineItemId])
@@ -2304,26 +2319,31 @@ model ProductModifierGroup {
 
 /// POS outlet/station for product sales (e.g., Pro Shop, Restaurant, Bar)
 model POSOutlet {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clubId      String   @db.Uuid
-  name        String   @db.VarChar(100)
-  code        String   @db.VarChar(20)
-  description String?  @db.VarChar(500)
-  location    String?  @db.VarChar(200)
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId       String   @db.Uuid
+  name         String   @db.VarChar(100)
+  code         String?  @db.VarChar(20)
+  outletType   String?  @db.VarChar(50)
+  description  String?  @db.VarChar(500)
+  location     String?  @db.VarChar(200)
+  templateId   String?  @db.Uuid
+  customConfig Json     @default("{}")
 
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   club             Club                   @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  template         POSTemplate?           @relation(fields: [templateId], references: [id])
   productConfigs   OutletProductConfig[]
   categoryConfigs  OutletCategoryConfig[]
   gridConfig       OutletGridConfig?
   salesMetrics     ProductSalesMetric[]
   staffUsage       StaffProductUsage[]
   suggestionConfig SmartSuggestionConfig?
+  roleConfigs      POSOutletRoleConfig[]
 
-  @@unique([clubId, code])
+  @@unique([clubId, name])
   @@index([clubId])
   @@index([clubId, isActive])
   @@map("pos_outlets")
@@ -2499,16 +2519,16 @@ enum CashMovementType {
 
 /// Physical cash drawer location
 model CashDrawer {
-  id            String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clubId        String            @db.Uuid
-  name          String            @db.VarChar(100)
-  location      String?           @db.VarChar(200)
-  isActive      Boolean           @default(true)
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId    String   @db.Uuid
+  name      String   @db.VarChar(100)
+  location  String?  @db.VarChar(200)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  club          Club              @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  shifts        CashDrawerShift[]
+  club   Club              @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  shifts CashDrawerShift[]
 
   @@index([clubId])
   @@index([clubId, isActive])
@@ -2517,40 +2537,40 @@ model CashDrawer {
 
 /// Cash drawer shift (open/close session)
 model CashDrawerShift {
-  id                String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  cashDrawerId      String            @db.Uuid
-  status            CashDrawerStatus  @default(OPEN)
+  id           String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  cashDrawerId String           @db.Uuid
+  status       CashDrawerStatus @default(OPEN)
 
   // Opening
-  openedBy          String            @db.Uuid
-  openedAt          DateTime          @default(now())
-  openingFloat      Decimal           @db.Decimal(12, 2)
-  openingDenominations Json?          // { "1000": 5, "500": 10, ... }
+  openedBy             String   @db.Uuid
+  openedAt             DateTime @default(now())
+  openingFloat         Decimal  @db.Decimal(12, 2)
+  openingDenominations Json? // { "1000": 5, "500": 10, ... }
 
   // Closing
-  closedBy          String?           @db.Uuid
-  closedAt          DateTime?
-  closingCount      Decimal?          @db.Decimal(12, 2)
-  closingDenominations Json?          // { "1000": 5, "500": 10, ... }
+  closedBy             String?   @db.Uuid
+  closedAt             DateTime?
+  closingCount         Decimal?  @db.Decimal(12, 2)
+  closingDenominations Json? // { "1000": 5, "500": 10, ... }
 
   // Calculated totals
-  expectedCash      Decimal?          @db.Decimal(12, 2)
-  actualCash        Decimal?          @db.Decimal(12, 2)
-  variance          Decimal?          @db.Decimal(12, 2)
-  varianceNote      String?           @db.VarChar(500)
+  expectedCash Decimal? @db.Decimal(12, 2)
+  actualCash   Decimal? @db.Decimal(12, 2)
+  variance     Decimal? @db.Decimal(12, 2)
+  varianceNote String?  @db.VarChar(500)
 
   // Summary
-  totalSales        Decimal           @default(0) @db.Decimal(12, 2)
-  totalRefunds      Decimal           @default(0) @db.Decimal(12, 2)
-  totalPaidIn       Decimal           @default(0) @db.Decimal(12, 2)
-  totalPaidOut      Decimal           @default(0) @db.Decimal(12, 2)
-  totalDrops        Decimal           @default(0) @db.Decimal(12, 2)
+  totalSales   Decimal @default(0) @db.Decimal(12, 2)
+  totalRefunds Decimal @default(0) @db.Decimal(12, 2)
+  totalPaidIn  Decimal @default(0) @db.Decimal(12, 2)
+  totalPaidOut Decimal @default(0) @db.Decimal(12, 2)
+  totalDrops   Decimal @default(0) @db.Decimal(12, 2)
 
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  cashDrawer        CashDrawer        @relation(fields: [cashDrawerId], references: [id], onDelete: Cascade)
-  movements         CashMovement[]
+  cashDrawer CashDrawer     @relation(fields: [cashDrawerId], references: [id], onDelete: Cascade)
+  movements  CashMovement[]
 
   @@index([cashDrawerId])
   @@index([cashDrawerId, status])
@@ -2560,27 +2580,789 @@ model CashDrawerShift {
 
 /// Individual cash movement within a shift
 model CashMovement {
-  id              String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  shiftId         String            @db.Uuid
-  type            CashMovementType
-  amount          Decimal           @db.Decimal(12, 2)
-  description     String?           @db.VarChar(500)
-  reference       String?           @db.VarChar(100)
+  id          String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  shiftId     String           @db.Uuid
+  type        CashMovementType
+  amount      Decimal          @db.Decimal(12, 2)
+  description String?          @db.VarChar(500)
+  reference   String?          @db.VarChar(100)
 
   // For PAID_IN/PAID_OUT
-  reason          String?           @db.VarChar(200)
-  approvedBy      String?           @db.Uuid
+  reason     String? @db.VarChar(200)
+  approvedBy String? @db.Uuid
 
   // For CASH_SALE/CASH_REFUND
-  transactionId   String?           @db.Uuid
+  transactionId String? @db.Uuid
 
-  performedBy     String            @db.Uuid
-  performedAt     DateTime          @default(now())
+  performedBy String   @db.Uuid
+  performedAt DateTime @default(now())
 
-  shift           CashDrawerShift   @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  shift CashDrawerShift @relation(fields: [shiftId], references: [id], onDelete: Cascade)
 
   @@index([shiftId])
   @@index([shiftId, type])
   @@index([performedAt])
   @@map("cash_movements")
+}
+
+// ─────────────────────────────────────────────────────────────
+// EOD SETTLEMENT
+// ─────────────────────────────────────────────────────────────
+
+enum SettlementStatus {
+  OPEN
+  IN_REVIEW
+  CLOSED
+  REOPENED
+}
+
+enum ExceptionType {
+  CASH_VARIANCE
+  CARD_VARIANCE
+  MISSING_RECEIPT
+  DUPLICATE_TRANSACTION
+  VOID_WITHOUT_APPROVAL
+  REFUND_WITHOUT_APPROVAL
+  DISCOUNT_WITHOUT_APPROVAL
+  SYSTEM_ERROR
+  OTHER
+}
+
+enum ExceptionSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ExceptionResolution {
+  PENDING
+  ACKNOWLEDGED
+  ADJUSTED
+  WRITTEN_OFF
+  ESCALATED
+  RESOLVED
+}
+
+model DailySettlement {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId       String   @db.Uuid
+  businessDate DateTime @db.Date
+
+  status SettlementStatus @default(OPEN)
+
+  // Sales totals
+  totalGrossSales    Decimal @default(0) @db.Decimal(12, 2)
+  totalDiscounts     Decimal @default(0) @db.Decimal(12, 2)
+  totalNetSales      Decimal @default(0) @db.Decimal(12, 2)
+  totalTax           Decimal @default(0) @db.Decimal(12, 2)
+  totalServiceCharge Decimal @default(0) @db.Decimal(12, 2)
+
+  // Payment breakdown
+  totalCash          Decimal @default(0) @db.Decimal(12, 2)
+  totalCard          Decimal @default(0) @db.Decimal(12, 2)
+  totalMemberAccount Decimal @default(0) @db.Decimal(12, 2)
+  totalOther         Decimal @default(0) @db.Decimal(12, 2)
+
+  // Refunds and voids
+  totalRefunds Decimal @default(0) @db.Decimal(12, 2)
+  totalVoids   Decimal @default(0) @db.Decimal(12, 2)
+
+  // Cash reconciliation
+  expectedCash Decimal  @default(0) @db.Decimal(12, 2)
+  actualCash   Decimal? @db.Decimal(12, 2)
+  cashVariance Decimal? @db.Decimal(12, 2)
+
+  // Transaction counts
+  transactionCount Int @default(0)
+  refundCount      Int @default(0)
+  voidCount        Int @default(0)
+
+  // Workflow
+  openedBy   String?   @db.Uuid
+  openedAt   DateTime?
+  reviewedBy String?   @db.Uuid
+  reviewedAt DateTime?
+  closedBy   String?   @db.Uuid
+  closedAt   DateTime?
+
+  notes String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  club       Club                  @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  exceptions SettlementException[]
+
+  @@unique([clubId, businessDate])
+  @@index([clubId])
+  @@index([clubId, status])
+  @@index([businessDate])
+  @@map("daily_settlements")
+}
+
+model SettlementException {
+  id           String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  settlementId String @db.Uuid
+
+  type       ExceptionType
+  severity   ExceptionSeverity   @default(MEDIUM)
+  resolution ExceptionResolution @default(PENDING)
+
+  description String   @db.Text
+  amount      Decimal? @db.Decimal(12, 2)
+
+  // Reference to related entities
+  transactionId String? @db.Uuid
+  shiftId       String? @db.Uuid
+  lineItemId    String? @db.Uuid
+
+  // Resolution tracking
+  resolvedBy     String?   @db.Uuid
+  resolvedAt     DateTime?
+  resolutionNote String?   @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  settlement DailySettlement @relation(fields: [settlementId], references: [id], onDelete: Cascade)
+
+  @@index([settlementId])
+  @@index([settlementId, resolution])
+  @@index([type])
+  @@index([severity])
+  @@map("settlement_exceptions")
+}
+
+// ─────────────────────────────────────────────────────────────
+// POS ACTION PANEL CONFIGURATION
+// ─────────────────────────────────────────────────────────────
+
+/// POS template configuration for outlet types
+model POSTemplate {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId          String   @db.Uuid
+  name            String   @db.VarChar(100)
+  description     String?  @db.VarChar(500)
+  outletType      String   @db.VarChar(50) // golf, spa, fnb, pro-shop, facility
+  toolbarConfig   Json     @default("{}") // Zone layout for toolbar
+  actionBarConfig Json     @default("{}") // Button grid configuration
+  isDefault       Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  club    Club        @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  outlets POSOutlet[]
+
+  @@unique([clubId, name])
+  @@index([clubId])
+  @@index([clubId, outletType])
+  @@map("pos_templates")
+}
+
+
+/// Role-based button overrides for a POS outlet
+model POSOutletRoleConfig {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  outletId        String   @db.Uuid
+  role            String   @db.VarChar(50) // cashier, manager, admin
+  buttonOverrides Json     @default("{}") // hidden, disabled, requireApproval arrays
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  outlet POSOutlet @relation(fields: [outletId], references: [id], onDelete: Cascade)
+
+  @@unique([outletId, role])
+  @@index([outletId])
+  @@map("pos_outlet_role_configs")
+}
+
+// =============================================================================
+// MINIMUM SPEND
+// =============================================================================
+
+enum MinimumSpendPeriod {
+  MONTHLY
+  QUARTERLY
+  ANNUALLY
+}
+
+enum ShortfallAction {
+  CHARGE_DIFFERENCE // Bill member for the shortfall amount
+  CARRY_FORWARD // Carry shortfall to next period
+  WAIVE // Waive the shortfall (manual override)
+  CREDIT_BALANCE // Apply to member credit balance
+}
+
+enum MemberSpendStatus {
+  ON_TRACK // Current spending is on pace to meet minimum
+  AT_RISK // Spending is below pace, may not meet minimum
+  MET // Minimum has been met for the period
+  SHORTFALL // Period ended below minimum
+  EXEMPT // Member is exempt from minimum spend
+  PENDING_ACTION // Shortfall pending action
+  RESOLVED // Shortfall has been resolved
+}
+
+model MinimumSpendRequirement {
+  id     String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId String @db.Uuid
+
+  name        String  @db.VarChar(100)
+  description String? @db.Text
+
+  // Requirement configuration
+  membershipTypes String[] // Array of membership type IDs this applies to
+  minimumAmount   Decimal            @db.Decimal(12, 2)
+  period          MinimumSpendPeriod @default(QUARTERLY)
+
+  // What counts toward minimum spend
+  includeFoodBeverage Boolean  @default(true)
+  includeGolf         Boolean  @default(true)
+  includeSpa          Boolean  @default(false)
+  includeRetail       Boolean  @default(false)
+  includeEvents       Boolean  @default(false)
+  includedCategories  String[] // Specific category IDs to include
+  excludedCategories  String[] // Specific category IDs to exclude
+
+  // Shortfall handling
+  defaultShortfallAction ShortfallAction @default(CHARGE_DIFFERENCE)
+  gracePeriodDays        Int             @default(0)
+  allowPartialCredit     Boolean         @default(false) // Can partial spend roll over?
+
+  // Notifications
+  notifyAtPercent     Int[] @default([50, 75, 90]) // Send alerts at these % of period
+  notifyDaysBeforeEnd Int[] @default([30, 14, 7]) // Send alerts this many days before period end
+
+  isActive      Boolean   @default(true)
+  effectiveFrom DateTime  @default(now())
+  effectiveTo   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberSpends MemberMinimumSpend[]
+
+  @@index([clubId])
+  @@index([clubId, isActive])
+  @@map("minimum_spend_requirements")
+}
+
+model MemberMinimumSpend {
+  id            String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId        String @db.Uuid
+  memberId      String @db.Uuid
+  requirementId String @db.Uuid
+
+  // Period tracking
+  periodStart DateTime @db.Date
+  periodEnd   DateTime @db.Date
+  periodLabel String   @db.VarChar(50) // e.g., "Q1 2024", "January 2024"
+
+  // Spend tracking
+  requiredAmount     Decimal  @db.Decimal(12, 2)
+  currentSpend       Decimal  @default(0) @db.Decimal(12, 2)
+  projectedSpend     Decimal? @db.Decimal(12, 2) // Based on current pace
+  shortfallAmount    Decimal? @db.Decimal(12, 2) // requiredAmount - currentSpend (if negative)
+  carryForwardAmount Decimal  @default(0) @db.Decimal(12, 2) // From previous period
+
+  // Status and resolution
+  status       MemberSpendStatus @default(ON_TRACK)
+  isExempt     Boolean           @default(false)
+  exemptReason String?           @db.Text
+  exemptBy     String?           @db.Uuid
+  exemptAt     DateTime?
+
+  // Shortfall resolution
+  shortfallAction     ShortfallAction?
+  shortfallResolvedBy String?          @db.Uuid
+  shortfallResolvedAt DateTime?
+  shortfallNote       String?          @db.Text
+  shortfallInvoiceId  String?          @db.Uuid // If billed
+
+  // Spend breakdown by category
+  spendByCategory Json? // { "food": 500, "golf": 300, ... }
+
+  lastCalculatedAt DateTime @default(now())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  requirement MinimumSpendRequirement @relation(fields: [requirementId], references: [id], onDelete: Cascade)
+  member      Member                  @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([memberId, requirementId, periodStart])
+  @@index([clubId])
+  @@index([memberId])
+  @@index([requirementId])
+  @@index([clubId, periodStart, periodEnd])
+  @@index([clubId, status])
+  @@map("member_minimum_spends")
+}
+
+// =============================================================================
+// SUB-ACCOUNTS
+// =============================================================================
+
+enum SubAccountStatus {
+  ACTIVE
+  SUSPENDED
+  EXPIRED
+  REVOKED
+}
+
+enum SubAccountPermission {
+  GOLF // Can book and pay for golf
+  FOOD_BEVERAGE // Can charge F&B
+  RETAIL // Can purchase pro shop items
+  SPA // Can book and pay for spa services
+  EVENTS // Can register and pay for events
+  ALL // Full access to all categories
+}
+
+model SubAccount {
+  id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId   String @db.Uuid
+  memberId String @db.Uuid
+
+  // Sub-account holder info
+  name         String  @db.VarChar(100)
+  relationship String  @db.VarChar(50) // e.g., "Child", "Spouse", "Employee"
+  email        String? @db.VarChar(255)
+  phone        String? @db.VarChar(50)
+
+  // Authentication
+  pin            String    @db.VarChar(60) // Hashed PIN
+  pinAttempts    Int       @default(0)
+  pinLockedUntil DateTime?
+
+  // Status and validity
+  status     SubAccountStatus @default(ACTIVE)
+  validFrom  DateTime         @default(now())
+  validUntil DateTime?
+
+  // Permissions
+  permissions SubAccountPermission[] @default([ALL])
+
+  // Spending limits
+  dailyLimit          Decimal? @db.Decimal(12, 2)
+  weeklyLimit         Decimal? @db.Decimal(12, 2)
+  monthlyLimit        Decimal? @db.Decimal(12, 2)
+  perTransactionLimit Decimal? @db.Decimal(12, 2)
+
+  // Usage tracking
+  dailySpend       Decimal  @default(0) @db.Decimal(12, 2)
+  weeklySpend      Decimal  @default(0) @db.Decimal(12, 2)
+  monthlySpend     Decimal  @default(0) @db.Decimal(12, 2)
+  lastResetDaily   DateTime @default(now())
+  lastResetWeekly  DateTime @default(now())
+  lastResetMonthly DateTime @default(now())
+
+  // Notification preferences
+  notifyPrimaryOnUse   Boolean @default(false)
+  notifyOnLimitReached Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  member       Member                  @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  transactions SubAccountTransaction[]
+
+  @@unique([clubId, memberId, name])
+  @@index([clubId])
+  @@index([memberId])
+  @@index([clubId, status])
+  @@map("sub_accounts")
+}
+
+model SubAccountTransaction {
+  id           String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId       String @db.Uuid
+  subAccountId String @db.Uuid
+
+  // Transaction details
+  amount      Decimal              @db.Decimal(12, 2)
+  description String               @db.VarChar(255)
+  category    SubAccountPermission
+
+  // Reference to original transaction
+  paymentTransactionId String? @db.Uuid
+  lineItemId           String? @db.Uuid
+  teeTimeId            String? @db.Uuid
+
+  // Approval/verification
+  verifiedAt DateTime @default(now())
+  verifiedBy String?  @db.Uuid // Staff who verified the PIN
+
+  // Location/context
+  locationName String? @db.VarChar(100) // e.g., "Pro Shop", "Restaurant"
+  notes        String? @db.Text
+
+  createdAt DateTime @default(now())
+
+  subAccount SubAccount @relation(fields: [subAccountId], references: [id], onDelete: Cascade)
+
+  @@index([clubId])
+  @@index([subAccountId])
+  @@index([clubId, createdAt])
+  @@index([subAccountId, createdAt])
+  @@map("sub_account_transactions")
+}
+
+// =============================================================================
+// STORED PAYMENTS
+// =============================================================================
+
+enum StoredPaymentMethodType {
+  CARD // Credit/debit card
+  BANK_ACCOUNT // Direct debit (ACH)
+}
+
+enum StoredPaymentMethodStatus {
+  ACTIVE // Available for use
+  EXPIRED // Card expired
+  FAILED // Verification failed
+  REMOVED // Member removed it
+}
+
+enum AutoPaySchedule {
+  INVOICE_DUE // Pay when invoice is due
+  STATEMENT_DATE // Pay on statement date
+  MONTHLY_FIXED // Pay on specific day each month
+}
+
+enum AutoPayAttemptStatus {
+  PENDING // Waiting to process
+  PROCESSING // Currently processing
+  SUCCEEDED // Payment succeeded
+  FAILED // Payment failed
+  CANCELLED // Cancelled before processing
+}
+
+/// Stored payment method for members (Stripe tokens)
+model StoredPaymentMethod {
+  id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId   String @db.Uuid
+  memberId String @db.Uuid
+
+  // Stripe references
+  stripeCustomerId      String? @db.VarChar(255) // cus_xxx
+  stripePaymentMethodId String  @db.VarChar(255) // pm_xxx
+
+  // Card details (non-sensitive)
+  type           StoredPaymentMethodType @default(CARD)
+  brand          String                  @db.VarChar(50) // visa, mastercard, amex
+  last4          String                  @db.VarChar(4)
+  expiryMonth    Int?
+  expiryYear     Int?
+  cardholderName String?                 @db.VarChar(200)
+
+  // Status
+  status           StoredPaymentMethodStatus @default(ACTIVE)
+  isDefault        Boolean                   @default(false)
+  isAutoPayEnabled Boolean                   @default(false)
+
+  // Verification
+  verifiedAt        DateTime?
+  lastUsedAt        DateTime?
+  failureCount      Int       @default(0)
+  lastFailureReason String?   @db.VarChar(500)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  member          Member           @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  autoPaySettings AutoPaySetting[]
+  autoPayAttempts AutoPayAttempt[]
+
+  @@unique([memberId, stripePaymentMethodId])
+  @@index([clubId])
+  @@index([memberId])
+  @@index([clubId, status])
+  @@map("stored_payment_methods")
+}
+
+/// Auto-pay settings for a member
+model AutoPaySetting {
+  id              String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId          String @db.Uuid
+  memberId        String @db.Uuid
+  paymentMethodId String @db.Uuid
+
+  // Auto-pay configuration
+  isEnabled         Boolean         @default(true)
+  schedule          AutoPaySchedule @default(INVOICE_DUE)
+  paymentDayOfMonth Int? // For MONTHLY_FIXED schedule (1-28)
+
+  // Limits
+  maxPaymentAmount     Decimal? @db.Decimal(12, 2) // Max per payment
+  monthlyMaxAmount     Decimal? @db.Decimal(12, 2) // Max per month
+  requireApprovalAbove Decimal? @db.Decimal(12, 2) // Require member approval above this
+
+  // Invoice filtering
+  payDuesOnly       Boolean  @default(false) // Only pay dues, not other charges
+  excludeCategories String[] // Category codes to exclude from auto-pay
+
+  // Notifications
+  notifyBeforePayment Boolean @default(true)
+  notifyDaysBefore    Int     @default(3)
+  notifyOnSuccess     Boolean @default(true)
+  notifyOnFailure     Boolean @default(true)
+
+  // Retry settings
+  maxRetryAttempts  Int @default(3)
+  retryIntervalDays Int @default(3)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  paymentMethod StoredPaymentMethod @relation(fields: [paymentMethodId], references: [id], onDelete: Cascade)
+
+  @@unique([memberId]) // One auto-pay setting per member
+  @@index([clubId])
+  @@index([paymentMethodId])
+  @@index([clubId, isEnabled])
+  @@map("auto_pay_settings")
+}
+
+/// Auto-pay attempt record
+model AutoPayAttempt {
+  id              String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId          String  @db.Uuid
+  memberId        String  @db.Uuid
+  paymentMethodId String  @db.Uuid
+  invoiceId       String? @db.Uuid
+
+  // Attempt details
+  amount        Decimal              @db.Decimal(12, 2)
+  attemptNumber Int                  @default(1) // 1, 2, 3 for retries
+  status        AutoPayAttemptStatus @default(PENDING)
+
+  // Stripe references
+  stripePaymentIntentId String? @db.VarChar(255) // pi_xxx
+  stripeChargeId        String? @db.VarChar(255) // ch_xxx
+
+  // Result
+  processedAt    DateTime?
+  succeededAt    DateTime?
+  failedAt       DateTime?
+  failureCode    String?   @db.VarChar(100) // Stripe error code
+  failureMessage String?   @db.VarChar(500)
+
+  // Retry tracking
+  nextRetryAt   DateTime?
+  isManualRetry Boolean   @default(false)
+
+  // Reference to payment if successful
+  paymentTransactionId String? @db.Uuid
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  paymentMethod StoredPaymentMethod @relation(fields: [paymentMethodId], references: [id])
+  invoice       Invoice?            @relation(fields: [invoiceId], references: [id])
+
+  @@index([clubId])
+  @@index([memberId])
+  @@index([paymentMethodId])
+  @@index([invoiceId])
+  @@index([status])
+  @@index([clubId, status, nextRetryAt])
+  @@map("auto_pay_attempts")
+}
+
+// ============================================
+// Credit Notes & Collections
+// ============================================
+
+/// Credit note for refunds, adjustments, and courtesy credits
+model CreditNote {
+  id               String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId           String              @db.Uuid
+  memberId         String              @db.Uuid
+  creditNoteNumber String              @db.VarChar(30)
+  issueDate        DateTime            @default(now())
+
+  // Type and reason
+  type         CreditNoteType
+  reason       CreditNoteReason
+  reasonDetail String?
+
+  // Source invoice (if credit is for a specific invoice)
+  sourceInvoiceId String? @db.Uuid
+
+  // Amounts
+  subtotal   Decimal @db.Decimal(12, 2)
+  taxAmount  Decimal @default(0) @db.Decimal(12, 2)
+  totalAmount Decimal @db.Decimal(12, 2)
+
+  // Application tracking
+  appliedToBalance Decimal @default(0) @db.Decimal(12, 2)
+  refundedAmount   Decimal @default(0) @db.Decimal(12, 2)
+
+  // Status
+  status CreditNoteStatus @default(DRAFT)
+
+  // Approval
+  approvedBy String?   @db.Uuid
+  approvedAt DateTime?
+
+  // Notes
+  internalNotes      String?
+  memberVisibleNotes String?
+
+  // Audit
+  createdBy String   @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  voidedAt  DateTime?
+  voidedBy  String?  @db.Uuid
+
+  // Relations
+  club          Club                    @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  member        Member                  @relation(fields: [memberId], references: [id])
+  sourceInvoice Invoice?                @relation("CreditNoteSource", fields: [sourceInvoiceId], references: [id])
+  lineItems     CreditNoteLineItem[]
+  applications  CreditNoteApplication[]
+
+  @@unique([clubId, creditNoteNumber])
+  @@index([clubId])
+  @@index([clubId, memberId])
+  @@index([creditNoteNumber])
+  @@map("credit_notes")
+}
+
+enum CreditNoteType {
+  REFUND
+  ADJUSTMENT
+  COURTESY
+  PROMO
+  WRITE_OFF
+  RETURN
+  CANCELLATION
+}
+
+enum CreditNoteReason {
+  BILLING_ERROR
+  DUPLICATE_CHARGE
+  SERVICE_NOT_RENDERED
+  MEMBERSHIP_CANCELLATION
+  PRODUCT_RETURN
+  PRICE_ADJUSTMENT
+  CUSTOMER_SATISFACTION
+  EVENT_CANCELLATION
+  RAIN_CHECK
+  OVERPAYMENT
+  OTHER
+}
+
+enum CreditNoteStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  APPLIED
+  PARTIALLY_APPLIED
+  REFUNDED
+  VOIDED
+}
+
+/// Credit note line item
+model CreditNoteLineItem {
+  id           String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  creditNoteId String  @db.Uuid
+  description  String  @db.VarChar(500)
+  quantity     Decimal @default(1) @db.Decimal(10, 2)
+  unitPrice    Decimal @db.Decimal(12, 2)
+  lineTotal    Decimal @db.Decimal(12, 2)
+  taxable      Boolean @default(false)
+  taxRate      Decimal @default(0) @db.Decimal(5, 2)
+  taxAmount    Decimal @default(0) @db.Decimal(12, 2)
+  chargeTypeId String? @db.Uuid
+
+  creditNote CreditNote  @relation(fields: [creditNoteId], references: [id], onDelete: Cascade)
+  chargeType ChargeType? @relation(fields: [chargeTypeId], references: [id])
+
+  @@index([creditNoteId])
+  @@map("credit_note_line_items")
+}
+
+/// Credit note application to invoices
+model CreditNoteApplication {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  creditNoteId  String   @db.Uuid
+  invoiceId     String   @db.Uuid
+  amountApplied Decimal  @db.Decimal(12, 2)
+  appliedAt     DateTime @default(now())
+  appliedBy     String   @db.Uuid
+
+  creditNote CreditNote @relation(fields: [creditNoteId], references: [id])
+  invoice    Invoice    @relation(fields: [invoiceId], references: [id])
+
+  @@index([creditNoteId])
+  @@index([invoiceId])
+  @@map("credit_note_applications")
+}
+
+/// Collection action tracking for AR management
+model CollectionAction {
+  id        String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId    String  @db.Uuid
+  memberId  String  @db.Uuid
+  invoiceId String? @db.Uuid
+
+  // Action
+  actionType CollectionActionType
+  stage      Int                  @default(1) // Collection stage (1, 2, 3, etc.)
+
+  // Details
+  notes        String?
+  templateUsed String? @db.VarChar(100)
+  sentVia      String? @db.VarChar(20) // EMAIL, SMS, LETTER, CALL
+
+  // Result
+  result      CollectionResult?
+  resultNotes String?
+  resultAt    DateTime?
+
+  // Scheduling
+  scheduledAt DateTime?
+  completedAt DateTime?
+
+  // Assignment
+  assignedTo String? @db.Uuid
+
+  // Audit
+  createdBy String   @db.Uuid
+  createdAt DateTime @default(now())
+
+  club    Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  member  Member   @relation(fields: [memberId], references: [id])
+  invoice Invoice? @relation(fields: [invoiceId], references: [id])
+
+  @@index([clubId, memberId])
+  @@index([scheduledAt])
+  @@index([clubId, actionType])
+  @@map("collection_actions")
+}
+
+enum CollectionActionType {
+  REMINDER_EMAIL
+  REMINDER_SMS
+  REMINDER_LETTER
+  PHONE_CALL
+  RESTRICT_BOOKING
+  RESTRICT_CHARGING
+  SUSPEND_MEMBERSHIP
+  WRITE_OFF
+  SEND_TO_AGENCY
+}
+
+enum CollectionResult {
+  PAYMENT_RECEIVED
+  PAYMENT_PROMISED
+  NO_ANSWER
+  LEFT_MESSAGE
+  DISPUTED
+  HARDSHIP
+  REFUSED
+  CONTACT_INVALID
 }

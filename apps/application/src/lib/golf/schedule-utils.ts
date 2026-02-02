@@ -659,7 +659,7 @@ export const DEFAULT_SCHEDULE_CONFIG: Omit<ScheduleConfig, 'id' | 'courseId'> = 
   weekdayFirstTee: '06:00',
   weekdayLastTee: '17:00',
   weekdayBookingMode: 'EIGHTEEN',
-  weekendFirstTee: '05:30',
+  weekendFirstTee: '06:00',  // Same as weekday - clubs can customize if needed
   weekendLastTee: '17:30',
   weekendBookingMode: 'EIGHTEEN',
   twilightMode: 'FIXED',

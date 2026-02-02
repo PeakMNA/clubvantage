@@ -254,6 +254,7 @@ export interface SourceBooking {
   playerCount: number
   sourceTeeTime: string
   sourceDate: string
+  sourceFlightId?: string
   playerIds?: string[]
 }
 

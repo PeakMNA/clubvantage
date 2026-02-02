@@ -3,7 +3,7 @@
  * Creates sample data for development and testing
  */
 
-import { PrismaClient, Region, SubscriptionTier, MemberStatus, UserRole, InvoiceStatus, PaymentMethod, BookingStatus, PlayerType, CartType, SkillLevel, BookingType, BookingPaymentMethod, BookingPaymentStatus, VariationPriceType, WaitlistStatus, ApplicationStatus } from '@prisma/client';
+import { PrismaClient, Region, SubscriptionTier, MemberStatus, UserRole, InvoiceStatus, PaymentMethod, BookingStatus, PlayerType, CartType, SkillLevel, BookingType, BookingPaymentMethod, BookingPaymentStatus, VariationPriceType, WaitlistStatus, ApplicationStatus, LineItemType, TaxType } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
@@ -413,6 +413,61 @@ async function main() {
   console.log(`✅ Created golf settings for club: ${demoClub.name}`);
 
   // ============================================================================
+  // CHECK-IN PAYMENT METHODS
+  // ============================================================================
+  console.log('Creating check-in payment methods...');
+
+  const cashPaymentMethod = await prisma.checkInPaymentMethod.upsert({
+    where: { id: '00000000-0000-0000-0000-000000000001' },
+    update: {},
+    create: {
+      id: '00000000-0000-0000-0000-000000000001',
+      clubId: demoClub.id,
+      name: 'Cash',
+      icon: 'banknote',
+      type: 'CASH',
+      isEnabled: true,
+      requiresRef: false,
+      opensPOS: false,
+      sortOrder: 0,
+    },
+  });
+
+  const cardPaymentMethod = await prisma.checkInPaymentMethod.upsert({
+    where: { id: '00000000-0000-0000-0000-000000000002' },
+    update: {},
+    create: {
+      id: '00000000-0000-0000-0000-000000000002',
+      clubId: demoClub.id,
+      name: 'Card',
+      icon: 'credit-card',
+      type: 'CARD',
+      isEnabled: true,
+      requiresRef: true,
+      opensPOS: true,
+      sortOrder: 1,
+    },
+  });
+
+  const memberAccountMethod = await prisma.checkInPaymentMethod.upsert({
+    where: { id: '00000000-0000-0000-0000-000000000003' },
+    update: {},
+    create: {
+      id: '00000000-0000-0000-0000-000000000003',
+      clubId: demoClub.id,
+      name: 'Member Account',
+      icon: 'user',
+      type: 'MEMBER_ACCOUNT',
+      isEnabled: true,
+      requiresRef: false,
+      opensPOS: false,
+      sortOrder: 2,
+    },
+  });
+
+  console.log('✅ Created check-in payment methods');
+
+  // ============================================================================
   // GOLF SCHEDULE CONFIGURATION
   // ============================================================================
   console.log('Creating golf schedule configuration...');
@@ -424,7 +479,7 @@ async function main() {
       courseId: golfCourse.id,
       weekdayFirstTee: '06:00',
       weekdayLastTee: '17:00',
-      weekendFirstTee: '05:30',
+      weekendFirstTee: '06:00',  // Same as weekday
       weekendLastTee: '17:30',
       twilightMode: 'FIXED',
       twilightMinutesBeforeSunset: 90,
@@ -539,6 +594,516 @@ async function main() {
   console.log(`✅ Created schedule config with ${scheduleConfig.id}`);
 
   // ============================================================================
+  // PRO SHOP CATEGORIES & PRODUCTS
+  // ============================================================================
+  console.log('Creating pro shop categories and products...');
+
+  // Create pro shop categories
+  const proshopCategories = await Promise.all([
+    prisma.proshopCategory.upsert({
+      where: { id: '00000000-0000-0000-0000-000000000001' },
+      update: {},
+      create: {
+        id: '00000000-0000-0000-0000-000000000001',
+        clubId: demoClub.id,
+        name: 'Apparel',
+        description: 'Golf clothing and accessories',
+        defaultTaxRate: 7,
+        defaultTaxType: 'ADD',
+        sortOrder: 1,
+      },
+    }),
+    prisma.proshopCategory.upsert({
+      where: { id: '00000000-0000-0000-0000-000000000002' },
+      update: {},
+      create: {
+        id: '00000000-0000-0000-0000-000000000002',
+        clubId: demoClub.id,
+        name: 'Equipment',
+        description: 'Golf balls, tees, and accessories',
+        defaultTaxRate: 7,
+        defaultTaxType: 'ADD',
+        sortOrder: 2,
+      },
+    }),
+    prisma.proshopCategory.upsert({
+      where: { id: '00000000-0000-0000-0000-000000000003' },
+      update: {},
+      create: {
+        id: '00000000-0000-0000-0000-000000000003',
+        clubId: demoClub.id,
+        name: 'Beverages',
+        description: 'Drinks and refreshments',
+        defaultTaxRate: 7,
+        defaultTaxType: 'ADD',
+        sortOrder: 3,
+      },
+    }),
+    prisma.proshopCategory.upsert({
+      where: { id: '00000000-0000-0000-0000-000000000004' },
+      update: {},
+      create: {
+        id: '00000000-0000-0000-0000-000000000004',
+        clubId: demoClub.id,
+        name: 'Snacks',
+        description: 'Food and snacks',
+        defaultTaxRate: 7,
+        defaultTaxType: 'ADD',
+        sortOrder: 4,
+      },
+    }),
+    prisma.proshopCategory.upsert({
+      where: { id: '00000000-0000-0000-0000-000000000005' },
+      update: {},
+      create: {
+        id: '00000000-0000-0000-0000-000000000005',
+        clubId: demoClub.id,
+        name: 'Rentals',
+        description: 'Equipment rentals',
+        defaultTaxRate: 7,
+        defaultTaxType: 'ADD',
+        sortOrder: 5,
+      },
+    }),
+  ]);
+
+  console.log(`✅ Created ${proshopCategories.length} pro shop categories`);
+
+  // Create pro shop products
+  const proshopProducts = await Promise.all([
+    // Apparel
+    prisma.proshopProduct.upsert({
+      where: { clubId_sku: { clubId: demoClub.id, sku: 'APP-POLO-001' } },
+      update: {},
+      create: {
+        clubId: demoClub.id,
+        categoryId: proshopCategories[0].id,
+        name: 'Club Logo Polo Shirt',
+        description: 'Premium cotton polo with embroidered club logo',
+        sku: 'APP-POLO-001',
+        price: 1800,
+        taxRate: 7,
+        taxType: 'ADD',
+        isQuickAdd: false,
+      },
+    }),
+    prisma.proshopProduct.upsert({
+      where: { clubId_sku: { clubId: demoClub.id, sku: 'APP-HAT-001' } },
+      update: {},
+      create: {
+        clubId: demoClub.id,
+        categoryId: proshopCategories[0].id,
+        name: 'Club Logo Cap',
+        description: 'Adjustable golf cap with club logo',
+        sku: 'APP-HAT-001',
+        price: 650,
+        taxRate: 7,
+        taxType: 'ADD',
+        isQuickAdd: true,
+      },
+    }),
+    prisma.proshopProduct.upsert({
+      where: { clubId_sku: { clubId: demoClub.id, sku: 'APP-GLOVE-001' } },
+      update: {},
+      create: {
+        clubId: demoClub.id,
+        categoryId: proshopCategories[0].id,
+        name: 'Golf Glove - Leather',
+        description: 'Premium leather golf glove',
+        sku: 'APP-GLOVE-001',
+        price: 450,
+        taxRate: 7,
+        taxType: 'ADD',
+        isQuickAdd: true,
+      },
+    }),
+
+    // Equipment
+    prisma.proshopProduct.upsert({
+      where: { clubId_sku: { clubId: demoClub.id, sku: 'EQP-BALL-001' } },
+      update: {},
+      create: {
+        clubId: demoClub.id,
+        categoryId: proshopCategories[1].id,
+        name: 'Golf Balls (Sleeve of 3)',
+        description: 'Premium golf balls - pack of 3',
+        sku: 'EQP-BALL-001',
+        price: 180,
+        taxRate: 7,
+        taxType: 'ADD',
+        isQuickAdd: true,
+      },
+    }),
+    prisma.proshopProduct.upsert({
+      where: { clubId_sku: { clubId: demoClub.id, sku: 'EQP-BALL-002' } },
+      update: {},
+      create: {
+        clubId: demoClub.id,
+        categoryId: proshopCategories[1].id,
+        name: 'Golf Balls (Dozen)',
+        description: 'Premium golf balls - box of 12',
+        sku: 'EQP-BALL-002',
+        price: 650,
+        taxRate: 7,
+        taxType: 'ADD',
+        isQuickAdd: false,
+      },
+    }),
+    prisma.proshopProduct.upsert({
+      where: { clubId_sku: { clubId: demoClub.id, sku: 'EQP-TEE-001' } },
+      update: {},
+      create: {
+        clubId: demoClub.id,
+        categoryId: proshopCategories[1].id,
+        name: 'Wooden Tees (Pack of 50)',
+        description: 'Natural wood tees',
+        sku: 'EQP-TEE-001',
+        price: 80,
+        taxRate: 7,
+        taxType: 'ADD',
+        isQuickAdd: true,
+      },
+    }),
+    prisma.proshopProduct.upsert({
+      where: { clubId_sku: { clubId: demoClub.id, sku: 'EQP-TOWEL-001' } },
+      update: {},
+      create: {
+        clubId: demoClub.id,
+        categoryId: proshopCategories[1].id,
+        name: 'Golf Towel',
+        description: 'Microfiber golf towel with club logo',
+        sku: 'EQP-TOWEL-001',
+        price: 350,
+        taxRate: 7,
+        taxType: 'ADD',
+        isQuickAdd: true,
+      },
+    }),
+    prisma.proshopProduct.upsert({
+      where: { clubId_sku: { clubId: demoClub.id, sku: 'EQP-MARKER-001' } },
+      update: {},
+      create: {
+        clubId: demoClub.id,
+        categoryId: proshopCategories[1].id,
+        name: 'Ball Marker (Club Logo)',
+        description: 'Metal ball marker with magnetic clip',
+        sku: 'EQP-MARKER-001',
+        price: 150,
+        taxRate: 7,
+        taxType: 'ADD',
+        isQuickAdd: true,
+      },
+    }),
+
+    // Beverages
+    prisma.proshopProduct.upsert({
+      where: { clubId_sku: { clubId: demoClub.id, sku: 'BEV-WATER-001' } },
+      update: {},
+      create: {
+        clubId: demoClub.id,
+        categoryId: proshopCategories[2].id,
+        name: 'Bottled Water',
+        description: 'Cold mineral water 500ml',
+        sku: 'BEV-WATER-001',
+        price: 40,
+        taxRate: 7,
+        taxType: 'ADD',
+        isQuickAdd: true,
+      },
+    }),
+    prisma.proshopProduct.upsert({
+      where: { clubId_sku: { clubId: demoClub.id, sku: 'BEV-SPORT-001' } },
+      update: {},
+      create: {
+        clubId: demoClub.id,
+        categoryId: proshopCategories[2].id,
+        name: 'Sports Drink',
+        description: 'Electrolyte sports drink 500ml',
+        sku: 'BEV-SPORT-001',
+        price: 60,
+        taxRate: 7,
+        taxType: 'ADD',
+        isQuickAdd: true,
+      },
+    }),
+    prisma.proshopProduct.upsert({
+      where: { clubId_sku: { clubId: demoClub.id, sku: 'BEV-BEER-001' } },
+      update: {},
+      create: {
+        clubId: demoClub.id,
+        categoryId: proshopCategories[2].id,
+        name: 'Beer (Domestic)',
+        description: 'Cold domestic beer 330ml',
+        sku: 'BEV-BEER-001',
+        price: 120,
+        taxRate: 7,
+        taxType: 'ADD',
+        isQuickAdd: true,
+      },
+    }),
+    prisma.proshopProduct.upsert({
+      where: { clubId_sku: { clubId: demoClub.id, sku: 'BEV-BEER-002' } },
+      update: {},
+      create: {
+        clubId: demoClub.id,
+        categoryId: proshopCategories[2].id,
+        name: 'Beer (Premium Import)',
+        description: 'Cold premium imported beer 330ml',
+        sku: 'BEV-BEER-002',
+        price: 180,
+        taxRate: 7,
+        taxType: 'ADD',
+        isQuickAdd: true,
+      },
+    }),
+    prisma.proshopProduct.upsert({
+      where: { clubId_sku: { clubId: demoClub.id, sku: 'BEV-SODA-001' } },
+      update: {},
+      create: {
+        clubId: demoClub.id,
+        categoryId: proshopCategories[2].id,
+        name: 'Soft Drink',
+        description: 'Cold soft drink 330ml',
+        sku: 'BEV-SODA-001',
+        price: 50,
+        taxRate: 7,
+        taxType: 'ADD',
+        isQuickAdd: true,
+      },
+    }),
+
+    // Snacks
+    prisma.proshopProduct.upsert({
+      where: { clubId_sku: { clubId: demoClub.id, sku: 'SNK-SAND-001' } },
+      update: {},
+      create: {
+        clubId: demoClub.id,
+        categoryId: proshopCategories[3].id,
+        name: 'Club Sandwich',
+        description: 'Fresh club sandwich with chips',
+        sku: 'SNK-SAND-001',
+        price: 250,
+        taxRate: 7,
+        taxType: 'ADD',
+        isQuickAdd: false,
+      },
+    }),
+    prisma.proshopProduct.upsert({
+      where: { clubId_sku: { clubId: demoClub.id, sku: 'SNK-NUTS-001' } },
+      update: {},
+      create: {
+        clubId: demoClub.id,
+        categoryId: proshopCategories[3].id,
+        name: 'Mixed Nuts',
+        description: 'Salted mixed nuts pack',
+        sku: 'SNK-NUTS-001',
+        price: 80,
+        taxRate: 7,
+        taxType: 'ADD',
+        isQuickAdd: true,
+      },
+    }),
+    prisma.proshopProduct.upsert({
+      where: { clubId_sku: { clubId: demoClub.id, sku: 'SNK-CHOC-001' } },
+      update: {},
+      create: {
+        clubId: demoClub.id,
+        categoryId: proshopCategories[3].id,
+        name: 'Chocolate Bar',
+        description: 'Premium chocolate bar',
+        sku: 'SNK-CHOC-001',
+        price: 65,
+        taxRate: 7,
+        taxType: 'ADD',
+        isQuickAdd: true,
+      },
+    }),
+    prisma.proshopProduct.upsert({
+      where: { clubId_sku: { clubId: demoClub.id, sku: 'SNK-ENERGY-001' } },
+      update: {},
+      create: {
+        clubId: demoClub.id,
+        categoryId: proshopCategories[3].id,
+        name: 'Energy Bar',
+        description: 'High-protein energy bar',
+        sku: 'SNK-ENERGY-001',
+        price: 90,
+        taxRate: 7,
+        taxType: 'ADD',
+        isQuickAdd: true,
+      },
+    }),
+
+    // Rentals
+    prisma.proshopProduct.upsert({
+      where: { clubId_sku: { clubId: demoClub.id, sku: 'RNT-CLUB-001' } },
+      update: {},
+      create: {
+        clubId: demoClub.id,
+        categoryId: proshopCategories[4].id,
+        name: 'Club Set Rental',
+        description: 'Full set of premium clubs rental',
+        sku: 'RNT-CLUB-001',
+        price: 800,
+        taxRate: 7,
+        taxType: 'ADD',
+        isQuickAdd: false,
+      },
+    }),
+    prisma.proshopProduct.upsert({
+      where: { clubId_sku: { clubId: demoClub.id, sku: 'RNT-SHOE-001' } },
+      update: {},
+      create: {
+        clubId: demoClub.id,
+        categoryId: proshopCategories[4].id,
+        name: 'Golf Shoes Rental',
+        description: 'Golf shoes rental',
+        sku: 'RNT-SHOE-001',
+        price: 300,
+        taxRate: 7,
+        taxType: 'ADD',
+        isQuickAdd: false,
+      },
+    }),
+    prisma.proshopProduct.upsert({
+      where: { clubId_sku: { clubId: demoClub.id, sku: 'RNT-RANGE-001' } },
+      update: {},
+      create: {
+        clubId: demoClub.id,
+        categoryId: proshopCategories[4].id,
+        name: 'Range Finder Rental',
+        description: 'GPS range finder rental',
+        sku: 'RNT-RANGE-001',
+        price: 400,
+        taxRate: 7,
+        taxType: 'ADD',
+        isQuickAdd: false,
+      },
+    }),
+    prisma.proshopProduct.upsert({
+      where: { clubId_sku: { clubId: demoClub.id, sku: 'RNT-UMBRELLA-001' } },
+      update: {},
+      create: {
+        clubId: demoClub.id,
+        categoryId: proshopCategories[4].id,
+        name: 'Umbrella Rental',
+        description: 'Golf umbrella rental',
+        sku: 'RNT-UMBRELLA-001',
+        price: 150,
+        taxRate: 7,
+        taxType: 'ADD',
+        isQuickAdd: true,
+      },
+    }),
+  ]);
+
+  console.log(`✅ Created ${proshopProducts.length} pro shop products`);
+
+  // Create some product variants (sizes for polo shirts and gloves)
+  const poloProduct = proshopProducts.find(p => p.sku === 'APP-POLO-001');
+  const gloveProduct = proshopProducts.find(p => p.sku === 'APP-GLOVE-001');
+
+  if (poloProduct) {
+    await Promise.all([
+      prisma.proshopVariant.upsert({
+        where: { id: '00000000-0000-0000-0001-000000000001' },
+        update: {},
+        create: {
+          id: '00000000-0000-0000-0001-000000000001',
+          productId: poloProduct.id,
+          name: 'Small',
+          sku: 'APP-POLO-001-S',
+          priceAdjustment: 0,
+        },
+      }),
+      prisma.proshopVariant.upsert({
+        where: { id: '00000000-0000-0000-0001-000000000002' },
+        update: {},
+        create: {
+          id: '00000000-0000-0000-0001-000000000002',
+          productId: poloProduct.id,
+          name: 'Medium',
+          sku: 'APP-POLO-001-M',
+          priceAdjustment: 0,
+        },
+      }),
+      prisma.proshopVariant.upsert({
+        where: { id: '00000000-0000-0000-0001-000000000003' },
+        update: {},
+        create: {
+          id: '00000000-0000-0000-0001-000000000003',
+          productId: poloProduct.id,
+          name: 'Large',
+          sku: 'APP-POLO-001-L',
+          priceAdjustment: 0,
+        },
+      }),
+      prisma.proshopVariant.upsert({
+        where: { id: '00000000-0000-0000-0001-000000000004' },
+        update: {},
+        create: {
+          id: '00000000-0000-0000-0001-000000000004',
+          productId: poloProduct.id,
+          name: 'X-Large',
+          sku: 'APP-POLO-001-XL',
+          priceAdjustment: 100,
+        },
+      }),
+    ]);
+    console.log('✅ Created polo shirt variants');
+  }
+
+  if (gloveProduct) {
+    await Promise.all([
+      prisma.proshopVariant.upsert({
+        where: { id: '00000000-0000-0000-0002-000000000001' },
+        update: {},
+        create: {
+          id: '00000000-0000-0000-0002-000000000001',
+          productId: gloveProduct.id,
+          name: 'S/M Left Hand',
+          sku: 'APP-GLOVE-001-SML',
+          priceAdjustment: 0,
+        },
+      }),
+      prisma.proshopVariant.upsert({
+        where: { id: '00000000-0000-0000-0002-000000000002' },
+        update: {},
+        create: {
+          id: '00000000-0000-0000-0002-000000000002',
+          productId: gloveProduct.id,
+          name: 'M/L Left Hand',
+          sku: 'APP-GLOVE-001-MLL',
+          priceAdjustment: 0,
+        },
+      }),
+      prisma.proshopVariant.upsert({
+        where: { id: '00000000-0000-0000-0002-000000000003' },
+        update: {},
+        create: {
+          id: '00000000-0000-0000-0002-000000000003',
+          productId: gloveProduct.id,
+          name: 'S/M Right Hand',
+          sku: 'APP-GLOVE-001-SMR',
+          priceAdjustment: 0,
+        },
+      }),
+      prisma.proshopVariant.upsert({
+        where: { id: '00000000-0000-0000-0002-000000000004' },
+        update: {},
+        create: {
+          id: '00000000-0000-0000-0002-000000000004',
+          productId: gloveProduct.id,
+          name: 'M/L Right Hand',
+          sku: 'APP-GLOVE-001-MLR',
+          priceAdjustment: 0,
+        },
+      }),
+    ]);
+    console.log('✅ Created golf glove variants');
+  }
+
+  // ============================================================================
   // CADDIES
   // ============================================================================
   console.log('Creating caddies...');
@@ -586,6 +1151,147 @@ async function main() {
   );
 
   console.log(`✅ Created ${caddies.length} caddies`);
+
+  // ============================================================================
+  // GOLF RATE CONFIGURATION
+  // ============================================================================
+  console.log('Creating golf rate configuration...');
+
+  // Find existing rate config or create new one
+  let rateConfig = await prisma.golfRateConfig.findFirst({
+    where: {
+      clubId: demoClub.id,
+      courseId: golfCourse.id,
+      name: 'Standard Rates 2026',
+    },
+  });
+
+  if (!rateConfig) {
+    rateConfig = await prisma.golfRateConfig.create({
+      data: {
+        clubId: demoClub.id,
+        courseId: golfCourse.id,
+        name: 'Standard Rates 2026',
+        description: 'Default rate configuration for 2026 season',
+        isActive: true,
+        effectiveFrom: new Date('2026-01-01'),
+        effectiveTo: null,
+      },
+    });
+  }
+
+  console.log(`✅ Created rate config: ${rateConfig.name}`);
+
+  // Green Fee Rates
+  console.log('Creating green fee rates...');
+
+  const greenFeeRates = [
+    // Members - discounted/included in membership
+    { playerType: 'MEMBER', holes: 18, timeCategory: 'STANDARD', amount: 50, taxType: 'INCLUDE', taxRate: 7 },
+    { playerType: 'MEMBER', holes: 9, timeCategory: 'STANDARD', amount: 30, taxType: 'INCLUDE', taxRate: 7 },
+    { playerType: 'MEMBER', holes: 18, timeCategory: 'PRIME_TIME', amount: 65, taxType: 'INCLUDE', taxRate: 7 },
+    { playerType: 'MEMBER', holes: 9, timeCategory: 'PRIME_TIME', amount: 40, taxType: 'INCLUDE', taxRate: 7 },
+    { playerType: 'MEMBER', holes: 18, timeCategory: 'OFF_PEAK', amount: 35, taxType: 'INCLUDE', taxRate: 7 },
+    { playerType: 'MEMBER', holes: 9, timeCategory: 'OFF_PEAK', amount: 20, taxType: 'INCLUDE', taxRate: 7 },
+
+    // Guests - full price
+    { playerType: 'GUEST', holes: 18, timeCategory: 'STANDARD', amount: 150, taxType: 'ADD', taxRate: 7 },
+    { playerType: 'GUEST', holes: 9, timeCategory: 'STANDARD', amount: 90, taxType: 'ADD', taxRate: 7 },
+    { playerType: 'GUEST', holes: 18, timeCategory: 'PRIME_TIME', amount: 180, taxType: 'ADD', taxRate: 7 },
+    { playerType: 'GUEST', holes: 9, timeCategory: 'PRIME_TIME', amount: 110, taxType: 'ADD', taxRate: 7 },
+    { playerType: 'GUEST', holes: 18, timeCategory: 'OFF_PEAK', amount: 120, taxType: 'ADD', taxRate: 7 },
+    { playerType: 'GUEST', holes: 9, timeCategory: 'OFF_PEAK', amount: 70, taxType: 'ADD', taxRate: 7 },
+
+    // Dependents - reduced rate
+    { playerType: 'DEPENDENT', holes: 18, timeCategory: 'STANDARD', amount: 75, taxType: 'INCLUDE', taxRate: 7 },
+    { playerType: 'DEPENDENT', holes: 9, timeCategory: 'STANDARD', amount: 45, taxType: 'INCLUDE', taxRate: 7 },
+    { playerType: 'DEPENDENT', holes: 18, timeCategory: 'PRIME_TIME', amount: 90, taxType: 'INCLUDE', taxRate: 7 },
+    { playerType: 'DEPENDENT', holes: 9, timeCategory: 'PRIME_TIME', amount: 55, taxType: 'INCLUDE', taxRate: 7 },
+    { playerType: 'DEPENDENT', holes: 18, timeCategory: 'OFF_PEAK', amount: 60, taxType: 'INCLUDE', taxRate: 7 },
+    { playerType: 'DEPENDENT', holes: 9, timeCategory: 'OFF_PEAK', amount: 35, taxType: 'INCLUDE', taxRate: 7 },
+
+    // Walk-ups - premium pricing
+    { playerType: 'WALK_UP', holes: 18, timeCategory: 'STANDARD', amount: 180, taxType: 'ADD', taxRate: 7 },
+    { playerType: 'WALK_UP', holes: 9, timeCategory: 'STANDARD', amount: 110, taxType: 'ADD', taxRate: 7 },
+    { playerType: 'WALK_UP', holes: 18, timeCategory: 'PRIME_TIME', amount: 210, taxType: 'ADD', taxRate: 7 },
+    { playerType: 'WALK_UP', holes: 9, timeCategory: 'PRIME_TIME', amount: 130, taxType: 'ADD', taxRate: 7 },
+    { playerType: 'WALK_UP', holes: 18, timeCategory: 'OFF_PEAK', amount: 150, taxType: 'ADD', taxRate: 7 },
+    { playerType: 'WALK_UP', holes: 9, timeCategory: 'OFF_PEAK', amount: 90, taxType: 'ADD', taxRate: 7 },
+  ];
+
+  for (const rate of greenFeeRates) {
+    await prisma.greenFee.upsert({
+      where: {
+        rateConfigId_playerType_holes_timeCategory: {
+          rateConfigId: rateConfig.id,
+          playerType: rate.playerType,
+          holes: rate.holes,
+          timeCategory: rate.timeCategory,
+        },
+      },
+      update: {},
+      create: {
+        rateConfigId: rateConfig.id,
+        ...rate,
+      },
+    });
+  }
+
+  console.log(`✅ Created ${greenFeeRates.length} green fee rates`);
+
+  // Cart Rates
+  console.log('Creating cart rates...');
+
+  const cartRates = [
+    { cartType: 'SINGLE', amount: 40, taxType: 'ADD', taxRate: 7 },
+    { cartType: 'SHARED', amount: 25, taxType: 'ADD', taxRate: 7 }, // Per person
+    { cartType: 'WALKING', amount: 0, taxType: 'NONE', taxRate: 0 },
+  ];
+
+  for (const rate of cartRates) {
+    await prisma.cartRate.upsert({
+      where: {
+        rateConfigId_cartType: {
+          rateConfigId: rateConfig.id,
+          cartType: rate.cartType,
+        },
+      },
+      update: {},
+      create: {
+        rateConfigId: rateConfig.id,
+        ...rate,
+      },
+    });
+  }
+
+  console.log(`✅ Created ${cartRates.length} cart rates`);
+
+  // Caddy Rates
+  console.log('Creating caddy rates...');
+
+  const caddyRates = [
+    { caddyType: 'FORECADDY', amount: 30, taxType: 'NONE', taxRate: 0 }, // Per player
+    { caddyType: 'SINGLE', amount: 80, taxType: 'NONE', taxRate: 0 },
+    { caddyType: 'DOUBLE', amount: 50, taxType: 'NONE', taxRate: 0 }, // Per player for shared
+  ];
+
+  for (const rate of caddyRates) {
+    await prisma.caddyRate.upsert({
+      where: {
+        rateConfigId_caddyType: {
+          rateConfigId: rateConfig.id,
+          caddyType: rate.caddyType,
+        },
+      },
+      update: {},
+      create: {
+        rateConfigId: rateConfig.id,
+        ...rate,
+      },
+    });
+  }
+
+  console.log(`✅ Created ${caddyRates.length} caddy rates`);
 
   // ============================================================================
   // ADMIN USER
@@ -1353,7 +2059,27 @@ async function main() {
   );
 
   // Helper to generate tee time number
+  // Find the highest existing tee time number to avoid conflicts
+  const existingTeeTimes = await prisma.teeTime.findMany({
+    where: {
+      clubId: demoClub.id,
+      teeTimeNumber: {
+        startsWith: 'TT-2026-',
+      },
+    },
+    select: {
+      teeTimeNumber: true,
+    },
+  });
+
   let teeTimeCounter = 100;
+  if (existingTeeTimes.length > 0) {
+    const maxNumber = Math.max(
+      ...existingTeeTimes.map(tt => parseInt(tt.teeTimeNumber.split('-')[2]) || 0)
+    );
+    teeTimeCounter = maxNumber;
+  }
+
   const getNextTeeTimeNumber = () => `TT-2026-${String(++teeTimeCounter).padStart(4, '0')}`;
 
   // ============================================================================
@@ -1983,8 +2709,940 @@ async function main() {
 
   console.log(`✅ Created ${createdTeeTimeCount} tee times with ${createdPlayerCount} players`);
 
-  // Seed products
-  await seedProducts(demoClub.id);
+  // ============================================================================
+  // SAMPLE TEE TIMES WITH RATES & PAYMENT TRACKING
+  // ============================================================================
+  console.log('Creating sample tee times with rate calculations and payment states...');
+
+  // Helper function to calculate fees based on rate config
+  const getGreenFee = (playerType: string, holes: number, timeCategory: string = 'STANDARD'): number => {
+    const rates: Record<string, Record<number, Record<string, number>>> = {
+      'MEMBER': { 18: { STANDARD: 50, PRIME_TIME: 65, OFF_PEAK: 35 }, 9: { STANDARD: 30, PRIME_TIME: 40, OFF_PEAK: 20 } },
+      'GUEST': { 18: { STANDARD: 150, PRIME_TIME: 180, OFF_PEAK: 120 }, 9: { STANDARD: 90, PRIME_TIME: 110, OFF_PEAK: 70 } },
+      'DEPENDENT': { 18: { STANDARD: 75, PRIME_TIME: 90, OFF_PEAK: 60 }, 9: { STANDARD: 45, PRIME_TIME: 55, OFF_PEAK: 35 } },
+      'WALK_UP': { 18: { STANDARD: 180, PRIME_TIME: 210, OFF_PEAK: 150 }, 9: { STANDARD: 110, PRIME_TIME: 130, OFF_PEAK: 90 } },
+    };
+    return rates[playerType]?.[holes]?.[timeCategory] || 0;
+  };
+
+  const getCartFee = (cartType: string): number => {
+    const rates: Record<string, number> = { 'SINGLE': 40, 'SHARED': 25, 'WALKING': 0 };
+    return rates[cartType] || 0;
+  };
+
+  const getCaddyFee = (caddyType: string): number => {
+    const rates: Record<string, number> = { 'FORECADDY': 30, 'SINGLE': 80, 'DOUBLE': 50 };
+    return rates[caddyType] || 0;
+  };
+
+  // Example 1: Fully paid member booking with cart and caddy (tomorrow for E2E tests)
+  const sampleTeeDateBase = new Date();
+  sampleTeeDateBase.setDate(sampleTeeDateBase.getDate() + 1); // Tomorrow
+  // Ensure it's a weekday (Mon-Fri) for consistent testing
+  while (sampleTeeDateBase.getDay() === 0 || sampleTeeDateBase.getDay() === 6) {
+    sampleTeeDateBase.setDate(sampleTeeDateBase.getDate() + 1);
+  }
+  const paidTeeDate = new Date(sampleTeeDateBase.getFullYear(), sampleTeeDateBase.getMonth(), sampleTeeDateBase.getDate());
+  console.log(`📅 Creating sample tee times for date: ${paidTeeDate.toISOString().split('T')[0]}`);
+  const paidMember = activeMembers[0];
+
+  let fullyPaidTeeTime = await prisma.teeTime.findFirst({
+    where: {
+      clubId: demoClub.id,
+      courseId: golfCourse.id,
+      teeDate: paidTeeDate,
+      teeTime: '08:00',
+    },
+  });
+
+  if (!fullyPaidTeeTime) {
+    fullyPaidTeeTime = await prisma.teeTime.create({
+      data: {
+        clubId: demoClub.id,
+        courseId: golfCourse.id,
+        teeTimeNumber: getNextTeeTimeNumber(),
+        teeDate: paidTeeDate,
+        teeTime: '08:00',
+        holes: 18,
+        status: BookingStatus.CONFIRMED,
+        confirmedAt: new Date(),
+        players: {
+          create: [
+            {
+              position: 1,
+              playerType: PlayerType.MEMBER,
+              memberId: paidMember.id,
+              cartType: CartType.SINGLE,
+              cartStatus: 'PAID' as RentalStatus,
+              caddyStatus: 'PAID' as RentalStatus,
+              greenFee: getGreenFee('MEMBER', 18, 'PRIME_TIME'),
+              cartFee: getCartFee('SINGLE'),
+              caddyFee: getCaddyFee('SINGLE'),
+            },
+            {
+              position: 2,
+              playerType: PlayerType.GUEST,
+              guestName: 'John Smith',
+              guestEmail: 'john.smith@guest.com',
+              guestPhone: '+66 99 123 4567',
+              cartType: CartType.SHARED,
+              sharedWithPosition: 1,
+              cartStatus: 'PAID' as RentalStatus,
+              caddyStatus: 'NONE' as RentalStatus,
+              greenFee: getGreenFee('GUEST', 18, 'PRIME_TIME'),
+              cartFee: getCartFee('SHARED'),
+              caddyFee: 0,
+            },
+          ],
+        },
+      },
+    });
+  }
+
+  // Add line items for fully paid booking
+  const fullyPaidPlayers = await prisma.teeTimePlayer.findMany({
+    where: { teeTimeId: fullyPaidTeeTime!.id },
+    orderBy: { position: 'asc' },
+  });
+
+  const taxRate = 7; // 7% VAT
+
+  for (const player of fullyPaidPlayers) {
+    // Check if line items already exist for this player
+    const existingLineItems = await prisma.bookingLineItem.findMany({
+      where: { teeTimePlayerId: player.id },
+    });
+
+    if (existingLineItems.length === 0) {
+      // Create Green Fee line item
+      const greenFeeBase = Number(player.greenFee || 0);
+      if (greenFeeBase > 0) {
+        const greenFeeTax = greenFeeBase * (taxRate / 100);
+        await prisma.bookingLineItem.create({
+          data: {
+            teeTimePlayerId: player.id,
+            type: LineItemType.GREEN_FEE,
+            description: `Green Fee (18 holes) - ${player.playerType === 'MEMBER' ? 'Member' : 'Guest'}`,
+            baseAmount: greenFeeBase,
+            taxType: TaxType.ADD,
+            taxRate: taxRate,
+            taxAmount: greenFeeTax,
+            totalAmount: greenFeeBase + greenFeeTax,
+            isPaid: true,
+            paidAt: new Date(),
+            paymentMethodId: memberAccountMethod.id,
+          },
+        });
+      }
+
+      // Create Cart Fee line item
+      const cartFeeBase = Number(player.cartFee || 0);
+      if (cartFeeBase > 0) {
+        const cartFeeTax = cartFeeBase * (taxRate / 100);
+        await prisma.bookingLineItem.create({
+          data: {
+            teeTimePlayerId: player.id,
+            type: LineItemType.CART,
+            description: `Cart Fee - ${player.cartType === 'SINGLE' ? 'Single' : 'Shared'}`,
+            baseAmount: cartFeeBase,
+            taxType: TaxType.ADD,
+            taxRate: taxRate,
+            taxAmount: cartFeeTax,
+            totalAmount: cartFeeBase + cartFeeTax,
+            isPaid: true,
+            paidAt: new Date(),
+            paymentMethodId: memberAccountMethod.id,
+          },
+        });
+      }
+
+      // Create Caddy Fee line item
+      const caddyFeeBase = Number(player.caddyFee || 0);
+      if (caddyFeeBase > 0) {
+        const caddyFeeTax = caddyFeeBase * (taxRate / 100);
+        await prisma.bookingLineItem.create({
+          data: {
+            teeTimePlayerId: player.id,
+            type: LineItemType.CADDY,
+            description: 'Caddy Fee',
+            baseAmount: caddyFeeBase,
+            taxType: TaxType.ADD,
+            taxRate: taxRate,
+            taxAmount: caddyFeeTax,
+            totalAmount: caddyFeeBase + caddyFeeTax,
+            isPaid: true,
+            paidAt: new Date(),
+            paymentMethodId: memberAccountMethod.id,
+          },
+        });
+      }
+    }
+  }
+
+  console.log('✅ Created line items for fully paid booking');
+
+  // Example 2: Unpaid guest booking (same day as Example 1, different time for E2E tests)
+  const unpaidTeeDate = paidTeeDate; // Same date for easier testing
+  const unpaidMember = activeMembers[1];
+
+  let unpaidTeeTime = await prisma.teeTime.findFirst({
+    where: {
+      clubId: demoClub.id,
+      courseId: golfCourse.id,
+      teeDate: unpaidTeeDate,
+      teeTime: '10:00',
+    },
+  });
+
+  if (!unpaidTeeTime) {
+    unpaidTeeTime = await prisma.teeTime.create({
+      data: {
+        clubId: demoClub.id,
+        courseId: golfCourse.id,
+        teeTimeNumber: getNextTeeTimeNumber(),
+        teeDate: unpaidTeeDate,
+        teeTime: '10:00',
+        holes: 18,
+        status: BookingStatus.CONFIRMED,
+        confirmedAt: new Date(),
+        players: {
+          create: [
+            {
+              position: 1,
+              playerType: PlayerType.GUEST,
+              guestName: 'Sarah Johnson',
+              guestEmail: 'sarah.j@corporate.com',
+              guestPhone: '+66 88 234 5678',
+              cartType: CartType.SINGLE,
+              cartStatus: 'REQUESTED' as RentalStatus,
+              caddyStatus: 'REQUESTED' as RentalStatus,
+              greenFee: getGreenFee('GUEST', 18, 'STANDARD'),
+              cartFee: getCartFee('SINGLE'),
+              caddyFee: getCaddyFee('SINGLE'),
+            },
+            {
+              position: 2,
+              playerType: PlayerType.GUEST,
+              guestName: 'Michael Lee',
+              guestEmail: 'michael.lee@corporate.com',
+              guestPhone: '+66 88 345 6789',
+              cartType: CartType.SHARED,
+              sharedWithPosition: 1,
+              cartStatus: 'REQUESTED' as RentalStatus,
+              caddyStatus: 'NONE' as RentalStatus,
+              greenFee: getGreenFee('GUEST', 18, 'STANDARD'),
+              cartFee: getCartFee('SHARED'),
+              caddyFee: 0,
+            },
+            {
+              position: 3,
+              playerType: PlayerType.GUEST,
+              guestName: 'Emma Wilson',
+              guestEmail: 'emma.w@corporate.com',
+              guestPhone: '+66 88 456 7890',
+              cartType: CartType.WALKING,
+              cartStatus: 'NONE' as RentalStatus,
+              caddyStatus: 'NONE' as RentalStatus,
+              greenFee: getGreenFee('GUEST', 18, 'STANDARD'),
+              cartFee: 0,
+              caddyFee: 0,
+            },
+          ],
+        },
+      },
+    });
+  }
+
+  // Add UNPAID line items for unpaid booking
+  const unpaidPlayers = await prisma.teeTimePlayer.findMany({
+    where: { teeTimeId: unpaidTeeTime!.id },
+    orderBy: { position: 'asc' },
+  });
+
+  for (const player of unpaidPlayers) {
+    // Check if line items already exist for this player
+    const existingLineItems = await prisma.bookingLineItem.findMany({
+      where: { teeTimePlayerId: player.id },
+    });
+
+    if (existingLineItems.length === 0) {
+      // Create Green Fee line item (unpaid)
+      const greenFeeBase = Number(player.greenFee || 0);
+      if (greenFeeBase > 0) {
+        const greenFeeTax = greenFeeBase * (taxRate / 100);
+        await prisma.bookingLineItem.create({
+          data: {
+            teeTimePlayerId: player.id,
+            type: LineItemType.GREEN_FEE,
+            description: `Green Fee (18 holes) - Guest`,
+            baseAmount: greenFeeBase,
+            taxType: TaxType.ADD,
+            taxRate: taxRate,
+            taxAmount: greenFeeTax,
+            totalAmount: greenFeeBase + greenFeeTax,
+            isPaid: false,  // UNPAID
+          },
+        });
+      }
+
+      // Create Cart Fee line item (unpaid)
+      const cartFeeBase = Number(player.cartFee || 0);
+      if (cartFeeBase > 0) {
+        const cartFeeTax = cartFeeBase * (taxRate / 100);
+        await prisma.bookingLineItem.create({
+          data: {
+            teeTimePlayerId: player.id,
+            type: LineItemType.CART,
+            description: `Cart Fee - ${player.cartType === 'SINGLE' ? 'Single' : 'Shared'}`,
+            baseAmount: cartFeeBase,
+            taxType: TaxType.ADD,
+            taxRate: taxRate,
+            taxAmount: cartFeeTax,
+            totalAmount: cartFeeBase + cartFeeTax,
+            isPaid: false,  // UNPAID
+          },
+        });
+      }
+
+      // Create Caddy Fee line item (unpaid)
+      const caddyFeeBase = Number(player.caddyFee || 0);
+      if (caddyFeeBase > 0) {
+        const caddyFeeTax = caddyFeeBase * (taxRate / 100);
+        await prisma.bookingLineItem.create({
+          data: {
+            teeTimePlayerId: player.id,
+            type: LineItemType.CADDY,
+            description: 'Caddy Fee',
+            baseAmount: caddyFeeBase,
+            taxType: TaxType.ADD,
+            taxRate: taxRate,
+            taxAmount: caddyFeeTax,
+            totalAmount: caddyFeeBase + caddyFeeTax,
+            isPaid: false,  // UNPAID
+          },
+        });
+      }
+    }
+  }
+
+  console.log('✅ Created line items for unpaid booking');
+
+  // Example 3: Partially paid booking - member with guests (same day for E2E tests)
+  const partialTeeDate = paidTeeDate; // Same date for easier testing
+  const partialMember = activeMembers[2];
+
+  let partialTeeTime = await prisma.teeTime.findFirst({
+    where: {
+      clubId: demoClub.id,
+      courseId: golfCourse.id,
+      teeDate: partialTeeDate,
+      teeTime: '14:00',
+    },
+  });
+
+  if (!partialTeeTime) {
+    partialTeeTime = await prisma.teeTime.create({
+      data: {
+        clubId: demoClub.id,
+        courseId: golfCourse.id,
+        teeTimeNumber: getNextTeeTimeNumber(),
+        teeDate: partialTeeDate,
+        teeTime: '14:00',
+        holes: 18,
+        status: BookingStatus.CONFIRMED,
+        confirmedAt: new Date(),
+        players: {
+          create: [
+            {
+              position: 1,
+              playerType: PlayerType.MEMBER,
+              memberId: partialMember.id,
+              cartType: CartType.SINGLE,
+              cartStatus: 'PAID' as RentalStatus,
+              caddyStatus: 'PAID' as RentalStatus,
+              greenFee: getGreenFee('MEMBER', 18, 'PRIME_TIME'),
+              cartFee: getCartFee('SINGLE'),
+              caddyFee: getCaddyFee('SINGLE'),
+            },
+            {
+              position: 2,
+              playerType: PlayerType.GUEST,
+              guestName: 'David Chen',
+              guestEmail: 'david.chen@guest.com',
+              guestPhone: '+66 99 567 8901',
+              cartType: CartType.SHARED,
+              sharedWithPosition: 1,
+              cartStatus: 'REQUESTED' as RentalStatus,
+              caddyStatus: 'REQUESTED' as RentalStatus,
+              greenFee: getGreenFee('GUEST', 18, 'PRIME_TIME'),
+              cartFee: getCartFee('SHARED'),
+              caddyFee: getCaddyFee('SINGLE'),
+            },
+          ],
+        },
+      },
+    });
+  }
+
+  // Add MIXED line items for partially paid booking (member paid, guest unpaid)
+  const partialPlayers = await prisma.teeTimePlayer.findMany({
+    where: { teeTimeId: partialTeeTime!.id },
+    orderBy: { position: 'asc' },
+  });
+
+  for (const player of partialPlayers) {
+    // Check if line items already exist for this player
+    const existingLineItems = await prisma.bookingLineItem.findMany({
+      where: { teeTimePlayerId: player.id },
+    });
+
+    if (existingLineItems.length === 0) {
+      const isPaid = player.playerType === 'MEMBER'; // Member is pre-paid, guest is not
+
+      // Create Green Fee line item
+      const greenFeeBase = Number(player.greenFee || 0);
+      if (greenFeeBase > 0) {
+        const greenFeeTax = greenFeeBase * (taxRate / 100);
+        await prisma.bookingLineItem.create({
+          data: {
+            teeTimePlayerId: player.id,
+            type: LineItemType.GREEN_FEE,
+            description: `Green Fee (18 holes) - ${player.playerType === 'MEMBER' ? 'Member' : 'Guest'}`,
+            baseAmount: greenFeeBase,
+            taxType: TaxType.ADD,
+            taxRate: taxRate,
+            taxAmount: greenFeeTax,
+            totalAmount: greenFeeBase + greenFeeTax,
+            isPaid: isPaid,
+            paidAt: isPaid ? new Date() : undefined,
+            paymentMethodId: isPaid ? memberAccountMethod.id : undefined,
+          },
+        });
+      }
+
+      // Create Cart Fee line item
+      const cartFeeBase = Number(player.cartFee || 0);
+      if (cartFeeBase > 0) {
+        const cartFeeTax = cartFeeBase * (taxRate / 100);
+        await prisma.bookingLineItem.create({
+          data: {
+            teeTimePlayerId: player.id,
+            type: LineItemType.CART,
+            description: `Cart Fee - ${player.cartType === 'SINGLE' ? 'Single' : 'Shared'}`,
+            baseAmount: cartFeeBase,
+            taxType: TaxType.ADD,
+            taxRate: taxRate,
+            taxAmount: cartFeeTax,
+            totalAmount: cartFeeBase + cartFeeTax,
+            isPaid: isPaid,
+            paidAt: isPaid ? new Date() : undefined,
+            paymentMethodId: isPaid ? memberAccountMethod.id : undefined,
+          },
+        });
+      }
+
+      // Create Caddy Fee line item
+      const caddyFeeBase = Number(player.caddyFee || 0);
+      if (caddyFeeBase > 0) {
+        const caddyFeeTax = caddyFeeBase * (taxRate / 100);
+        await prisma.bookingLineItem.create({
+          data: {
+            teeTimePlayerId: player.id,
+            type: LineItemType.CADDY,
+            description: 'Caddy Fee',
+            baseAmount: caddyFeeBase,
+            taxType: TaxType.ADD,
+            taxRate: taxRate,
+            taxAmount: caddyFeeTax,
+            totalAmount: caddyFeeBase + caddyFeeTax,
+            isPaid: isPaid,
+            paidAt: isPaid ? new Date() : undefined,
+            paymentMethodId: isPaid ? memberAccountMethod.id : undefined,
+          },
+        });
+      }
+    }
+  }
+
+  console.log('✅ Created line items for partially paid booking');
+
+  // ============================================================================
+  // POS BUTTON REGISTRY & TEMPLATES
+  // ============================================================================
+  console.log('Creating POS configuration...');
+
+  // Update club with POS button registry
+  const posButtonRegistry = {
+    'pos.pay': { id: 'pos.pay', label: 'Pay', icon: 'CreditCard', category: 'payment', color: 'primary', size: 'large', outlets: ['*'], shortcut: 'P' },
+    'pos.addItem': { id: 'pos.addItem', label: 'Add Item', icon: 'Plus', category: 'cart', color: 'neutral', size: 'medium', outlets: ['*'] },
+    'pos.discount': { id: 'pos.discount', label: 'Discount', icon: 'Percent', category: 'cart', color: 'warning', size: 'medium', outlets: ['*'], permissions: ['pos.discount.apply'] },
+    'pos.void': { id: 'pos.void', label: 'Void', icon: 'X', category: 'cart', color: 'danger', size: 'medium', outlets: ['*'], permissions: ['pos.void'], confirmAction: true },
+    'pos.hold': { id: 'pos.hold', label: 'Hold', icon: 'Pause', category: 'cart', color: 'neutral', size: 'medium', outlets: ['*'] },
+    'pos.print': { id: 'pos.print', label: 'Print', icon: 'Printer', category: 'utility', color: 'neutral', size: 'medium', outlets: ['*'] },
+    'pos.transfer': { id: 'pos.transfer', label: 'Transfer', icon: 'ArrowRightLeft', category: 'cart', color: 'neutral', size: 'medium', outlets: ['*'] },
+    'pos.payCard': { id: 'pos.payCard', label: 'Card', icon: 'CreditCard', category: 'payment', color: 'primary', size: 'medium', outlets: ['*'] },
+    'pos.payAccount': { id: 'pos.payAccount', label: 'Account', icon: 'User', category: 'payment', color: 'primary', size: 'medium', outlets: ['*'] },
+    'pos.payCash': { id: 'pos.payCash', label: 'Cash', icon: 'Banknote', category: 'payment', color: 'primary', size: 'medium', outlets: ['*'] },
+    'golf.checkin': { id: 'golf.checkin', label: 'Check In', icon: 'UserCheck', category: 'checkin', color: 'success', size: 'large', outlets: ['golf-checkin'], requiresSelection: true, selectionType: 'teeTime', shortcut: 'C' },
+    'golf.settle': { id: 'golf.settle', label: 'Settle', icon: 'Receipt', category: 'payment', color: 'primary', size: 'large', outlets: ['golf-checkin'], requiresSelection: true },
+    'golf.printTicket': { id: 'golf.printTicket', label: 'Print Ticket', icon: 'Ticket', category: 'utility', color: 'neutral', size: 'medium', outlets: ['golf-checkin'], requiresSelection: true },
+  };
+
+  await prisma.club.update({
+    where: { id: demoClub.id },
+    data: { posButtonRegistry },
+  });
+
+  console.log('✅ Updated club with POS button registry');
+
+  // Create POS Templates
+  const posTemplates = await Promise.all([
+    // Golf Check-in Template
+    prisma.pOSTemplate.upsert({
+      where: { clubId_name: { clubId: demoClub.id, name: 'Golf Check-in Default' } },
+      update: {},
+      create: {
+        clubId: demoClub.id,
+        name: 'Golf Check-in Default',
+        description: 'Default template for golf check-in counter',
+        outletType: 'golf',
+        isDefault: true,
+        toolbarConfig: {
+          zones: {
+            left: { type: 'search', placeholder: 'Search member or tee time...', width: 'flex-1' },
+            center: { type: 'categories', items: ['Tee Times', 'Walk-ups', 'On Course'] },
+            right: { type: 'actions', items: ['golf.printTicket', 'pos.print'] },
+          },
+        },
+        actionBarConfig: {
+          rows: 2,
+          columns: 6,
+          buttons: [
+            // Row 1
+            { row: 0, col: 0, colSpan: 2, buttonId: 'golf.checkin' },
+            { row: 0, col: 2, colSpan: 2, buttonId: 'golf.settle' },
+            { row: 0, col: 4, buttonId: 'pos.addItem' },
+            { row: 0, col: 5, buttonId: 'pos.discount' },
+            // Row 2
+            { row: 1, col: 0, buttonId: 'pos.payCard' },
+            { row: 1, col: 1, buttonId: 'pos.payAccount' },
+            { row: 1, col: 2, buttonId: 'pos.payCash' },
+            { row: 1, col: 3, buttonId: 'pos.void' },
+            { row: 1, col: 4, buttonId: 'pos.hold' },
+            { row: 1, col: 5, buttonId: 'pos.print' },
+          ],
+        },
+      },
+    }),
+
+    // Pro Shop Template
+    prisma.pOSTemplate.upsert({
+      where: { clubId_name: { clubId: demoClub.id, name: 'Pro Shop Default' } },
+      update: {},
+      create: {
+        clubId: demoClub.id,
+        name: 'Pro Shop Default',
+        description: 'Default template for pro shop retail',
+        outletType: 'pro-shop',
+        isDefault: true,
+        toolbarConfig: {
+          zones: {
+            left: { type: 'search', placeholder: 'Search products...', width: 'flex-1' },
+            center: { type: 'categories', items: ['Apparel', 'Equipment', 'Accessories', 'Snacks', 'Rentals'] },
+            right: { type: 'actions', items: ['pos.print'] },
+          },
+        },
+        actionBarConfig: {
+          rows: 2,
+          columns: 6,
+          buttons: [
+            // Row 1
+            { row: 0, col: 0, colSpan: 2, buttonId: 'pos.pay' },
+            { row: 0, col: 2, buttonId: 'pos.addItem' },
+            { row: 0, col: 3, buttonId: 'pos.discount' },
+            { row: 0, col: 4, buttonId: 'pos.void' },
+            { row: 0, col: 5, buttonId: 'pos.hold' },
+            // Row 2
+            { row: 1, col: 0, buttonId: 'pos.payCard' },
+            { row: 1, col: 1, buttonId: 'pos.payAccount' },
+            { row: 1, col: 2, buttonId: 'pos.payCash' },
+            { row: 1, col: 3, buttonId: 'pos.transfer' },
+            { row: 1, col: 4, colSpan: 2, buttonId: 'pos.print' },
+          ],
+        },
+      },
+    }),
+
+    // Spa Template
+    prisma.pOSTemplate.upsert({
+      where: { clubId_name: { clubId: demoClub.id, name: 'Spa Default' } },
+      update: {},
+      create: {
+        clubId: demoClub.id,
+        name: 'Spa Default',
+        description: 'Default template for spa front desk',
+        outletType: 'spa',
+        isDefault: true,
+        toolbarConfig: {
+          zones: {
+            left: { type: 'search', placeholder: 'Search member or booking...', width: 'flex-1' },
+            center: { type: 'categories', items: ['Treatments', 'Packages', 'Products'] },
+            right: { type: 'actions', items: ['pos.print'] },
+          },
+        },
+        actionBarConfig: {
+          rows: 2,
+          columns: 6,
+          buttons: [
+            // Row 1
+            { row: 0, col: 0, colSpan: 2, buttonId: 'pos.pay' },
+            { row: 0, col: 2, buttonId: 'pos.addItem' },
+            { row: 0, col: 3, buttonId: 'pos.discount' },
+            { row: 0, col: 4, buttonId: 'pos.void' },
+            { row: 0, col: 5, buttonId: 'pos.hold' },
+            // Row 2
+            { row: 1, col: 0, buttonId: 'pos.payCard' },
+            { row: 1, col: 1, buttonId: 'pos.payAccount' },
+            { row: 1, col: 2, buttonId: 'pos.payCash' },
+            { row: 1, col: 3, buttonId: 'pos.transfer' },
+            { row: 1, col: 4, colSpan: 2, buttonId: 'pos.print' },
+          ],
+        },
+      },
+    }),
+
+    // F&B Template
+    prisma.pOSTemplate.upsert({
+      where: { clubId_name: { clubId: demoClub.id, name: 'F&B Default' } },
+      update: {},
+      create: {
+        clubId: demoClub.id,
+        name: 'F&B Default',
+        description: 'Default template for food and beverage outlets',
+        outletType: 'fnb',
+        isDefault: true,
+        toolbarConfig: {
+          zones: {
+            left: { type: 'search', placeholder: 'Search member or table...', width: 'flex-1' },
+            center: { type: 'categories', items: ['Food', 'Beverages', 'Desserts', 'Specials'] },
+            right: { type: 'actions', items: ['pos.print'] },
+          },
+        },
+        actionBarConfig: {
+          rows: 2,
+          columns: 6,
+          buttons: [
+            // Row 1
+            { row: 0, col: 0, colSpan: 2, buttonId: 'pos.pay' },
+            { row: 0, col: 2, buttonId: 'pos.addItem' },
+            { row: 0, col: 3, buttonId: 'pos.discount' },
+            { row: 0, col: 4, buttonId: 'pos.void' },
+            { row: 0, col: 5, buttonId: 'pos.hold' },
+            // Row 2
+            { row: 1, col: 0, buttonId: 'pos.payCard' },
+            { row: 1, col: 1, buttonId: 'pos.payAccount' },
+            { row: 1, col: 2, buttonId: 'pos.payCash' },
+            { row: 1, col: 3, buttonId: 'pos.transfer' },
+            { row: 1, col: 4, colSpan: 2, buttonId: 'pos.print' },
+          ],
+        },
+      },
+    }),
+  ]);
+
+  console.log(`✅ Created ${posTemplates.length} POS templates`);
+
+  // Create POS Outlets
+  const golfTemplate = posTemplates.find(t => t.outletType === 'golf');
+  const proShopTemplate = posTemplates.find(t => t.outletType === 'pro-shop');
+  const spaTemplate = posTemplates.find(t => t.outletType === 'spa');
+  const fnbTemplate = posTemplates.find(t => t.outletType === 'fnb');
+
+  const posOutlets = await Promise.all([
+    prisma.pOSOutlet.upsert({
+      where: { clubId_name: { clubId: demoClub.id, name: 'Golf Check-in' } },
+      update: {},
+      create: {
+        clubId: demoClub.id,
+        name: 'Golf Check-in',
+        outletType: 'golf',
+        templateId: golfTemplate?.id,
+        customConfig: {},
+        isActive: true,
+      },
+    }),
+    prisma.pOSOutlet.upsert({
+      where: { clubId_name: { clubId: demoClub.id, name: 'Pro Shop' } },
+      update: {},
+      create: {
+        clubId: demoClub.id,
+        name: 'Pro Shop',
+        outletType: 'pro-shop',
+        templateId: proShopTemplate?.id,
+        customConfig: {},
+        isActive: true,
+      },
+    }),
+    prisma.pOSOutlet.upsert({
+      where: { clubId_name: { clubId: demoClub.id, name: 'Spa Front Desk' } },
+      update: {},
+      create: {
+        clubId: demoClub.id,
+        name: 'Spa Front Desk',
+        outletType: 'spa',
+        templateId: spaTemplate?.id,
+        customConfig: {},
+        isActive: true,
+      },
+    }),
+    prisma.pOSOutlet.upsert({
+      where: { clubId_name: { clubId: demoClub.id, name: 'Restaurant' } },
+      update: {},
+      create: {
+        clubId: demoClub.id,
+        name: 'Restaurant',
+        outletType: 'fnb',
+        templateId: fnbTemplate?.id,
+        customConfig: {},
+        isActive: true,
+      },
+    }),
+    prisma.pOSOutlet.upsert({
+      where: { clubId_name: { clubId: demoClub.id, name: 'Bar' } },
+      update: {},
+      create: {
+        clubId: demoClub.id,
+        name: 'Bar',
+        outletType: 'fnb',
+        templateId: fnbTemplate?.id,
+        customConfig: {},
+        isActive: true,
+      },
+    }),
+  ]);
+
+  console.log(`✅ Created ${posOutlets.length} POS outlets`);
+
+  // Create POS Outlet Role Configs
+  const golfCheckinOutlet = posOutlets.find(o => o.name === 'Golf Check-in');
+  const proShopOutlet = posOutlets.find(o => o.name === 'Pro Shop');
+
+  if (golfCheckinOutlet) {
+    await Promise.all([
+      // Cashier role - hide void, require approval for discount
+      prisma.pOSOutletRoleConfig.upsert({
+        where: { outletId_role: { outletId: golfCheckinOutlet.id, role: 'cashier' } },
+        update: {},
+        create: {
+          outletId: golfCheckinOutlet.id,
+          role: 'cashier',
+          buttonOverrides: {
+            hidden: ['pos.void'],
+            disabled: [],
+            requireApproval: ['pos.discount'],
+          },
+        },
+      }),
+      // Manager role - full access
+      prisma.pOSOutletRoleConfig.upsert({
+        where: { outletId_role: { outletId: golfCheckinOutlet.id, role: 'manager' } },
+        update: {},
+        create: {
+          outletId: golfCheckinOutlet.id,
+          role: 'manager',
+          buttonOverrides: {
+            hidden: [],
+            disabled: [],
+            requireApproval: [],
+          },
+        },
+      }),
+    ]);
+  }
+
+  if (proShopOutlet) {
+    await Promise.all([
+      // Cashier role - hide void, require approval for discount
+      prisma.pOSOutletRoleConfig.upsert({
+        where: { outletId_role: { outletId: proShopOutlet.id, role: 'cashier' } },
+        update: {},
+        create: {
+          outletId: proShopOutlet.id,
+          role: 'cashier',
+          buttonOverrides: {
+            hidden: ['pos.void'],
+            disabled: [],
+            requireApproval: ['pos.discount'],
+          },
+        },
+      }),
+      // Manager role - full access
+      prisma.pOSOutletRoleConfig.upsert({
+        where: { outletId_role: { outletId: proShopOutlet.id, role: 'manager' } },
+        update: {},
+        create: {
+          outletId: proShopOutlet.id,
+          role: 'manager',
+          buttonOverrides: {
+            hidden: [],
+            disabled: [],
+            requireApproval: [],
+          },
+        },
+      }),
+    ]);
+  }
+
+  console.log('✅ Created POS outlet role configurations');
+
+  // Example 4: Walk-up booking (same day for E2E tests - Twilight)
+  const walkupTeeDate = paidTeeDate; // Same date for easier testing
+
+  let walkupTeeTime = await prisma.teeTime.findFirst({
+    where: {
+      clubId: demoClub.id,
+      courseId: golfCourse.id,
+      teeDate: walkupTeeDate,
+      teeTime: '16:00',
+    },
+  });
+
+  if (!walkupTeeTime) {
+    walkupTeeTime = await prisma.teeTime.create({
+      data: {
+        clubId: demoClub.id,
+        courseId: golfCourse.id,
+        teeTimeNumber: getNextTeeTimeNumber(),
+        teeDate: walkupTeeDate,
+        teeTime: '16:00',
+        holes: 9,
+        status: BookingStatus.CONFIRMED,
+        confirmedAt: new Date(),
+        players: {
+          create: [
+            {
+              position: 1,
+              playerType: PlayerType.WALK_UP,
+              guestName: 'Twilight Walker 1',
+              guestEmail: 'walkup1@example.com',
+              guestPhone: '+66 99 678 9012',
+              cartType: CartType.WALKING,
+              cartStatus: 'NONE' as RentalStatus,
+              caddyStatus: 'NONE' as RentalStatus,
+              greenFee: getGreenFee('WALK_UP', 9, 'OFF_PEAK'),
+              cartFee: 0,
+              caddyFee: 0,
+            },
+            {
+              position: 2,
+              playerType: PlayerType.WALK_UP,
+              guestName: 'Twilight Walker 2',
+              guestEmail: 'walkup2@example.com',
+              guestPhone: '+66 99 789 0123',
+              cartType: CartType.WALKING,
+              cartStatus: 'NONE' as RentalStatus,
+              caddyStatus: 'NONE' as RentalStatus,
+              greenFee: getGreenFee('WALK_UP', 9, 'OFF_PEAK'),
+              cartFee: 0,
+              caddyFee: 0,
+            },
+          ],
+        },
+      },
+    });
+  }
+
+  // Example 5: Four-ball with mixed players and forecaddy (same day for E2E tests)
+  const fourballTeeDate = paidTeeDate; // Same date for easier testing
+  const fourballMember1 = activeMembers[3];
+  const fourballMember2 = activeMembers[4];
+
+  let fourballTeeTime = await prisma.teeTime.findFirst({
+    where: {
+      clubId: demoClub.id,
+      courseId: golfCourse.id,
+      teeDate: fourballTeeDate,
+      teeTime: '07:00',
+    },
+  });
+
+  if (!fourballTeeTime) {
+    fourballTeeTime = await prisma.teeTime.create({
+      data: {
+        clubId: demoClub.id,
+        courseId: golfCourse.id,
+        teeTimeNumber: getNextTeeTimeNumber(),
+        teeDate: fourballTeeDate,
+        teeTime: '07:00',
+        holes: 18,
+        status: BookingStatus.CONFIRMED,
+        confirmedAt: new Date(),
+        players: {
+          create: [
+            {
+              position: 1,
+              playerType: PlayerType.MEMBER,
+              memberId: fourballMember1.id,
+              cartType: CartType.SHARED,
+              sharedWithPosition: 2,
+              cartStatus: 'PAID' as RentalStatus,
+              caddyStatus: 'PAID' as RentalStatus,
+              greenFee: getGreenFee('MEMBER', 18, 'PRIME_TIME'),
+              cartFee: getCartFee('SHARED'),
+              caddyFee: getCaddyFee('FORECADDY'),
+            },
+            {
+              position: 2,
+              playerType: PlayerType.MEMBER,
+              memberId: fourballMember2.id,
+              cartType: CartType.SHARED,
+              sharedWithPosition: 1,
+              cartStatus: 'PAID' as RentalStatus,
+              caddyStatus: 'PAID' as RentalStatus,
+              greenFee: getGreenFee('MEMBER', 18, 'PRIME_TIME'),
+              cartFee: getCartFee('SHARED'),
+              caddyFee: getCaddyFee('FORECADDY'),
+            },
+            {
+              position: 3,
+              playerType: PlayerType.GUEST,
+              guestName: 'VIP Guest 1',
+              guestEmail: 'vip1@corporate.com',
+              guestPhone: '+66 99 890 1234',
+              cartType: CartType.SHARED,
+              sharedWithPosition: 4,
+              cartStatus: 'PAID' as RentalStatus,
+              caddyStatus: 'PAID' as RentalStatus,
+              greenFee: getGreenFee('GUEST', 18, 'PRIME_TIME'),
+              cartFee: getCartFee('SHARED'),
+              caddyFee: getCaddyFee('FORECADDY'),
+            },
+            {
+              position: 4,
+              playerType: PlayerType.GUEST,
+              guestName: 'VIP Guest 2',
+              guestEmail: 'vip2@corporate.com',
+              guestPhone: '+66 99 901 2345',
+              cartType: CartType.SHARED,
+              sharedWithPosition: 3,
+              cartStatus: 'PAID' as RentalStatus,
+              caddyStatus: 'PAID' as RentalStatus,
+              greenFee: getGreenFee('GUEST', 18, 'PRIME_TIME'),
+              cartFee: getCartFee('SHARED'),
+              caddyFee: getCaddyFee('FORECADDY'),
+            },
+          ],
+        },
+      },
+    });
+  }
+
+  console.log('✅ Created 5 sample tee times with detailed rate calculations:');
+  console.log(`   - Fully paid member + guest (Prime Time)`);
+  console.log(`   - Unpaid 3-guest booking (Standard Time)`);
+  console.log(`   - Partially paid member + guest (Prime Time)`);
+  console.log(`   - Walk-up twilight 9-hole (Off-Peak)`);
+  console.log(`   - Four-ball with forecaddy (Prime Time)`);
 
   console.log('');
   console.log('🎉 Database seed completed successfully!');
@@ -2003,218 +3661,6 @@ async function main() {
   console.log('');
   console.log('  Member Portal (http://localhost:3004):');
   console.log('    member@demo.com / Member123!');
-}
-
-// ============================================================================
-// PRODUCT CATEGORIES & PRODUCTS
-// ============================================================================
-
-async function seedProducts(clubId: string) {
-  console.log('Seeding product categories and products...');
-
-  // Create categories
-  const categories = await Promise.all([
-    prisma.productCategory.create({
-      data: {
-        clubId,
-        name: 'Apparel',
-        color: '#3B82F6',
-        iconName: 'shirt',
-        sortOrder: 1,
-      },
-    }),
-    prisma.productCategory.create({
-      data: {
-        clubId,
-        name: 'Equipment',
-        color: '#10B981',
-        iconName: 'golf',
-        sortOrder: 2,
-      },
-    }),
-    prisma.productCategory.create({
-      data: {
-        clubId,
-        name: 'Accessories',
-        color: '#8B5CF6',
-        iconName: 'package',
-        sortOrder: 3,
-      },
-    }),
-    prisma.productCategory.create({
-      data: {
-        clubId,
-        name: 'Food & Beverage',
-        color: '#F59E0B',
-        iconName: 'utensils',
-        sortOrder: 4,
-      },
-    }),
-    prisma.productCategory.create({
-      data: {
-        clubId,
-        name: 'Golf Balls',
-        color: '#14B8A6',
-        iconName: 'circle',
-        sortOrder: 5,
-      },
-    }),
-  ]);
-
-  const [apparel, equipment, accessories, fnb, balls] = categories;
-
-  // Create products
-  const products = [
-    // Apparel - with variants
-    {
-      clubId,
-      categoryId: apparel.id,
-      name: 'Club Logo Polo Shirt',
-      sku: 'APP-001',
-      productType: 'VARIABLE' as const,
-      basePrice: 85.0,
-      trackInventory: true,
-      stockQuantity: 50,
-      sortPriority: 10,
-    },
-    {
-      clubId,
-      categoryId: apparel.id,
-      name: 'Golf Shorts - Navy',
-      sku: 'APP-002',
-      productType: 'SIMPLE' as const,
-      basePrice: 65.0,
-      trackInventory: true,
-      stockQuantity: 30,
-      sortPriority: 20,
-    },
-    // Equipment
-    {
-      clubId,
-      categoryId: equipment.id,
-      name: 'Titleist TSR3 Driver',
-      sku: 'EQP-001',
-      productType: 'SIMPLE' as const,
-      basePrice: 599.0,
-      trackInventory: true,
-      stockQuantity: 4,
-      sortPriority: 30,
-    },
-    // Accessories
-    {
-      clubId,
-      categoryId: accessories.id,
-      name: 'Golf Bag - Stand',
-      sku: 'ACC-001',
-      productType: 'SIMPLE' as const,
-      basePrice: 289.0,
-      trackInventory: true,
-      stockQuantity: 7,
-      sortPriority: 40,
-    },
-    // F&B - with modifiers (will be linked later)
-    {
-      clubId,
-      categoryId: fnb.id,
-      name: 'Club Burger',
-      sku: 'FNB-001',
-      productType: 'SIMPLE' as const,
-      basePrice: 18.0,
-      trackInventory: false,
-      sortPriority: 10,
-    },
-    {
-      clubId,
-      categoryId: fnb.id,
-      name: 'Bottled Water',
-      sku: 'FNB-002',
-      productType: 'SIMPLE' as const,
-      basePrice: 3.5,
-      trackInventory: true,
-      stockQuantity: 200,
-      sortPriority: 5,
-    },
-    // Golf Balls
-    {
-      clubId,
-      categoryId: balls.id,
-      name: 'Titleist Pro V1 (Dozen)',
-      sku: 'BALL-001',
-      productType: 'SIMPLE' as const,
-      basePrice: 54.99,
-      trackInventory: true,
-      stockQuantity: 30,
-      sortPriority: 10,
-    },
-  ];
-
-  const createdProducts = await Promise.all(
-    products.map((p) => prisma.product.create({ data: p })),
-  );
-
-  // Add variants to polo shirt
-  const poloShirt = createdProducts[0];
-  await prisma.productVariant.createMany({
-    data: [
-      { productId: poloShirt.id, name: 'Small', sku: 'APP-001-S', priceAdjustment: 0, stockQuantity: 10, sortOrder: 1 },
-      { productId: poloShirt.id, name: 'Medium', sku: 'APP-001-M', priceAdjustment: 0, stockQuantity: 15, sortOrder: 2 },
-      { productId: poloShirt.id, name: 'Large', sku: 'APP-001-L', priceAdjustment: 0, stockQuantity: 15, sortOrder: 3 },
-      { productId: poloShirt.id, name: 'XL', sku: 'APP-001-XL', priceAdjustment: 5, stockQuantity: 10, sortOrder: 4 },
-    ],
-  });
-
-  // Create modifier groups for F&B
-  const cookingTempGroup = await prisma.modifierGroup.create({
-    data: {
-      clubId,
-      name: 'Cooking Temperature',
-      selectionType: 'SINGLE',
-      minSelections: 1,
-      maxSelections: 1,
-    },
-  });
-
-  await prisma.modifier.createMany({
-    data: [
-      { groupId: cookingTempGroup.id, name: 'Rare', priceAdjustment: 0, sortOrder: 1 },
-      { groupId: cookingTempGroup.id, name: 'Medium Rare', priceAdjustment: 0, isDefault: true, sortOrder: 2 },
-      { groupId: cookingTempGroup.id, name: 'Medium', priceAdjustment: 0, sortOrder: 3 },
-      { groupId: cookingTempGroup.id, name: 'Medium Well', priceAdjustment: 0, sortOrder: 4 },
-      { groupId: cookingTempGroup.id, name: 'Well Done', priceAdjustment: 0, sortOrder: 5 },
-    ],
-  });
-
-  const toppingsGroup = await prisma.modifierGroup.create({
-    data: {
-      clubId,
-      name: 'Burger Toppings',
-      selectionType: 'MULTIPLE',
-      minSelections: 0,
-      maxSelections: null,
-    },
-  });
-
-  await prisma.modifier.createMany({
-    data: [
-      { groupId: toppingsGroup.id, name: 'Add Bacon', priceAdjustment: 3, sortOrder: 1 },
-      { groupId: toppingsGroup.id, name: 'Add Cheese', priceAdjustment: 2, sortOrder: 2 },
-      { groupId: toppingsGroup.id, name: 'Add Avocado', priceAdjustment: 2.5, sortOrder: 3 },
-      { groupId: toppingsGroup.id, name: 'No Onions', priceAdjustment: 0, sortOrder: 4 },
-      { groupId: toppingsGroup.id, name: 'No Pickles', priceAdjustment: 0, sortOrder: 5 },
-    ],
-  });
-
-  // Link burger to modifier groups
-  const burger = createdProducts.find((p) => p.name === 'Club Burger')!;
-  await prisma.productModifierGroup.createMany({
-    data: [
-      { productId: burger.id, modifierGroupId: cookingTempGroup.id, isRequired: true, sortOrder: 1 },
-      { productId: burger.id, modifierGroupId: toppingsGroup.id, isRequired: false, sortOrder: 2 },
-    ],
-  });
-
-  console.log(`✅ Created ${createdProducts.length} products`);
-  return createdProducts;
 }
 
 main()

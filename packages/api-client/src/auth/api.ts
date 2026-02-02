@@ -280,19 +280,11 @@ export async function getMe(): Promise<AuthUser | null> {
  */
 export async function checkSession(): Promise<AuthUser | null> {
   // First try to get the current session
-  let user = await getSession();
+  const user = await getSession();
 
-  if (user) {
-    return user;
-  }
-
-  // If no session, try to refresh
-  try {
-    await refreshSession();
-    user = await getSession();
-    return user;
-  } catch {
-    // Refresh failed, no valid session
-    return null;
-  }
+  // If we have a user, great - return it
+  // If not, don't bother with refresh - the user needs to log in
+  // (Refresh is only useful when access token expired but refresh token is valid,
+  // which is handled by the auto-refresh interval when user IS authenticated)
+  return user;
 }

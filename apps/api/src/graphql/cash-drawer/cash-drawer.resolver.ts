@@ -267,7 +267,6 @@ export class CashDrawerResolver {
     totalPaidOut: Number(shift.totalPaidOut),
     totalDrops: Number(shift.totalDrops),
     createdAt: shift.createdAt,
-    cashDrawer: shift.cashDrawer ? this.mapDrawerToGraphQL(shift.cashDrawer) : undefined,
     movements: shift.movements?.map(this.mapMovementToGraphQL),
   });
 

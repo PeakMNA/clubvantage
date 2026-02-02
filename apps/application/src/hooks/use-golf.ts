@@ -15,6 +15,7 @@ import {
   useCancelTeeTimeMutation,
   useCheckInTeeTimeMutation,
   useUpdatePlayerRentalStatusMutation,
+  useMoveTeeTimeMutation,
   useSubscription,
 } from '@clubvantage/api-client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -108,7 +109,10 @@ function transformCourse(apiCourse: any): Course {
 }
 
 export function useCourses() {
-  const { data, isLoading, error } = useGetCoursesQuery();
+  const { data, isLoading, error, status } = useGetCoursesQuery();
+
+  // Debug logging
+  console.log('[useCourses] status:', status, 'isLoading:', isLoading, 'error:', error, 'data:', data);
 
   const courses = useMemo(() => {
     if (!data?.courses) return [];
@@ -226,6 +230,14 @@ export function useGolfMutations() {
     },
   });
 
+  const moveMutation = useMoveTeeTimeMutation({
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['GetTeeSheet'] });
+      queryClient.invalidateQueries({ queryKey: ['GetTeeTimes'] });
+      queryClient.invalidateQueries({ queryKey: ['GetWeekViewOccupancy'] });
+    },
+  });
+
   const createTeeTime = useCallback(
     async (data: {
       courseId: string;
@@ -324,6 +336,20 @@ export function useGolfMutations() {
     [updatePlayerRentalStatusMutation]
   );
 
+  const moveTeeTime = useCallback(
+    async (
+      id: string,
+      data: {
+        newTeeDate: string;
+        newTeeTime: string;
+        newCourseId?: string;
+      }
+    ) => {
+      return moveMutation.mutateAsync({ id, input: data });
+    },
+    [moveMutation]
+  );
+
   return {
     createTeeTime,
     updateTeeTime,
@@ -331,12 +357,14 @@ export function useGolfMutations() {
     cancelTeeTime,
     checkIn,
     updatePlayerRentalStatus,
+    moveTeeTime,
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
     isUpdatingPlayers: updatePlayersMutation.isPending,
     isCancelling: cancelMutation.isPending,
     isCheckingIn: checkInMutation.isPending,
     isUpdatingRentalStatus: updatePlayerRentalStatusMutation.isPending,
+    isMoving: moveMutation.isPending,
   };
 }
 

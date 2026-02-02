@@ -143,3 +143,48 @@ clubvantage/
 - Use `cn()` utility for className merging
 - Follow existing modal patterns (header, body, footer sections)
 - Status badges should use the color mappings above
+
+## Database & Prisma Guidelines
+
+### Schema Changes
+When modifying the Prisma schema (`/database/prisma/schema.prisma`):
+
+1. **NEVER use `--force-reset` or `--accept-data-loss`** - These flags delete all data
+2. **Use migrations for schema changes:**
+   ```bash
+   cd database
+   npx prisma migrate dev --name descriptive_migration_name
+   ```
+3. **For additive changes only** (new tables, new optional columns), you can use:
+   ```bash
+   npx prisma db push
+   ```
+   This is safe for adding new models/fields that don't affect existing data.
+
+### If Database Gets Reset
+If data is accidentally lost, re-seed the database:
+```bash
+cd database
+npx prisma db seed
+```
+
+**Demo Credentials:**
+- Staff App: `admin@royalbangkokclub.com` / `Admin123!`
+- Member Portal: `member@demo.com` / `Member123!`
+
+### Generating Prisma Client
+After schema changes, regenerate the client:
+```bash
+npx prisma generate
+```
+
+### GraphQL Schema Regeneration
+After adding new GraphQL types/resolvers, start the API briefly to regenerate `schema.gql`:
+```bash
+cd apps/api
+pnpm run dev  # Let it start, then stop with Ctrl+C
+```
+Then run codegen for the API client:
+```bash
+pnpm --filter @clubvantage/api-client run codegen
+```

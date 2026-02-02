@@ -344,6 +344,7 @@ export {
   useInfiniteGetPosButtonRegistryQuery,
   useUpsertPosTemplateMutation,
   useClonePosTemplateMutation,
+  useDeletePosTemplateMutation,
   useAssignPosTemplateMutation,
   useSetPosRoleOverridesMutation,
   useUpdatePosButtonRegistryMutation,

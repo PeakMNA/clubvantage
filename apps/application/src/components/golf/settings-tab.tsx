@@ -654,7 +654,7 @@ export function SettingsTab({
                             customSchedule: e.target.checked
                               ? {
                                   weekday: { firstTeeTime: '06:00', lastTeeTime: '17:00', interval: 8 },
-                                  weekend: { firstTeeTime: '05:30', lastTeeTime: '17:30', interval: 8 },
+                                  weekend: { firstTeeTime: '06:00', lastTeeTime: '17:30', interval: 8 },
                                 }
                               : undefined,
                           }
@@ -879,7 +879,7 @@ export function SettingsTab({
                             customSchedule: e.target.checked
                               ? {
                                   weekday: { firstTeeTime: '06:00', lastTeeTime: '17:00', interval: 8 },
-                                  weekend: { firstTeeTime: '05:30', lastTeeTime: '17:30', interval: 8 },
+                                  weekend: { firstTeeTime: '06:00', lastTeeTime: '17:30', interval: 8 },
                                 }
                               : undefined,
                           }

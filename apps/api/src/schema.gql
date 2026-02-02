@@ -1377,6 +1377,11 @@ type DeleteResponseType {
   success: Boolean!
 }
 
+type DeleteTemplateMutationResponse {
+  message: String
+  success: Boolean!
+}
+
 type DependentType {
   dateOfBirth: DateTime
   email: String
@@ -2511,6 +2516,9 @@ type Mutation {
 
   """Delete (deactivate) a minimum spend requirement"""
   deleteMinimumSpendRequirement(id: ID!): MinimumSpendRequirement!
+
+  """Delete a POS template"""
+  deletePOSTemplate(id: ID!): DeleteTemplateMutationResponse!
 
   """
   Delete a pro shop category. If category has products, provide moveProductsTo.

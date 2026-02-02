@@ -12,30 +12,39 @@ registerEnumType(CashMovementType, {
 });
 
 @ObjectType()
-export class CashDrawerGraphQLType {
+export class CashMovementGraphQLType {
   @Field(() => ID)
   id: string;
 
   @Field(() => ID)
-  clubId: string;
+  shiftId: string;
 
-  @Field()
-  name: string;
+  @Field(() => CashMovementType)
+  type: CashMovementType;
+
+  @Field(() => Float)
+  amount: number;
 
   @Field({ nullable: true })
-  location?: string;
+  description?: string;
+
+  @Field({ nullable: true })
+  reference?: string;
+
+  @Field({ nullable: true })
+  reason?: string;
+
+  @Field(() => ID, { nullable: true })
+  approvedBy?: string;
+
+  @Field(() => ID, { nullable: true })
+  transactionId?: string;
+
+  @Field(() => ID)
+  performedBy: string;
 
   @Field()
-  isActive: boolean;
-
-  @Field()
-  createdAt: Date;
-
-  @Field()
-  updatedAt: Date;
-
-  @Field(() => CashDrawerShiftGraphQLType, { nullable: true })
-  currentShift?: CashDrawerShiftGraphQLType;
+  performedAt: Date;
 }
 
 @ObjectType()
@@ -103,47 +112,35 @@ export class CashDrawerShiftGraphQLType {
   @Field()
   createdAt: Date;
 
-  @Field(() => CashDrawerGraphQLType, { nullable: true })
-  cashDrawer?: CashDrawerGraphQLType;
-
   @Field(() => [CashMovementGraphQLType], { nullable: true })
   movements?: CashMovementGraphQLType[];
 }
 
 @ObjectType()
-export class CashMovementGraphQLType {
+export class CashDrawerGraphQLType {
   @Field(() => ID)
   id: string;
 
   @Field(() => ID)
-  shiftId: string;
-
-  @Field(() => CashMovementType)
-  type: CashMovementType;
-
-  @Field(() => Float)
-  amount: number;
-
-  @Field({ nullable: true })
-  description?: string;
-
-  @Field({ nullable: true })
-  reference?: string;
-
-  @Field({ nullable: true })
-  reason?: string;
-
-  @Field(() => ID, { nullable: true })
-  approvedBy?: string;
-
-  @Field(() => ID, { nullable: true })
-  transactionId?: string;
-
-  @Field(() => ID)
-  performedBy: string;
+  clubId: string;
 
   @Field()
-  performedAt: Date;
+  name: string;
+
+  @Field({ nullable: true })
+  location?: string;
+
+  @Field()
+  isActive: boolean;
+
+  @Field()
+  createdAt: Date;
+
+  @Field()
+  updatedAt: Date;
+
+  @Field(() => CashDrawerShiftGraphQLType, { nullable: true })
+  currentShift?: CashDrawerShiftGraphQLType;
 }
 
 @ObjectType()

@@ -4,10 +4,13 @@ import {
   BadRequestException,
   ConflictException,
   Logger,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { PrismaService } from '@/shared/prisma/prisma.service';
 import { RedisService } from '@/shared/redis/redis.service';
 import { EventStoreService } from '@/shared/events/event-store.service';
+import { LineItemGeneratorService } from '@/graphql/golf/line-item-generator.service';
 
 export enum BookingStatus {
   PENDING = 'PENDING',
@@ -87,6 +90,8 @@ export class GolfService {
     private prisma: PrismaService,
     private redis: RedisService,
     private eventStore: EventStoreService,
+    @Inject(forwardRef(() => LineItemGeneratorService))
+    private lineItemGenerator: LineItemGeneratorService,
   ) {}
 
   async getTeeSheet(
@@ -529,6 +534,17 @@ export class GolfService {
         },
       });
 
+      // Generate line items for all players
+      try {
+        await this.lineItemGenerator.generateLineItemsForFlight(teeTime.id);
+      } catch (error) {
+        // Don't fail the booking if line item generation fails
+        // Just log the error - staff can add items manually
+        this.logger.warn(
+          `Failed to generate line items for tee time ${teeTime.id}: ${error.message}`,
+        );
+      }
+
       await this.eventStore.append({
         tenantId,
         aggregateType: 'TeeTime',
@@ -683,6 +699,16 @@ export class GolfService {
         },
       });
     });
+
+    // Regenerate line items for all players (since we replaced all players)
+    // This handles changes to cart/caddy requests
+    try {
+      await this.lineItemGenerator.generateLineItemsForFlight(id);
+    } catch (error) {
+      this.logger.warn(
+        `Failed to regenerate line items for tee time ${id}: ${error.message}`,
+      );
+    }
 
     await this.eventStore.append({
       tenantId,
