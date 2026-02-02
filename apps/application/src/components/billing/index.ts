@@ -67,5 +67,16 @@ export {
   OverrideSuspensionDialog,
 } from './billing-dialogs'
 
+// Invoice Creation
+export {
+  InvoiceCreateModal,
+  type InvoiceFormData,
+} from './invoice-create-modal'
+export {
+  InvoiceLineItemRow,
+  type ChargeType,
+  type LineItemData,
+} from './invoice-line-item-row'
+
 // Legacy (to be deprecated)
 export { InvoicesTable } from './invoices-table'
