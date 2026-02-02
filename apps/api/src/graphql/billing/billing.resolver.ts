@@ -13,6 +13,10 @@ import {
   MemberTransactionsType,
   MemberTransactionType,
   ChargeTypeType,
+  ArAgingReportType,
+  AgingBucketType,
+  AgingMemberType,
+  ReinstatedMemberType,
 } from './billing.types';
 import {
   CreateInvoiceInput,
@@ -207,6 +211,188 @@ export class BillingResolver {
       taxable: ct.taxable,
       category: ct.category ?? undefined,
     }));
+  }
+
+  @Query(() => ArAgingReportType, { name: 'arAgingReport', description: 'Get AR aging report with buckets and member details' })
+  async getArAgingReport(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('filter', { nullable: true }) filter?: string,
+    @Args('page', { nullable: true, defaultValue: 1 }) page?: number,
+    @Args('limit', { nullable: true, defaultValue: 20 }) limit?: number,
+  ): Promise<ArAgingReportType> {
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+    const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+
+    // Get all outstanding invoices with member data
+    const outstandingInvoices = await this.prisma.invoice.findMany({
+      where: {
+        clubId: user.tenantId,
+        balanceDue: { gt: 0 },
+        deletedAt: null,
+      },
+      include: {
+        member: {
+          include: {
+            membershipType: true,
+          },
+        },
+      },
+      orderBy: { dueDate: 'asc' },
+    });
+
+    // Calculate aging bucket for each invoice
+    const getAgingStatus = (dueDate: Date): string => {
+      const diffDays = Math.floor((now.getTime() - dueDate.getTime()) / (24 * 60 * 60 * 1000));
+      if (diffDays < 0) return 'current';
+      if (diffDays < 30) return 'current';
+      if (diffDays < 60) return '30';
+      if (diffDays < 90) return '60';
+      return '90';
+    };
+
+    // Group by member and calculate totals
+    const memberAging = new Map<string, {
+      member: any;
+      balance: number;
+      oldestDueDate: Date;
+      worstStatus: string;
+    }>();
+
+    for (const invoice of outstandingInvoices) {
+      const existing = memberAging.get(invoice.memberId);
+      const balance = invoice.balanceDue.toNumber();
+      const agingStatus = getAgingStatus(invoice.dueDate);
+
+      if (existing) {
+        existing.balance += balance;
+        if (invoice.dueDate < existing.oldestDueDate) {
+          existing.oldestDueDate = invoice.dueDate;
+        }
+        // Determine worst status
+        const statusOrder = ['current', '30', '60', '90', 'suspended'];
+        const memberStatus = invoice.member.status === 'SUSPENDED' ? 'suspended' : agingStatus;
+        if (statusOrder.indexOf(memberStatus) > statusOrder.indexOf(existing.worstStatus)) {
+          existing.worstStatus = memberStatus;
+        }
+      } else {
+        const memberStatus = invoice.member.status === 'SUSPENDED' ? 'suspended' : agingStatus;
+        memberAging.set(invoice.memberId, {
+          member: invoice.member,
+          balance,
+          oldestDueDate: invoice.dueDate,
+          worstStatus: memberStatus,
+        });
+      }
+    }
+
+    // Calculate buckets
+    const bucketTotals = {
+      current: { amount: 0, count: 0 },
+      '30': { amount: 0, count: 0 },
+      '60': { amount: 0, count: 0 },
+      '90': { amount: 0, count: 0 },
+      suspended: { amount: 0, count: 0 },
+    };
+
+    const membersArray = Array.from(memberAging.values());
+    let totalAmount = 0;
+
+    for (const memberData of membersArray) {
+      const status = memberData.worstStatus as keyof typeof bucketTotals;
+      if (bucketTotals[status]) {
+        bucketTotals[status].amount += memberData.balance;
+        bucketTotals[status].count += 1;
+      }
+      totalAmount += memberData.balance;
+    }
+
+    // Build bucket response
+    const buckets: AgingBucketType[] = [
+      {
+        id: 'current',
+        label: 'Current',
+        memberCount: bucketTotals.current.count,
+        totalAmount: bucketTotals.current.amount.toString(),
+        percentage: totalAmount > 0 ? (bucketTotals.current.amount / totalAmount) * 100 : 0,
+      },
+      {
+        id: '30',
+        label: '1-30 Days',
+        memberCount: bucketTotals['30'].count,
+        totalAmount: bucketTotals['30'].amount.toString(),
+        percentage: totalAmount > 0 ? (bucketTotals['30'].amount / totalAmount) * 100 : 0,
+      },
+      {
+        id: '60',
+        label: '31-60 Days',
+        memberCount: bucketTotals['60'].count,
+        totalAmount: bucketTotals['60'].amount.toString(),
+        percentage: totalAmount > 0 ? (bucketTotals['60'].amount / totalAmount) * 100 : 0,
+      },
+      {
+        id: '90',
+        label: '61-90 Days',
+        memberCount: bucketTotals['90'].count,
+        totalAmount: bucketTotals['90'].amount.toString(),
+        percentage: totalAmount > 0 ? (bucketTotals['90'].amount / totalAmount) * 100 : 0,
+      },
+      {
+        id: 'suspended',
+        label: 'Suspended',
+        memberCount: bucketTotals.suspended.count,
+        totalAmount: bucketTotals.suspended.amount.toString(),
+        percentage: totalAmount > 0 ? (bucketTotals.suspended.amount / totalAmount) * 100 : 0,
+      },
+    ];
+
+    // Filter members based on filter parameter
+    let filteredMembers = membersArray;
+    if (filter && filter !== 'all') {
+      if (filter === '30+') {
+        filteredMembers = membersArray.filter((m) => ['30', '60', '90', 'suspended'].includes(m.worstStatus));
+      } else if (filter === '60+') {
+        filteredMembers = membersArray.filter((m) => ['60', '90', 'suspended'].includes(m.worstStatus));
+      } else if (filter === '90+') {
+        filteredMembers = membersArray.filter((m) => ['90', 'suspended'].includes(m.worstStatus));
+      } else if (filter === 'suspended') {
+        filteredMembers = membersArray.filter((m) => m.worstStatus === 'suspended');
+      }
+    }
+
+    // Sort by balance (highest first)
+    filteredMembers.sort((a, b) => b.balance - a.balance);
+
+    // Paginate
+    const totalCount = filteredMembers.length;
+    const skip = ((page || 1) - 1) * (limit || 20);
+    const paginatedMembers = filteredMembers.slice(skip, skip + (limit || 20));
+
+    // Build member response
+    const members: AgingMemberType[] = paginatedMembers.map((m) => ({
+      id: m.member.id,
+      name: `${m.member.firstName} ${m.member.lastName}`,
+      photoUrl: m.member.photoUrl ?? undefined,
+      memberNumber: m.member.memberId,
+      membershipType: m.member.membershipType?.name || 'Unknown',
+      oldestInvoiceDate: m.oldestDueDate,
+      balance: m.balance.toString(),
+      daysOutstanding: Math.max(0, Math.floor((now.getTime() - m.oldestDueDate.getTime()) / (24 * 60 * 60 * 1000))),
+      status: m.worstStatus,
+    }));
+
+    // Get recently reinstated members (last 7 days)
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    // For now, return empty array - would need to track reinstatement events
+    const reinstatedMembers: ReinstatedMemberType[] = [];
+
+    return {
+      buckets,
+      members,
+      reinstatedMembers,
+      totalCount,
+    };
   }
 
   @Query(() => MemberTransactionsType, { name: 'memberTransactions', description: 'Get transaction history for a member' })

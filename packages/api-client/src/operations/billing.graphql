@@ -200,6 +200,38 @@ query GetChargeTypes {
   }
 }
 
+query GetArAgingReport($filter: String, $page: Float, $limit: Float) {
+  arAgingReport(filter: $filter, page: $page, limit: $limit) {
+    buckets {
+      id
+      label
+      memberCount
+      totalAmount
+      percentage
+    }
+    members {
+      id
+      name
+      photoUrl
+      memberNumber
+      membershipType
+      oldestInvoiceDate
+      balance
+      daysOutstanding
+      status
+    }
+    reinstatedMembers {
+      id
+      name
+      clearedDate
+      previousBalance
+      receiptId
+      receiptNumber
+    }
+    totalCount
+  }
+}
+
 # Billing Mutations
 
 mutation CreateInvoice($input: CreateInvoiceInput!) {

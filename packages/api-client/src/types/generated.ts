@@ -58,6 +58,28 @@ export type AddStoredPaymentInput = {
   stripePaymentMethodId: Scalars['String']['input'];
 };
 
+export type AgingBucketType = {
+  __typename?: 'AgingBucketType';
+  id: Scalars['String']['output'];
+  label: Scalars['String']['output'];
+  memberCount: Scalars['Float']['output'];
+  percentage: Scalars['Float']['output'];
+  totalAmount: Scalars['String']['output'];
+};
+
+export type AgingMemberType = {
+  __typename?: 'AgingMemberType';
+  balance: Scalars['String']['output'];
+  daysOutstanding: Scalars['Float']['output'];
+  id: Scalars['ID']['output'];
+  memberNumber: Scalars['String']['output'];
+  membershipType: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  oldestInvoiceDate: Scalars['DateTime']['output'];
+  photoUrl?: Maybe<Scalars['String']['output']>;
+  status: Scalars['String']['output'];
+};
+
 /** Days to which a configuration applies */
 export type ApplicableDays =
   | 'ALL'
@@ -160,6 +182,14 @@ export type ApplyDiscountResultType = {
 export type ApproveDiscountInput = {
   appliedDiscountId: Scalars['ID']['input'];
   approvalNote?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type ArAgingReportType = {
+  __typename?: 'ArAgingReportType';
+  buckets: Array<AgingBucketType>;
+  members: Array<AgingMemberType>;
+  reinstatedMembers: Array<ReinstatedMemberType>;
+  totalCount: Scalars['Float']['output'];
 };
 
 export type AssignTemplateInput = {
@@ -4478,6 +4508,8 @@ export type Query = {
   applicationStats: ApplicationStatsType;
   /** Get paginated list of membership applications */
   applications: ApplicationConnection;
+  /** Get AR aging report with buckets and member details */
+  arAgingReport: ArAgingReportType;
   /** Calculate totals for multiple players (for batch payment) */
   batchTotal: BatchTotalType;
   /** Get billing statistics for the current month */
@@ -4745,6 +4777,13 @@ export type QueryApplicationsArgs = {
   search?: InputMaybe<Scalars['String']['input']>;
   skip?: InputMaybe<Scalars['Int']['input']>;
   status?: InputMaybe<ApplicationStatus>;
+};
+
+
+export type QueryArAgingReportArgs = {
+  filter?: InputMaybe<Scalars['String']['input']>;
+  limit?: InputMaybe<Scalars['Float']['input']>;
+  page?: InputMaybe<Scalars['Float']['input']>;
 };
 
 
@@ -5426,6 +5465,16 @@ export type RecordTransactionInput = {
   paymentTransactionId?: InputMaybe<Scalars['String']['input']>;
   subAccountId: Scalars['String']['input'];
   teeTimeId?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type ReinstatedMemberType = {
+  __typename?: 'ReinstatedMemberType';
+  clearedDate: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  previousBalance: Scalars['String']['output'];
+  receiptId: Scalars['ID']['output'];
+  receiptNumber: Scalars['String']['output'];
 };
 
 export type RemoveLineItemInput = {
@@ -6997,6 +7046,15 @@ export type GetChargeTypesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type GetChargeTypesQuery = { __typename?: 'Query', chargeTypes: Array<{ __typename?: 'ChargeTypeType', id: string, name: string, code: string, description?: string | null | undefined, defaultPrice?: string | null | undefined, taxable: boolean, category?: string | null | undefined }> };
+
+export type GetArAgingReportQueryVariables = Exact<{
+  filter?: InputMaybe<Scalars['String']['input']>;
+  page?: InputMaybe<Scalars['Float']['input']>;
+  limit?: InputMaybe<Scalars['Float']['input']>;
+}>;
+
+
+export type GetArAgingReportQuery = { __typename?: 'Query', arAgingReport: { __typename?: 'ArAgingReportType', totalCount: number, buckets: Array<{ __typename?: 'AgingBucketType', id: string, label: string, memberCount: number, totalAmount: string, percentage: number }>, members: Array<{ __typename?: 'AgingMemberType', id: string, name: string, photoUrl?: string | null | undefined, memberNumber: string, membershipType: string, oldestInvoiceDate: string, balance: string, daysOutstanding: number, status: string }>, reinstatedMembers: Array<{ __typename?: 'ReinstatedMemberType', id: string, name: string, clearedDate: string, previousBalance: string, receiptId: string, receiptNumber: string }> } };
 
 export type CreateInvoiceMutationVariables = Exact<{
   input: CreateInvoiceInput;

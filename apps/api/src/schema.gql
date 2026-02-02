@@ -40,6 +40,26 @@ input AddStoredPaymentInput {
   stripePaymentMethodId: String!
 }
 
+type AgingBucketType {
+  id: String!
+  label: String!
+  memberCount: Float!
+  percentage: Float!
+  totalAmount: String!
+}
+
+type AgingMemberType {
+  balance: String!
+  daysOutstanding: Float!
+  id: ID!
+  memberNumber: String!
+  membershipType: String!
+  name: String!
+  oldestInvoiceDate: DateTime!
+  photoUrl: String
+  status: String!
+}
+
 """Days to which a configuration applies"""
 enum ApplicableDays {
   ALL
@@ -137,6 +157,13 @@ type ApplyDiscountResultType {
 input ApproveDiscountInput {
   appliedDiscountId: ID!
   approvalNote: String
+}
+
+type ArAgingReportType {
+  buckets: [AgingBucketType!]!
+  members: [AgingMemberType!]!
+  reinstatedMembers: [ReinstatedMemberType!]!
+  totalCount: Float!
 }
 
 input AssignTemplateInput {
@@ -3500,6 +3527,9 @@ type Query {
   """Get paginated list of membership applications"""
   applications(after: String, first: Int = 10, search: String, skip: Int, status: ApplicationStatus): ApplicationConnection!
 
+  """Get AR aging report with buckets and member details"""
+  arAgingReport(filter: String, limit: Float = 20, page: Float = 1): ArAgingReportType!
+
   """Calculate totals for multiple players (for batch payment)"""
   batchTotal(playerIds: [ID!]!): BatchTotalType!
 
@@ -3931,6 +3961,15 @@ input RecordTransactionInput {
   paymentTransactionId: String
   subAccountId: String!
   teeTimeId: String
+}
+
+type ReinstatedMemberType {
+  clearedDate: DateTime!
+  id: ID!
+  name: String!
+  previousBalance: String!
+  receiptId: ID!
+  receiptNumber: String!
 }
 
 input RemoveLineItemInput {

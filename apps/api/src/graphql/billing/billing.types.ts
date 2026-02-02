@@ -280,3 +280,88 @@ export class MemberTransactionsType {
   @Field()
   currentBalance: string;
 }
+
+// AR Aging types for aging dashboard
+@ObjectType()
+export class AgingBucketType {
+  @Field()
+  id: string; // 'current' | '30' | '60' | '90' | 'suspended'
+
+  @Field()
+  label: string;
+
+  @Field()
+  memberCount: number;
+
+  @Field()
+  totalAmount: string;
+
+  @Field()
+  percentage: number;
+}
+
+@ObjectType()
+export class AgingMemberType {
+  @Field(() => ID)
+  id: string;
+
+  @Field()
+  name: string;
+
+  @Field({ nullable: true })
+  photoUrl?: string;
+
+  @Field()
+  memberNumber: string;
+
+  @Field()
+  membershipType: string;
+
+  @Field()
+  oldestInvoiceDate: Date;
+
+  @Field()
+  balance: string;
+
+  @Field()
+  daysOutstanding: number;
+
+  @Field()
+  status: string; // 'current' | '30' | '60' | '90' | 'suspended'
+}
+
+@ObjectType()
+export class ReinstatedMemberType {
+  @Field(() => ID)
+  id: string;
+
+  @Field()
+  name: string;
+
+  @Field()
+  clearedDate: Date;
+
+  @Field()
+  previousBalance: string;
+
+  @Field(() => ID)
+  receiptId: string;
+
+  @Field()
+  receiptNumber: string;
+}
+
+@ObjectType()
+export class ArAgingReportType {
+  @Field(() => [AgingBucketType])
+  buckets: AgingBucketType[];
+
+  @Field(() => [AgingMemberType])
+  members: AgingMemberType[];
+
+  @Field(() => [ReinstatedMemberType])
+  reinstatedMembers: ReinstatedMemberType[];
+
+  @Field()
+  totalCount: number;
+}
