@@ -283,12 +283,6 @@ mutation AssignEquipment($input: AssignEquipmentInput!) {
       rentalFee
       conditionAtCheckout
       notes
-      equipment {
-        id
-        assetNumber
-        name
-        status
-      }
       member {
         id
         memberId
@@ -309,12 +303,6 @@ mutation ReturnEquipment($input: ReturnEquipmentInput!) {
       returnedAt
       conditionAtReturn
       notes
-      equipment {
-        id
-        assetNumber
-        name
-        status
-      }
     }
   }
 }

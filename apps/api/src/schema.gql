@@ -128,6 +128,11 @@ type AppliedDiscountType {
   transactionId: String
 }
 
+input ApplyCreditNoteInput {
+  amount: Float!
+  invoiceId: ID!
+}
+
 input ApplyDiscountByCodeInput {
   code: String!
   lineItemId: ID
@@ -159,11 +164,40 @@ input ApproveDiscountInput {
   approvalNote: String
 }
 
+type ArAccountSearchResult {
+  accountName: String!
+  accountNumber: String!
+  accountType: ArAccountType!
+  agingStatus: String
+  creditBalance: String!
+  dependentCount: Float
+  id: ID!
+  invoiceCount: Float!
+  outstandingBalance: String!
+  photoUrl: String
+  subType: String
+}
+
+"""AR account type discriminator"""
+enum ArAccountType {
+  CITY_LEDGER
+  MEMBER
+}
+
 type ArAgingReportType {
   buckets: [AgingBucketType!]!
   members: [AgingMemberType!]!
   reinstatedMembers: [ReinstatedMemberType!]!
   totalCount: Float!
+}
+
+input AssignEquipmentInput {
+  bookingId: ID
+  conditionAtCheckout: EquipmentCondition
+  equipmentId: ID!
+  notes: String
+  rentalFee: Float
+  teeTimePlayerId: ID
 }
 
 input AssignTemplateInput {
@@ -285,6 +319,35 @@ type BatchPaymentResultType {
   transactionId: String
 }
 
+type BatchSettlementAllocation {
+  amount: String!
+  invoiceId: ID!
+  invoiceNumber: String!
+  newBalance: String!
+  previousBalance: String!
+}
+
+input BatchSettlementInput {
+  accountId: ID!
+  accountType: ArAccountType!
+  method: PaymentMethod!
+  notes: String
+  paymentAmount: Float!
+  paymentDate: DateTime
+  referenceNumber: String
+  useFifo: Boolean = true
+}
+
+type BatchSettlementResult {
+  allocations: [BatchSettlementAllocation!]!
+  creditAdded: String!
+  newCreditBalance: String!
+  newOutstandingBalance: String!
+  paymentId: ID!
+  receiptNumber: String!
+  totalAllocated: String!
+}
+
 type BatchTotalType {
   balanceDue: Float!
   grandTotal: Float!
@@ -295,6 +358,32 @@ type BatchTotalType {
   taxTotal: Float!
 }
 
+"""Billing frequency options"""
+enum BillingFrequency {
+  ANNUAL
+  MONTHLY
+  QUARTERLY
+  SEMI_ANNUAL
+}
+
+"""Preview of an upcoming billing period"""
+type BillingPeriodPreview {
+  """Date when the invoice will be generated/billed"""
+  billingDate: DateTime!
+
+  """Human-readable description of the period"""
+  description: String!
+
+  """Due date for payment"""
+  dueDate: DateTime!
+
+  """End date of the billing period"""
+  periodEnd: DateTime!
+
+  """Start date of the billing period"""
+  periodStart: DateTime!
+}
+
 type BillingStatsType {
   invoiceCount: Float!
   outstandingBalance: String!
@@ -302,6 +391,12 @@ type BillingStatsType {
   overdueCount: Float!
   paidCount: Float!
   totalRevenue: String!
+}
+
+"""Billing timing options (advance or arrears)"""
+enum BillingTiming {
+  ADVANCE
+  ARREARS
 }
 
 type BlockMutationResponse {
@@ -838,6 +933,47 @@ input CheckLimitInput {
   subAccountId: String!
 }
 
+"""City ledger account type"""
+enum CityLedgerAccountType {
+  CORPORATE
+  HOUSE_ACCOUNT
+  OTHER
+  VENDOR
+}
+
+"""City ledger account status"""
+enum CityLedgerStatus {
+  ACTIVE
+  CLOSED
+  INACTIVE
+  SUSPENDED
+}
+
+type CityLedgerType {
+  accountName: String!
+  accountNumber: String!
+  accountType: CityLedgerAccountType!
+  billingAddress: String
+  contactEmail: String
+  contactName: String
+  contactPhone: String
+  createdAt: DateTime!
+  creditBalance: String!
+  creditLimit: String
+  id: ID!
+  notes: String
+  outstandingBalance: String!
+  paymentTerms: Float!
+  status: CityLedgerStatus!
+  taxId: String
+  updatedAt: DateTime!
+}
+
+type CityLedgerTypeEdge {
+  cursor: String!
+  node: CityLedgerType!
+}
+
 type CloneTemplateMutationResponse {
   message: String
   success: Boolean!
@@ -860,6 +996,62 @@ input CloseShiftInput {
   denominations: String
   shiftId: ID!
   varianceNote: String
+}
+
+"""Club billing configuration settings"""
+type ClubBillingSettingsType {
+  """Whether to automatically apply late fees when due"""
+  autoApplyLateFee: Boolean!
+  clubId: ID!
+
+  """When the settings were created"""
+  createdAt: DateTime!
+
+  """Billing cycle alignment (calendar or anniversary)"""
+  defaultAlignment: CycleAlignment!
+
+  """Default day of month for billing (1-28)"""
+  defaultBillingDay: Int!
+
+  """Default billing frequency for new members"""
+  defaultFrequency: BillingFrequency!
+
+  """Whether to bill in advance or arrears"""
+  defaultTiming: BillingTiming!
+
+  """Grace period days after due date before late fees"""
+  gracePeriodDays: Int!
+  id: ID!
+
+  """Days after invoice date when payment is due"""
+  invoiceDueDays: Int!
+
+  """Days before billing cycle to generate invoices"""
+  invoiceGenerationLead: Int!
+
+  """Fixed late fee amount (in cents)"""
+  lateFeeAmount: Float!
+
+  """Late fee percentage (0-100)"""
+  lateFeePercentage: Float!
+
+  """Type of late fee to apply"""
+  lateFeeType: LateFeeType!
+
+  """Maximum late fee cap amount (in cents)"""
+  maxLateFee: Float
+
+  """Whether to prorate charges for membership changes mid-cycle"""
+  prorateChanges: Boolean!
+
+  """Whether to prorate charges for new members mid-cycle"""
+  prorateNewMembers: Boolean!
+
+  """Method used for calculating prorated amounts"""
+  prorationMethod: ProrationMethod!
+
+  """When the settings were last updated"""
+  updatedAt: DateTime!
 }
 
 type ClubGolfSettingsType {
@@ -940,6 +1132,17 @@ input CreateCashDrawerInput {
   name: String!
 }
 
+input CreateCreditNoteInput {
+  internalNotes: String
+  lineItems: [CreditNoteLineItemInput!]!
+  memberId: ID!
+  memberVisibleNotes: String
+  reason: CreditNoteReason!
+  reasonDetail: String
+  sourceInvoiceId: ID
+  type: CreditNoteType!
+}
+
 input CreateCreditOverrideInput {
   expiresAt: DateTime
   memberId: ID!
@@ -967,6 +1170,32 @@ input CreateDiscountInput {
   type: DiscountType!
   validity: DiscountValidityInput
   value: Float!
+}
+
+input CreateEquipmentCategoryInput {
+  attachmentType: EquipmentAttachmentType
+  code: String!
+  color: String
+  defaultRentalRate: Float
+  depositAmount: Float
+  description: String
+  icon: String
+  name: String!
+  requiresDeposit: Boolean
+}
+
+input CreateEquipmentInput {
+  assetNumber: String!
+  categoryId: ID!
+  condition: EquipmentCondition
+  location: String
+  manufacturer: String
+  model: String
+  name: String!
+  notes: String
+  purchaseDate: DateTime
+  serialNumber: String
+  warrantyExpiry: DateTime
 }
 
 input CreateExceptionInput {
@@ -1013,6 +1242,17 @@ input CreateGroupBookingInput {
   startTime: String!
 }
 
+"""Input for creating an interest category"""
+input CreateInterestCategoryInput {
+  code: String!
+  color: String
+  description: String
+  icon: String
+  isActive: Boolean = true
+  name: String!
+  sortOrder: Int = 0
+}
+
 input CreateInvoiceInput {
   billingPeriod: String
   dueDate: DateTime!
@@ -1042,6 +1282,26 @@ input CreateLotteryRequestInput {
   preference1: String!
   preference2: String
   preference3: String
+}
+
+input CreateMemberBillingProfileInput {
+  billingAlignment: CycleAlignment
+  billingFrequency: BillingFrequency
+  billingTiming: BillingTiming
+
+  """Custom billing day (1-28)"""
+  customBillingDay: Int
+
+  """Custom grace period in days"""
+  customGracePeriod: Int
+
+  """Exempt from late fees"""
+  customLateFeeExempt: Boolean
+  memberId: ID!
+
+  """Next scheduled billing date"""
+  nextBillingDate: DateTime
+  prorationOverride: ProrationMethod
 }
 
 input CreateMemberInput {
@@ -1349,6 +1609,106 @@ type CreditLimitOverrideType {
   reason: String!
 }
 
+type CreditNoteApplicationType {
+  amountApplied: String!
+  appliedAt: DateTime!
+  id: ID!
+  invoice: InvoiceType
+}
+
+type CreditNoteConnection {
+  edges: [CreditNoteGraphQLTypeEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type CreditNoteGraphQLType {
+  applications: [CreditNoteApplicationType!]
+  appliedToBalance: String!
+  approvedAt: DateTime
+  createdAt: DateTime!
+  creditNoteNumber: String!
+  id: ID!
+  internalNotes: String
+  issueDate: DateTime!
+  lineItems: [CreditNoteLineItemType!]!
+  member: MemberSummaryBillingType
+  memberVisibleNotes: String
+  reason: CreditNoteReason!
+  reasonDetail: String
+  refundedAmount: String!
+  status: CreditNoteStatus!
+  subtotal: String!
+  taxAmount: String!
+  totalAmount: String!
+  type: CreditNoteType!
+  updatedAt: DateTime!
+  voidedAt: DateTime
+}
+
+type CreditNoteGraphQLTypeEdge {
+  cursor: String!
+  node: CreditNoteGraphQLType!
+}
+
+input CreditNoteLineItemInput {
+  chargeTypeId: ID
+  description: String!
+  quantity: Float! = 1
+  taxRate: Float = 0
+  taxable: Boolean = false
+  unitPrice: Float!
+}
+
+type CreditNoteLineItemType {
+  chargeType: ChargeTypeType
+  description: String!
+  id: ID!
+  lineTotal: String!
+  quantity: Float!
+  taxAmount: String!
+  taxRate: String!
+  taxable: Boolean!
+  unitPrice: String!
+}
+
+"""Credit note reason options"""
+enum CreditNoteReason {
+  BILLING_ERROR
+  CUSTOMER_SATISFACTION
+  DUPLICATE_CHARGE
+  EVENT_CANCELLATION
+  MEMBERSHIP_CANCELLATION
+  OTHER
+  OVERPAYMENT
+  PRICE_ADJUSTMENT
+  PRODUCT_RETURN
+  RAIN_CHECK
+  SERVICE_NOT_RENDERED
+}
+
+"""Credit note status options"""
+enum CreditNoteStatus {
+  APPLIED
+  APPROVED
+  DRAFT
+  PARTIALLY_APPLIED
+  PENDING_APPROVAL
+  REFUNDED
+  VOIDED
+}
+
+"""Credit note type options"""
+enum CreditNoteType {
+  ADJUSTMENT
+  CANCELLATION
+  COURTESY
+  PROMO
+  REFUND
+  RETURN
+  WRITE_OFF
+}
+
 type CreditSettingsType {
   creditAlertThreshold: Float!
   creditBlockEnabled: Boolean!
@@ -1371,6 +1731,12 @@ type CreditStatusType {
 enum CreditWarningLevel {
   APPROACHING_LIMIT
   EXCEEDED
+}
+
+"""Billing cycle alignment (calendar or anniversary)"""
+enum CycleAlignment {
+  ANNIVERSARY
+  CALENDAR
 }
 
 type DailyCheckInReportType {
@@ -1482,6 +1848,25 @@ type DeleteTemplateMutationResponse {
   success: Boolean!
 }
 
+"""Single interest entry for a dependent"""
+input DependentInterestInput {
+  categoryId: ID!
+  interestLevel: Int!
+}
+
+"""Dependent interest in an activity category"""
+type DependentInterestType {
+  category: InterestCategoryType
+  categoryId: ID!
+  createdAt: DateTime!
+  dependentId: ID!
+  id: ID!
+
+  """Interest level 0-100"""
+  interestLevel: Int!
+  updatedAt: DateTime!
+}
+
 type DependentType {
   dateOfBirth: DateTime
   email: String
@@ -1591,6 +1976,137 @@ type EffectiveScheduleType {
   twilightTime: String!
 }
 
+"""Response for engagement delete operations"""
+type EngagementDeleteResponse {
+  message: String!
+}
+
+"""Individual equipment item"""
+type Equipment {
+  assetNumber: String!
+  category: EquipmentCategory!
+  condition: EquipmentCondition!
+  currentAssignment: EquipmentAssignment
+  id: ID!
+  lastMaintenanceAt: DateTime
+  location: String
+  manufacturer: String
+  model: String
+  name: String!
+  nextMaintenanceAt: DateTime
+  notes: String
+  purchaseDate: DateTime
+  serialNumber: String
+  status: EquipmentStatus!
+  warrantyExpiry: DateTime
+}
+
+"""Equipment assignment to a booking or tee time player"""
+type EquipmentAssignment {
+  assignedAt: DateTime!
+  bookingNumber: String
+  conditionAtCheckout: EquipmentCondition
+  conditionAtReturn: EquipmentCondition
+  id: ID!
+  member: EquipmentAssignmentMember
+  notes: String
+  rentalFee: Float
+  returnedAt: DateTime
+}
+
+"""Member info for equipment assignment"""
+type EquipmentAssignmentMember {
+  avatarUrl: String
+  firstName: String!
+  id: ID!
+  lastName: String!
+  memberId: String!
+}
+
+type EquipmentAssignmentResponse {
+  assignment: EquipmentAssignment
+  error: String
+  success: Boolean!
+}
+
+"""Type of equipment attachment to bookings"""
+enum EquipmentAttachmentType {
+  OPTIONAL_ADDON
+  REQUIRED_RESOURCE
+}
+
+input EquipmentAvailabilityInput {
+  categoryId: ID!
+  endTime: DateTime!
+  startTime: DateTime!
+}
+
+"""Equipment category for grouping similar equipment types"""
+type EquipmentCategory {
+  attachmentType: EquipmentAttachmentType!
+  availableCount: Int!
+  code: String!
+  color: String
+  defaultRentalRate: Float
+  depositAmount: Float
+  description: String
+  equipmentCount: Int!
+  icon: String
+  id: ID!
+  isActive: Boolean!
+  name: String!
+  requiresDeposit: Boolean!
+  sortOrder: Int!
+}
+
+type EquipmentCategoryResponse {
+  category: EquipmentCategory
+  error: String
+  success: Boolean!
+}
+
+"""Physical condition of equipment"""
+enum EquipmentCondition {
+  EXCELLENT
+  FAIR
+  GOOD
+  NEEDS_REPAIR
+  OUT_OF_SERVICE
+}
+
+type EquipmentDeleteResponse {
+  error: String
+  message: String
+  success: Boolean!
+}
+
+input EquipmentFilterInput {
+  categoryId: ID
+  condition: EquipmentCondition
+  status: EquipmentStatus
+}
+
+type EquipmentReleaseResponse {
+  error: String
+  releasedCount: Int!
+  success: Boolean!
+}
+
+type EquipmentResponse {
+  equipment: Equipment
+  error: String
+  success: Boolean!
+}
+
+"""Availability status of equipment"""
+enum EquipmentStatus {
+  AVAILABLE
+  IN_USE
+  MAINTENANCE
+  RESERVED
+  RETIRED
+}
+
 """Resolution status of an exception"""
 enum ExceptionResolution {
   ACKNOWLEDGED
@@ -1678,6 +2194,21 @@ type FacilityType {
   location: String
   name: String!
   type: ResourceTypeEnum!
+}
+
+type FifoAllocationItem {
+  allocatedAmount: String!
+  balance: String!
+  dueDate: DateTime!
+  invoiceId: ID!
+  invoiceNumber: String!
+}
+
+type FifoAllocationPreview {
+  allocations: [FifoAllocationItem!]!
+  creditToAdd: String!
+  remainingPayment: String!
+  totalAllocated: String!
 }
 
 type FlightAssignment {
@@ -2003,6 +2534,27 @@ input ImportPlayersFromCSVInput {
   rows: [CSVPlayerRow!]!
 }
 
+"""Interest category for member engagement"""
+type InterestCategoryType {
+  code: String!
+  color: String
+  createdAt: DateTime!
+  description: String
+  icon: String
+  id: ID!
+  isActive: Boolean!
+  name: String!
+  sortOrder: Int!
+  updatedAt: DateTime!
+}
+
+"""Source of the interest data"""
+enum InterestSource {
+  BOOKING
+  EXPLICIT
+  INFERRED
+}
+
 type InvoiceConnection {
   edges: [InvoiceTypeEdge!]!
   pageInfo: PageInfo!
@@ -2086,6 +2638,37 @@ input JoinWaitlistInput {
   serviceId: ID
 }
 
+"""Preview of late fee calculation"""
+type LateFeePreview {
+  """Date when late fee would be applied"""
+  appliedDate: DateTime!
+
+  """Number of days overdue"""
+  daysOverdue: Int!
+
+  """Human-readable description of the late fee"""
+  description: String!
+
+  """Late fee amount in cents"""
+  feeAmount: Float!
+
+  """Whether the invoice is still within grace period"""
+  isWithinGracePeriod: Boolean!
+}
+
+input LateFeePreviewInput {
+  """Date to calculate late fee as of (defaults to today)"""
+  calculationDate: DateTime
+  invoiceId: ID!
+}
+
+"""Late fee type options"""
+enum LateFeeType {
+  FIXED
+  PERCENTAGE
+  TIERED
+}
+
 type LineItemPaymentType {
   amount: Float!
   description: String
@@ -2158,10 +2741,114 @@ type MemberAtRiskType {
   usagePercent: Float!
 }
 
+"""Member-specific billing profile with optional overrides"""
+type MemberBillingProfileType {
+  """Override cycle alignment for this member"""
+  billingAlignment: CycleAlignment
+
+  """Override billing frequency for this member"""
+  billingFrequency: BillingFrequency
+
+  """Whether billing is on hold for this member"""
+  billingHold: Boolean!
+
+  """Reason for placing billing on hold"""
+  billingHoldReason: String
+
+  """Date until which billing is on hold"""
+  billingHoldUntil: DateTime
+
+  """Override billing timing for this member"""
+  billingTiming: BillingTiming
+
+  """When the profile was created"""
+  createdAt: DateTime!
+
+  """Current billing period end date"""
+  currentPeriodEnd: DateTime
+
+  """Current billing period start date"""
+  currentPeriodStart: DateTime
+
+  """Custom billing day of month (1-28)"""
+  customBillingDay: Int
+
+  """Custom grace period in days"""
+  customGracePeriod: Int
+
+  """Whether this member is exempt from late fees"""
+  customLateFeeExempt: Boolean!
+  id: ID!
+
+  """Last billing date processed"""
+  lastBillingDate: DateTime
+
+  """Associated member information"""
+  member: MemberBillingSummary
+  memberId: ID!
+
+  """Next scheduled billing date"""
+  nextBillingDate: DateTime
+
+  """Internal notes about this billing profile"""
+  notes: String
+
+  """Override proration method for this member"""
+  prorationOverride: ProrationMethod
+
+  """When the profile was last updated"""
+  updatedAt: DateTime!
+}
+
+"""Minimal member summary for billing contexts"""
+type MemberBillingSummary {
+  firstName: String!
+  id: ID!
+  lastName: String!
+
+  """Member ID number"""
+  memberId: String!
+}
+
+"""Member communication preferences"""
+type MemberCommunicationPrefsType {
+  createdAt: DateTime!
+  emailPromotions: Boolean!
+  id: ID!
+  memberId: ID!
+  pushNotifications: Boolean!
+  smsPromotions: Boolean!
+  unsubscribedCategories: [String!]!
+  updatedAt: DateTime!
+}
+
 type MemberConnection {
   edges: [MemberTypeEdge!]!
   pageInfo: PageInfo!
   totalCount: Int!
+}
+
+"""Single interest entry for a member"""
+input MemberInterestInput {
+  categoryId: ID!
+  interestLevel: Int!
+  source: InterestSource
+}
+
+"""Member interest in an activity category"""
+type MemberInterestType {
+  activityCount: Int!
+  category: InterestCategoryType
+  categoryId: ID!
+  createdAt: DateTime!
+  id: ID!
+
+  """Interest level 0-100"""
+  interestLevel: Int!
+  lastActivityAt: DateTime
+  memberId: ID!
+  source: InterestSource!
+  updatedAt: DateTime!
 }
 
 type MemberMinimumSpend {
@@ -2423,20 +3110,33 @@ type Mutation {
   """Add a new stored payment method"""
   addPaymentMethod(input: AddStoredPaymentInput!): StoredPaymentMethod!
 
+  """Apply credit note to member balance"""
+  applyCreditNoteToBalance(id: ID!): CreditNoteGraphQLType!
+
+  """Apply credit note to a specific invoice"""
+  applyCreditNoteToInvoice(id: ID!, input: ApplyCreditNoteInput!): CreditNoteGraphQLType!
+
   """Apply a discount to a line item or transaction"""
   applyDiscount(input: ApplyDiscountInput!): ApplyDiscountResultType!
 
   """Apply a discount using a promo code"""
   applyDiscountByCode(input: ApplyDiscountByCodeInput!): ApplyDiscountResultType!
 
+  """Approve a credit note"""
+  approveCreditNote(id: ID!): CreditNoteGraphQLType!
+
   """Approve a pending discount that requires manager approval"""
   approveDiscount(input: ApproveDiscountInput!): AppliedDiscountType!
+  assignEquipment(input: AssignEquipmentInput!): EquipmentAssignmentResponse!
 
   """Auto-assign players to flights"""
   assignFlights(id: ID!, interval: Float! = 8): GroupBookingFlightsResponse!
 
   """Assign a template to an outlet"""
   assignPOSTemplate(input: AssignTemplateInput!): AssignTemplateMutationResponse!
+
+  """Batch settle invoices using FIFO allocation"""
+  batchSettleInvoices(input: BatchSettlementInput!): BatchSettlementResult!
 
   """Remove multiple line items"""
   bulkRemoveLineItems(input: BulkRemoveLineItemsInput!): BulkRemoveResultType!
@@ -2532,6 +3232,9 @@ type Mutation {
   """Create a course schedule"""
   createCourseSchedule(input: CreateScheduleInput!): ScheduleMutationResponse!
 
+  """Create a new credit note"""
+  createCreditNote(input: CreateCreditNoteInput!): CreditNoteGraphQLType!
+
   """Create a credit limit override (temporary or permanent increase)"""
   createCreditOverride(input: CreateCreditOverrideInput!): CreditLimitOverrideType!
 
@@ -2543,6 +3246,8 @@ type Mutation {
 
   """Create a new discount"""
   createDiscount(input: CreateDiscountInput!): DiscountGraphQLType!
+  createEquipment(input: CreateEquipmentInput!): EquipmentResponse!
+  createEquipmentCategory(input: CreateEquipmentCategoryInput!): EquipmentCategoryResponse!
 
   """Create a new facility"""
   createFacility(input: CreateFacilityInput!): FacilityResponseType!
@@ -2553,6 +3258,9 @@ type Mutation {
   """Create a group booking"""
   createGroupBooking(input: CreateGroupBookingInput!): GroupBookingMutationResponse!
 
+  """Create a new interest category"""
+  createInterestCategory(input: CreateInterestCategoryInput!): InterestCategoryType!
+
   """Create a new invoice"""
   createInvoice(input: CreateInvoiceInput!): InvoiceType!
 
@@ -2561,6 +3269,9 @@ type Mutation {
 
   """Create a new member"""
   createMember(input: CreateMemberInput!): MemberType!
+
+  """Create a billing profile for a member with custom settings"""
+  createMemberBillingProfile(input: CreateMemberBillingProfileInput!): MemberBillingProfileType!
 
   """Create a new minimum spend requirement"""
   createMinimumSpendRequirement(input: CreateRequirementInput!): MinimumSpendRequirement!
@@ -2627,6 +3338,8 @@ type Mutation {
 
   """Delete a discount (soft delete)"""
   deleteDiscount(id: ID!): Boolean!
+  deleteEquipment(id: ID!): EquipmentDeleteResponse!
+  deleteEquipmentCategory(id: ID!): EquipmentDeleteResponse!
 
   """Delete a facility"""
   deleteFacility(id: ID!): DeleteResponseType!
@@ -2636,6 +3349,9 @@ type Mutation {
 
   """Delete a draft group booking"""
   deleteGroupBooking(id: ID!): GroupBookingMutationResponse!
+
+  """Delete an interest category"""
+  deleteInterestCategory(id: ID!): EngagementDeleteResponse!
 
   """Delete a draft lottery"""
   deleteLottery(id: ID!): LotteryMutationResponse!
@@ -2763,9 +3479,13 @@ type Mutation {
 
   """Manually regenerate line items for a tee time"""
   regenerateLineItems(teeTimeId: ID!): Boolean!
+  releaseEquipmentForBooking(bookingId: ID!): EquipmentReleaseResponse!
 
   """Remove an applied discount"""
   removeAppliedDiscount(appliedDiscountId: ID!): Boolean!
+
+  """Remove a specific interest from a dependent"""
+  removeDependentInterest(categoryId: ID!, dependentId: ID!): EngagementDeleteResponse!
 
   """Remove entry from waitlist"""
   removeFromWaitlist(input: WaitlistActionInput!): WaitlistResponseType!
@@ -2775,6 +3495,9 @@ type Mutation {
 
   """Remove a line item from cart"""
   removeLineItem(input: RemoveLineItemInput!): RemoveLineItemResultType!
+
+  """Remove a specific interest from a member"""
+  removeMemberInterest(categoryId: ID!, memberId: ID!): EngagementDeleteResponse!
 
   """Remove minimum spend exemption from a member"""
   removeMinimumSpendExemption(memberSpendId: ID!): MemberMinimumSpend!
@@ -2811,6 +3534,7 @@ type Mutation {
 
   """Retry a failed auto-pay attempt"""
   retryAutoPayAttempt(attemptId: ID!): AutoPayResult!
+  returnEquipment(input: ReturnEquipmentInput!): EquipmentAssignmentResponse!
 
   """Revert a credit limit override"""
   revertCreditOverride(overrideId: ID!): Boolean!
@@ -2826,6 +3550,12 @@ type Mutation {
 
   """Set a payment method as default"""
   setDefaultPaymentMethod(id: ID!): StoredPaymentMethod!
+
+  """Set interests for a dependent (upserts)"""
+  setDependentInterests(input: SetDependentInterestsInput!): [DependentInterestType!]!
+
+  """Set interests for a member (upserts)"""
+  setMemberInterests(input: SetMemberInterestsInput!): [MemberInterestType!]!
 
   """Set role-specific button overrides for an outlet"""
   setPOSRoleOverrides(input: POSRoleOverridesInput!, outletId: ID!): SetRoleOverridesMutationResponse!
@@ -2878,6 +3608,9 @@ type Mutation {
   """Update check-in policy settings"""
   updateCheckInPolicy(input: CheckInPolicyInput!): CheckInSettingsType!
 
+  """Update club-wide billing configuration settings"""
+  updateClubBillingSettings(input: UpdateClubBillingSettingsInput!): ClubBillingSettingsType!
+
   """Update a course schedule"""
   updateCourseSchedule(id: ID!, input: UpdateScheduleInput!): ScheduleMutationResponse!
 
@@ -2886,6 +3619,9 @@ type Mutation {
 
   """Update an existing discount"""
   updateDiscount(id: ID!, input: UpdateDiscountInput!): DiscountGraphQLType!
+  updateEquipment(input: UpdateEquipmentInput!): EquipmentResponse!
+  updateEquipmentCategory(input: UpdateEquipmentCategoryInput!): EquipmentCategoryResponse!
+  updateEquipmentStatus(input: UpdateEquipmentStatusInput!): EquipmentResponse!
 
   """Update an existing facility"""
   updateFacility(input: UpdateFacilityInput!): FacilityResponseType!
@@ -2896,6 +3632,9 @@ type Mutation {
   """Update a group booking"""
   updateGroupBooking(id: ID!, input: UpdateGroupBookingInput!): GroupBookingMutationResponse!
 
+  """Update an existing interest category"""
+  updateInterestCategory(id: ID!, input: UpdateInterestCategoryInput!): InterestCategoryType!
+
   """Update line item quantity"""
   updateLineItemQuantity(input: UpdateLineItemQuantityInput!): UpdateQuantityResultType!
 
@@ -2904,6 +3643,12 @@ type Mutation {
 
   """Update an existing member"""
   updateMember(id: ID!, input: UpdateMemberInput!): MemberType!
+
+  """Update billing profile for a member"""
+  updateMemberBillingProfile(input: UpdateMemberBillingProfileInput!, memberId: ID!): MemberBillingProfileType!
+
+  """Update communication preferences for a member"""
+  updateMemberCommunicationPrefs(input: UpdateCommunicationPrefsInput!): MemberCommunicationPrefsType!
 
   """Update credit limit settings for a member"""
   updateMemberCreditSettings(input: UpdateCreditSettingsInput!): Boolean!
@@ -2991,6 +3736,9 @@ type Mutation {
 
   """Verify a sub-account PIN"""
   verifySubAccountPin(input: VerifyPinInput!): PinVerificationResult!
+
+  """Void a credit note"""
+  voidCreditNote(id: ID!, input: VoidCreditNoteInput!): CreditNoteGraphQLType!
 
   """Void an invoice"""
   voidInvoice(id: ID!, input: VoidInvoiceInput!): InvoiceType!
@@ -3511,6 +4259,40 @@ type ProductVariant {
   stockQuantity: Int
 }
 
+"""Proration calculation method"""
+enum ProrationMethod {
+  DAILY
+  MONTHLY
+  NONE
+}
+
+"""Preview of proration calculation"""
+type ProrationPreview {
+  """Total days in the billing period"""
+  daysInPeriod: Int!
+
+  """Number of days being prorated"""
+  daysProrated: Int!
+
+  """Human-readable description of the proration"""
+  description: String!
+
+  """Prorated amount in cents"""
+  proratedAmount: Float!
+
+  """Proration factor (0-1)"""
+  prorationFactor: Float!
+}
+
+input ProrationPreviewInput {
+  """Effective date for the prorated period"""
+  effectiveDate: DateTime!
+
+  """Full period amount before proration"""
+  fullPeriodAmount: Float!
+  memberId: ID!
+}
+
 type Query {
   """Get all active discounts for POS use"""
   activeDiscounts: [DiscountGraphQLType!]!
@@ -3581,6 +4363,9 @@ type Query {
   """Check if a sub-account can make a transaction"""
   checkSubAccountLimit(input: CheckLimitInput!): SubAccountLimitCheck!
 
+  """Get club-wide billing configuration settings"""
+  clubBillingSettings: ClubBillingSettingsType!
+
   """Get club golf settings including cart, rental, and caddy policies"""
   clubGolfSettings: ClubGolfSettingsType
 
@@ -3589,6 +4374,12 @@ type Query {
 
   """Get all golf courses"""
   courses: [GolfCourseType!]!
+
+  """Get a single credit note by ID"""
+  creditNote(id: ID!): CreditNoteGraphQLType!
+
+  """Get paginated list of credit notes"""
+  creditNotes(after: String, endDate: DateTime, first: Int = 10, memberId: ID, skip: Int, startDate: DateTime, status: CreditNoteStatus): CreditNoteConnection!
 
   """Get or create current period spend for a member and requirement"""
   currentMemberSpend(memberId: ID!, requirementId: ID!): MemberMinimumSpend!
@@ -3599,6 +4390,9 @@ type Query {
   """Get daily check-in report for a course"""
   dailyCheckInReport(input: DailyReportInput!): DailyCheckInReportType!
 
+  """Get all interests for a dependent"""
+  dependentInterests(dependentId: ID!): [DependentInterestType!]!
+
   """Get a single discount by ID"""
   discount(id: ID!): DiscountGraphQLType
 
@@ -3607,6 +4401,11 @@ type Query {
 
   """Get all discounts for the current club with filtering and pagination"""
   discounts(after: String, first: Int = 10, isActive: Boolean, scope: DiscountScope, search: String, skip: Int, sortBy: String = "name", sortOrder: String = "asc", type: DiscountType): DiscountConnection!
+  equipment(filter: EquipmentFilterInput): [Equipment!]!
+  equipmentAvailability(input: EquipmentAvailabilityInput!): [Equipment!]!
+  equipmentCategories: [EquipmentCategory!]!
+  equipmentCategory(id: ID!): EquipmentCategory
+  equipmentItem(id: ID!): Equipment
 
   """Get list of facilities"""
   facilities(filter: FacilityFilterInput): [FacilityType!]!
@@ -3645,6 +4444,15 @@ type Query {
   """Check if a tee time has a cart draft"""
   hasDraft(teeTimeId: ID!): Boolean!
 
+  """Get all interest categories for the club"""
+  interestCategories(
+    """Filter by active status"""
+    isActive: Boolean
+  ): [InterestCategoryType!]!
+
+  """Get a single interest category by ID"""
+  interestCategory(id: ID!): InterestCategoryType!
+
   """Get a single invoice by ID"""
   invoice(id: ID!): InvoiceType!
 
@@ -3675,6 +4483,12 @@ type Query {
   """Get auto-pay settings for a member"""
   memberAutoPaySetting(memberId: ID!): AutoPaySetting
 
+  """Get billing profile for a specific member"""
+  memberBillingProfile(memberId: ID!): MemberBillingProfileType
+
+  """Get communication preferences for a member"""
+  memberCommunicationPrefs(memberId: ID!): MemberCommunicationPrefsType!
+
   """Get credit limit override history for a member"""
   memberCreditOverrideHistory(limit: Int = 10, memberId: ID!): [CreditLimitOverrideType!]!
 
@@ -3689,6 +4503,9 @@ type Query {
 
   """Get member dependents"""
   memberDependents(memberId: ID!): [DependentType!]!
+
+  """Get all interests for a member"""
+  memberInterests(memberId: ID!): [MemberInterestType!]!
 
   """Get a member minimum spend record by ID"""
   memberMinimumSpend(id: ID!): MemberMinimumSpend
@@ -3766,6 +4583,20 @@ type Query {
   """Get all POS templates for the current club"""
   posTemplates: [POSTemplateGraphQLType!]!
 
+  """Preview FIFO allocation for a payment amount"""
+  previewFifoAllocation(accountId: ID!, accountType: String!, paymentAmount: Float!): FifoAllocationPreview!
+
+  """Preview late fee calculation for an overdue invoice"""
+  previewLateFee(input: LateFeePreviewInput!): LateFeePreview!
+
+  """
+  Preview the next billing period dates for a member based on their configuration
+  """
+  previewNextBillingPeriod(memberId: ID!): BillingPeriodPreview!
+
+  """Preview prorated amount for a member joining mid-cycle"""
+  previewProration(input: ProrationPreviewInput!): ProrationPreview!
+
   """Get all pro shop categories for the current club"""
   proShopCategories: [ProShopCategoryType!]!
 
@@ -3795,6 +4626,9 @@ type Query {
 
   """Get HTML template for a receipt"""
   receiptHTML(playerId: ID!, teeTimeId: ID!): String!
+
+  """Search AR accounts (Members + City Ledger)"""
+  searchArAccounts(accountTypes: [String!], limit: Float = 10, search: String!): [ArAccountSearchResult!]!
 
   """Search for caddies by name or caddy number"""
   searchCaddies(courseId: ID, search: String): [CaddyType!]!
@@ -4041,6 +4875,12 @@ enum ResourceTypeEnum {
   STUDIO
 }
 
+input ReturnEquipmentInput {
+  assignmentId: ID!
+  conditionAtReturn: EquipmentCondition!
+  notes: String
+}
+
 input RoleRulesInput {
   allowedRoles: [String!]
   deniedRoles: [String!]
@@ -4108,6 +4948,18 @@ type ServiceVariationType {
   name: String!
   priceModifier: Float!
   priceType: String!
+}
+
+"""Input for setting dependent interests"""
+input SetDependentInterestsInput {
+  dependentId: ID!
+  interests: [DependentInterestInput!]!
+}
+
+"""Input for setting member interests"""
+input SetMemberInterestsInput {
+  interests: [MemberInterestInput!]!
+  memberId: ID!
 }
 
 type SetRoleOverridesMutationResponse {
@@ -4861,6 +5713,52 @@ input UpdateCashDrawerInput {
   name: String
 }
 
+input UpdateClubBillingSettingsInput {
+  """Automatically apply late fees when due"""
+  autoApplyLateFee: Boolean
+  defaultAlignment: CycleAlignment
+
+  """Default billing day (1-28)"""
+  defaultBillingDay: Int
+  defaultFrequency: BillingFrequency
+  defaultTiming: BillingTiming
+
+  """Grace period days after due date (0-60)"""
+  gracePeriodDays: Int
+
+  """Days after invoice for payment due (1-60)"""
+  invoiceDueDays: Int
+
+  """Days before billing to generate invoices (0-30)"""
+  invoiceGenerationLead: Int
+
+  """Fixed late fee amount"""
+  lateFeeAmount: Float
+
+  """Late fee percentage (0-100)"""
+  lateFeePercentage: Float
+  lateFeeType: LateFeeType
+
+  """Maximum late fee cap"""
+  maxLateFee: Float
+
+  """Prorate charges for membership changes mid-cycle"""
+  prorateChanges: Boolean
+
+  """Prorate charges for new members mid-cycle"""
+  prorateNewMembers: Boolean
+  prorationMethod: ProrationMethod
+}
+
+"""Input for updating communication preferences"""
+input UpdateCommunicationPrefsInput {
+  emailPromotions: Boolean
+  memberId: ID!
+  pushNotifications: Boolean
+  smsPromotions: Boolean
+  unsubscribedCategories: [String!]
+}
+
 input UpdateCreditSettingsInput {
   creditAlertThreshold: Float
   creditBlockEnabled: Boolean
@@ -4890,6 +5788,40 @@ input UpdateDiscountInput {
   type: DiscountType
   validity: DiscountValidityInput
   value: Float
+}
+
+input UpdateEquipmentCategoryInput {
+  attachmentType: EquipmentAttachmentType
+  color: String
+  defaultRentalRate: Float
+  depositAmount: Float
+  description: String
+  icon: String
+  id: ID!
+  isActive: Boolean
+  name: String
+  requiresDeposit: Boolean
+  sortOrder: Int
+}
+
+input UpdateEquipmentInput {
+  condition: EquipmentCondition
+  id: ID!
+  lastMaintenanceAt: DateTime
+  location: String
+  manufacturer: String
+  model: String
+  name: String
+  nextMaintenanceAt: DateTime
+  notes: String
+  purchaseDate: DateTime
+  serialNumber: String
+  warrantyExpiry: DateTime
+}
+
+input UpdateEquipmentStatusInput {
+  id: ID!
+  status: EquipmentStatus!
 }
 
 input UpdateFacilityInput {
@@ -4924,6 +5856,16 @@ input UpdateGroupBookingInput {
   status: GroupBookingStatus
 }
 
+"""Input for updating an interest category"""
+input UpdateInterestCategoryInput {
+  color: String
+  description: String
+  icon: String
+  isActive: Boolean
+  name: String
+  sortOrder: Int
+}
+
 input UpdateLineItemQuantityInput {
   lineItemId: ID!
   quantity: Int!
@@ -4939,6 +5881,37 @@ input UpdateLotteryInput {
   status: LotteryStatus
   timeRangeEnd: String
   timeRangeStart: String
+}
+
+input UpdateMemberBillingProfileInput {
+  billingAlignment: CycleAlignment
+  billingFrequency: BillingFrequency
+
+  """Put billing on hold"""
+  billingHold: Boolean
+
+  """Reason for billing hold"""
+  billingHoldReason: String
+
+  """Date until billing hold expires"""
+  billingHoldUntil: DateTime
+  billingTiming: BillingTiming
+
+  """Custom billing day (1-28)"""
+  customBillingDay: Int
+
+  """Custom grace period in days"""
+  customGracePeriod: Int
+
+  """Exempt from late fees"""
+  customLateFeeExempt: Boolean
+
+  """Next scheduled billing date"""
+  nextBillingDate: DateTime
+
+  """Internal notes about billing profile"""
+  notes: String
+  prorationOverride: ProrationMethod
 }
 
 input UpdateMemberInput {
@@ -5303,6 +6276,10 @@ input VisibilityRulesInput {
   memberOnly: Boolean
   roleRules: RoleRulesInput
   timeRules: [TimeRuleInput!]
+}
+
+input VoidCreditNoteInput {
+  reason: String!
 }
 
 input VoidInvoiceInput {

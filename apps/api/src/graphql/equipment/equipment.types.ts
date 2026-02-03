@@ -66,6 +66,54 @@ export class EquipmentCategoryType {
   availableCount: number;
 }
 
+@ObjectType('EquipmentAssignmentMember', { description: 'Member info for equipment assignment' })
+export class EquipmentAssignmentMemberType {
+  @Field(() => ID)
+  id: string;
+
+  @Field()
+  memberId: string;
+
+  @Field()
+  firstName: string;
+
+  @Field()
+  lastName: string;
+
+  @Field({ nullable: true })
+  avatarUrl?: string;
+}
+
+@ObjectType('EquipmentAssignment', { description: 'Equipment assignment to a booking or tee time player' })
+export class EquipmentAssignmentType {
+  @Field(() => ID)
+  id: string;
+
+  @Field(() => EquipmentAssignmentMemberType, { nullable: true })
+  member?: EquipmentAssignmentMemberType;
+
+  @Field({ nullable: true })
+  bookingNumber?: string;
+
+  @Field()
+  assignedAt: Date;
+
+  @Field({ nullable: true })
+  returnedAt?: Date;
+
+  @Field(() => Float, { nullable: true })
+  rentalFee?: number;
+
+  @Field(() => EquipmentCondition, { nullable: true })
+  conditionAtCheckout?: EquipmentCondition;
+
+  @Field(() => EquipmentCondition, { nullable: true })
+  conditionAtReturn?: EquipmentCondition;
+
+  @Field({ nullable: true })
+  notes?: string;
+}
+
 @ObjectType('Equipment', { description: 'Individual equipment item' })
 export class EquipmentType {
   @Field(() => ID)
@@ -115,57 +163,6 @@ export class EquipmentType {
 
   @Field(() => EquipmentAssignmentType, { nullable: true })
   currentAssignment?: EquipmentAssignmentType;
-}
-
-@ObjectType('EquipmentAssignmentMember', { description: 'Member info for equipment assignment' })
-export class EquipmentAssignmentMemberType {
-  @Field(() => ID)
-  id: string;
-
-  @Field()
-  memberId: string;
-
-  @Field()
-  firstName: string;
-
-  @Field()
-  lastName: string;
-
-  @Field({ nullable: true })
-  avatarUrl?: string;
-}
-
-@ObjectType('EquipmentAssignment', { description: 'Equipment assignment to a booking or tee time player' })
-export class EquipmentAssignmentType {
-  @Field(() => ID)
-  id: string;
-
-  @Field(() => EquipmentType, { nullable: true })
-  equipment?: EquipmentType;
-
-  @Field(() => EquipmentAssignmentMemberType, { nullable: true })
-  member?: EquipmentAssignmentMemberType;
-
-  @Field({ nullable: true })
-  bookingNumber?: string;
-
-  @Field()
-  assignedAt: Date;
-
-  @Field({ nullable: true })
-  returnedAt?: Date;
-
-  @Field(() => Float, { nullable: true })
-  rentalFee?: number;
-
-  @Field(() => EquipmentCondition, { nullable: true })
-  conditionAtCheckout?: EquipmentCondition;
-
-  @Field(() => EquipmentCondition, { nullable: true })
-  conditionAtReturn?: EquipmentCondition;
-
-  @Field({ nullable: true })
-  notes?: string;
 }
 
 // Response Types

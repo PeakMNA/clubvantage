@@ -346,7 +346,6 @@ export class EquipmentResolver {
 
     return {
       id: a.id,
-      equipment: a.equipment ? this.transformEquipment({ ...a.equipment, assignments: [] }) : undefined,
       member: member
         ? {
             id: member.id,
