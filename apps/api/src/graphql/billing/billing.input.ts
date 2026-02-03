@@ -8,9 +8,10 @@ import {
   IsArray,
   ValidateNested,
   Min,
+  IsDate,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { InvoiceStatus, PaymentMethod, CreditNoteType, CreditNoteReason, CreditNoteStatus } from './billing.types';
+import { InvoiceStatus, PaymentMethod, CreditNoteType, CreditNoteReason, CreditNoteStatus, ArAccountType } from './billing.types';
 import { PaginationArgs } from '../common/pagination';
 
 @InputType()
@@ -325,4 +326,61 @@ export class CreditNotesQueryArgs extends PaginationArgs {
   @Field({ nullable: true })
   @IsOptional()
   endDate?: Date;
+}
+
+// Batch Settlement Input - for FIFO-based payment settlement
+@InputType()
+export class BatchSettlementInput {
+  @Field(() => ID)
+  @IsUUID()
+  accountId: string;
+
+  @Field(() => ArAccountType)
+  @IsEnum(ArAccountType)
+  accountType: ArAccountType;
+
+  @Field(() => Float)
+  @IsNumber()
+  @Min(0.01)
+  paymentAmount: number;
+
+  @Field(() => PaymentMethod)
+  @IsEnum(PaymentMethod)
+  method: PaymentMethod;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  referenceNumber?: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  paymentDate?: Date;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  notes?: string;
+
+  @Field({ nullable: true, defaultValue: true })
+  @IsOptional()
+  useFifo?: boolean; // If true, auto-allocate using FIFO; if false, add all to credit
+}
+
+// Statement generation input
+@InputType()
+export class GenerateStatementInput {
+  @Field(() => ID)
+  @IsUUID()
+  memberId: string;
+
+  @Field()
+  @Type(() => Date)
+  @IsDate()
+  startDate: Date;
+
+  @Field()
+  @Type(() => Date)
+  @IsDate()
+  endDate: Date;
 }

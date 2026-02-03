@@ -1,6 +1,8 @@
 import { Resolver, Query, Mutation, Args, ID } from '@nestjs/graphql';
 import { UseGuards } from '@nestjs/common';
 import { BillingService } from '@/modules/billing/billing.service';
+import { CityLedgerService } from '@/modules/billing/city-ledger.service';
+import { AllocationService } from '@/modules/billing/allocation.service';
 import { PrismaService } from '@/shared/prisma/prisma.service';
 import { GqlAuthGuard } from '../guards/gql-auth.guard';
 import { GqlCurrentUser } from '../common/decorators/gql-current-user.decorator';
@@ -22,6 +24,14 @@ import {
   CreditNoteLineItemType,
   CreditNoteApplicationType,
   CreditNoteStatus,
+  ArAccountSearchResult,
+  ArAccountType,
+  CityLedgerType,
+  CityLedgerConnection,
+  FifoAllocationPreview,
+  FifoAllocationItem,
+  BatchSettlementResult,
+  StatementType,
 } from './billing.types';
 import {
   CreateInvoiceInput,
@@ -32,6 +42,8 @@ import {
   CreditNotesQueryArgs,
   ApplyCreditNoteInput,
   VoidCreditNoteInput,
+  BatchSettlementInput,
+  GenerateStatementInput,
 } from './billing.input';
 import { encodeCursor } from '../common/pagination';
 
@@ -40,6 +52,8 @@ import { encodeCursor } from '../common/pagination';
 export class BillingResolver {
   constructor(
     private readonly billingService: BillingService,
+    private readonly cityLedgerService: CityLedgerService,
+    private readonly allocationService: AllocationService,
     private readonly prisma: PrismaService,
   ) {}
 
@@ -270,6 +284,9 @@ export class BillingResolver {
     }>();
 
     for (const invoice of outstandingInvoices) {
+      // Skip invoices without a member (city ledger invoices)
+      if (!invoice.memberId || !invoice.member) continue;
+
       const existing = memberAging.get(invoice.memberId);
       const balance = invoice.balanceDue.toNumber();
       const agingStatus = getAgingStatus(invoice.dueDate);
@@ -474,6 +491,203 @@ export class BillingResolver {
     };
   }
 
+  @Query(() => [ArAccountSearchResult], { name: 'searchArAccounts', description: 'Search AR accounts (Members + City Ledger)' })
+  async searchArAccounts(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('search') search: string,
+    @Args('accountTypes', { type: () => [String], nullable: true }) accountTypes?: string[],
+    @Args('limit', { nullable: true, defaultValue: 10 }) limit?: number,
+  ): Promise<ArAccountSearchResult[]> {
+    const results: ArAccountSearchResult[] = [];
+    const now = new Date();
+
+    // Determine which account types to search
+    const searchMembers = !accountTypes || accountTypes.length === 0 || accountTypes.includes('MEMBER');
+    const searchCityLedger = !accountTypes || accountTypes.length === 0 || accountTypes.includes('CITY_LEDGER');
+
+    // Search members
+    if (searchMembers) {
+      const members = await this.prisma.member.findMany({
+        where: {
+          clubId: user.tenantId,
+          isActive: true,
+          OR: [
+            { memberId: { contains: search, mode: 'insensitive' } },
+            { firstName: { contains: search, mode: 'insensitive' } },
+            { lastName: { contains: search, mode: 'insensitive' } },
+            { email: { contains: search, mode: 'insensitive' } },
+            { phone: { contains: search, mode: 'insensitive' } },
+          ],
+        },
+        include: {
+          membershipType: true,
+          dependents: { where: { isActive: true } },
+          invoices: {
+            where: {
+              deletedAt: null,
+              balanceDue: { gt: 0 },
+            },
+            orderBy: { dueDate: 'asc' },
+          },
+        },
+        take: limit,
+      });
+
+      for (const member of members) {
+        // Calculate aging status
+        let agingStatus = 'current';
+        if (member.status === 'SUSPENDED') {
+          agingStatus = 'suspended';
+        } else if (member.invoices.length > 0) {
+          const oldestInvoice = member.invoices[0];
+          const diffDays = Math.floor((now.getTime() - oldestInvoice.dueDate.getTime()) / (24 * 60 * 60 * 1000));
+          if (diffDays >= 90) agingStatus = '90';
+          else if (diffDays >= 60) agingStatus = '60';
+          else if (diffDays >= 30) agingStatus = '30';
+        }
+
+        results.push({
+          id: member.id,
+          accountType: ArAccountType.MEMBER,
+          accountNumber: member.memberId,
+          accountName: `${member.firstName} ${member.lastName}`,
+          subType: member.membershipType?.name,
+          outstandingBalance: member.outstandingBalance?.toString() || '0',
+          creditBalance: member.creditBalance?.toString() || '0',
+          invoiceCount: member.invoices.length,
+          agingStatus,
+          photoUrl: member.avatarUrl ?? undefined,
+          dependentCount: member.dependents.length,
+        });
+      }
+    }
+
+    // Search city ledger accounts
+    if (searchCityLedger) {
+      const cityLedgers = await this.cityLedgerService.search(user.tenantId, search, limit);
+
+      for (const cl of cityLedgers) {
+        // Get invoice count
+        const invoiceCount = await this.prisma.invoice.count({
+          where: {
+            cityLedgerId: cl.id,
+            deletedAt: null,
+            balanceDue: { gt: 0 },
+          },
+        });
+
+        // Get oldest invoice for aging
+        const oldestInvoice = await this.prisma.invoice.findFirst({
+          where: {
+            cityLedgerId: cl.id,
+            deletedAt: null,
+            balanceDue: { gt: 0 },
+          },
+          orderBy: { dueDate: 'asc' },
+        });
+
+        let agingStatus = 'current';
+        if (cl.status === 'SUSPENDED') {
+          agingStatus = 'suspended';
+        } else if (oldestInvoice) {
+          const diffDays = Math.floor((now.getTime() - oldestInvoice.dueDate.getTime()) / (24 * 60 * 60 * 1000));
+          if (diffDays >= 90) agingStatus = '90';
+          else if (diffDays >= 60) agingStatus = '60';
+          else if (diffDays >= 30) agingStatus = '30';
+        }
+
+        results.push({
+          id: cl.id,
+          accountType: ArAccountType.CITY_LEDGER,
+          accountNumber: cl.accountNumber,
+          accountName: cl.accountName,
+          subType: cl.accountType,
+          outstandingBalance: cl.outstandingBalance?.toString() || '0',
+          creditBalance: cl.creditBalance?.toString() || '0',
+          invoiceCount,
+          agingStatus,
+          photoUrl: undefined,
+          dependentCount: undefined,
+        });
+      }
+    }
+
+    // Sort by account name and limit total results
+    results.sort((a, b) => a.accountName.localeCompare(b.accountName));
+    return results.slice(0, limit || 10);
+  }
+
+  @Query(() => FifoAllocationPreview, { name: 'previewFifoAllocation', description: 'Preview FIFO allocation for a payment amount' })
+  async previewFifoAllocation(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('accountId', { type: () => ID }) accountId: string,
+    @Args('accountType', { type: () => String }) accountType: string,
+    @Args('paymentAmount') paymentAmount: number,
+  ): Promise<FifoAllocationPreview> {
+    // Get outstanding invoices sorted by due date (FIFO)
+    const whereClause: any = {
+      clubId: user.tenantId,
+      deletedAt: null,
+      status: { in: ['SENT', 'PARTIALLY_PAID', 'OVERDUE'] },
+      balanceDue: { gt: 0 },
+    };
+
+    if (accountType === 'MEMBER') {
+      whereClause.memberId = accountId;
+    } else {
+      whereClause.cityLedgerId = accountId;
+    }
+
+    const invoices = await this.prisma.invoice.findMany({
+      where: whereClause,
+      orderBy: { dueDate: 'asc' },
+    });
+
+    // Calculate FIFO allocation
+    const allocations: FifoAllocationItem[] = [];
+    let remainingPayment = paymentAmount;
+
+    for (const invoice of invoices) {
+      if (remainingPayment <= 0) break;
+
+      const balance = invoice.balanceDue.toNumber();
+      const allocatedAmount = Math.min(remainingPayment, balance);
+
+      allocations.push({
+        invoiceId: invoice.id,
+        invoiceNumber: invoice.invoiceNumber,
+        dueDate: invoice.dueDate,
+        balance: balance.toString(),
+        allocatedAmount: allocatedAmount.toString(),
+      });
+
+      remainingPayment -= allocatedAmount;
+    }
+
+    const totalAllocated = paymentAmount - remainingPayment;
+    const creditToAdd = Math.max(0, remainingPayment);
+
+    return {
+      allocations,
+      totalAllocated: totalAllocated.toString(),
+      remainingPayment: remainingPayment.toString(),
+      creditToAdd: creditToAdd.toString(),
+    };
+  }
+
+  @Query(() => StatementType, { name: 'generateStatement', description: 'Generate a member statement for a date range' })
+  async generateStatement(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('input') input: GenerateStatementInput,
+  ): Promise<StatementType> {
+    return this.billingService.generateStatement(
+      user.tenantId,
+      input.memberId,
+      input.startDate,
+      input.endDate,
+    );
+  }
+
   @Mutation(() => InvoiceType, { name: 'createInvoice', description: 'Create a new invoice' })
   async createInvoice(
     @GqlCurrentUser() user: JwtPayload,
@@ -541,6 +755,67 @@ export class BillingResolver {
       user.email,
     );
     return this.transformPayment(payment);
+  }
+
+  @Mutation(() => BatchSettlementResult, { name: 'batchSettleInvoices', description: 'Batch settle invoices using FIFO allocation' })
+  async batchSettleInvoices(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('input') input: BatchSettlementInput,
+  ): Promise<BatchSettlementResult> {
+    const { accountId, accountType, paymentAmount, method, referenceNumber, paymentDate, notes, useFifo } = input;
+
+    // Convert ArAccountType to string for service
+    const accountTypeStr = accountType === ArAccountType.MEMBER ? 'MEMBER' : 'CITY_LEDGER';
+
+    // Get outstanding invoices for FIFO allocation
+    const invoices = await this.allocationService.getOutstandingInvoices(
+      user.tenantId,
+      accountId,
+      accountTypeStr,
+    );
+
+    // Calculate FIFO allocation if enabled, otherwise add all to credit
+    let allocations: { invoiceId: string; allocatedAmount: number }[] = [];
+    if (useFifo !== false && invoices.length > 0) {
+      const fifoResult = this.allocationService.calculateFifoAllocation(
+        invoices.map(inv => ({ id: inv.id, balanceDue: inv.balanceDue })),
+        paymentAmount,
+      );
+      allocations = fifoResult.allocations;
+    }
+
+    // Apply allocations
+    const result = await this.allocationService.applyAllocations(
+      user.tenantId,
+      accountId,
+      accountTypeStr,
+      paymentAmount,
+      method,
+      allocations,
+      {
+        referenceNumber,
+        paymentDate,
+        notes,
+        userId: user.sub,
+        userEmail: user.email,
+      },
+    );
+
+    return {
+      paymentId: result.paymentId,
+      receiptNumber: result.receiptNumber,
+      allocations: result.allocations.map(a => ({
+        invoiceId: a.invoiceId,
+        invoiceNumber: a.invoiceNumber,
+        amount: a.amount.toString(),
+        previousBalance: a.previousBalance.toString(),
+        newBalance: a.newBalance.toString(),
+      })),
+      totalAllocated: result.totalAllocated.toString(),
+      creditAdded: result.creditAdded.toString(),
+      newOutstandingBalance: result.accountOutstandingBalance.toString(),
+      newCreditBalance: result.accountCreditBalance.toString(),
+    };
   }
 
   private transformInvoice(invoice: any): InvoiceType {

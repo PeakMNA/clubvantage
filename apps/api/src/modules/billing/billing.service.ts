@@ -319,11 +319,12 @@ export class BillingService {
         },
       });
 
-      // Process allocations
+      // Process allocations using atomic operations to prevent race conditions
       if (dto.allocations && dto.allocations.length > 0) {
         let totalAllocated = 0;
 
         for (const allocation of dto.allocations) {
+          // First verify the invoice exists and check balance
           const invoice = await tx.invoice.findFirst({
             where: {
               id: allocation.invoiceId,
@@ -352,20 +353,30 @@ export class BillingService {
             },
           });
 
-          const newPaidAmount = invoice.paidAmount.toNumber() + allocation.amount;
-          const newBalanceDue = invoice.balanceDue.toNumber() - allocation.amount;
+          // Use atomic increment/decrement to prevent race conditions
+          // This ensures concurrent payments to the same invoice calculate correctly
+          const updatedInvoice = await tx.invoice.update({
+            where: { id: allocation.invoiceId },
+            data: {
+              paidAmount: { increment: allocation.amount },
+              balanceDue: { decrement: allocation.amount },
+            },
+          });
+
+          // Determine status based on updated values
+          const newBalanceDue = updatedInvoice.balanceDue.toNumber();
+          const newPaidAmount = updatedInvoice.paidAmount.toNumber();
           const newStatus =
             newBalanceDue <= 0
               ? 'PAID'
               : newPaidAmount > 0
               ? 'PARTIALLY_PAID'
-              : invoice.status;
+              : updatedInvoice.status;
 
+          // Update status in a separate call (status logic requires the updated values)
           await tx.invoice.update({
             where: { id: allocation.invoiceId },
             data: {
-              paidAmount: newPaidAmount,
-              balanceDue: newBalanceDue,
               status: newStatus,
               paidDate: newBalanceDue <= 0 ? new Date() : null,
             },
@@ -476,6 +487,45 @@ export class BillingService {
     }
 
     return payment;
+  }
+
+  // ==================== STATEMENTS ====================
+
+  /**
+   * Generate a member statement for a date range
+   * Returns transaction history with opening/closing balances
+   */
+  async generateStatement(
+    tenantId: string,
+    memberId: string,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<{
+    member: {
+      id: string;
+      name: string;
+      memberNumber: string;
+      membershipType: string;
+      email?: string;
+      address?: string;
+    };
+    periodStart: Date;
+    periodEnd: Date;
+    openingBalance: string;
+    closingBalance: string;
+    transactions: {
+      id: string;
+      date: Date;
+      type: string;
+      description: string;
+      invoiceNumber?: string;
+      amount: string;
+      runningBalance: string;
+    }[];
+  }> {
+    // TODO: Full implementation in Task 1B.2
+    // For now, throw not implemented to indicate this needs work
+    throw new Error('generateStatement not yet implemented - see Task 1B.2');
   }
 
   // ==================== STATISTICS ====================

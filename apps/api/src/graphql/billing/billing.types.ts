@@ -6,6 +6,42 @@ import { PaymentMethod } from '@/modules/billing/dto/create-payment.dto';
 // Re-export and register enums for GraphQL
 export { InvoiceStatus, PaymentMethod };
 
+// City Ledger enums
+export enum CityLedgerTypeEnum {
+  CORPORATE = 'CORPORATE',
+  HOUSE_ACCOUNT = 'HOUSE_ACCOUNT',
+  VENDOR = 'VENDOR',
+  OTHER = 'OTHER',
+}
+
+export enum CityLedgerStatusEnum {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  SUSPENDED = 'SUSPENDED',
+  CLOSED = 'CLOSED',
+}
+
+// AR Account type discriminator
+export enum ArAccountType {
+  MEMBER = 'MEMBER',
+  CITY_LEDGER = 'CITY_LEDGER',
+}
+
+registerEnumType(CityLedgerTypeEnum, {
+  name: 'CityLedgerAccountType',
+  description: 'City ledger account type',
+});
+
+registerEnumType(CityLedgerStatusEnum, {
+  name: 'CityLedgerStatus',
+  description: 'City ledger account status',
+});
+
+registerEnumType(ArAccountType, {
+  name: 'ArAccountType',
+  description: 'AR account type discriminator',
+});
+
 registerEnumType(InvoiceStatus, {
   name: 'InvoiceStatus',
   description: 'Invoice status options',
@@ -529,3 +565,218 @@ export class CreditNoteGraphQLType {
 
 @ObjectType()
 export class CreditNoteConnection extends Paginated(CreditNoteGraphQLType) {}
+
+// City Ledger Types
+@ObjectType()
+export class CityLedgerType {
+  @Field(() => ID)
+  id: string;
+
+  @Field()
+  accountNumber: string;
+
+  @Field()
+  accountName: string;
+
+  @Field(() => CityLedgerTypeEnum)
+  accountType: CityLedgerTypeEnum;
+
+  @Field({ nullable: true })
+  contactName?: string;
+
+  @Field({ nullable: true })
+  contactEmail?: string;
+
+  @Field({ nullable: true })
+  contactPhone?: string;
+
+  @Field({ nullable: true })
+  billingAddress?: string;
+
+  @Field({ nullable: true })
+  taxId?: string;
+
+  @Field({ nullable: true })
+  creditLimit?: string;
+
+  @Field()
+  creditBalance: string;
+
+  @Field()
+  outstandingBalance: string;
+
+  @Field()
+  paymentTerms: number;
+
+  @Field(() => CityLedgerStatusEnum)
+  status: CityLedgerStatusEnum;
+
+  @Field({ nullable: true })
+  notes?: string;
+
+  @Field()
+  createdAt: Date;
+
+  @Field()
+  updatedAt: Date;
+}
+
+@ObjectType()
+export class CityLedgerConnection extends Paginated(CityLedgerType) {}
+
+// AR Account Search Result - unified type for Member and City Ledger search
+@ObjectType()
+export class ArAccountSearchResult {
+  @Field(() => ID)
+  id: string;
+
+  @Field(() => ArAccountType)
+  accountType: ArAccountType;
+
+  @Field()
+  accountNumber: string;
+
+  @Field()
+  accountName: string;
+
+  @Field({ nullable: true })
+  subType?: string; // Membership type for members, CityLedgerType for city ledger
+
+  @Field()
+  outstandingBalance: string;
+
+  @Field()
+  creditBalance: string;
+
+  @Field()
+  invoiceCount: number;
+
+  @Field({ nullable: true })
+  agingStatus?: string; // 'current' | '30' | '60' | '90' | 'suspended'
+
+  @Field({ nullable: true })
+  photoUrl?: string;
+
+  @Field({ nullable: true })
+  dependentCount?: number; // For members with dependents
+}
+
+// FIFO Allocation types
+@ObjectType()
+export class FifoAllocationItem {
+  @Field(() => ID)
+  invoiceId: string;
+
+  @Field()
+  invoiceNumber: string;
+
+  @Field()
+  dueDate: Date;
+
+  @Field()
+  balance: string;
+
+  @Field()
+  allocatedAmount: string;
+}
+
+@ObjectType()
+export class FifoAllocationPreview {
+  @Field(() => [FifoAllocationItem])
+  allocations: FifoAllocationItem[];
+
+  @Field()
+  totalAllocated: string;
+
+  @Field()
+  remainingPayment: string;
+
+  @Field()
+  creditToAdd: string;
+}
+
+// Batch Settlement Result
+@ObjectType()
+export class BatchSettlementAllocation {
+  @Field(() => ID)
+  invoiceId: string;
+
+  @Field()
+  invoiceNumber: string;
+
+  @Field()
+  amount: string;
+
+  @Field()
+  previousBalance: string;
+
+  @Field()
+  newBalance: string;
+}
+
+@ObjectType()
+export class BatchSettlementResult {
+  @Field(() => ID)
+  paymentId: string;
+
+  @Field()
+  receiptNumber: string;
+
+  @Field(() => [BatchSettlementAllocation])
+  allocations: BatchSettlementAllocation[];
+
+  @Field()
+  totalAllocated: string;
+
+  @Field()
+  creditAdded: string;
+
+  @Field()
+  newOutstandingBalance: string;
+
+  @Field()
+  newCreditBalance: string;
+}
+
+// Statement types for member statement generation
+@ObjectType()
+export class MemberStatementInfoType {
+  @Field(() => ID)
+  id: string;
+
+  @Field()
+  name: string;
+
+  @Field()
+  memberNumber: string;
+
+  @Field()
+  membershipType: string;
+
+  @Field({ nullable: true })
+  email?: string;
+
+  @Field({ nullable: true })
+  address?: string;
+}
+
+@ObjectType()
+export class StatementType {
+  @Field(() => MemberStatementInfoType)
+  member: MemberStatementInfoType;
+
+  @Field()
+  periodStart: Date;
+
+  @Field()
+  periodEnd: Date;
+
+  @Field()
+  openingBalance: string;
+
+  @Field()
+  closingBalance: string;
+
+  @Field(() => [MemberTransactionType])
+  transactions: MemberTransactionType[];
+}
