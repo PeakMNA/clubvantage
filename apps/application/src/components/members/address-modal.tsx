@@ -3,17 +3,15 @@
 import { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import {
+  Button,
+  Checkbox,
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-} from '@clubvantage/ui';
-import { Button } from '@clubvantage/ui';
-import { Input } from '@clubvantage/ui';
-import { Label } from '@clubvantage/ui';
-import { Checkbox } from '@clubvantage/ui';
-import {
+  Input,
+  Label,
   Select,
   SelectContent,
   SelectItem,
@@ -172,7 +170,11 @@ export function AddressModal({
       return;
     }
 
-    await onSubmit(formData);
+    try {
+      await onSubmit(formData);
+    } catch (err) {
+      console.error('Failed to save address:', err);
+    }
   };
 
   const handleClose = () => {
