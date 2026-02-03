@@ -20,6 +20,7 @@ export * from './primitives/sheet';
 export * from './primitives/select';
 export * from './primitives/alert';
 export * from './primitives/tooltip';
+export * from './primitives/switch';
 
 // Components (ClubVantage custom components)
 export * from './components/status-badge';
