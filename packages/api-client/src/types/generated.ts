@@ -46,6 +46,13 @@ export type AddLineItemInput = {
   variantId?: InputMaybe<Scalars['ID']['input']>;
 };
 
+export type AddLookupTranslationInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  locale: Scalars['String']['input'];
+  lookupValueId: Scalars['ID']['input'];
+  name: Scalars['String']['input'];
+};
+
 export type AddStoredPaymentInput = {
   brand: Scalars['String']['input'];
   cardholderName?: InputMaybe<Scalars['String']['input']>;
@@ -1298,6 +1305,19 @@ export type CreateInvoiceInput = {
   memberId: Scalars['ID']['input'];
   notes?: InputMaybe<Scalars['String']['input']>;
   sendEmail?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+export type CreateLookupValueInput = {
+  categoryId: Scalars['ID']['input'];
+  code: Scalars['String']['input'];
+  color?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  icon?: InputMaybe<Scalars['String']['input']>;
+  isActive?: InputMaybe<Scalars['Boolean']['input']>;
+  isDefault?: InputMaybe<Scalars['Boolean']['input']>;
+  metadata?: InputMaybe<Scalars['JSON']['input']>;
+  name: Scalars['String']['input'];
+  sortOrder?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type CreateLotteryInput = {
@@ -2762,6 +2782,60 @@ export type LineItemType =
   | 'PROSHOP'
   | 'RENTAL';
 
+export type LookupCategory = {
+  __typename?: 'LookupCategory';
+  code: Scalars['String']['output'];
+  description?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  isGlobal: Scalars['Boolean']['output'];
+  isSystem: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  sortOrder: Scalars['Int']['output'];
+  valueCount: Scalars['Int']['output'];
+  values?: Maybe<Array<LookupValue>>;
+};
+
+export type LookupCategoryFilterInput = {
+  isGlobal?: InputMaybe<Scalars['Boolean']['input']>;
+  isSystem?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+export type LookupMutationResult = {
+  __typename?: 'LookupMutationResult';
+  error?: Maybe<Scalars['String']['output']>;
+  message?: Maybe<Scalars['String']['output']>;
+  success: Scalars['Boolean']['output'];
+  translation?: Maybe<LookupTranslation>;
+  value?: Maybe<LookupValue>;
+};
+
+export type LookupTranslation = {
+  __typename?: 'LookupTranslation';
+  description?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  locale: Scalars['String']['output'];
+  lookupValueId: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+};
+
+export type LookupValue = {
+  __typename?: 'LookupValue';
+  category?: Maybe<LookupCategory>;
+  categoryId: Scalars['String']['output'];
+  clubId?: Maybe<Scalars['String']['output']>;
+  code: Scalars['String']['output'];
+  color?: Maybe<Scalars['String']['output']>;
+  description?: Maybe<Scalars['String']['output']>;
+  icon?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  isActive: Scalars['Boolean']['output'];
+  isDefault: Scalars['Boolean']['output'];
+  metadata?: Maybe<Scalars['JSON']['output']>;
+  name: Scalars['String']['output'];
+  sortOrder: Scalars['Int']['output'];
+  translations?: Maybe<Array<LookupTranslation>>;
+};
+
 export type LotteryDrawResult = {
   __typename?: 'LotteryDrawResult';
   assignedCount: Scalars['Int']['output'];
@@ -3180,6 +3254,7 @@ export type Mutation = {
   addGroupPlayers: GroupBookingMutationResponse;
   /** Add a line item to a player */
   addLineItem: BookingLineItemType;
+  addLookupTranslation: LookupMutationResult;
   /** Add a new stored payment method */
   addPaymentMethod: StoredPaymentMethod;
   /** Apply credit note to member balance */
@@ -3286,6 +3361,7 @@ export type Mutation = {
   createInterestCategory: InterestCategoryType;
   /** Create a new invoice */
   createInvoice: InvoiceType;
+  createLookupValue: LookupMutationResult;
   /** Create a lottery */
   createLottery: LotteryMutationResponse;
   /** Create a new member */
@@ -3347,6 +3423,8 @@ export type Mutation = {
   deleteGroupBooking: GroupBookingMutationResponse;
   /** Delete an interest category */
   deleteInterestCategory: EngagementDeleteResponse;
+  deleteLookupTranslation: LookupMutationResult;
+  deleteLookupValue: LookupMutationResult;
   /** Delete a draft lottery */
   deleteLottery: LotteryMutationResponse;
   /** Soft delete a member */
@@ -3538,6 +3616,7 @@ export type Mutation = {
   updateInterestCategory: InterestCategoryType;
   /** Update line item quantity */
   updateLineItemQuantity: UpdateQuantityResultType;
+  updateLookupValue: LookupMutationResult;
   /** Update a lottery */
   updateLottery: LotteryMutationResponse;
   /** Update an existing member */
@@ -3626,6 +3705,11 @@ export type MutationAddGroupPlayersArgs = {
 
 export type MutationAddLineItemArgs = {
   input: AddLineItemInput;
+};
+
+
+export type MutationAddLookupTranslationArgs = {
+  input: AddLookupTranslationInput;
 };
 
 
@@ -3913,6 +3997,11 @@ export type MutationCreateInvoiceArgs = {
 };
 
 
+export type MutationCreateLookupValueArgs = {
+  input: CreateLookupValueInput;
+};
+
+
 export type MutationCreateLotteryArgs = {
   input: CreateLotteryInput;
 };
@@ -4077,6 +4166,16 @@ export type MutationDeleteGroupBookingArgs = {
 
 
 export type MutationDeleteInterestCategoryArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteLookupTranslationArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteLookupValueArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -4587,6 +4686,11 @@ export type MutationUpdateInterestCategoryArgs = {
 
 export type MutationUpdateLineItemQuantityArgs = {
   input: UpdateLineItemQuantityInput;
+};
+
+
+export type MutationUpdateLookupValueArgs = {
+  input: UpdateLookupValueInput;
 };
 
 
@@ -5497,6 +5601,10 @@ export type Query = {
   isTeeTimeFullySettled: Scalars['Boolean']['output'];
   /** Get discounts applied to a line item */
   lineItemDiscounts: Array<AppliedDiscountType>;
+  lookupCategories: Array<LookupCategory>;
+  lookupCategory?: Maybe<LookupCategory>;
+  lookupValue?: Maybe<LookupValue>;
+  lookupValues: Array<LookupValue>;
   /** Get lotteries */
   lotteries: Array<GolfLotteryType>;
   /** Get a single lottery */
@@ -5971,6 +6079,27 @@ export type QueryIsTeeTimeFullySettledArgs = {
 
 export type QueryLineItemDiscountsArgs = {
   lineItemId: Scalars['ID']['input'];
+};
+
+
+export type QueryLookupCategoriesArgs = {
+  filter?: InputMaybe<LookupCategoryFilterInput>;
+};
+
+
+export type QueryLookupCategoryArgs = {
+  code: Scalars['String']['input'];
+};
+
+
+export type QueryLookupValueArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryLookupValuesArgs = {
+  categoryCode: Scalars['String']['input'];
+  includeInactive?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 
@@ -7590,6 +7719,18 @@ export type UpdateInterestCategoryInput = {
 export type UpdateLineItemQuantityInput = {
   lineItemId: Scalars['ID']['input'];
   quantity: Scalars['Int']['input'];
+};
+
+export type UpdateLookupValueInput = {
+  color?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  icon?: InputMaybe<Scalars['String']['input']>;
+  id: Scalars['ID']['input'];
+  isActive?: InputMaybe<Scalars['Boolean']['input']>;
+  isDefault?: InputMaybe<Scalars['Boolean']['input']>;
+  metadata?: InputMaybe<Scalars['JSON']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  sortOrder?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type UpdateLotteryInput = {
@@ -9485,6 +9626,70 @@ export type PayLineItemsMutationVariables = Exact<{
 
 
 export type PayLineItemsMutation = { __typename?: 'Mutation', payLineItems: { __typename?: 'PayLineItemsResultType', success: boolean, error?: string | null | undefined, transactionId?: string | null | undefined, paidCount: number, totalPaid: number } };
+
+export type GetLookupCategoriesQueryVariables = Exact<{
+  filter?: InputMaybe<LookupCategoryFilterInput>;
+}>;
+
+
+export type GetLookupCategoriesQuery = { __typename?: 'Query', lookupCategories: Array<{ __typename?: 'LookupCategory', id: string, code: string, name: string, description?: string | null | undefined, isSystem: boolean, isGlobal: boolean, sortOrder: number, valueCount: number }> };
+
+export type GetLookupCategoryQueryVariables = Exact<{
+  code: Scalars['String']['input'];
+}>;
+
+
+export type GetLookupCategoryQuery = { __typename?: 'Query', lookupCategory?: { __typename?: 'LookupCategory', id: string, code: string, name: string, description?: string | null | undefined, isSystem: boolean, isGlobal: boolean, sortOrder: number, valueCount: number, values?: Array<{ __typename?: 'LookupValue', id: string, code: string, name: string, icon?: string | null | undefined, color?: string | null | undefined, sortOrder: number, isActive: boolean, isDefault: boolean }> | null | undefined } | null | undefined };
+
+export type GetLookupValuesQueryVariables = Exact<{
+  categoryCode: Scalars['String']['input'];
+  includeInactive?: InputMaybe<Scalars['Boolean']['input']>;
+}>;
+
+
+export type GetLookupValuesQuery = { __typename?: 'Query', lookupValues: Array<{ __typename?: 'LookupValue', id: string, categoryId: string, clubId?: string | null | undefined, code: string, name: string, description?: string | null | undefined, icon?: string | null | undefined, color?: string | null | undefined, sortOrder: number, isActive: boolean, isDefault: boolean, metadata?: any | null | undefined, translations?: Array<{ __typename?: 'LookupTranslation', id: string, locale: string, name: string, description?: string | null | undefined }> | null | undefined }> };
+
+export type GetLookupValueQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetLookupValueQuery = { __typename?: 'Query', lookupValue?: { __typename?: 'LookupValue', id: string, categoryId: string, clubId?: string | null | undefined, code: string, name: string, description?: string | null | undefined, icon?: string | null | undefined, color?: string | null | undefined, sortOrder: number, isActive: boolean, isDefault: boolean, metadata?: any | null | undefined, translations?: Array<{ __typename?: 'LookupTranslation', id: string, locale: string, name: string, description?: string | null | undefined }> | null | undefined, category?: { __typename?: 'LookupCategory', id: string, code: string, name: string, isSystem: boolean } | null | undefined } | null | undefined };
+
+export type CreateLookupValueMutationVariables = Exact<{
+  input: CreateLookupValueInput;
+}>;
+
+
+export type CreateLookupValueMutation = { __typename?: 'Mutation', createLookupValue: { __typename?: 'LookupMutationResult', success: boolean, message?: string | null | undefined, error?: string | null | undefined, value?: { __typename?: 'LookupValue', id: string, code: string, name: string, icon?: string | null | undefined, color?: string | null | undefined, sortOrder: number, isActive: boolean, isDefault: boolean } | null | undefined } };
+
+export type UpdateLookupValueMutationVariables = Exact<{
+  input: UpdateLookupValueInput;
+}>;
+
+
+export type UpdateLookupValueMutation = { __typename?: 'Mutation', updateLookupValue: { __typename?: 'LookupMutationResult', success: boolean, message?: string | null | undefined, error?: string | null | undefined, value?: { __typename?: 'LookupValue', id: string, code: string, name: string, icon?: string | null | undefined, color?: string | null | undefined, sortOrder: number, isActive: boolean, isDefault: boolean } | null | undefined } };
+
+export type DeleteLookupValueMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type DeleteLookupValueMutation = { __typename?: 'Mutation', deleteLookupValue: { __typename?: 'LookupMutationResult', success: boolean, message?: string | null | undefined, error?: string | null | undefined } };
+
+export type AddLookupTranslationMutationVariables = Exact<{
+  input: AddLookupTranslationInput;
+}>;
+
+
+export type AddLookupTranslationMutation = { __typename?: 'Mutation', addLookupTranslation: { __typename?: 'LookupMutationResult', success: boolean, message?: string | null | undefined, error?: string | null | undefined, translation?: { __typename?: 'LookupTranslation', id: string, locale: string, name: string, description?: string | null | undefined } | null | undefined } };
+
+export type DeleteLookupTranslationMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type DeleteLookupTranslationMutation = { __typename?: 'Mutation', deleteLookupTranslation: { __typename?: 'LookupMutationResult', success: boolean, message?: string | null | undefined, error?: string | null | undefined } };
 
 export type GetMyMemberQueryVariables = Exact<{ [key: string]: never; }>;
 

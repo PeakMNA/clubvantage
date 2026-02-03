@@ -1,0 +1,169 @@
+# ============================================================================
+# Lookup Category Queries
+# ============================================================================
+
+query GetLookupCategories($filter: LookupCategoryFilterInput) {
+  lookupCategories(filter: $filter) {
+    id
+    code
+    name
+    description
+    isSystem
+    isGlobal
+    sortOrder
+    valueCount
+  }
+}
+
+query GetLookupCategory($code: String!) {
+  lookupCategory(code: $code) {
+    id
+    code
+    name
+    description
+    isSystem
+    isGlobal
+    sortOrder
+    valueCount
+    values {
+      id
+      code
+      name
+      icon
+      color
+      sortOrder
+      isActive
+      isDefault
+    }
+  }
+}
+
+# ============================================================================
+# Lookup Value Queries
+# ============================================================================
+
+query GetLookupValues($categoryCode: String!, $includeInactive: Boolean) {
+  lookupValues(categoryCode: $categoryCode, includeInactive: $includeInactive) {
+    id
+    categoryId
+    clubId
+    code
+    name
+    description
+    icon
+    color
+    sortOrder
+    isActive
+    isDefault
+    metadata
+    translations {
+      id
+      locale
+      name
+      description
+    }
+  }
+}
+
+query GetLookupValue($id: ID!) {
+  lookupValue(id: $id) {
+    id
+    categoryId
+    clubId
+    code
+    name
+    description
+    icon
+    color
+    sortOrder
+    isActive
+    isDefault
+    metadata
+    translations {
+      id
+      locale
+      name
+      description
+    }
+    category {
+      id
+      code
+      name
+      isSystem
+    }
+  }
+}
+
+# ============================================================================
+# Lookup Value Mutations
+# ============================================================================
+
+mutation CreateLookupValue($input: CreateLookupValueInput!) {
+  createLookupValue(input: $input) {
+    success
+    message
+    error
+    value {
+      id
+      code
+      name
+      icon
+      color
+      sortOrder
+      isActive
+      isDefault
+    }
+  }
+}
+
+mutation UpdateLookupValue($input: UpdateLookupValueInput!) {
+  updateLookupValue(input: $input) {
+    success
+    message
+    error
+    value {
+      id
+      code
+      name
+      icon
+      color
+      sortOrder
+      isActive
+      isDefault
+    }
+  }
+}
+
+mutation DeleteLookupValue($id: ID!) {
+  deleteLookupValue(id: $id) {
+    success
+    message
+    error
+  }
+}
+
+# ============================================================================
+# Translation Mutations
+# ============================================================================
+
+mutation AddLookupTranslation($input: AddLookupTranslationInput!) {
+  addLookupTranslation(input: $input) {
+    success
+    message
+    error
+    translation {
+      id
+      locale
+      name
+      description
+    }
+  }
+}
+
+mutation DeleteLookupTranslation($id: ID!) {
+  deleteLookupTranslation(id: $id) {
+    success
+    message
+    error
+  }
+}
