@@ -7,6 +7,7 @@ import { useMemo, useCallback } from 'react';
 import {
   useGetInvoicesQuery,
   useGetInvoiceQuery,
+  useGetMemberTransactionsQuery,
   useCreateInvoiceMutation,
   useSendInvoiceMutation,
   useVoidInvoiceMutation,
@@ -279,4 +280,49 @@ export function useBillingMutations() {
     isVoiding: voidMutation.isPending,
     isRecordingPayment: paymentMutation.isPending,
   };
+}
+
+// Transaction type for AR history
+export type TransactionType = 'INVOICE' | 'PAYMENT' | 'CREDIT' | 'ADJUSTMENT';
+
+export interface MemberTransaction {
+  id: string;
+  memberId: string;
+  date: string;
+  type: TransactionType;
+  description: string;
+  invoiceNumber?: string;
+  amount: number;
+  runningBalance: number;
+}
+
+/**
+ * Hook to fetch member AR transactions with transformed data
+ * Wraps useGetMemberTransactionsQuery with data transformation
+ */
+export function useMemberTransactions(memberId: string, enabled = true) {
+  const { data, isLoading, error, refetch } = useGetMemberTransactionsQuery(
+    { memberId },
+    { enabled: enabled && !!memberId, staleTime: 30000 }
+  );
+
+  const transactions = useMemo((): MemberTransaction[] => {
+    if (!data?.memberTransactions?.transactions) return [];
+    return data.memberTransactions.transactions.map((tx) => ({
+      id: tx.id,
+      memberId,
+      date: tx.date,
+      type: tx.type as TransactionType,
+      description: tx.description,
+      invoiceNumber: tx.invoiceNumber ?? undefined,
+      amount: parseFloat(tx.amount),
+      runningBalance: parseFloat(tx.runningBalance),
+    }));
+  }, [data, memberId]);
+
+  const currentBalance = useMemo(() => {
+    return parseFloat(data?.memberTransactions?.currentBalance ?? '0');
+  }, [data]);
+
+  return { transactions, currentBalance, isLoading, error, refetch };
 }
