@@ -81,6 +81,7 @@ model Club {
   equipmentCategories    EquipmentCategory[]
   equipment              Equipment[]
   equipmentAssignments   EquipmentAssignment[]
+  lookupValues           LookupValue[]
 
   @@index([slug])
   @@index([isActive])
@@ -3768,4 +3769,69 @@ model FacilityEquipmentOption {
 
   @@unique([facilityId, equipmentCategoryId])
   @@map("facility_equipment_options")
+}
+
+// ─────────────────────────────────────────────────────────────
+// LOOKUP TABLES SYSTEM
+// ─────────────────────────────────────────────────────────────
+
+/// Lookup category for configurable enum values (e.g., PLAYER_TYPE, PAYMENT_METHOD)
+model LookupCategory {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code        String   @db.VarChar(50)   // e.g., "PLAYER_TYPE", "PAYMENT_METHOD"
+  name        String   @db.VarChar(100)
+  description String?
+  isSystem    Boolean  @default(false)   // System-managed, values not deletable
+  isGlobal    Boolean  @default(true)    // Available to all clubs
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  values      LookupValue[]
+
+  @@unique([code])
+  @@index([isGlobal])
+  @@map("lookup_categories")
+}
+
+/// Individual lookup value within a category
+model LookupValue {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  categoryId   String   @db.Uuid
+  clubId       String?  @db.Uuid          // null = global default
+  code         String   @db.VarChar(50)   // Internal code (MEMBER, GUEST)
+  name         String   @db.VarChar(100)  // Display name
+  description  String?
+  icon         String?  @db.VarChar(50)   // Lucide icon name
+  color        String?  @db.VarChar(7)    // Hex color
+  sortOrder    Int      @default(0)
+  isActive     Boolean  @default(true)
+  isDefault    Boolean  @default(false)
+  metadata     Json     @default("{}")    // Custom attributes
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  category     LookupCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  club         Club?          @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  translations LookupTranslation[]
+
+  @@unique([categoryId, clubId, code])
+  @@index([categoryId, isActive])
+  @@index([clubId])
+  @@map("lookup_values")
+}
+
+/// Translations for lookup values supporting i18n
+model LookupTranslation {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  lookupValueId String   @db.Uuid
+  locale        String   @db.VarChar(10)  // e.g., "th", "zh-CN", "ja"
+  name          String   @db.VarChar(100)
+  description   String?
+
+  lookupValue   LookupValue @relation(fields: [lookupValueId], references: [id], onDelete: Cascade)
+
+  @@unique([lookupValueId, locale])
+  @@map("lookup_translations")
 }
