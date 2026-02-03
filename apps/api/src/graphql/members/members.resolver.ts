@@ -355,28 +355,31 @@ export class MembersResolver {
       throw new Error('Member not found');
     }
 
-    // If this is set as primary, unset any existing primary addresses
-    if (input.isPrimary) {
-      await this.prisma.memberAddress.updateMany({
-        where: { memberId: input.memberId, isPrimary: true },
-        data: { isPrimary: false },
-      });
-    }
+    // Use transaction to ensure atomicity when setting primary address
+    const address = await this.prisma.$transaction(async (tx) => {
+      // If this is set as primary, unset any existing primary addresses
+      if (input.isPrimary) {
+        await tx.memberAddress.updateMany({
+          where: { memberId: input.memberId, isPrimary: true },
+          data: { isPrimary: false },
+        });
+      }
 
-    const address = await this.prisma.memberAddress.create({
-      data: {
-        memberId: input.memberId,
-        label: input.label,
-        type: input.type || 'BILLING',
-        addressLine1: input.addressLine1,
-        addressLine2: input.addressLine2,
-        subDistrict: input.subDistrict,
-        district: input.district,
-        province: input.province,
-        postalCode: input.postalCode,
-        country: input.country || 'Thailand',
-        isPrimary: input.isPrimary ?? false,
-      },
+      return tx.memberAddress.create({
+        data: {
+          memberId: input.memberId,
+          label: input.label,
+          type: input.type || 'BILLING',
+          addressLine1: input.addressLine1,
+          addressLine2: input.addressLine2,
+          subDistrict: input.subDistrict,
+          district: input.district,
+          province: input.province,
+          postalCode: input.postalCode,
+          country: input.country || 'Thailand',
+          isPrimary: input.isPrimary ?? false,
+        },
+      });
     });
 
     return this.transformAddress(address);
@@ -397,28 +400,31 @@ export class MembersResolver {
       throw new Error('Address not found');
     }
 
-    // If setting as primary, unset any existing primary addresses
-    if (input.isPrimary) {
-      await this.prisma.memberAddress.updateMany({
-        where: { memberId: existing.memberId, isPrimary: true, id: { not: id } },
-        data: { isPrimary: false },
-      });
-    }
+    // Use transaction to ensure atomicity when setting primary address
+    const address = await this.prisma.$transaction(async (tx) => {
+      // If setting as primary, unset any existing primary addresses
+      if (input.isPrimary) {
+        await tx.memberAddress.updateMany({
+          where: { memberId: existing.memberId, isPrimary: true, id: { not: id } },
+          data: { isPrimary: false },
+        });
+      }
 
-    const address = await this.prisma.memberAddress.update({
-      where: { id },
-      data: {
-        label: input.label,
-        type: input.type,
-        addressLine1: input.addressLine1,
-        addressLine2: input.addressLine2,
-        subDistrict: input.subDistrict,
-        district: input.district,
-        province: input.province,
-        postalCode: input.postalCode,
-        country: input.country,
-        isPrimary: input.isPrimary,
-      },
+      return tx.memberAddress.update({
+        where: { id },
+        data: {
+          label: input.label,
+          type: input.type,
+          addressLine1: input.addressLine1,
+          addressLine2: input.addressLine2,
+          subDistrict: input.subDistrict,
+          district: input.district,
+          province: input.province,
+          postalCode: input.postalCode,
+          country: input.country,
+          isPrimary: input.isPrimary,
+        },
+      });
     });
 
     return this.transformAddress(address);
