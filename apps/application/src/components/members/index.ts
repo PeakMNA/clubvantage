@@ -36,11 +36,16 @@ export { ProfileTab } from './profile-tab';
 export { ContractTab } from './contract-tab';
 export { DependentsTab } from './dependents-tab';
 export { ARHistoryTab } from './ar-history-tab';
+export { EngagementTab } from './engagement-tab';
+
+// Engagement Components
+export * from './engagement';
 
 // Modal Components
 export { AddMemberModal, type AddMemberFormData, type AddMemberModalProps } from './add-member-modal';
 export { DependentModal, type DependentFormData, type DependentModalProps } from './dependent-modal';
 export { ChargeModal, type ChargeFormData, type ChargeModalProps } from './charge-modal';
+export { AddressModal, type AddressFormData, type AddressModalProps, type AddressLabel } from './address-modal';
 
 // Confirmation Dialogs
 export {
