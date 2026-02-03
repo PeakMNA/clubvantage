@@ -54,7 +54,7 @@ import type {
   CreditNoteType as ListCreditNoteType,
 } from '@/components/billing/credit-note-list'
 
-import { useInvoices } from '@/hooks/use-billing'
+import { useInvoices, useGenerateStatement } from '@/hooks/use-billing'
 import { type MemberOption } from '@clubvantage/ui'
 
 // Fallback mock invoice data (used when API unavailable)
@@ -329,6 +329,9 @@ export default function BillingPage() {
     isLoading: isInvoicesLoading,
   } = useInvoices({ page: currentPage, pageSize: 20 })
 
+  // Statement generation hook
+  const { generateStatement, isLoading: statementLoading } = useGenerateStatement()
+
   // Use API data if available, fall back to mock data
   const invoices = apiInvoices.length > 0 ? apiInvoices : mockInvoices
   const invoiceSummary = apiInvoices.length > 0 ? apiSummary : mockInvoiceSummary
@@ -418,34 +421,39 @@ export default function BillingPage() {
     closingBalance: number
     transactions: StatementTransaction[]
   }> => {
-    // Mock statement data - TODO: replace with actual API call
-    const memberData = mockMemberOptions.find((m) => m.id === data.memberId)
-    const memberInvoices = mockInvoices.filter((inv) => inv.memberId === data.memberId)
+    const statement = await generateStatement(
+      data.memberId,
+      new Date(data.periodStart),
+      new Date(data.periodEnd)
+    )
 
-    // Generate mock transactions from invoices
-    const transactions: StatementTransaction[] = memberInvoices.map((inv) => ({
-      id: inv.id,
-      date: inv.date,
-      type: 'INVOICE' as const,
-      description: `Invoice ${inv.invoiceNumber}`,
-      reference: inv.invoiceNumber,
-      debit: inv.amount,
-      runningBalance: inv.balance,
-    }))
+    if (!statement) {
+      throw new Error('Failed to generate statement')
+    }
 
     return {
       member: {
-        id: data.memberId,
-        name: memberData ? `${memberData.firstName} ${memberData.lastName}` : 'Unknown',
-        memberNumber: memberData?.memberId || data.memberId,
-        membershipType: 'Golf Premium',
-        email: memberData?.email,
+        id: statement.member.id,
+        name: statement.member.name,
+        memberNumber: statement.member.memberNumber,
+        membershipType: statement.member.membershipType,
+        email: statement.member.email ?? undefined,
+        address: statement.member.address ?? undefined,
       },
-      openingBalance: 0,
-      closingBalance: transactions.reduce((sum, t) => sum + (t.debit || 0) - (t.credit || 0), 0),
-      transactions,
+      openingBalance: statement.openingBalance,
+      closingBalance: statement.closingBalance,
+      transactions: statement.transactions.map((tx) => ({
+        id: tx.id,
+        date: tx.date,
+        type: tx.type as 'INVOICE' | 'PAYMENT' | 'CREDIT' | 'ADJUSTMENT',
+        description: tx.description,
+        reference: tx.invoiceNumber ?? undefined,
+        debit: tx.debit,
+        credit: tx.credit,
+        runningBalance: tx.runningBalance,
+      })),
     }
-  }, [])
+  }, [generateStatement])
 
   const handleInvoiceSubmit = useCallback(async (data: InvoiceFormData) => {
     setIsSubmitting(true)
