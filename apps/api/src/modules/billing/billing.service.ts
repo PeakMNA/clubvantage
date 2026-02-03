@@ -523,9 +523,177 @@ export class BillingService {
       runningBalance: string;
     }[];
   }> {
-    // TODO: Full implementation in Task 1B.2
-    // For now, throw not implemented to indicate this needs work
-    throw new Error('generateStatement not yet implemented - see Task 1B.2');
+    // 1. Fetch member info with membershipType
+    const member = await this.prisma.member.findFirst({
+      where: {
+        id: memberId,
+        clubId: tenantId,
+      },
+      include: {
+        membershipType: true,
+      },
+    });
+
+    if (!member) {
+      throw new NotFoundException('Member not found');
+    }
+
+    // 2. Calculate opening balance (sum of all transactions before startDate)
+    const openingBalance = await this.calculateBalanceAsOf(memberId, startDate);
+
+    // 3. Fetch transactions within the date range
+    const transactions = await this.getTransactionsInRange(
+      memberId,
+      startDate,
+      endDate,
+    );
+
+    // 4. Calculate running balance for each transaction
+    let runningBalance = openingBalance;
+    const transactionsWithRunningBalance = transactions.map((tx) => {
+      runningBalance += parseFloat(tx.amount);
+      return {
+        ...tx,
+        runningBalance: runningBalance.toFixed(2),
+      };
+    });
+
+    // 5. Return StatementType object
+    return {
+      member: {
+        id: member.id,
+        name: `${member.firstName} ${member.lastName}`,
+        memberNumber: member.memberId,
+        membershipType: member.membershipType?.name || 'Unknown',
+        email: member.email || undefined,
+        address: member.address || undefined,
+      },
+      periodStart: startDate,
+      periodEnd: endDate,
+      openingBalance: openingBalance.toFixed(2),
+      closingBalance: runningBalance.toFixed(2),
+      transactions: transactionsWithRunningBalance,
+    };
+  }
+
+  /**
+   * Calculate the balance for a member as of a specific date
+   * This sums all invoices and subtracts all payments before the given date
+   */
+  private async calculateBalanceAsOf(
+    memberId: string,
+    asOfDate: Date,
+  ): Promise<number> {
+    // Get sum of all invoice totals before the date
+    const invoiceSum = await this.prisma.invoice.aggregate({
+      where: {
+        memberId,
+        invoiceDate: { lt: asOfDate },
+        deletedAt: null,
+        status: { not: 'VOID' },
+      },
+      _sum: { totalAmount: true },
+    });
+
+    // Get sum of all payments before the date
+    const paymentSum = await this.prisma.payment.aggregate({
+      where: {
+        memberId,
+        paymentDate: { lt: asOfDate },
+      },
+      _sum: { amount: true },
+    });
+
+    const totalInvoices = invoiceSum._sum.totalAmount?.toNumber() || 0;
+    const totalPayments = paymentSum._sum.amount?.toNumber() || 0;
+
+    return totalInvoices - totalPayments;
+  }
+
+  /**
+   * Get all transactions (invoices and payments) for a member within a date range
+   * Returns them sorted by date in ascending order
+   */
+  private async getTransactionsInRange(
+    memberId: string,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<
+    {
+      id: string;
+      date: Date;
+      type: string;
+      description: string;
+      invoiceNumber?: string;
+      amount: string;
+    }[]
+  > {
+    // Get invoices in date range
+    const invoices = await this.prisma.invoice.findMany({
+      where: {
+        memberId,
+        invoiceDate: {
+          gte: startDate,
+          lte: endDate,
+        },
+        deletedAt: null,
+        status: { not: 'VOID' },
+      },
+      orderBy: { invoiceDate: 'asc' },
+    });
+
+    // Get payments in date range
+    const payments = await this.prisma.payment.findMany({
+      where: {
+        memberId,
+        paymentDate: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+      orderBy: { paymentDate: 'asc' },
+    });
+
+    // Combine transactions
+    const transactions: {
+      id: string;
+      date: Date;
+      type: string;
+      description: string;
+      invoiceNumber?: string;
+      amount: string;
+    }[] = [];
+
+    // Add invoices (positive amounts - charges)
+    for (const invoice of invoices) {
+      transactions.push({
+        id: invoice.id,
+        date: invoice.invoiceDate,
+        type: 'INVOICE',
+        description: invoice.billingPeriod || `Invoice ${invoice.invoiceNumber}`,
+        invoiceNumber: invoice.invoiceNumber,
+        amount: invoice.totalAmount.toNumber().toString(),
+      });
+    }
+
+    // Add payments (negative amounts - credits)
+    for (const payment of payments) {
+      transactions.push({
+        id: payment.id,
+        date: payment.paymentDate,
+        type: 'PAYMENT',
+        description: `Payment - ${payment.receiptNumber}`,
+        invoiceNumber: undefined,
+        amount: (-payment.amount.toNumber()).toString(),
+      });
+    }
+
+    // Sort all transactions by date
+    transactions.sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+    );
+
+    return transactions;
   }
 
   // ==================== STATISTICS ====================
