@@ -1,0 +1,144 @@
+# Member Documents Queries
+
+query GetMemberDocuments(
+  $memberId: ID!
+  $first: Int
+  $skip: Int
+  $type: DocumentType
+  $isVerified: Boolean
+  $includeExpired: Boolean
+) {
+  memberDocuments(
+    memberId: $memberId
+    first: $first
+    skip: $skip
+    type: $type
+    isVerified: $isVerified
+    includeExpired: $includeExpired
+  ) {
+    edges {
+      node {
+        id
+        clubId
+        memberId
+        name
+        type
+        fileName
+        fileUrl
+        fileSize
+        mimeType
+        description
+        expiryDate
+        isVerified
+        verifiedBy
+        verifiedAt
+        uploadedBy
+        createdAt
+        updatedAt
+      }
+      cursor
+    }
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      startCursor
+      endCursor
+    }
+    totalCount
+  }
+}
+
+query GetDocument($id: ID!) {
+  document(id: $id) {
+    id
+    clubId
+    memberId
+    name
+    type
+    fileName
+    fileUrl
+    fileSize
+    mimeType
+    description
+    expiryDate
+    isVerified
+    verifiedBy
+    verifiedAt
+    uploadedBy
+    createdAt
+    updatedAt
+  }
+}
+
+query GetDocumentSignedUrl($id: ID!, $expiresIn: Int) {
+  documentSignedUrl(id: $id, expiresIn: $expiresIn)
+}
+
+# Member Documents Mutations
+
+mutation UploadMemberDocument($input: UploadDocumentInput!) {
+  uploadMemberDocument(input: $input) {
+    success
+    message
+    document {
+      id
+      clubId
+      memberId
+      name
+      type
+      fileName
+      fileUrl
+      fileSize
+      mimeType
+      description
+      expiryDate
+      isVerified
+      uploadedBy
+      createdAt
+      updatedAt
+    }
+  }
+}
+
+mutation UpdateMemberDocument($id: ID!, $input: UpdateDocumentInput!) {
+  updateMemberDocument(id: $id, input: $input) {
+    id
+    clubId
+    memberId
+    name
+    type
+    fileName
+    fileUrl
+    fileSize
+    mimeType
+    description
+    expiryDate
+    isVerified
+    verifiedBy
+    verifiedAt
+    uploadedBy
+    createdAt
+    updatedAt
+  }
+}
+
+mutation DeleteMemberDocument($id: ID!) {
+  deleteMemberDocument(id: $id) {
+    success
+    message
+  }
+}
+
+mutation VerifyDocument($input: VerifyDocumentInput!) {
+  verifyDocument(input: $input) {
+    success
+    message
+    document {
+      id
+      isVerified
+      verifiedBy
+      verifiedAt
+      updatedAt
+    }
+  }
+}

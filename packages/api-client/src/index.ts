@@ -389,6 +389,17 @@ export {
   useDeleteLookupValueMutation,
   useAddLookupTranslationMutation,
   useDeleteLookupTranslationMutation,
+  // Document hooks
+  useGetMemberDocumentsQuery,
+  useInfiniteGetMemberDocumentsQuery,
+  useGetDocumentQuery,
+  useInfiniteGetDocumentQuery,
+  useGetDocumentSignedUrlQuery,
+  useInfiniteGetDocumentSignedUrlQuery,
+  useUploadMemberDocumentMutation,
+  useUpdateMemberDocumentMutation,
+  useDeleteMemberDocumentMutation,
+  useVerifyDocumentMutation,
 } from './hooks/generated';
 
 // Custom hooks
