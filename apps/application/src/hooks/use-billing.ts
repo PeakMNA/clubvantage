@@ -364,10 +364,12 @@ export interface Statement {
  */
 export function useGenerateStatement() {
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
   const generateStatement = useCallback(
     async (memberId: string, startDate: Date, endDate: Date): Promise<Statement | null> => {
       setIsLoading(true);
+      setError(null);
       try {
         const data = await useGenerateStatementQuery.fetcher({
           input: {
@@ -392,11 +394,18 @@ export function useGenerateStatement() {
             type: tx.type,
             description: tx.description,
             invoiceNumber: tx.invoiceNumber,
+            // Debit/Credit classification: INVOICE transactions are debits (increase balance),
+            // all other transaction types (PAYMENT, CREDIT, ADJUSTMENT) are treated as credits
+            // (decrease balance). This assumes the API returns positive amounts for all types.
             debit: tx.type === 'INVOICE' ? parseFloat(tx.amount) : undefined,
             credit: tx.type !== 'INVOICE' ? parseFloat(tx.amount) : undefined,
             runningBalance: parseFloat(tx.runningBalance),
           })),
         };
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error('Failed to generate statement');
+        setError(error);
+        return null;
       } finally {
         setIsLoading(false);
       }
@@ -404,5 +413,5 @@ export function useGenerateStatement() {
     []
   );
 
-  return { generateStatement, isLoading };
+  return { generateStatement, isLoading, error };
 }
