@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Loader2,
   Check,
@@ -17,13 +17,13 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  Button,
+  Input,
+  Label,
+  Switch,
+  Checkbox,
   cn,
 } from '@clubvantage/ui';
-import { Button } from '@clubvantage/ui';
-import { Input } from '@clubvantage/ui';
-import { Label } from '@clubvantage/ui';
-import { Switch } from '@clubvantage/ui';
-import { Checkbox } from '@clubvantage/ui';
 import {
   useGetMemberAutoPaySettingQuery,
   useGetMemberPaymentMethodsQuery,
@@ -126,7 +126,10 @@ export function AutoPayModal({
 
   const existingSetting = settingData?.memberAutoPaySetting;
   const paymentMethods = methodsData?.memberPaymentMethods ?? [];
-  const activePaymentMethods = paymentMethods.filter((m) => m.status === 'ACTIVE');
+  const activePaymentMethods = useMemo(
+    () => paymentMethods.filter((m) => m.status === 'ACTIVE'),
+    [paymentMethods]
+  );
   const isEditing = !!existingSetting;
   const isLoading = isLoadingSettings || isLoadingMethods;
   const isSaving = upsertMutation.isPending || disableMutation.isPending;
@@ -156,7 +159,7 @@ export function AutoPayModal({
       }
     }
     setHasChanges(false);
-  }, [existingSetting, activePaymentMethods.length]);
+  }, [existingSetting, activePaymentMethods]);
 
   const updateField = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setFormState((prev) => ({ ...prev, [key]: value }));
