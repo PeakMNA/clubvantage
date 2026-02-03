@@ -188,3 +188,59 @@ Then run codegen for the API client:
 ```bash
 pnpm --filter @clubvantage/api-client run codegen
 ```
+
+## TypeScript Checking
+
+### Running tsc with Full Project Context
+**IMPORTANT:** Never run `tsc file.ts` on individual files - it ignores tsconfig settings.
+
+```bash
+# Correct: Use --project flag or run from project root
+cd apps/api && pnpm exec tsc --noEmit --project tsconfig.json
+
+# Or simply run from the app directory (picks up tsconfig automatically)
+pnpm exec tsc --noEmit
+
+# Or use the build script
+pnpm --filter @clubvantage/api run build
+```
+
+Without `--project`, TypeScript won't resolve:
+- Path aliases (`@/modules/...`)
+- Decorator settings (`experimentalDecorators`, `emitDecoratorMetadata`)
+- Monorepo package references
+
+## NestJS API Guidelines
+
+### GraphQL Input Validation
+The API uses `ValidationPipe` with `forbidNonWhitelisted: true`. **All GraphQL input class properties MUST have class-validator decorators:**
+
+```typescript
+import { IsOptional, IsEnum, IsUUID, IsString } from 'class-validator';
+
+@InputType()
+export class MyFilterInput {
+  @Field(() => ID, { nullable: true })
+  @IsOptional()          // Required for optional fields
+  @IsUUID()              // Validates the type
+  categoryId?: string;
+
+  @Field(() => MyEnum, { nullable: true })
+  @IsOptional()
+  @IsEnum(MyEnum)        // Required for enum fields
+  status?: MyEnum;
+}
+```
+
+Without these decorators, the ValidationPipe will reject the input with "Bad Request Exception".
+
+### Common Decorators
+| Type | Decorators |
+|------|------------|
+| Optional field | `@IsOptional()` |
+| UUID/ID | `@IsUUID()` |
+| String | `@IsString()` |
+| Number | `@IsNumber()` |
+| Boolean | `@IsBoolean()` |
+| Enum | `@IsEnum(EnumType)` |
+| Date | `@Type(() => Date)` + `@IsDate()` |
