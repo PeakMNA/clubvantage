@@ -31,6 +31,8 @@ export {
   useInfiniteGetInvoiceQuery,
   useGetMemberTransactionsQuery,
   useInfiniteGetMemberTransactionsQuery,
+  useGenerateStatementQuery,
+  useInfiniteGenerateStatementQuery,
   useCreateInvoiceMutation,
   useSendInvoiceMutation,
   useVoidInvoiceMutation,

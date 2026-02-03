@@ -434,3 +434,31 @@ mutation VoidCreditNote($id: ID!, $input: VoidCreditNoteInput!) {
     voidedAt
   }
 }
+
+# Statement Generation
+
+query GenerateStatement($input: GenerateStatementInput!) {
+  generateStatement(input: $input) {
+    member {
+      id
+      name
+      memberNumber
+      membershipType
+      email
+      address
+    }
+    periodStart
+    periodEnd
+    openingBalance
+    closingBalance
+    transactions {
+      id
+      date
+      type
+      description
+      invoiceNumber
+      amount
+      runningBalance
+    }
+  }
+}

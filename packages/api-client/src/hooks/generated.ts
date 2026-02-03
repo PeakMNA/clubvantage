@@ -2339,6 +2339,12 @@ export type FlightPaymentSummaryType = {
   totalPlayers: Scalars['Int']['output'];
 };
 
+export type GenerateStatementInput = {
+  endDate: Scalars['DateTime']['input'];
+  memberId: Scalars['ID']['input'];
+  startDate: Scalars['DateTime']['input'];
+};
+
 export type GenerateTicketInput = {
   forceRegenerate?: InputMaybe<Scalars['Boolean']['input']>;
   teeTimeId: Scalars['ID']['input'];
@@ -3032,6 +3038,16 @@ export type MemberSpendStatus =
   | 'PENDING_ACTION'
   | 'RESOLVED'
   | 'SHORTFALL';
+
+export type MemberStatementInfoType = {
+  __typename?: 'MemberStatementInfoType';
+  address?: Maybe<Scalars['String']['output']>;
+  email?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  memberNumber: Scalars['String']['output'];
+  membershipType: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+};
 
 export type MemberStatsType = {
   __typename?: 'MemberStatsType';
@@ -5575,6 +5591,8 @@ export type Query = {
   flightCheckInInfo: FlightCheckInInfoType;
   /** Get payment summary for a flight */
   flightPaymentSummary: FlightPaymentSummaryType;
+  /** Generate a member statement for a date range */
+  generateStatement: StatementType;
   /** Generate a tee ticket for a tee time */
   generateTeeTicket?: Maybe<TeeTicketType>;
   /** Get the effective schedule for a specific date (with season/special day overrides applied) */
@@ -5998,6 +6016,11 @@ export type QueryFlightCheckInInfoArgs = {
 
 export type QueryFlightPaymentSummaryArgs = {
   teeTimeId: Scalars['ID']['input'];
+};
+
+
+export type QueryGenerateStatementArgs = {
+  input: GenerateStatementInput;
 };
 
 
@@ -7058,6 +7081,16 @@ export type StarterTicketResponseType = {
   startingHole: Scalars['Int']['output'];
   teeTime: Scalars['DateTime']['output'];
   ticketNumber: Scalars['String']['output'];
+};
+
+export type StatementType = {
+  __typename?: 'StatementType';
+  closingBalance: Scalars['String']['output'];
+  member: MemberStatementInfoType;
+  openingBalance: Scalars['String']['output'];
+  periodEnd: Scalars['DateTime']['output'];
+  periodStart: Scalars['DateTime']['output'];
+  transactions: Array<MemberTransactionType>;
 };
 
 export type StoredPaymentMethod = {
@@ -8431,6 +8464,13 @@ export type VoidCreditNoteMutationVariables = Exact<{
 
 
 export type VoidCreditNoteMutation = { __typename?: 'Mutation', voidCreditNote: { __typename?: 'CreditNoteGraphQLType', id: string, creditNoteNumber: string, status: CreditNoteStatus, voidedAt?: string | null | undefined } };
+
+export type GenerateStatementQueryVariables = Exact<{
+  input: GenerateStatementInput;
+}>;
+
+
+export type GenerateStatementQuery = { __typename?: 'Query', generateStatement: { __typename?: 'StatementType', periodStart: string, periodEnd: string, openingBalance: string, closingBalance: string, member: { __typename?: 'MemberStatementInfoType', id: string, name: string, memberNumber: string, membershipType: string, email?: string | null | undefined, address?: string | null | undefined }, transactions: Array<{ __typename?: 'MemberTransactionType', id: string, date: string, type: string, description: string, invoiceNumber?: string | null | undefined, amount: string, runningBalance: string }> } };
 
 export type GetBookingsQueryVariables = Exact<{
   facilityId?: InputMaybe<Scalars['ID']['input']>;
@@ -11576,6 +11616,76 @@ export const useVoidCreditNoteMutation = <
 
 
 useVoidCreditNoteMutation.fetcher = (variables: VoidCreditNoteMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<VoidCreditNoteMutation, VoidCreditNoteMutationVariables>(VoidCreditNoteDocument, variables, options);
+
+export const GenerateStatementDocument = `
+    query GenerateStatement($input: GenerateStatementInput!) {
+  generateStatement(input: $input) {
+    member {
+      id
+      name
+      memberNumber
+      membershipType
+      email
+      address
+    }
+    periodStart
+    periodEnd
+    openingBalance
+    closingBalance
+    transactions {
+      id
+      date
+      type
+      description
+      invoiceNumber
+      amount
+      runningBalance
+    }
+  }
+}
+    `;
+
+export const useGenerateStatementQuery = <
+      TData = GenerateStatementQuery,
+      TError = unknown
+    >(
+      variables: GenerateStatementQueryVariables,
+      options?: Omit<UseQueryOptions<GenerateStatementQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GenerateStatementQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GenerateStatementQuery, TError, TData>(
+      {
+    queryKey: ['GenerateStatement', variables],
+    queryFn: graphqlFetcher<GenerateStatementQuery, GenerateStatementQueryVariables>(GenerateStatementDocument, variables),
+    ...options
+  }
+    )};
+
+useGenerateStatementQuery.getKey = (variables: GenerateStatementQueryVariables) => ['GenerateStatement', variables];
+
+export const useInfiniteGenerateStatementQuery = <
+      TData = InfiniteData<GenerateStatementQuery>,
+      TError = unknown
+    >(
+      variables: GenerateStatementQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GenerateStatementQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GenerateStatementQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GenerateStatementQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GenerateStatement.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GenerateStatementQuery, GenerateStatementQueryVariables>(GenerateStatementDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGenerateStatementQuery.getKey = (variables: GenerateStatementQueryVariables) => ['GenerateStatement.infinite', variables];
+
+
+useGenerateStatementQuery.fetcher = (variables: GenerateStatementQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GenerateStatementQuery, GenerateStatementQueryVariables>(GenerateStatementDocument, variables, options);
 
 export const GetBookingsDocument = `
     query GetBookings($facilityId: ID, $staffId: ID, $startDate: String, $endDate: String, $statuses: [BookingStatus!], $first: Int = 20, $skip: Int) {

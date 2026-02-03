@@ -3,7 +3,7 @@
  * for use in the frontend components
  */
 
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useState } from 'react';
 import {
   useGetInvoicesQuery,
   useGetInvoiceQuery,
@@ -12,6 +12,7 @@ import {
   useSendInvoiceMutation,
   useVoidInvoiceMutation,
   useRecordPaymentMutation,
+  useGenerateStatementQuery,
   queryKeys,
 } from '@clubvantage/api-client';
 import { useQueryClient } from '@tanstack/react-query';
@@ -325,4 +326,83 @@ export function useMemberTransactions(memberId: string, enabled = true) {
   }, [data]);
 
   return { transactions, currentBalance, isLoading, error, refetch };
+}
+
+// Statement generation types
+export interface StatementMember {
+  id: string;
+  name: string;
+  memberNumber: string;
+  membershipType: string;
+  email?: string | null;
+  address?: string | null;
+}
+
+export interface StatementTransaction {
+  id: string;
+  date: Date;
+  type: string;
+  description: string;
+  invoiceNumber?: string | null;
+  debit?: number;
+  credit?: number;
+  runningBalance: number;
+}
+
+export interface Statement {
+  member: StatementMember;
+  periodStart: Date;
+  periodEnd: Date;
+  openingBalance: number;
+  closingBalance: number;
+  transactions: StatementTransaction[];
+}
+
+/**
+ * Hook to generate a member statement on demand
+ * Uses the fetcher directly for lazy/on-demand execution
+ */
+export function useGenerateStatement() {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const generateStatement = useCallback(
+    async (memberId: string, startDate: Date, endDate: Date): Promise<Statement | null> => {
+      setIsLoading(true);
+      try {
+        const data = await useGenerateStatementQuery.fetcher({
+          input: {
+            memberId,
+            startDate: startDate.toISOString(),
+            endDate: endDate.toISOString(),
+          },
+        })();
+
+        if (!data?.generateStatement) return null;
+
+        const stmt = data.generateStatement;
+        return {
+          member: stmt.member,
+          periodStart: new Date(stmt.periodStart),
+          periodEnd: new Date(stmt.periodEnd),
+          openingBalance: parseFloat(stmt.openingBalance),
+          closingBalance: parseFloat(stmt.closingBalance),
+          transactions: stmt.transactions.map((tx) => ({
+            id: tx.id,
+            date: new Date(tx.date),
+            type: tx.type,
+            description: tx.description,
+            invoiceNumber: tx.invoiceNumber,
+            debit: tx.type === 'INVOICE' ? parseFloat(tx.amount) : undefined,
+            credit: tx.type !== 'INVOICE' ? parseFloat(tx.amount) : undefined,
+            runningBalance: parseFloat(tx.runningBalance),
+          })),
+        };
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
+
+  return { generateStatement, isLoading };
 }
