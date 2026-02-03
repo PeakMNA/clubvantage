@@ -31,7 +31,21 @@ export default function LoginPage() {
         return;
       }
 
+      // After sleep/wake cycles, the Next.js router can become stale.
+      // Refresh router state first, then navigate.
+      router.refresh();
+
+      // Small delay to ensure router state is refreshed before navigation
+      await new Promise(resolve => setTimeout(resolve, 50));
+
       router.push('/');
+
+      // Fallback: if still on login page after 500ms, force hard navigation
+      setTimeout(() => {
+        if (window.location.pathname === '/login') {
+          window.location.href = '/';
+        }
+      }, 500);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Invalid credentials');
     } finally {
