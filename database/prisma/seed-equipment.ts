@@ -10,6 +10,7 @@ import {
   EquipmentAttachmentType,
   EquipmentCondition,
   EquipmentStatus,
+  OperationType,
 } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import 'dotenv/config';
@@ -23,6 +24,7 @@ interface EquipmentCategorySeed {
   description: string;
   icon: string;
   color: string;
+  operationType: OperationType;
   attachmentType: EquipmentAttachmentType;
   defaultRentalRate?: number;
   requiresDeposit: boolean;
@@ -50,6 +52,7 @@ const EQUIPMENT_CATEGORIES: EquipmentCategorySeed[] = [
     description: 'Electric and gas-powered golf carts for course navigation',
     icon: 'Car',
     color: '#10B981', // emerald
+    operationType: OperationType.GOLF,
     attachmentType: EquipmentAttachmentType.OPTIONAL_ADDON,
     defaultRentalRate: 800,
     requiresDeposit: false,
@@ -60,6 +63,7 @@ const EQUIPMENT_CATEGORIES: EquipmentCategorySeed[] = [
     description: 'Rental golf club sets for members and guests',
     icon: 'Flag',
     color: '#3B82F6', // blue
+    operationType: OperationType.GOLF,
     attachmentType: EquipmentAttachmentType.OPTIONAL_ADDON,
     defaultRentalRate: 500,
     requiresDeposit: true,
@@ -71,6 +75,7 @@ const EQUIPMENT_CATEGORIES: EquipmentCategorySeed[] = [
     description: 'Manual pull/push golf bag carts',
     icon: 'ShoppingCart',
     color: '#6366F1', // indigo
+    operationType: OperationType.GOLF,
     attachmentType: EquipmentAttachmentType.OPTIONAL_ADDON,
     defaultRentalRate: 200,
     requiresDeposit: false,
@@ -81,17 +86,19 @@ const EQUIPMENT_CATEGORIES: EquipmentCategorySeed[] = [
     description: 'Practice range ball buckets',
     icon: 'Circle',
     color: '#F59E0B', // amber
+    operationType: OperationType.GOLF,
     attachmentType: EquipmentAttachmentType.OPTIONAL_ADDON,
     defaultRentalRate: 150,
     requiresDeposit: false,
   },
-  // Tennis Equipment
+  // Tennis Equipment (Facility)
   {
     code: 'TENNIS_RACKETS',
     name: 'Tennis Rackets',
     description: 'Rental tennis rackets',
     icon: 'CircleDot',
     color: '#EF4444', // red
+    operationType: OperationType.FACILITY,
     attachmentType: EquipmentAttachmentType.OPTIONAL_ADDON,
     defaultRentalRate: 200,
     requiresDeposit: true,
@@ -103,17 +110,19 @@ const EQUIPMENT_CATEGORIES: EquipmentCategorySeed[] = [
     description: 'Tennis ball canisters for court play',
     icon: 'Circle',
     color: '#84CC16', // lime
+    operationType: OperationType.FACILITY,
     attachmentType: EquipmentAttachmentType.OPTIONAL_ADDON,
     defaultRentalRate: 100,
     requiresDeposit: false,
   },
-  // Facility Equipment (Required Resources)
+  // Event Equipment (Required Resources)
   {
     code: 'PROJECTORS',
     name: 'Projectors',
     description: 'LCD projectors for meeting rooms',
     icon: 'Projector',
     color: '#8B5CF6', // violet
+    operationType: OperationType.EVENT,
     attachmentType: EquipmentAttachmentType.REQUIRED_RESOURCE,
     defaultRentalRate: 500,
     requiresDeposit: false,
@@ -124,6 +133,7 @@ const EQUIPMENT_CATEGORIES: EquipmentCategorySeed[] = [
     description: 'Portable PA and sound systems',
     icon: 'Speaker',
     color: '#EC4899', // pink
+    operationType: OperationType.EVENT,
     attachmentType: EquipmentAttachmentType.REQUIRED_RESOURCE,
     defaultRentalRate: 800,
     requiresDeposit: false,
@@ -134,6 +144,7 @@ const EQUIPMENT_CATEGORIES: EquipmentCategorySeed[] = [
     description: 'Folding tables for events and functions',
     icon: 'Table2',
     color: '#14B8A6', // teal
+    operationType: OperationType.EVENT,
     attachmentType: EquipmentAttachmentType.REQUIRED_RESOURCE,
     defaultRentalRate: 50,
     requiresDeposit: false,
@@ -144,6 +155,7 @@ const EQUIPMENT_CATEGORIES: EquipmentCategorySeed[] = [
     description: 'Stackable chairs for events',
     icon: 'Armchair',
     color: '#64748B', // slate
+    operationType: OperationType.EVENT,
     attachmentType: EquipmentAttachmentType.REQUIRED_RESOURCE,
     defaultRentalRate: 20,
     requiresDeposit: false,
@@ -376,7 +388,12 @@ async function main() {
     });
 
     if (existing) {
-      console.log(`  ⏭️  Skipping ${cat.name} (already exists)`);
+      // Update existing category with operationType
+      await prisma.equipmentCategory.update({
+        where: { id: existing.id },
+        data: { operationType: cat.operationType },
+      });
+      console.log(`  🔄 Updated ${cat.name} with operationType: ${cat.operationType}`);
       categoryMap.set(cat.code, existing.id);
       categoriesSkipped++;
       continue;
@@ -390,6 +407,7 @@ async function main() {
         description: cat.description,
         icon: cat.icon,
         color: cat.color,
+        operationType: cat.operationType,
         attachmentType: cat.attachmentType,
         defaultRentalRate: cat.defaultRentalRate,
         requiresDeposit: cat.requiresDeposit,

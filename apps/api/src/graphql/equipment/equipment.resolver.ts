@@ -22,6 +22,7 @@ import {
   UpdateEquipmentInput,
   UpdateEquipmentStatusInput,
   EquipmentFilterInput,
+  EquipmentCategoryFilterInput,
   AssignEquipmentInput,
   ReturnEquipmentInput,
   EquipmentAvailabilityInput,
@@ -41,8 +42,10 @@ export class EquipmentResolver {
   @Query(() => [EquipmentCategoryType], { name: 'equipmentCategories' })
   async getEquipmentCategories(
     @GqlCurrentUser() user: JwtPayload,
+    @Args('filter', { type: () => EquipmentCategoryFilterInput, nullable: true })
+    filter?: EquipmentCategoryFilterInput,
   ): Promise<EquipmentCategoryType[]> {
-    const categories = await this.equipmentService.findAllCategories(user.tenantId);
+    const categories = await this.equipmentService.findAllCategories(user.tenantId, filter);
 
     return categories.map((cat) => this.transformCategory(cat, cat._count.equipment, 0));
   }
@@ -306,6 +309,7 @@ export class EquipmentResolver {
       icon: cat.icon ?? undefined,
       color: cat.color ?? undefined,
       attachmentType: cat.attachmentType,
+      operationType: cat.operationType,
       defaultRentalRate: cat.defaultRentalRate?.toNumber() ?? undefined,
       requiresDeposit: cat.requiresDeposit,
       depositAmount: cat.depositAmount?.toNumber() ?? undefined,

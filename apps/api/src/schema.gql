@@ -1181,6 +1181,7 @@ input CreateEquipmentCategoryInput {
   description: String
   icon: String
   name: String!
+  operationType: OperationType = FACILITY
   requiresDeposit: Boolean
 }
 
@@ -2055,8 +2056,14 @@ type EquipmentCategory {
   id: ID!
   isActive: Boolean!
   name: String!
+  operationType: OperationType!
   requiresDeposit: Boolean!
   sortOrder: Int!
+}
+
+input EquipmentCategoryFilterInput {
+  isActive: Boolean
+  operationType: OperationType
 }
 
 type EquipmentCategoryResponse {
@@ -2083,6 +2090,9 @@ type EquipmentDeleteResponse {
 input EquipmentFilterInput {
   categoryId: ID
   condition: EquipmentCondition
+
+  """Filter by category operation type"""
+  operationType: OperationType
   status: EquipmentStatus
 }
 
@@ -3762,6 +3772,16 @@ input OpenShiftInput {
   openingFloat: Float!
 }
 
+"""
+Type of operation this equipment category belongs to (Golf, Facility, Spa, Event)
+"""
+enum OperationType {
+  EVENT
+  FACILITY
+  GOLF
+  SPA
+}
+
 type OutletGridConfig {
   categoryStyle: CategoryDisplayStyle!
   gridColumns: Int!
@@ -4403,7 +4423,7 @@ type Query {
   discounts(after: String, first: Int = 10, isActive: Boolean, scope: DiscountScope, search: String, skip: Int, sortBy: String = "name", sortOrder: String = "asc", type: DiscountType): DiscountConnection!
   equipment(filter: EquipmentFilterInput): [Equipment!]!
   equipmentAvailability(input: EquipmentAvailabilityInput!): [Equipment!]!
-  equipmentCategories: [EquipmentCategory!]!
+  equipmentCategories(filter: EquipmentCategoryFilterInput): [EquipmentCategory!]!
   equipmentCategory(id: ID!): EquipmentCategory
   equipmentItem(id: ID!): Equipment
 
@@ -4877,7 +4897,7 @@ enum ResourceTypeEnum {
 
 input ReturnEquipmentInput {
   assignmentId: ID!
-  conditionAtReturn: EquipmentCondition!
+  conditionAtReturn: EquipmentCondition
   notes: String
 }
 
@@ -5800,6 +5820,7 @@ input UpdateEquipmentCategoryInput {
   id: ID!
   isActive: Boolean
   name: String
+  operationType: OperationType
   requiresDeposit: Boolean
   sortOrder: Int
 }

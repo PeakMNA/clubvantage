@@ -189,12 +189,41 @@ export type ApproveDiscountInput = {
   approvalNote?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type ArAccountSearchResult = {
+  __typename?: 'ArAccountSearchResult';
+  accountName: Scalars['String']['output'];
+  accountNumber: Scalars['String']['output'];
+  accountType: ArAccountType;
+  agingStatus?: Maybe<Scalars['String']['output']>;
+  creditBalance: Scalars['String']['output'];
+  dependentCount?: Maybe<Scalars['Float']['output']>;
+  id: Scalars['ID']['output'];
+  invoiceCount: Scalars['Float']['output'];
+  outstandingBalance: Scalars['String']['output'];
+  photoUrl?: Maybe<Scalars['String']['output']>;
+  subType?: Maybe<Scalars['String']['output']>;
+};
+
+/** AR account type discriminator */
+export type ArAccountType =
+  | 'CITY_LEDGER'
+  | 'MEMBER';
+
 export type ArAgingReportType = {
   __typename?: 'ArAgingReportType';
   buckets: Array<AgingBucketType>;
   members: Array<AgingMemberType>;
   reinstatedMembers: Array<ReinstatedMemberType>;
   totalCount: Scalars['Float']['output'];
+};
+
+export type AssignEquipmentInput = {
+  bookingId?: InputMaybe<Scalars['ID']['input']>;
+  conditionAtCheckout?: InputMaybe<EquipmentCondition>;
+  equipmentId: Scalars['ID']['input'];
+  notes?: InputMaybe<Scalars['String']['input']>;
+  rentalFee?: InputMaybe<Scalars['Float']['input']>;
+  teeTimePlayerId?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export type AssignTemplateInput = {
@@ -319,6 +348,37 @@ export type BatchPaymentResultType = {
   transactionId?: Maybe<Scalars['String']['output']>;
 };
 
+export type BatchSettlementAllocation = {
+  __typename?: 'BatchSettlementAllocation';
+  amount: Scalars['String']['output'];
+  invoiceId: Scalars['ID']['output'];
+  invoiceNumber: Scalars['String']['output'];
+  newBalance: Scalars['String']['output'];
+  previousBalance: Scalars['String']['output'];
+};
+
+export type BatchSettlementInput = {
+  accountId: Scalars['ID']['input'];
+  accountType: ArAccountType;
+  method: PaymentMethod;
+  notes?: InputMaybe<Scalars['String']['input']>;
+  paymentAmount: Scalars['Float']['input'];
+  paymentDate?: InputMaybe<Scalars['DateTime']['input']>;
+  referenceNumber?: InputMaybe<Scalars['String']['input']>;
+  useFifo?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+export type BatchSettlementResult = {
+  __typename?: 'BatchSettlementResult';
+  allocations: Array<BatchSettlementAllocation>;
+  creditAdded: Scalars['String']['output'];
+  newCreditBalance: Scalars['String']['output'];
+  newOutstandingBalance: Scalars['String']['output'];
+  paymentId: Scalars['ID']['output'];
+  receiptNumber: Scalars['String']['output'];
+  totalAllocated: Scalars['String']['output'];
+};
+
 export type BatchTotalType = {
   __typename?: 'BatchTotalType';
   balanceDue: Scalars['Float']['output'];
@@ -330,6 +390,28 @@ export type BatchTotalType = {
   taxTotal: Scalars['Float']['output'];
 };
 
+/** Billing frequency options */
+export type BillingFrequency =
+  | 'ANNUAL'
+  | 'MONTHLY'
+  | 'QUARTERLY'
+  | 'SEMI_ANNUAL';
+
+/** Preview of an upcoming billing period */
+export type BillingPeriodPreview = {
+  __typename?: 'BillingPeriodPreview';
+  /** Date when the invoice will be generated/billed */
+  billingDate: Scalars['DateTime']['output'];
+  /** Human-readable description of the period */
+  description: Scalars['String']['output'];
+  /** Due date for payment */
+  dueDate: Scalars['DateTime']['output'];
+  /** End date of the billing period */
+  periodEnd: Scalars['DateTime']['output'];
+  /** Start date of the billing period */
+  periodStart: Scalars['DateTime']['output'];
+};
+
 export type BillingStatsType = {
   __typename?: 'BillingStatsType';
   invoiceCount: Scalars['Float']['output'];
@@ -339,6 +421,11 @@ export type BillingStatsType = {
   paidCount: Scalars['Float']['output'];
   totalRevenue: Scalars['String']['output'];
 };
+
+/** Billing timing options (advance or arrears) */
+export type BillingTiming =
+  | 'ADVANCE'
+  | 'ARREARS';
 
 export type BlockMutationResponse = {
   __typename?: 'BlockMutationResponse';
@@ -894,6 +981,47 @@ export type CheckLimitInput = {
   subAccountId: Scalars['String']['input'];
 };
 
+/** City ledger account type */
+export type CityLedgerAccountType =
+  | 'CORPORATE'
+  | 'HOUSE_ACCOUNT'
+  | 'OTHER'
+  | 'VENDOR';
+
+/** City ledger account status */
+export type CityLedgerStatus =
+  | 'ACTIVE'
+  | 'CLOSED'
+  | 'INACTIVE'
+  | 'SUSPENDED';
+
+export type CityLedgerType = {
+  __typename?: 'CityLedgerType';
+  accountName: Scalars['String']['output'];
+  accountNumber: Scalars['String']['output'];
+  accountType: CityLedgerAccountType;
+  billingAddress?: Maybe<Scalars['String']['output']>;
+  contactEmail?: Maybe<Scalars['String']['output']>;
+  contactName?: Maybe<Scalars['String']['output']>;
+  contactPhone?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  creditBalance: Scalars['String']['output'];
+  creditLimit?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  notes?: Maybe<Scalars['String']['output']>;
+  outstandingBalance: Scalars['String']['output'];
+  paymentTerms: Scalars['Float']['output'];
+  status: CityLedgerStatus;
+  taxId?: Maybe<Scalars['String']['output']>;
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+export type CityLedgerTypeEdge = {
+  __typename?: 'CityLedgerTypeEdge';
+  cursor: Scalars['String']['output'];
+  node: CityLedgerType;
+};
+
 export type CloneTemplateMutationResponse = {
   __typename?: 'CloneTemplateMutationResponse';
   message?: Maybe<Scalars['String']['output']>;
@@ -916,6 +1044,47 @@ export type CloseShiftInput = {
   denominations?: InputMaybe<Scalars['String']['input']>;
   shiftId: Scalars['ID']['input'];
   varianceNote?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** Club billing configuration settings */
+export type ClubBillingSettingsType = {
+  __typename?: 'ClubBillingSettingsType';
+  /** Whether to automatically apply late fees when due */
+  autoApplyLateFee: Scalars['Boolean']['output'];
+  clubId: Scalars['ID']['output'];
+  /** When the settings were created */
+  createdAt: Scalars['DateTime']['output'];
+  /** Billing cycle alignment (calendar or anniversary) */
+  defaultAlignment: CycleAlignment;
+  /** Default day of month for billing (1-28) */
+  defaultBillingDay: Scalars['Int']['output'];
+  /** Default billing frequency for new members */
+  defaultFrequency: BillingFrequency;
+  /** Whether to bill in advance or arrears */
+  defaultTiming: BillingTiming;
+  /** Grace period days after due date before late fees */
+  gracePeriodDays: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  /** Days after invoice date when payment is due */
+  invoiceDueDays: Scalars['Int']['output'];
+  /** Days before billing cycle to generate invoices */
+  invoiceGenerationLead: Scalars['Int']['output'];
+  /** Fixed late fee amount (in cents) */
+  lateFeeAmount: Scalars['Float']['output'];
+  /** Late fee percentage (0-100) */
+  lateFeePercentage: Scalars['Float']['output'];
+  /** Type of late fee to apply */
+  lateFeeType: LateFeeType;
+  /** Maximum late fee cap amount (in cents) */
+  maxLateFee?: Maybe<Scalars['Float']['output']>;
+  /** Whether to prorate charges for membership changes mid-cycle */
+  prorateChanges: Scalars['Boolean']['output'];
+  /** Whether to prorate charges for new members mid-cycle */
+  prorateNewMembers: Scalars['Boolean']['output'];
+  /** Method used for calculating prorated amounts */
+  prorationMethod: ProrationMethod;
+  /** When the settings were last updated */
+  updatedAt: Scalars['DateTime']['output'];
 };
 
 export type ClubGolfSettingsType = {
@@ -1038,6 +1207,33 @@ export type CreateDiscountInput = {
   value: Scalars['Float']['input'];
 };
 
+export type CreateEquipmentCategoryInput = {
+  attachmentType?: InputMaybe<EquipmentAttachmentType>;
+  code: Scalars['String']['input'];
+  color?: InputMaybe<Scalars['String']['input']>;
+  defaultRentalRate?: InputMaybe<Scalars['Float']['input']>;
+  depositAmount?: InputMaybe<Scalars['Float']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  icon?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+  operationType?: InputMaybe<OperationType>;
+  requiresDeposit?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+export type CreateEquipmentInput = {
+  assetNumber: Scalars['String']['input'];
+  categoryId: Scalars['ID']['input'];
+  condition?: InputMaybe<EquipmentCondition>;
+  location?: InputMaybe<Scalars['String']['input']>;
+  manufacturer?: InputMaybe<Scalars['String']['input']>;
+  model?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+  notes?: InputMaybe<Scalars['String']['input']>;
+  purchaseDate?: InputMaybe<Scalars['DateTime']['input']>;
+  serialNumber?: InputMaybe<Scalars['String']['input']>;
+  warrantyExpiry?: InputMaybe<Scalars['DateTime']['input']>;
+};
+
 export type CreateExceptionInput = {
   amount?: InputMaybe<Scalars['Float']['input']>;
   description: Scalars['String']['input'];
@@ -1082,6 +1278,17 @@ export type CreateGroupBookingInput = {
   startTime: Scalars['String']['input'];
 };
 
+/** Input for creating an interest category */
+export type CreateInterestCategoryInput = {
+  code: Scalars['String']['input'];
+  color?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  icon?: InputMaybe<Scalars['String']['input']>;
+  isActive?: InputMaybe<Scalars['Boolean']['input']>;
+  name: Scalars['String']['input'];
+  sortOrder?: InputMaybe<Scalars['Int']['input']>;
+};
+
 export type CreateInvoiceInput = {
   billingPeriod?: InputMaybe<Scalars['String']['input']>;
   dueDate: Scalars['DateTime']['input'];
@@ -1111,6 +1318,22 @@ export type CreateLotteryRequestInput = {
   preference1: Scalars['String']['input'];
   preference2?: InputMaybe<Scalars['String']['input']>;
   preference3?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type CreateMemberBillingProfileInput = {
+  billingAlignment?: InputMaybe<CycleAlignment>;
+  billingFrequency?: InputMaybe<BillingFrequency>;
+  billingTiming?: InputMaybe<BillingTiming>;
+  /** Custom billing day (1-28) */
+  customBillingDay?: InputMaybe<Scalars['Int']['input']>;
+  /** Custom grace period in days */
+  customGracePeriod?: InputMaybe<Scalars['Int']['input']>;
+  /** Exempt from late fees */
+  customLateFeeExempt?: InputMaybe<Scalars['Boolean']['input']>;
+  memberId: Scalars['ID']['input'];
+  /** Next scheduled billing date */
+  nextBillingDate?: InputMaybe<Scalars['DateTime']['input']>;
+  prorationOverride?: InputMaybe<ProrationMethod>;
 };
 
 export type CreateMemberInput = {
@@ -1547,6 +1770,11 @@ export type CreditWarningLevel =
   | 'APPROACHING_LIMIT'
   | 'EXCEEDED';
 
+/** Billing cycle alignment (calendar or anniversary) */
+export type CycleAlignment =
+  | 'ANNIVERSARY'
+  | 'CALENDAR';
+
 export type DailyCheckInReportType = {
   __typename?: 'DailyCheckInReportType';
   checkedInPlayers: Scalars['Int']['output'];
@@ -1657,6 +1885,25 @@ export type DeleteTemplateMutationResponse = {
   __typename?: 'DeleteTemplateMutationResponse';
   message?: Maybe<Scalars['String']['output']>;
   success: Scalars['Boolean']['output'];
+};
+
+/** Single interest entry for a dependent */
+export type DependentInterestInput = {
+  categoryId: Scalars['ID']['input'];
+  interestLevel: Scalars['Int']['input'];
+};
+
+/** Dependent interest in an activity category */
+export type DependentInterestType = {
+  __typename?: 'DependentInterestType';
+  category?: Maybe<InterestCategoryType>;
+  categoryId: Scalars['ID']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  dependentId: Scalars['ID']['output'];
+  id: Scalars['ID']['output'];
+  /** Interest level 0-100 */
+  interestLevel: Scalars['Int']['output'];
+  updatedAt: Scalars['DateTime']['output'];
 };
 
 export type DependentType = {
@@ -1775,6 +2022,152 @@ export type EffectiveScheduleType = {
   twilightTime: Scalars['String']['output'];
 };
 
+/** Response for engagement delete operations */
+export type EngagementDeleteResponse = {
+  __typename?: 'EngagementDeleteResponse';
+  message: Scalars['String']['output'];
+};
+
+/** Individual equipment item */
+export type Equipment = {
+  __typename?: 'Equipment';
+  assetNumber: Scalars['String']['output'];
+  category: EquipmentCategory;
+  condition: EquipmentCondition;
+  currentAssignment?: Maybe<EquipmentAssignment>;
+  id: Scalars['ID']['output'];
+  lastMaintenanceAt?: Maybe<Scalars['DateTime']['output']>;
+  location?: Maybe<Scalars['String']['output']>;
+  manufacturer?: Maybe<Scalars['String']['output']>;
+  model?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  nextMaintenanceAt?: Maybe<Scalars['DateTime']['output']>;
+  notes?: Maybe<Scalars['String']['output']>;
+  purchaseDate?: Maybe<Scalars['DateTime']['output']>;
+  serialNumber?: Maybe<Scalars['String']['output']>;
+  status: EquipmentStatus;
+  warrantyExpiry?: Maybe<Scalars['DateTime']['output']>;
+};
+
+/** Equipment assignment to a booking or tee time player */
+export type EquipmentAssignment = {
+  __typename?: 'EquipmentAssignment';
+  assignedAt: Scalars['DateTime']['output'];
+  bookingNumber?: Maybe<Scalars['String']['output']>;
+  conditionAtCheckout?: Maybe<EquipmentCondition>;
+  conditionAtReturn?: Maybe<EquipmentCondition>;
+  id: Scalars['ID']['output'];
+  member?: Maybe<EquipmentAssignmentMember>;
+  notes?: Maybe<Scalars['String']['output']>;
+  rentalFee?: Maybe<Scalars['Float']['output']>;
+  returnedAt?: Maybe<Scalars['DateTime']['output']>;
+};
+
+/** Member info for equipment assignment */
+export type EquipmentAssignmentMember = {
+  __typename?: 'EquipmentAssignmentMember';
+  avatarUrl?: Maybe<Scalars['String']['output']>;
+  firstName: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  lastName: Scalars['String']['output'];
+  memberId: Scalars['String']['output'];
+};
+
+export type EquipmentAssignmentResponse = {
+  __typename?: 'EquipmentAssignmentResponse';
+  assignment?: Maybe<EquipmentAssignment>;
+  error?: Maybe<Scalars['String']['output']>;
+  success: Scalars['Boolean']['output'];
+};
+
+/** Type of equipment attachment to bookings */
+export type EquipmentAttachmentType =
+  | 'OPTIONAL_ADDON'
+  | 'REQUIRED_RESOURCE';
+
+export type EquipmentAvailabilityInput = {
+  categoryId: Scalars['ID']['input'];
+  endTime: Scalars['DateTime']['input'];
+  startTime: Scalars['DateTime']['input'];
+};
+
+/** Equipment category for grouping similar equipment types */
+export type EquipmentCategory = {
+  __typename?: 'EquipmentCategory';
+  attachmentType: EquipmentAttachmentType;
+  availableCount: Scalars['Int']['output'];
+  code: Scalars['String']['output'];
+  color?: Maybe<Scalars['String']['output']>;
+  defaultRentalRate?: Maybe<Scalars['Float']['output']>;
+  depositAmount?: Maybe<Scalars['Float']['output']>;
+  description?: Maybe<Scalars['String']['output']>;
+  equipmentCount: Scalars['Int']['output'];
+  icon?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  isActive: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  operationType: OperationType;
+  requiresDeposit: Scalars['Boolean']['output'];
+  sortOrder: Scalars['Int']['output'];
+};
+
+export type EquipmentCategoryFilterInput = {
+  isActive?: InputMaybe<Scalars['Boolean']['input']>;
+  operationType?: InputMaybe<OperationType>;
+};
+
+export type EquipmentCategoryResponse = {
+  __typename?: 'EquipmentCategoryResponse';
+  category?: Maybe<EquipmentCategory>;
+  error?: Maybe<Scalars['String']['output']>;
+  success: Scalars['Boolean']['output'];
+};
+
+/** Physical condition of equipment */
+export type EquipmentCondition =
+  | 'EXCELLENT'
+  | 'FAIR'
+  | 'GOOD'
+  | 'NEEDS_REPAIR'
+  | 'OUT_OF_SERVICE';
+
+export type EquipmentDeleteResponse = {
+  __typename?: 'EquipmentDeleteResponse';
+  error?: Maybe<Scalars['String']['output']>;
+  message?: Maybe<Scalars['String']['output']>;
+  success: Scalars['Boolean']['output'];
+};
+
+export type EquipmentFilterInput = {
+  categoryId?: InputMaybe<Scalars['ID']['input']>;
+  condition?: InputMaybe<EquipmentCondition>;
+  /** Filter by category operation type */
+  operationType?: InputMaybe<OperationType>;
+  status?: InputMaybe<EquipmentStatus>;
+};
+
+export type EquipmentReleaseResponse = {
+  __typename?: 'EquipmentReleaseResponse';
+  error?: Maybe<Scalars['String']['output']>;
+  releasedCount: Scalars['Int']['output'];
+  success: Scalars['Boolean']['output'];
+};
+
+export type EquipmentResponse = {
+  __typename?: 'EquipmentResponse';
+  equipment?: Maybe<Equipment>;
+  error?: Maybe<Scalars['String']['output']>;
+  success: Scalars['Boolean']['output'];
+};
+
+/** Availability status of equipment */
+export type EquipmentStatus =
+  | 'AVAILABLE'
+  | 'IN_USE'
+  | 'MAINTENANCE'
+  | 'RESERVED'
+  | 'RETIRED';
+
 /** Resolution status of an exception */
 export type ExceptionResolution =
   | 'ACKNOWLEDGED'
@@ -1863,6 +2256,23 @@ export type FacilityType = {
   location?: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
   type: ResourceTypeEnum;
+};
+
+export type FifoAllocationItem = {
+  __typename?: 'FifoAllocationItem';
+  allocatedAmount: Scalars['String']['output'];
+  balance: Scalars['String']['output'];
+  dueDate: Scalars['DateTime']['output'];
+  invoiceId: Scalars['ID']['output'];
+  invoiceNumber: Scalars['String']['output'];
+};
+
+export type FifoAllocationPreview = {
+  __typename?: 'FifoAllocationPreview';
+  allocations: Array<FifoAllocationItem>;
+  creditToAdd: Scalars['String']['output'];
+  remainingPayment: Scalars['String']['output'];
+  totalAllocated: Scalars['String']['output'];
 };
 
 export type FlightAssignment = {
@@ -2207,6 +2617,27 @@ export type ImportPlayersFromCsvInput = {
   rows: Array<CsvPlayerRow>;
 };
 
+/** Interest category for member engagement */
+export type InterestCategoryType = {
+  __typename?: 'InterestCategoryType';
+  code: Scalars['String']['output'];
+  color?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  description?: Maybe<Scalars['String']['output']>;
+  icon?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  isActive: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  sortOrder: Scalars['Int']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+/** Source of the interest data */
+export type InterestSource =
+  | 'BOOKING'
+  | 'EXPLICIT'
+  | 'INFERRED';
+
 export type InvoiceConnection = {
   __typename?: 'InvoiceConnection';
   edges: Array<InvoiceTypeEdge>;
@@ -2288,6 +2719,33 @@ export type JoinWaitlistInput = {
   serviceId?: InputMaybe<Scalars['ID']['input']>;
 };
 
+/** Preview of late fee calculation */
+export type LateFeePreview = {
+  __typename?: 'LateFeePreview';
+  /** Date when late fee would be applied */
+  appliedDate: Scalars['DateTime']['output'];
+  /** Number of days overdue */
+  daysOverdue: Scalars['Int']['output'];
+  /** Human-readable description of the late fee */
+  description: Scalars['String']['output'];
+  /** Late fee amount in cents */
+  feeAmount: Scalars['Float']['output'];
+  /** Whether the invoice is still within grace period */
+  isWithinGracePeriod: Scalars['Boolean']['output'];
+};
+
+export type LateFeePreviewInput = {
+  /** Date to calculate late fee as of (defaults to today) */
+  calculationDate?: InputMaybe<Scalars['DateTime']['input']>;
+  invoiceId: Scalars['ID']['input'];
+};
+
+/** Late fee type options */
+export type LateFeeType =
+  | 'FIXED'
+  | 'PERCENTAGE'
+  | 'TIERED';
+
 export type LineItemPaymentType = {
   __typename?: 'LineItemPaymentType';
   amount: Scalars['Float']['output'];
@@ -2361,11 +2819,100 @@ export type MemberAtRiskType = {
   usagePercent: Scalars['Float']['output'];
 };
 
+/** Member-specific billing profile with optional overrides */
+export type MemberBillingProfileType = {
+  __typename?: 'MemberBillingProfileType';
+  /** Override cycle alignment for this member */
+  billingAlignment?: Maybe<CycleAlignment>;
+  /** Override billing frequency for this member */
+  billingFrequency?: Maybe<BillingFrequency>;
+  /** Whether billing is on hold for this member */
+  billingHold: Scalars['Boolean']['output'];
+  /** Reason for placing billing on hold */
+  billingHoldReason?: Maybe<Scalars['String']['output']>;
+  /** Date until which billing is on hold */
+  billingHoldUntil?: Maybe<Scalars['DateTime']['output']>;
+  /** Override billing timing for this member */
+  billingTiming?: Maybe<BillingTiming>;
+  /** When the profile was created */
+  createdAt: Scalars['DateTime']['output'];
+  /** Current billing period end date */
+  currentPeriodEnd?: Maybe<Scalars['DateTime']['output']>;
+  /** Current billing period start date */
+  currentPeriodStart?: Maybe<Scalars['DateTime']['output']>;
+  /** Custom billing day of month (1-28) */
+  customBillingDay?: Maybe<Scalars['Int']['output']>;
+  /** Custom grace period in days */
+  customGracePeriod?: Maybe<Scalars['Int']['output']>;
+  /** Whether this member is exempt from late fees */
+  customLateFeeExempt: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  /** Last billing date processed */
+  lastBillingDate?: Maybe<Scalars['DateTime']['output']>;
+  /** Associated member information */
+  member?: Maybe<MemberBillingSummary>;
+  memberId: Scalars['ID']['output'];
+  /** Next scheduled billing date */
+  nextBillingDate?: Maybe<Scalars['DateTime']['output']>;
+  /** Internal notes about this billing profile */
+  notes?: Maybe<Scalars['String']['output']>;
+  /** Override proration method for this member */
+  prorationOverride?: Maybe<ProrationMethod>;
+  /** When the profile was last updated */
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+/** Minimal member summary for billing contexts */
+export type MemberBillingSummary = {
+  __typename?: 'MemberBillingSummary';
+  firstName: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  lastName: Scalars['String']['output'];
+  /** Member ID number */
+  memberId: Scalars['String']['output'];
+};
+
+/** Member communication preferences */
+export type MemberCommunicationPrefsType = {
+  __typename?: 'MemberCommunicationPrefsType';
+  createdAt: Scalars['DateTime']['output'];
+  emailPromotions: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  memberId: Scalars['ID']['output'];
+  pushNotifications: Scalars['Boolean']['output'];
+  smsPromotions: Scalars['Boolean']['output'];
+  unsubscribedCategories: Array<Scalars['String']['output']>;
+  updatedAt: Scalars['DateTime']['output'];
+};
+
 export type MemberConnection = {
   __typename?: 'MemberConnection';
   edges: Array<MemberTypeEdge>;
   pageInfo: PageInfo;
   totalCount: Scalars['Int']['output'];
+};
+
+/** Single interest entry for a member */
+export type MemberInterestInput = {
+  categoryId: Scalars['ID']['input'];
+  interestLevel: Scalars['Int']['input'];
+  source?: InputMaybe<InterestSource>;
+};
+
+/** Member interest in an activity category */
+export type MemberInterestType = {
+  __typename?: 'MemberInterestType';
+  activityCount: Scalars['Int']['output'];
+  category?: Maybe<InterestCategoryType>;
+  categoryId: Scalars['ID']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  /** Interest level 0-100 */
+  interestLevel: Scalars['Int']['output'];
+  lastActivityAt?: Maybe<Scalars['DateTime']['output']>;
+  memberId: Scalars['ID']['output'];
+  source: InterestSource;
+  updatedAt: Scalars['DateTime']['output'];
 };
 
 export type MemberMinimumSpend = {
@@ -2647,10 +3194,13 @@ export type Mutation = {
   approveCreditNote: CreditNoteGraphQlType;
   /** Approve a pending discount that requires manager approval */
   approveDiscount: AppliedDiscountType;
+  assignEquipment: EquipmentAssignmentResponse;
   /** Auto-assign players to flights */
   assignFlights: GroupBookingFlightsResponse;
   /** Assign a template to an outlet */
   assignPOSTemplate: AssignTemplateMutationResponse;
+  /** Batch settle invoices using FIFO allocation */
+  batchSettleInvoices: BatchSettlementResult;
   /** Remove multiple line items */
   bulkRemoveLineItems: BulkRemoveResultType;
   /** Transfer multiple line items to another player */
@@ -2724,18 +3274,24 @@ export type Mutation = {
   createDependent: DependentType;
   /** Create a new discount */
   createDiscount: DiscountGraphQlType;
+  createEquipment: EquipmentResponse;
+  createEquipmentCategory: EquipmentCategoryResponse;
   /** Create a new facility */
   createFacility: FacilityResponseType;
   /** Create a green fee rate */
   createGreenFeeRate: GreenFeeRateMutationResponse;
   /** Create a group booking */
   createGroupBooking: GroupBookingMutationResponse;
+  /** Create a new interest category */
+  createInterestCategory: InterestCategoryType;
   /** Create a new invoice */
   createInvoice: InvoiceType;
   /** Create a lottery */
   createLottery: LotteryMutationResponse;
   /** Create a new member */
   createMember: MemberType;
+  /** Create a billing profile for a member with custom settings */
+  createMemberBillingProfile: MemberBillingProfileType;
   /** Create a new minimum spend requirement */
   createMinimumSpendRequirement: MinimumSpendRequirement;
   createModifierGroup: ModifierGroup;
@@ -2781,12 +3337,16 @@ export type Mutation = {
   deleteDependent: DeleteDependentResponseType;
   /** Delete a discount (soft delete) */
   deleteDiscount: Scalars['Boolean']['output'];
+  deleteEquipment: EquipmentDeleteResponse;
+  deleteEquipmentCategory: EquipmentDeleteResponse;
   /** Delete a facility */
   deleteFacility: DeleteResponseType;
   /** Delete a green fee rate */
   deleteGreenFeeRate: DeleteRateMutationResponse;
   /** Delete a draft group booking */
   deleteGroupBooking: GroupBookingMutationResponse;
+  /** Delete an interest category */
+  deleteInterestCategory: EngagementDeleteResponse;
   /** Delete a draft lottery */
   deleteLottery: LotteryMutationResponse;
   /** Soft delete a member */
@@ -2871,14 +3431,19 @@ export type Mutation = {
   recordSubAccountTransaction: SubAccountTransaction;
   /** Manually regenerate line items for a tee time */
   regenerateLineItems: Scalars['Boolean']['output'];
+  releaseEquipmentForBooking: EquipmentReleaseResponse;
   /** Remove an applied discount */
   removeAppliedDiscount: Scalars['Boolean']['output'];
+  /** Remove a specific interest from a dependent */
+  removeDependentInterest: EngagementDeleteResponse;
   /** Remove entry from waitlist */
   removeFromWaitlist: WaitlistResponseType;
   /** Remove a player from a group booking */
   removeGroupPlayer: GroupBookingMutationResponse;
   /** Remove a line item from cart */
   removeLineItem: RemoveLineItemResultType;
+  /** Remove a specific interest from a member */
+  removeMemberInterest: EngagementDeleteResponse;
   /** Remove minimum spend exemption from a member */
   removeMinimumSpendExemption: MemberMinimumSpend;
   /** Remove a stored payment method */
@@ -2903,6 +3468,7 @@ export type Mutation = {
   resumeShift: CashDrawerShiftGraphQlType;
   /** Retry a failed auto-pay attempt */
   retryAutoPayAttempt: AutoPayResult;
+  returnEquipment: EquipmentAssignmentResponse;
   /** Revert a credit limit override */
   revertCreditOverride: Scalars['Boolean']['output'];
   /** Save cart draft for a tee time */
@@ -2913,6 +3479,10 @@ export type Mutation = {
   sendWaitlistOffer: WaitlistResponseType;
   /** Set a payment method as default */
   setDefaultPaymentMethod: StoredPaymentMethod;
+  /** Set interests for a dependent (upserts) */
+  setDependentInterests: Array<DependentInterestType>;
+  /** Set interests for a member (upserts) */
+  setMemberInterests: Array<MemberInterestType>;
   /** Set role-specific button overrides for an outlet */
   setPOSRoleOverrides: SetRoleOverridesMutationResponse;
   /** Settle all players in a flight at once */
@@ -2947,24 +3517,35 @@ export type Mutation = {
   updateCheckInPaymentMethod: CheckInPaymentMethodType;
   /** Update check-in policy settings */
   updateCheckInPolicy: CheckInSettingsType;
+  /** Update club-wide billing configuration settings */
+  updateClubBillingSettings: ClubBillingSettingsType;
   /** Update a course schedule */
   updateCourseSchedule: ScheduleMutationResponse;
   /** Update a dependent */
   updateDependent: DependentType;
   /** Update an existing discount */
   updateDiscount: DiscountGraphQlType;
+  updateEquipment: EquipmentResponse;
+  updateEquipmentCategory: EquipmentCategoryResponse;
+  updateEquipmentStatus: EquipmentResponse;
   /** Update an existing facility */
   updateFacility: FacilityResponseType;
   /** Update a green fee rate */
   updateGreenFeeRate: GreenFeeRateMutationResponse;
   /** Update a group booking */
   updateGroupBooking: GroupBookingMutationResponse;
+  /** Update an existing interest category */
+  updateInterestCategory: InterestCategoryType;
   /** Update line item quantity */
   updateLineItemQuantity: UpdateQuantityResultType;
   /** Update a lottery */
   updateLottery: LotteryMutationResponse;
   /** Update an existing member */
   updateMember: MemberType;
+  /** Update billing profile for a member */
+  updateMemberBillingProfile: MemberBillingProfileType;
+  /** Update communication preferences for a member */
+  updateMemberCommunicationPrefs: MemberCommunicationPrefsType;
   /** Update credit limit settings for a member */
   updateMemberCreditSettings: Scalars['Boolean']['output'];
   /** Update a minimum spend requirement */
@@ -3084,6 +3665,11 @@ export type MutationApproveDiscountArgs = {
 };
 
 
+export type MutationAssignEquipmentArgs = {
+  input: AssignEquipmentInput;
+};
+
+
 export type MutationAssignFlightsArgs = {
   id: Scalars['ID']['input'];
   interval?: Scalars['Float']['input'];
@@ -3092,6 +3678,11 @@ export type MutationAssignFlightsArgs = {
 
 export type MutationAssignPosTemplateArgs = {
   input: AssignTemplateInput;
+};
+
+
+export type MutationBatchSettleInvoicesArgs = {
+  input: BatchSettlementInput;
 };
 
 
@@ -3287,6 +3878,16 @@ export type MutationCreateDiscountArgs = {
 };
 
 
+export type MutationCreateEquipmentArgs = {
+  input: CreateEquipmentInput;
+};
+
+
+export type MutationCreateEquipmentCategoryArgs = {
+  input: CreateEquipmentCategoryInput;
+};
+
+
 export type MutationCreateFacilityArgs = {
   input: CreateFacilityInput;
 };
@@ -3302,6 +3903,11 @@ export type MutationCreateGroupBookingArgs = {
 };
 
 
+export type MutationCreateInterestCategoryArgs = {
+  input: CreateInterestCategoryInput;
+};
+
+
 export type MutationCreateInvoiceArgs = {
   input: CreateInvoiceInput;
 };
@@ -3314,6 +3920,11 @@ export type MutationCreateLotteryArgs = {
 
 export type MutationCreateMemberArgs = {
   input: CreateMemberInput;
+};
+
+
+export type MutationCreateMemberBillingProfileArgs = {
+  input: CreateMemberBillingProfileInput;
 };
 
 
@@ -3440,6 +4051,16 @@ export type MutationDeleteDiscountArgs = {
 };
 
 
+export type MutationDeleteEquipmentArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteEquipmentCategoryArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteFacilityArgs = {
   id: Scalars['ID']['input'];
 };
@@ -3451,6 +4072,11 @@ export type MutationDeleteGreenFeeRateArgs = {
 
 
 export type MutationDeleteGroupBookingArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteInterestCategoryArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -3673,8 +4299,19 @@ export type MutationRegenerateLineItemsArgs = {
 };
 
 
+export type MutationReleaseEquipmentForBookingArgs = {
+  bookingId: Scalars['ID']['input'];
+};
+
+
 export type MutationRemoveAppliedDiscountArgs = {
   appliedDiscountId: Scalars['ID']['input'];
+};
+
+
+export type MutationRemoveDependentInterestArgs = {
+  categoryId: Scalars['ID']['input'];
+  dependentId: Scalars['ID']['input'];
 };
 
 
@@ -3691,6 +4328,12 @@ export type MutationRemoveGroupPlayerArgs = {
 
 export type MutationRemoveLineItemArgs = {
   input: RemoveLineItemInput;
+};
+
+
+export type MutationRemoveMemberInterestArgs = {
+  categoryId: Scalars['ID']['input'];
+  memberId: Scalars['ID']['input'];
 };
 
 
@@ -3749,6 +4392,11 @@ export type MutationRetryAutoPayAttemptArgs = {
 };
 
 
+export type MutationReturnEquipmentArgs = {
+  input: ReturnEquipmentInput;
+};
+
+
 export type MutationRevertCreditOverrideArgs = {
   overrideId: Scalars['ID']['input'];
 };
@@ -3771,6 +4419,16 @@ export type MutationSendWaitlistOfferArgs = {
 
 export type MutationSetDefaultPaymentMethodArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationSetDependentInterestsArgs = {
+  input: SetDependentInterestsInput;
+};
+
+
+export type MutationSetMemberInterestsArgs = {
+  input: SetMemberInterestsInput;
 };
 
 
@@ -3866,6 +4524,11 @@ export type MutationUpdateCheckInPolicyArgs = {
 };
 
 
+export type MutationUpdateClubBillingSettingsArgs = {
+  input: UpdateClubBillingSettingsInput;
+};
+
+
 export type MutationUpdateCourseScheduleArgs = {
   id: Scalars['ID']['input'];
   input: UpdateScheduleInput;
@@ -3881,6 +4544,21 @@ export type MutationUpdateDependentArgs = {
 export type MutationUpdateDiscountArgs = {
   id: Scalars['ID']['input'];
   input: UpdateDiscountInput;
+};
+
+
+export type MutationUpdateEquipmentArgs = {
+  input: UpdateEquipmentInput;
+};
+
+
+export type MutationUpdateEquipmentCategoryArgs = {
+  input: UpdateEquipmentCategoryInput;
+};
+
+
+export type MutationUpdateEquipmentStatusArgs = {
+  input: UpdateEquipmentStatusInput;
 };
 
 
@@ -3901,6 +4579,12 @@ export type MutationUpdateGroupBookingArgs = {
 };
 
 
+export type MutationUpdateInterestCategoryArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateInterestCategoryInput;
+};
+
+
 export type MutationUpdateLineItemQuantityArgs = {
   input: UpdateLineItemQuantityInput;
 };
@@ -3915,6 +4599,17 @@ export type MutationUpdateLotteryArgs = {
 export type MutationUpdateMemberArgs = {
   id: Scalars['ID']['input'];
   input: UpdateMemberInput;
+};
+
+
+export type MutationUpdateMemberBillingProfileArgs = {
+  input: UpdateMemberBillingProfileInput;
+  memberId: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdateMemberCommunicationPrefsArgs = {
+  input: UpdateCommunicationPrefsInput;
 };
 
 
@@ -4129,6 +4824,13 @@ export type OpenShiftInput = {
   denominations?: InputMaybe<Scalars['String']['input']>;
   openingFloat: Scalars['Float']['input'];
 };
+
+/** Type of operation this equipment category belongs to (Golf, Facility, Spa, Event) */
+export type OperationType =
+  | 'EVENT'
+  | 'FACILITY'
+  | 'GOLF'
+  | 'SPA';
 
 export type OutletGridConfig = {
   __typename?: 'OutletGridConfig';
@@ -4651,6 +5353,35 @@ export type ProductVariant = {
   stockQuantity?: Maybe<Scalars['Int']['output']>;
 };
 
+/** Proration calculation method */
+export type ProrationMethod =
+  | 'DAILY'
+  | 'MONTHLY'
+  | 'NONE';
+
+/** Preview of proration calculation */
+export type ProrationPreview = {
+  __typename?: 'ProrationPreview';
+  /** Total days in the billing period */
+  daysInPeriod: Scalars['Int']['output'];
+  /** Number of days being prorated */
+  daysProrated: Scalars['Int']['output'];
+  /** Human-readable description of the proration */
+  description: Scalars['String']['output'];
+  /** Prorated amount in cents */
+  proratedAmount: Scalars['Float']['output'];
+  /** Proration factor (0-1) */
+  prorationFactor: Scalars['Float']['output'];
+};
+
+export type ProrationPreviewInput = {
+  /** Effective date for the prorated period */
+  effectiveDate: Scalars['DateTime']['input'];
+  /** Full period amount before proration */
+  fullPeriodAmount: Scalars['Float']['input'];
+  memberId: Scalars['ID']['input'];
+};
+
 export type Query = {
   __typename?: 'Query';
   /** Get all active discounts for POS use */
@@ -4699,6 +5430,8 @@ export type Query = {
   checkMemberCredit: CreditCheckResultType;
   /** Check if a sub-account can make a transaction */
   checkSubAccountLimit: SubAccountLimitCheck;
+  /** Get club-wide billing configuration settings */
+  clubBillingSettings: ClubBillingSettingsType;
   /** Get club golf settings including cart, rental, and caddy policies */
   clubGolfSettings?: Maybe<ClubGolfSettingsType>;
   /** Get schedules for a course */
@@ -4715,12 +5448,19 @@ export type Query = {
   currentShift?: Maybe<CashDrawerShiftGraphQlType>;
   /** Get daily check-in report for a course */
   dailyCheckInReport: DailyCheckInReportType;
+  /** Get all interests for a dependent */
+  dependentInterests: Array<DependentInterestType>;
   /** Get a single discount by ID */
   discount?: Maybe<DiscountGraphQlType>;
   /** Find a discount by its code */
   discountByCode?: Maybe<DiscountGraphQlType>;
   /** Get all discounts for the current club with filtering and pagination */
   discounts: DiscountConnection;
+  equipment: Array<Equipment>;
+  equipmentAvailability: Array<Equipment>;
+  equipmentCategories: Array<EquipmentCategory>;
+  equipmentCategory?: Maybe<EquipmentCategory>;
+  equipmentItem?: Maybe<Equipment>;
   /** Get list of facilities */
   facilities: Array<FacilityType>;
   /** Get check-in info for all players in a tee time */
@@ -4743,6 +5483,10 @@ export type Query = {
   groupBookings: Array<GolfGroupBookingType>;
   /** Check if a tee time has a cart draft */
   hasDraft: Scalars['Boolean']['output'];
+  /** Get all interest categories for the club */
+  interestCategories: Array<InterestCategoryType>;
+  /** Get a single interest category by ID */
+  interestCategory: InterestCategoryType;
   /** Get a single invoice by ID */
   invoice: InvoiceType;
   /** Get auto-pay attempts for an invoice */
@@ -4763,6 +5507,10 @@ export type Query = {
   memberAutoPayHistory: Array<AutoPayAttempt>;
   /** Get auto-pay settings for a member */
   memberAutoPaySetting?: Maybe<AutoPaySetting>;
+  /** Get billing profile for a specific member */
+  memberBillingProfile?: Maybe<MemberBillingProfileType>;
+  /** Get communication preferences for a member */
+  memberCommunicationPrefs: MemberCommunicationPrefsType;
   /** Get credit limit override history for a member */
   memberCreditOverrideHistory: Array<CreditLimitOverrideType>;
   /** Get active credit limit overrides for a member */
@@ -4773,6 +5521,8 @@ export type Query = {
   memberCreditStatus?: Maybe<CreditStatusType>;
   /** Get member dependents */
   memberDependents: Array<DependentType>;
+  /** Get all interests for a member */
+  memberInterests: Array<MemberInterestType>;
   /** Get a member minimum spend record by ID */
   memberMinimumSpend?: Maybe<MemberMinimumSpend>;
   /** Get member minimum spend records */
@@ -4825,6 +5575,14 @@ export type Query = {
   posTemplate?: Maybe<PosTemplateGraphQlType>;
   /** Get all POS templates for the current club */
   posTemplates: Array<PosTemplateGraphQlType>;
+  /** Preview FIFO allocation for a payment amount */
+  previewFifoAllocation: FifoAllocationPreview;
+  /** Preview late fee calculation for an overdue invoice */
+  previewLateFee: LateFeePreview;
+  /** Preview the next billing period dates for a member based on their configuration */
+  previewNextBillingPeriod: BillingPeriodPreview;
+  /** Preview prorated amount for a member joining mid-cycle */
+  previewProration: ProrationPreview;
   /** Get all pro shop categories for the current club */
   proShopCategories: Array<ProShopCategoryType>;
   /** Get a single pro shop category by ID */
@@ -4846,6 +5604,8 @@ export type Query = {
   rateConfig: RateConfigType;
   /** Get HTML template for a receipt */
   receiptHTML: Scalars['String']['output'];
+  /** Search AR accounts (Members + City Ledger) */
+  searchArAccounts: Array<ArAccountSearchResult>;
   /** Search for caddies by name or caddy number */
   searchCaddies: Array<CaddyType>;
   /** Get list of services */
@@ -5061,6 +5821,11 @@ export type QueryDailyCheckInReportArgs = {
 };
 
 
+export type QueryDependentInterestsArgs = {
+  dependentId: Scalars['ID']['input'];
+};
+
+
 export type QueryDiscountArgs = {
   id: Scalars['ID']['input'];
 };
@@ -5081,6 +5846,31 @@ export type QueryDiscountsArgs = {
   sortBy?: InputMaybe<Scalars['String']['input']>;
   sortOrder?: InputMaybe<Scalars['String']['input']>;
   type?: InputMaybe<DiscountType>;
+};
+
+
+export type QueryEquipmentArgs = {
+  filter?: InputMaybe<EquipmentFilterInput>;
+};
+
+
+export type QueryEquipmentAvailabilityArgs = {
+  input: EquipmentAvailabilityInput;
+};
+
+
+export type QueryEquipmentCategoriesArgs = {
+  filter?: InputMaybe<EquipmentCategoryFilterInput>;
+};
+
+
+export type QueryEquipmentCategoryArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryEquipmentItemArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -5137,6 +5927,16 @@ export type QueryGroupBookingsArgs = {
 
 export type QueryHasDraftArgs = {
   teeTimeId: Scalars['ID']['input'];
+};
+
+
+export type QueryInterestCategoriesArgs = {
+  isActive?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+
+export type QueryInterestCategoryArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -5202,6 +6002,16 @@ export type QueryMemberAutoPaySettingArgs = {
 };
 
 
+export type QueryMemberBillingProfileArgs = {
+  memberId: Scalars['ID']['input'];
+};
+
+
+export type QueryMemberCommunicationPrefsArgs = {
+  memberId: Scalars['ID']['input'];
+};
+
+
 export type QueryMemberCreditOverrideHistoryArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   memberId: Scalars['ID']['input'];
@@ -5224,6 +6034,11 @@ export type QueryMemberCreditStatusArgs = {
 
 
 export type QueryMemberDependentsArgs = {
+  memberId: Scalars['ID']['input'];
+};
+
+
+export type QueryMemberInterestsArgs = {
   memberId: Scalars['ID']['input'];
 };
 
@@ -5334,6 +6149,28 @@ export type QueryPosTemplateArgs = {
 };
 
 
+export type QueryPreviewFifoAllocationArgs = {
+  accountId: Scalars['ID']['input'];
+  accountType: Scalars['String']['input'];
+  paymentAmount: Scalars['Float']['input'];
+};
+
+
+export type QueryPreviewLateFeeArgs = {
+  input: LateFeePreviewInput;
+};
+
+
+export type QueryPreviewNextBillingPeriodArgs = {
+  memberId: Scalars['ID']['input'];
+};
+
+
+export type QueryPreviewProrationArgs = {
+  input: ProrationPreviewInput;
+};
+
+
 export type QueryProShopCategoryArgs = {
   id: Scalars['ID']['input'];
 };
@@ -5382,6 +6219,13 @@ export type QueryRateConfigArgs = {
 export type QueryReceiptHtmlArgs = {
   playerId: Scalars['ID']['input'];
   teeTimeId: Scalars['ID']['input'];
+};
+
+
+export type QuerySearchArAccountsArgs = {
+  accountTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  limit?: InputMaybe<Scalars['Float']['input']>;
+  search: Scalars['String']['input'];
 };
 
 
@@ -5721,6 +6565,12 @@ export type ResourceTypeEnum =
   | 'SPA'
   | 'STUDIO';
 
+export type ReturnEquipmentInput = {
+  assignmentId: Scalars['ID']['input'];
+  conditionAtReturn?: InputMaybe<EquipmentCondition>;
+  notes?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type RoleRulesInput = {
   allowedRoles?: InputMaybe<Array<Scalars['String']['input']>>;
   deniedRoles?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -5794,6 +6644,18 @@ export type ServiceVariationType = {
   name: Scalars['String']['output'];
   priceModifier: Scalars['Float']['output'];
   priceType: Scalars['String']['output'];
+};
+
+/** Input for setting dependent interests */
+export type SetDependentInterestsInput = {
+  dependentId: Scalars['ID']['input'];
+  interests: Array<DependentInterestInput>;
+};
+
+/** Input for setting member interests */
+export type SetMemberInterestsInput = {
+  interests: Array<MemberInterestInput>;
+  memberId: Scalars['ID']['input'];
 };
 
 export type SetRoleOverridesMutationResponse = {
@@ -6580,6 +7442,43 @@ export type UpdateCashDrawerInput = {
   name?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type UpdateClubBillingSettingsInput = {
+  /** Automatically apply late fees when due */
+  autoApplyLateFee?: InputMaybe<Scalars['Boolean']['input']>;
+  defaultAlignment?: InputMaybe<CycleAlignment>;
+  /** Default billing day (1-28) */
+  defaultBillingDay?: InputMaybe<Scalars['Int']['input']>;
+  defaultFrequency?: InputMaybe<BillingFrequency>;
+  defaultTiming?: InputMaybe<BillingTiming>;
+  /** Grace period days after due date (0-60) */
+  gracePeriodDays?: InputMaybe<Scalars['Int']['input']>;
+  /** Days after invoice for payment due (1-60) */
+  invoiceDueDays?: InputMaybe<Scalars['Int']['input']>;
+  /** Days before billing to generate invoices (0-30) */
+  invoiceGenerationLead?: InputMaybe<Scalars['Int']['input']>;
+  /** Fixed late fee amount */
+  lateFeeAmount?: InputMaybe<Scalars['Float']['input']>;
+  /** Late fee percentage (0-100) */
+  lateFeePercentage?: InputMaybe<Scalars['Float']['input']>;
+  lateFeeType?: InputMaybe<LateFeeType>;
+  /** Maximum late fee cap */
+  maxLateFee?: InputMaybe<Scalars['Float']['input']>;
+  /** Prorate charges for membership changes mid-cycle */
+  prorateChanges?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Prorate charges for new members mid-cycle */
+  prorateNewMembers?: InputMaybe<Scalars['Boolean']['input']>;
+  prorationMethod?: InputMaybe<ProrationMethod>;
+};
+
+/** Input for updating communication preferences */
+export type UpdateCommunicationPrefsInput = {
+  emailPromotions?: InputMaybe<Scalars['Boolean']['input']>;
+  memberId: Scalars['ID']['input'];
+  pushNotifications?: InputMaybe<Scalars['Boolean']['input']>;
+  smsPromotions?: InputMaybe<Scalars['Boolean']['input']>;
+  unsubscribedCategories?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
 export type UpdateCreditSettingsInput = {
   creditAlertThreshold?: InputMaybe<Scalars['Float']['input']>;
   creditBlockEnabled?: InputMaybe<Scalars['Boolean']['input']>;
@@ -6609,6 +7508,41 @@ export type UpdateDiscountInput = {
   type?: InputMaybe<DiscountType>;
   validity?: InputMaybe<DiscountValidityInput>;
   value?: InputMaybe<Scalars['Float']['input']>;
+};
+
+export type UpdateEquipmentCategoryInput = {
+  attachmentType?: InputMaybe<EquipmentAttachmentType>;
+  color?: InputMaybe<Scalars['String']['input']>;
+  defaultRentalRate?: InputMaybe<Scalars['Float']['input']>;
+  depositAmount?: InputMaybe<Scalars['Float']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  icon?: InputMaybe<Scalars['String']['input']>;
+  id: Scalars['ID']['input'];
+  isActive?: InputMaybe<Scalars['Boolean']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  operationType?: InputMaybe<OperationType>;
+  requiresDeposit?: InputMaybe<Scalars['Boolean']['input']>;
+  sortOrder?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type UpdateEquipmentInput = {
+  condition?: InputMaybe<EquipmentCondition>;
+  id: Scalars['ID']['input'];
+  lastMaintenanceAt?: InputMaybe<Scalars['DateTime']['input']>;
+  location?: InputMaybe<Scalars['String']['input']>;
+  manufacturer?: InputMaybe<Scalars['String']['input']>;
+  model?: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  nextMaintenanceAt?: InputMaybe<Scalars['DateTime']['input']>;
+  notes?: InputMaybe<Scalars['String']['input']>;
+  purchaseDate?: InputMaybe<Scalars['DateTime']['input']>;
+  serialNumber?: InputMaybe<Scalars['String']['input']>;
+  warrantyExpiry?: InputMaybe<Scalars['DateTime']['input']>;
+};
+
+export type UpdateEquipmentStatusInput = {
+  id: Scalars['ID']['input'];
+  status: EquipmentStatus;
 };
 
 export type UpdateFacilityInput = {
@@ -6643,6 +7577,16 @@ export type UpdateGroupBookingInput = {
   status?: InputMaybe<GroupBookingStatus>;
 };
 
+/** Input for updating an interest category */
+export type UpdateInterestCategoryInput = {
+  color?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  icon?: InputMaybe<Scalars['String']['input']>;
+  isActive?: InputMaybe<Scalars['Boolean']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  sortOrder?: InputMaybe<Scalars['Int']['input']>;
+};
+
 export type UpdateLineItemQuantityInput = {
   lineItemId: Scalars['ID']['input'];
   quantity: Scalars['Int']['input'];
@@ -6658,6 +7602,29 @@ export type UpdateLotteryInput = {
   status?: InputMaybe<LotteryStatus>;
   timeRangeEnd?: InputMaybe<Scalars['String']['input']>;
   timeRangeStart?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateMemberBillingProfileInput = {
+  billingAlignment?: InputMaybe<CycleAlignment>;
+  billingFrequency?: InputMaybe<BillingFrequency>;
+  /** Put billing on hold */
+  billingHold?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Reason for billing hold */
+  billingHoldReason?: InputMaybe<Scalars['String']['input']>;
+  /** Date until billing hold expires */
+  billingHoldUntil?: InputMaybe<Scalars['DateTime']['input']>;
+  billingTiming?: InputMaybe<BillingTiming>;
+  /** Custom billing day (1-28) */
+  customBillingDay?: InputMaybe<Scalars['Int']['input']>;
+  /** Custom grace period in days */
+  customGracePeriod?: InputMaybe<Scalars['Int']['input']>;
+  /** Exempt from late fees */
+  customLateFeeExempt?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Next scheduled billing date */
+  nextBillingDate?: InputMaybe<Scalars['DateTime']['input']>;
+  /** Internal notes about billing profile */
+  notes?: InputMaybe<Scalars['String']['input']>;
+  prorationOverride?: InputMaybe<ProrationMethod>;
 };
 
 export type UpdateMemberInput = {
@@ -7883,6 +8850,111 @@ export type ResolveSettlementExceptionMutationVariables = Exact<{
 
 
 export type ResolveSettlementExceptionMutation = { __typename?: 'Mutation', resolveSettlementException: { __typename?: 'SettlementExceptionGraphQLType', id: string, resolution: ExceptionResolution, resolvedBy?: string | null | undefined, resolvedAt?: string | null | undefined, resolutionNote?: string | null | undefined } };
+
+export type GetEquipmentCategoriesQueryVariables = Exact<{
+  filter?: InputMaybe<EquipmentCategoryFilterInput>;
+}>;
+
+
+export type GetEquipmentCategoriesQuery = { __typename?: 'Query', equipmentCategories: Array<{ __typename?: 'EquipmentCategory', id: string, code: string, name: string, description?: string | null | undefined, icon?: string | null | undefined, color?: string | null | undefined, attachmentType: EquipmentAttachmentType, operationType: OperationType, defaultRentalRate?: number | null | undefined, requiresDeposit: boolean, depositAmount?: number | null | undefined, sortOrder: number, isActive: boolean, equipmentCount: number, availableCount: number }> };
+
+export type GetEquipmentCategoryQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetEquipmentCategoryQuery = { __typename?: 'Query', equipmentCategory?: { __typename?: 'EquipmentCategory', id: string, code: string, name: string, description?: string | null | undefined, icon?: string | null | undefined, color?: string | null | undefined, attachmentType: EquipmentAttachmentType, operationType: OperationType, defaultRentalRate?: number | null | undefined, requiresDeposit: boolean, depositAmount?: number | null | undefined, sortOrder: number, isActive: boolean, equipmentCount: number, availableCount: number } | null | undefined };
+
+export type GetEquipmentQueryVariables = Exact<{
+  filter?: InputMaybe<EquipmentFilterInput>;
+}>;
+
+
+export type GetEquipmentQuery = { __typename?: 'Query', equipment: Array<{ __typename?: 'Equipment', id: string, assetNumber: string, name: string, serialNumber?: string | null | undefined, manufacturer?: string | null | undefined, model?: string | null | undefined, condition: EquipmentCondition, status: EquipmentStatus, location?: string | null | undefined, notes?: string | null | undefined, purchaseDate?: string | null | undefined, warrantyExpiry?: string | null | undefined, lastMaintenanceAt?: string | null | undefined, nextMaintenanceAt?: string | null | undefined, category: { __typename?: 'EquipmentCategory', id: string, code: string, name: string, icon?: string | null | undefined, color?: string | null | undefined, attachmentType: EquipmentAttachmentType }, currentAssignment?: { __typename?: 'EquipmentAssignment', id: string, assignedAt: string, bookingNumber?: string | null | undefined, member?: { __typename?: 'EquipmentAssignmentMember', id: string, memberId: string, firstName: string, lastName: string, avatarUrl?: string | null | undefined } | null | undefined } | null | undefined }> };
+
+export type GetEquipmentItemQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetEquipmentItemQuery = { __typename?: 'Query', equipmentItem?: { __typename?: 'Equipment', id: string, assetNumber: string, name: string, serialNumber?: string | null | undefined, manufacturer?: string | null | undefined, model?: string | null | undefined, condition: EquipmentCondition, status: EquipmentStatus, location?: string | null | undefined, notes?: string | null | undefined, purchaseDate?: string | null | undefined, warrantyExpiry?: string | null | undefined, lastMaintenanceAt?: string | null | undefined, nextMaintenanceAt?: string | null | undefined, category: { __typename?: 'EquipmentCategory', id: string, code: string, name: string, icon?: string | null | undefined, color?: string | null | undefined, attachmentType: EquipmentAttachmentType, defaultRentalRate?: number | null | undefined, requiresDeposit: boolean, depositAmount?: number | null | undefined }, currentAssignment?: { __typename?: 'EquipmentAssignment', id: string, assignedAt: string, returnedAt?: string | null | undefined, rentalFee?: number | null | undefined, conditionAtCheckout?: EquipmentCondition | null | undefined, notes?: string | null | undefined, bookingNumber?: string | null | undefined, member?: { __typename?: 'EquipmentAssignmentMember', id: string, memberId: string, firstName: string, lastName: string, avatarUrl?: string | null | undefined } | null | undefined } | null | undefined } | null | undefined };
+
+export type GetEquipmentAvailabilityQueryVariables = Exact<{
+  input: EquipmentAvailabilityInput;
+}>;
+
+
+export type GetEquipmentAvailabilityQuery = { __typename?: 'Query', equipmentAvailability: Array<{ __typename?: 'Equipment', id: string, assetNumber: string, name: string, condition: EquipmentCondition, status: EquipmentStatus, category: { __typename?: 'EquipmentCategory', id: string, name: string, icon?: string | null | undefined, color?: string | null | undefined, defaultRentalRate?: number | null | undefined } }> };
+
+export type CreateEquipmentCategoryMutationVariables = Exact<{
+  input: CreateEquipmentCategoryInput;
+}>;
+
+
+export type CreateEquipmentCategoryMutation = { __typename?: 'Mutation', createEquipmentCategory: { __typename?: 'EquipmentCategoryResponse', success: boolean, error?: string | null | undefined, category?: { __typename?: 'EquipmentCategory', id: string, code: string, name: string, description?: string | null | undefined, icon?: string | null | undefined, color?: string | null | undefined, attachmentType: EquipmentAttachmentType, defaultRentalRate?: number | null | undefined, requiresDeposit: boolean, depositAmount?: number | null | undefined, sortOrder: number, isActive: boolean } | null | undefined } };
+
+export type UpdateEquipmentCategoryMutationVariables = Exact<{
+  input: UpdateEquipmentCategoryInput;
+}>;
+
+
+export type UpdateEquipmentCategoryMutation = { __typename?: 'Mutation', updateEquipmentCategory: { __typename?: 'EquipmentCategoryResponse', success: boolean, error?: string | null | undefined, category?: { __typename?: 'EquipmentCategory', id: string, code: string, name: string, description?: string | null | undefined, icon?: string | null | undefined, color?: string | null | undefined, attachmentType: EquipmentAttachmentType, defaultRentalRate?: number | null | undefined, requiresDeposit: boolean, depositAmount?: number | null | undefined, sortOrder: number, isActive: boolean } | null | undefined } };
+
+export type DeleteEquipmentCategoryMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type DeleteEquipmentCategoryMutation = { __typename?: 'Mutation', deleteEquipmentCategory: { __typename?: 'EquipmentDeleteResponse', success: boolean, error?: string | null | undefined, message?: string | null | undefined } };
+
+export type CreateEquipmentMutationVariables = Exact<{
+  input: CreateEquipmentInput;
+}>;
+
+
+export type CreateEquipmentMutation = { __typename?: 'Mutation', createEquipment: { __typename?: 'EquipmentResponse', success: boolean, error?: string | null | undefined, equipment?: { __typename?: 'Equipment', id: string, assetNumber: string, name: string, serialNumber?: string | null | undefined, manufacturer?: string | null | undefined, model?: string | null | undefined, condition: EquipmentCondition, status: EquipmentStatus, location?: string | null | undefined, notes?: string | null | undefined, category: { __typename?: 'EquipmentCategory', id: string, name: string } } | null | undefined } };
+
+export type UpdateEquipmentMutationVariables = Exact<{
+  input: UpdateEquipmentInput;
+}>;
+
+
+export type UpdateEquipmentMutation = { __typename?: 'Mutation', updateEquipment: { __typename?: 'EquipmentResponse', success: boolean, error?: string | null | undefined, equipment?: { __typename?: 'Equipment', id: string, assetNumber: string, name: string, serialNumber?: string | null | undefined, manufacturer?: string | null | undefined, model?: string | null | undefined, condition: EquipmentCondition, status: EquipmentStatus, location?: string | null | undefined, notes?: string | null | undefined, category: { __typename?: 'EquipmentCategory', id: string, name: string } } | null | undefined } };
+
+export type UpdateEquipmentStatusMutationVariables = Exact<{
+  input: UpdateEquipmentStatusInput;
+}>;
+
+
+export type UpdateEquipmentStatusMutation = { __typename?: 'Mutation', updateEquipmentStatus: { __typename?: 'EquipmentResponse', success: boolean, error?: string | null | undefined, equipment?: { __typename?: 'Equipment', id: string, status: EquipmentStatus } | null | undefined } };
+
+export type DeleteEquipmentMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type DeleteEquipmentMutation = { __typename?: 'Mutation', deleteEquipment: { __typename?: 'EquipmentDeleteResponse', success: boolean, error?: string | null | undefined, message?: string | null | undefined } };
+
+export type AssignEquipmentMutationVariables = Exact<{
+  input: AssignEquipmentInput;
+}>;
+
+
+export type AssignEquipmentMutation = { __typename?: 'Mutation', assignEquipment: { __typename?: 'EquipmentAssignmentResponse', success: boolean, error?: string | null | undefined, assignment?: { __typename?: 'EquipmentAssignment', id: string, assignedAt: string, rentalFee?: number | null | undefined, conditionAtCheckout?: EquipmentCondition | null | undefined, notes?: string | null | undefined, bookingNumber?: string | null | undefined, member?: { __typename?: 'EquipmentAssignmentMember', id: string, memberId: string, firstName: string, lastName: string } | null | undefined } | null | undefined } };
+
+export type ReturnEquipmentMutationVariables = Exact<{
+  input: ReturnEquipmentInput;
+}>;
+
+
+export type ReturnEquipmentMutation = { __typename?: 'Mutation', returnEquipment: { __typename?: 'EquipmentAssignmentResponse', success: boolean, error?: string | null | undefined, assignment?: { __typename?: 'EquipmentAssignment', id: string, returnedAt?: string | null | undefined, conditionAtReturn?: EquipmentCondition | null | undefined, notes?: string | null | undefined } | null | undefined } };
+
+export type ReleaseEquipmentForBookingMutationVariables = Exact<{
+  bookingId: Scalars['ID']['input'];
+}>;
+
+
+export type ReleaseEquipmentForBookingMutation = { __typename?: 'Mutation', releaseEquipmentForBooking: { __typename?: 'EquipmentReleaseResponse', success: boolean, error?: string | null | undefined, releasedCount: number } };
 
 export type GetTeeSheetQueryVariables = Exact<{
   courseId: Scalars['ID']['input'];

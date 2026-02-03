@@ -2,8 +2,8 @@
 # Equipment Category Queries
 # ============================================================================
 
-query GetEquipmentCategories {
-  equipmentCategories {
+query GetEquipmentCategories($filter: EquipmentCategoryFilterInput) {
+  equipmentCategories(filter: $filter) {
     id
     code
     name
@@ -11,6 +11,7 @@ query GetEquipmentCategories {
     icon
     color
     attachmentType
+    operationType
     defaultRentalRate
     requiresDeposit
     depositAmount
@@ -30,6 +31,7 @@ query GetEquipmentCategory($id: ID!) {
     icon
     color
     attachmentType
+    operationType
     defaultRentalRate
     requiresDeposit
     depositAmount

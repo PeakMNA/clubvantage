@@ -3636,6 +3636,13 @@ enum EquipmentStatus {
   RETIRED
 }
 
+enum OperationType {
+  GOLF      // Golf carts, clubs, pull carts, range balls
+  FACILITY  // Tennis rackets, yoga mats, general facility equipment
+  SPA       // Robes, towels, spa-specific equipment
+  EVENT     // Projectors, AV systems, tables, chairs
+}
+
 /// Equipment category for grouping similar equipment types
 model EquipmentCategory {
   id                String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -3646,6 +3653,7 @@ model EquipmentCategory {
   icon              String?                 @db.VarChar(50) // Lucide icon name
   color             String?                 @db.VarChar(20) // Hex color
   attachmentType    EquipmentAttachmentType @default(OPTIONAL_ADDON)
+  operationType     OperationType           @default(FACILITY)
   defaultRentalRate Decimal?                @db.Decimal(10, 2)
   requiresDeposit   Boolean                 @default(false)
   depositAmount     Decimal?                @db.Decimal(10, 2)

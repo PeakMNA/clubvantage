@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '@/shared/prisma/prisma.service';
 import { EventStoreService } from '@/shared/events/event-store.service';
-import { EquipmentStatus, EquipmentCondition } from '@prisma/client';
+import { EquipmentStatus, EquipmentCondition, OperationType } from '@prisma/client';
 import {
   CreateEquipmentCategoryDto,
   UpdateEquipmentCategoryDto,
@@ -31,9 +31,16 @@ export class EquipmentService {
   // Category Operations
   // ============================================================================
 
-  async findAllCategories(clubId: string) {
+  async findAllCategories(
+    clubId: string,
+    filter?: { operationType?: OperationType; isActive?: boolean },
+  ) {
     return this.prisma.equipmentCategory.findMany({
-      where: { clubId },
+      where: {
+        clubId,
+        ...(filter?.operationType && { operationType: filter.operationType }),
+        ...(filter?.isActive !== undefined && { isActive: filter.isActive }),
+      },
       include: {
         _count: { select: { equipment: true } },
       },
@@ -112,6 +119,7 @@ export class EquipmentService {
       categoryId?: string;
       status?: EquipmentStatus;
       condition?: EquipmentCondition;
+      operationType?: OperationType;
     },
   ) {
     const where: any = { clubId };
@@ -119,6 +127,9 @@ export class EquipmentService {
     if (filters?.categoryId) where.categoryId = filters.categoryId;
     if (filters?.status) where.status = filters.status;
     if (filters?.condition) where.condition = filters.condition;
+    if (filters?.operationType) {
+      where.category = { operationType: filters.operationType };
+    }
 
     return this.prisma.equipment.findMany({
       where,

@@ -3,6 +3,7 @@ import {
   EquipmentAttachmentType,
   EquipmentCondition,
   EquipmentStatus,
+  OperationType,
 } from '@prisma/client';
 
 // Register enums
@@ -19,6 +20,11 @@ registerEnumType(EquipmentCondition, {
 registerEnumType(EquipmentStatus, {
   name: 'EquipmentStatus',
   description: 'Availability status of equipment',
+});
+
+registerEnumType(OperationType, {
+  name: 'OperationType',
+  description: 'Type of operation this equipment category belongs to (Golf, Facility, Spa, Event)',
 });
 
 @ObjectType('EquipmentCategory', { description: 'Equipment category for grouping similar equipment types' })
@@ -43,6 +49,9 @@ export class EquipmentCategoryType {
 
   @Field(() => EquipmentAttachmentType)
   attachmentType: EquipmentAttachmentType;
+
+  @Field(() => OperationType)
+  operationType: OperationType;
 
   @Field(() => Float, { nullable: true })
   defaultRentalRate?: number;

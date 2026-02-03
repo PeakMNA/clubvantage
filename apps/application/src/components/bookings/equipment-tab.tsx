@@ -35,12 +35,17 @@ import {
   type EquipmentCategoryType,
   type EquipmentStatusType,
 } from '@/hooks/use-equipment';
+import type { OperationType } from '@clubvantage/api-client';
+import { EquipmentAssignModal, type EquipmentForAssignment } from './equipment-assign-modal';
+import { EquipmentReturnModal, type EquipmentAssignmentForReturn } from './equipment-return-modal';
 
 // Re-export types for backward compatibility
 type EquipmentCategory = EquipmentCategoryType;
 type EquipmentStatus = EquipmentStatusType;
 
 export interface EquipmentTabProps {
+  /** Optional operation type to filter equipment (GOLF, FACILITY, SPA, EVENT) */
+  operationType?: OperationType;
   /** Optional pre-loaded equipment data (for testing or SSR) */
   initialEquipment?: Equipment[];
   onViewDetails?: (equipmentId: string) => void;
@@ -345,6 +350,7 @@ function EquipmentCard({
  * Fetches data from the GraphQL API using the useEquipment hook.
  */
 export function EquipmentTab({
+  operationType,
   initialEquipment,
   onViewDetails,
   onCheckOut,
@@ -359,8 +365,14 @@ export function EquipmentTab({
   const [showCategoryFilter, setShowCategoryFilter] = useState(false);
   const [showStatusFilter, setShowStatusFilter] = useState(false);
 
-  // Fetch equipment from API
-  const { equipment: fetchedEquipment, counts, isLoading, error, refetch } = useEquipment();
+  // Modal state
+  const [assignModalOpen, setAssignModalOpen] = useState(false);
+  const [returnModalOpen, setReturnModalOpen] = useState(false);
+  const [selectedEquipmentForAssign, setSelectedEquipmentForAssign] = useState<EquipmentForAssignment | null>(null);
+  const [selectedAssignmentForReturn, setSelectedAssignmentForReturn] = useState<EquipmentAssignmentForReturn | null>(null);
+
+  // Fetch equipment from API (filtered by operationType if provided)
+  const { equipment: fetchedEquipment, counts, isLoading, error, refetch } = useEquipment(operationType);
   const { setMaintenance, isUpdating } = useEquipmentMutations();
 
   // Use initial equipment if provided (for testing), otherwise use fetched data
@@ -403,6 +415,80 @@ export function EquipmentTab({
     await setMaintenance(equipmentId, !isMaintenance);
     refetch();
     onSetMaintenance?.(equipmentId);
+  };
+
+  // Handle check out (assign) modal
+  const handleOpenAssignModal = (equipmentId: string) => {
+    const item = equipment.find(e => e.id === equipmentId);
+    if (!item) return;
+
+    // Transform to EquipmentForAssignment format
+    const equipmentForAssign: EquipmentForAssignment = {
+      id: item.id,
+      assetNumber: item.code,
+      name: item.name,
+      condition: item.condition.toUpperCase(),
+      category: {
+        id: item.categoryId || item.category,
+        name: categoryConfig[item.category]?.label || item.category,
+        icon: item.categoryIcon,
+        color: item.categoryColor,
+        defaultRentalRate: item.dailyRate,
+      },
+    };
+
+    setSelectedEquipmentForAssign(equipmentForAssign);
+    setAssignModalOpen(true);
+    onCheckOut?.(equipmentId);
+  };
+
+  // Handle check in (return) modal
+  const handleOpenReturnModal = (equipmentId: string) => {
+    const item = equipment.find(e => e.id === equipmentId);
+    if (!item || !item.assignment) return;
+
+    // Transform to EquipmentAssignmentForReturn format
+    const assignmentForReturn: EquipmentAssignmentForReturn = {
+      id: item.assignment.assignmentId,
+      equipmentId: item.id,
+      equipment: {
+        id: item.id,
+        assetNumber: item.code,
+        name: item.name,
+        category: {
+          id: item.categoryId || item.category,
+          name: categoryConfig[item.category]?.label || item.category,
+          color: item.categoryColor,
+          icon: item.categoryIcon,
+        },
+      },
+      member: {
+        id: item.assignment.memberId,
+        firstName: item.assignment.memberName.split(' ')[0] || '',
+        lastName: item.assignment.memberName.split(' ').slice(1).join(' ') || '',
+        memberId: item.assignment.memberNumber,
+      },
+      assignedAt: item.assignment.assignedAtRaw, // Use raw date for duration calculations
+      conditionAtCheckout: item.condition.toUpperCase(),
+      rentalFee: item.dailyRate,
+    };
+
+    setSelectedAssignmentForReturn(assignmentForReturn);
+    setReturnModalOpen(true);
+    onCheckIn?.(equipmentId);
+  };
+
+  // Handle modal success callbacks
+  const handleAssignSuccess = () => {
+    refetch();
+    setAssignModalOpen(false);
+    setSelectedEquipmentForAssign(null);
+  };
+
+  const handleReturnSuccess = () => {
+    refetch();
+    setReturnModalOpen(false);
+    setSelectedAssignmentForReturn(null);
   };
 
   const categoryOptions: { value: FilterCategory; label: string }[] = [
@@ -624,8 +710,8 @@ export function EquipmentTab({
                 equipment={item}
                 viewMode={viewMode}
                 onViewDetails={() => onViewDetails?.(item.id)}
-                onCheckOut={() => onCheckOut?.(item.id)}
-                onCheckIn={() => onCheckIn?.(item.id)}
+                onCheckOut={() => handleOpenAssignModal(item.id)}
+                onCheckIn={() => handleOpenReturnModal(item.id)}
                 onSetMaintenance={() => handleSetMaintenance(item.id)}
               />
             ))}
@@ -665,6 +751,28 @@ export function EquipmentTab({
           </div>
         </div>
       </div>
+
+      {/* Equipment Assign Modal */}
+      <EquipmentAssignModal
+        isOpen={assignModalOpen}
+        onClose={() => {
+          setAssignModalOpen(false);
+          setSelectedEquipmentForAssign(null);
+        }}
+        equipment={selectedEquipmentForAssign}
+        onSuccess={handleAssignSuccess}
+      />
+
+      {/* Equipment Return Modal */}
+      <EquipmentReturnModal
+        isOpen={returnModalOpen}
+        onClose={() => {
+          setReturnModalOpen(false);
+          setSelectedAssignmentForReturn(null);
+        }}
+        assignment={selectedAssignmentForReturn}
+        onSuccess={handleReturnSuccess}
+      />
     </div>
   );
 }

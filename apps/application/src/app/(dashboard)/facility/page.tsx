@@ -16,12 +16,15 @@ import { useQueryClient } from '@tanstack/react-query';
 import {
   BookingProvider,
   useBooking,
+  BookingsTabsLayout,
+  type BookingsTab,
   CalendarDayView,
   CalendarDayViewSkeleton,
   BookingDetailPanel,
   CreateBookingModal,
   BookingEmptyState,
   BookingErrorState,
+  EquipmentTab,
 } from '@/components/bookings';
 import type { CalendarResource, CalendarBooking } from '@/components/bookings';
 import type { BookingStatus } from '@/components/bookings';
@@ -75,6 +78,7 @@ function FacilityPageContent() {
   const { openWizard } = useBooking();
   const queryClient = useQueryClient();
 
+  const [activeTab, setActiveTab] = useState<BookingsTab>('calendar');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [resourceTypeFilter, setResourceTypeFilter] = useState('all');
   const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
@@ -272,99 +276,136 @@ function FacilityPageContent() {
     openWizard(true);
   };
 
-  return (
-    <div className="flex h-full flex-col p-6">
-      <PageHeader
-        title="Facility Booking"
-        description="Manage facility reservations and scheduling"
-        breadcrumbs={[{ label: 'Facility' }]}
-        actions={
-          <Button onClick={handleNewBooking}>
-            <Plus className="mr-2 h-4 w-4" />
-            New Booking
-          </Button>
-        }
-      />
+  // Render tab content
+  const renderTabContent = (tab: BookingsTab) => {
+    switch (tab) {
+      case 'calendar':
+        return (
+          <div className="space-y-4 p-4 sm:p-6">
+            {/* Calendar Controls */}
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-2 sm:gap-4">
+                <Button variant="outline" size="icon" onClick={goToPrevDay}>
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <h2 className="min-w-[200px] text-center text-lg font-semibold sm:min-w-[280px] sm:text-xl">
+                  {formatDate(currentDate)}
+                </h2>
+                <Button variant="outline" size="icon" onClick={goToNextDay}>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="sm" onClick={goToToday}>
+                  Today
+                </Button>
+              </div>
+              <div className="flex items-center gap-2">
+                <select
+                  className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={resourceTypeFilter}
+                  onChange={(e) => setResourceTypeFilter(e.target.value)}
+                >
+                  {facilityTypes.map((type) => (
+                    <option key={type.value} value={type.value}>
+                      {type.label}
+                    </option>
+                  ))}
+                </select>
+                <div className="flex rounded-md border border-border">
+                  <Button
+                    variant={viewMode === 'day' ? 'secondary' : 'ghost'}
+                    size="sm"
+                    className="rounded-r-none"
+                    onClick={() => setViewMode('day')}
+                  >
+                    Day
+                  </Button>
+                  <Button
+                    variant={viewMode === 'week' ? 'secondary' : 'ghost'}
+                    size="sm"
+                    className="rounded-l-none"
+                    onClick={() => setViewMode('week')}
+                  >
+                    Week
+                  </Button>
+                </div>
+              </div>
+            </div>
 
-      {/* Calendar Controls */}
-      <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-2 sm:gap-4">
-          <Button variant="outline" size="icon" onClick={goToPrevDay}>
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <h2 className="min-w-[200px] text-center text-lg font-semibold sm:min-w-[280px] sm:text-xl">
-            {formatDate(currentDate)}
-          </h2>
-          <Button variant="outline" size="icon" onClick={goToNextDay}>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="sm" onClick={goToToday}>
-            Today
-          </Button>
-        </div>
-        <div className="flex items-center gap-2">
-          <select
-            className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
-            value={resourceTypeFilter}
-            onChange={(e) => setResourceTypeFilter(e.target.value)}
-          >
-            {facilityTypes.map((type) => (
-              <option key={type.value} value={type.value}>
-                {type.label}
-              </option>
-            ))}
-          </select>
-          <div className="flex rounded-md border border-border">
-            <Button
-              variant={viewMode === 'day' ? 'secondary' : 'ghost'}
-              size="sm"
-              className="rounded-r-none"
-              onClick={() => setViewMode('day')}
-            >
-              Day
-            </Button>
-            <Button
-              variant={viewMode === 'week' ? 'secondary' : 'ghost'}
-              size="sm"
-              className="rounded-l-none"
-              onClick={() => setViewMode('week')}
-            >
-              Week
-            </Button>
+            {/* Calendar View */}
+            {calendarError ? (
+              <BookingErrorState
+                variant="server"
+                title="Failed to load calendar"
+                description="Unable to load facility booking data. Please try again."
+                onRetry={() => queryClient.invalidateQueries({ queryKey: ['GetCalendarDay'] })}
+              />
+            ) : isCalendarLoading ? (
+              <CalendarDayViewSkeleton resourceCount={4} />
+            ) : resources.length === 0 ? (
+              <BookingEmptyState
+                variant="no-facilities"
+                title="No facilities found"
+                description={resourceTypeFilter !== 'all'
+                  ? "No facilities match the selected filter. Try selecting 'All Facilities'."
+                  : "No facilities are configured yet."
+                }
+              />
+            ) : (
+              <CalendarDayView
+                date={currentDate}
+                resources={resources}
+                bookings={bookings}
+                operatingHours={{ start: '06:00', end: '22:00' }}
+                onBookingClick={handleBookingClick}
+                onSlotClick={handleSlotClick}
+              />
+            )}
           </div>
-        </div>
+        );
+
+      case 'equipment':
+        return (
+          <EquipmentTab
+            operationType="FACILITY"
+            onViewDetails={(id) => console.log('View equipment details:', id)}
+          />
+        );
+
+      default:
+        return (
+          <BookingEmptyState
+            variant="no-data"
+            title="Coming Soon"
+            description="This feature is currently under development."
+          />
+        );
+    }
+  };
+
+  return (
+    <div className="flex h-full flex-col">
+      <div className="shrink-0 p-6 pb-0">
+        <PageHeader
+          title="Facility"
+          description="Manage facility reservations, scheduling, and equipment"
+          breadcrumbs={[{ label: 'Facility' }]}
+          actions={
+            activeTab === 'calendar' ? (
+              <Button onClick={handleNewBooking}>
+                <Plus className="mr-2 h-4 w-4" />
+                New Booking
+              </Button>
+            ) : null
+          }
+        />
       </div>
 
-      {/* Calendar View */}
-      <div className="mt-6 flex-1 overflow-auto">
-        {calendarError ? (
-          <BookingErrorState
-            variant="server"
-            title="Failed to load calendar"
-            description="Unable to load facility booking data. Please try again."
-            onRetry={() => queryClient.invalidateQueries({ queryKey: ['GetCalendarDay'] })}
-          />
-        ) : isCalendarLoading ? (
-          <CalendarDayViewSkeleton resourceCount={4} />
-        ) : resources.length === 0 ? (
-          <BookingEmptyState
-            variant="no-facilities"
-            title="No facilities found"
-            description={resourceTypeFilter !== 'all'
-              ? "No facilities match the selected filter. Try selecting 'All Facilities'."
-              : "No facilities are configured yet."
-            }
-          />
-        ) : (
-          <CalendarDayView
-            date={currentDate}
-            resources={resources}
-            bookings={bookings}
-            operatingHours={{ start: '06:00', end: '22:00' }}
-            onBookingClick={handleBookingClick}
-            onSlotClick={handleSlotClick}
-          />
-        )}
+      <div className="flex-1 overflow-hidden px-6 pb-6">
+        <BookingsTabsLayout
+          activeTab={activeTab}
+          onTabChange={(tab) => setActiveTab(tab)}
+          renderContent={renderTabContent}
+        />
       </div>
 
       {/* Booking Detail Panel */}

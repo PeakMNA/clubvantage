@@ -3,6 +3,7 @@ import {
   EquipmentAttachmentType,
   EquipmentCondition,
   EquipmentStatus,
+  OperationType,
 } from '@prisma/client';
 
 // Category Inputs
@@ -25,6 +26,9 @@ export class CreateEquipmentCategoryInput {
 
   @Field(() => EquipmentAttachmentType, { nullable: true })
   attachmentType?: EquipmentAttachmentType;
+
+  @Field(() => OperationType, { nullable: true, defaultValue: OperationType.FACILITY })
+  operationType?: OperationType;
 
   @Field(() => Float, { nullable: true })
   defaultRentalRate?: number;
@@ -55,6 +59,9 @@ export class UpdateEquipmentCategoryInput {
 
   @Field(() => EquipmentAttachmentType, { nullable: true })
   attachmentType?: EquipmentAttachmentType;
+
+  @Field(() => OperationType, { nullable: true })
+  operationType?: OperationType;
 
   @Field(() => Float, { nullable: true })
   defaultRentalRate?: number;
@@ -159,6 +166,15 @@ export class UpdateEquipmentStatusInput {
 
 // Filter Inputs
 @InputType()
+export class EquipmentCategoryFilterInput {
+  @Field(() => OperationType, { nullable: true })
+  operationType?: OperationType;
+
+  @Field({ nullable: true })
+  isActive?: boolean;
+}
+
+@InputType()
 export class EquipmentFilterInput {
   @Field(() => ID, { nullable: true })
   categoryId?: string;
@@ -168,6 +184,9 @@ export class EquipmentFilterInput {
 
   @Field(() => EquipmentCondition, { nullable: true })
   condition?: EquipmentCondition;
+
+  @Field(() => OperationType, { nullable: true, description: 'Filter by category operation type' })
+  operationType?: OperationType;
 }
 
 // Assignment Inputs

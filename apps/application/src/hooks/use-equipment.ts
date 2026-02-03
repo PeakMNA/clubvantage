@@ -11,6 +11,7 @@ import {
   useReturnEquipmentMutation,
   type EquipmentCondition,
   type EquipmentStatus,
+  type OperationType,
   type Equipment as ApiEquipment,
   type EquipmentCategory as ApiEquipmentCategory,
   type EquipmentFilterInput,
@@ -23,10 +24,13 @@ export type EquipmentStatusType = 'available' | 'in_use' | 'reserved' | 'mainten
 export type EquipmentConditionType = 'excellent' | 'good' | 'fair' | 'needs_repair';
 
 export interface EquipmentAssignment {
+  assignmentId: string;
+  memberId: string;
   memberName: string;
   memberNumber: string;
   memberPhoto?: string;
-  assignedAt: string;
+  assignedAt: string; // Formatted time for display
+  assignedAtRaw: string; // Raw ISO date for calculations
   expectedReturn?: string;
 }
 
@@ -119,12 +123,15 @@ function formatTime(date: Date | string): string {
 // Transform API equipment to frontend Equipment type
 function transformEquipment(apiEquipment: any): Equipment {
   const assignment = apiEquipment.currentAssignment ? {
+    assignmentId: apiEquipment.currentAssignment.id,
+    memberId: apiEquipment.currentAssignment.member?.id || '',
     memberName: apiEquipment.currentAssignment.member
       ? `${apiEquipment.currentAssignment.member.firstName} ${apiEquipment.currentAssignment.member.lastName}`
       : 'Unknown',
     memberNumber: apiEquipment.currentAssignment.member?.memberId || '',
     memberPhoto: apiEquipment.currentAssignment.member?.avatarUrl ?? undefined,
     assignedAt: formatTime(apiEquipment.currentAssignment.assignedAt),
+    assignedAtRaw: apiEquipment.currentAssignment.assignedAt,
     expectedReturn: apiEquipment.currentAssignment.returnedAt
       ? formatTime(apiEquipment.currentAssignment.returnedAt)
       : undefined,
@@ -169,9 +176,12 @@ function transformCategory(apiCategory: any): EquipmentCategory {
 
 /**
  * Hook to fetch equipment categories
+ * @param operationType - Optional filter to show only categories for a specific operation (GOLF, FACILITY, SPA, EVENT)
  */
-export function useEquipmentCategories() {
-  const query = useGetEquipmentCategoriesQuery();
+export function useEquipmentCategories(operationType?: OperationType) {
+  const query = useGetEquipmentCategoriesQuery({
+    filter: operationType ? { operationType } : undefined,
+  });
 
   const categories = useMemo(() => {
     if (!query.data?.equipmentCategories) return [];
@@ -188,9 +198,16 @@ export function useEquipmentCategories() {
 
 /**
  * Hook to fetch equipment items
+ * @param operationType - Optional filter to show only equipment for a specific operation (GOLF, FACILITY, SPA, EVENT)
+ * @param filter - Additional filter options (categoryId, status, condition)
  */
-export function useEquipment(filter?: EquipmentFilterInput) {
-  const query = useGetEquipmentQuery({ filter });
+export function useEquipment(operationType?: OperationType, filter?: Omit<EquipmentFilterInput, 'operationType'>) {
+  const query = useGetEquipmentQuery({
+    filter: {
+      ...filter,
+      ...(operationType && { operationType }),
+    },
+  });
 
   const equipment = useMemo(() => {
     if (!query.data?.equipment) return [];
