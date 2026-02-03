@@ -1,0 +1,328 @@
+# ============================================================================
+# Equipment Category Queries
+# ============================================================================
+
+query GetEquipmentCategories {
+  equipmentCategories {
+    id
+    code
+    name
+    description
+    icon
+    color
+    attachmentType
+    defaultRentalRate
+    requiresDeposit
+    depositAmount
+    sortOrder
+    isActive
+    equipmentCount
+    availableCount
+  }
+}
+
+query GetEquipmentCategory($id: ID!) {
+  equipmentCategory(id: $id) {
+    id
+    code
+    name
+    description
+    icon
+    color
+    attachmentType
+    defaultRentalRate
+    requiresDeposit
+    depositAmount
+    sortOrder
+    isActive
+    equipmentCount
+    availableCount
+  }
+}
+
+# ============================================================================
+# Equipment Item Queries
+# ============================================================================
+
+query GetEquipment($filter: EquipmentFilterInput) {
+  equipment(filter: $filter) {
+    id
+    assetNumber
+    name
+    serialNumber
+    manufacturer
+    model
+    condition
+    status
+    location
+    notes
+    purchaseDate
+    warrantyExpiry
+    lastMaintenanceAt
+    nextMaintenanceAt
+    category {
+      id
+      code
+      name
+      icon
+      color
+      attachmentType
+    }
+    currentAssignment {
+      id
+      assignedAt
+      member {
+        id
+        memberId
+        firstName
+        lastName
+        avatarUrl
+      }
+      bookingNumber
+    }
+  }
+}
+
+query GetEquipmentItem($id: ID!) {
+  equipmentItem(id: $id) {
+    id
+    assetNumber
+    name
+    serialNumber
+    manufacturer
+    model
+    condition
+    status
+    location
+    notes
+    purchaseDate
+    warrantyExpiry
+    lastMaintenanceAt
+    nextMaintenanceAt
+    category {
+      id
+      code
+      name
+      icon
+      color
+      attachmentType
+      defaultRentalRate
+      requiresDeposit
+      depositAmount
+    }
+    currentAssignment {
+      id
+      assignedAt
+      returnedAt
+      rentalFee
+      conditionAtCheckout
+      notes
+      member {
+        id
+        memberId
+        firstName
+        lastName
+        avatarUrl
+      }
+      bookingNumber
+    }
+  }
+}
+
+query GetEquipmentAvailability($input: EquipmentAvailabilityInput!) {
+  equipmentAvailability(input: $input) {
+    id
+    assetNumber
+    name
+    condition
+    status
+    category {
+      id
+      name
+      icon
+      color
+      defaultRentalRate
+    }
+  }
+}
+
+# ============================================================================
+# Equipment Category Mutations
+# ============================================================================
+
+mutation CreateEquipmentCategory($input: CreateEquipmentCategoryInput!) {
+  createEquipmentCategory(input: $input) {
+    success
+    error
+    category {
+      id
+      code
+      name
+      description
+      icon
+      color
+      attachmentType
+      defaultRentalRate
+      requiresDeposit
+      depositAmount
+      sortOrder
+      isActive
+    }
+  }
+}
+
+mutation UpdateEquipmentCategory($input: UpdateEquipmentCategoryInput!) {
+  updateEquipmentCategory(input: $input) {
+    success
+    error
+    category {
+      id
+      code
+      name
+      description
+      icon
+      color
+      attachmentType
+      defaultRentalRate
+      requiresDeposit
+      depositAmount
+      sortOrder
+      isActive
+    }
+  }
+}
+
+mutation DeleteEquipmentCategory($id: ID!) {
+  deleteEquipmentCategory(id: $id) {
+    success
+    error
+    message
+  }
+}
+
+# ============================================================================
+# Equipment Item Mutations
+# ============================================================================
+
+mutation CreateEquipment($input: CreateEquipmentInput!) {
+  createEquipment(input: $input) {
+    success
+    error
+    equipment {
+      id
+      assetNumber
+      name
+      serialNumber
+      manufacturer
+      model
+      condition
+      status
+      location
+      notes
+      category {
+        id
+        name
+      }
+    }
+  }
+}
+
+mutation UpdateEquipment($input: UpdateEquipmentInput!) {
+  updateEquipment(input: $input) {
+    success
+    error
+    equipment {
+      id
+      assetNumber
+      name
+      serialNumber
+      manufacturer
+      model
+      condition
+      status
+      location
+      notes
+      category {
+        id
+        name
+      }
+    }
+  }
+}
+
+mutation UpdateEquipmentStatus($input: UpdateEquipmentStatusInput!) {
+  updateEquipmentStatus(input: $input) {
+    success
+    error
+    equipment {
+      id
+      status
+    }
+  }
+}
+
+mutation DeleteEquipment($id: ID!) {
+  deleteEquipment(id: $id) {
+    success
+    error
+    message
+  }
+}
+
+# ============================================================================
+# Equipment Assignment Mutations
+# ============================================================================
+
+mutation AssignEquipment($input: AssignEquipmentInput!) {
+  assignEquipment(input: $input) {
+    success
+    error
+    assignment {
+      id
+      assignedAt
+      rentalFee
+      conditionAtCheckout
+      notes
+      equipment {
+        id
+        assetNumber
+        name
+        status
+      }
+      member {
+        id
+        memberId
+        firstName
+        lastName
+      }
+      bookingNumber
+    }
+  }
+}
+
+mutation ReturnEquipment($input: ReturnEquipmentInput!) {
+  returnEquipment(input: $input) {
+    success
+    error
+    assignment {
+      id
+      returnedAt
+      conditionAtReturn
+      notes
+      equipment {
+        id
+        assetNumber
+        name
+        status
+      }
+    }
+  }
+}
+
+mutation ReleaseEquipmentForBooking($bookingId: ID!) {
+  releaseEquipmentForBooking(bookingId: $bookingId) {
+    success
+    error
+    releasedCount
+  }
+}
