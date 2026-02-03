@@ -197,8 +197,8 @@ export class ReturnEquipmentInput {
   @Field(() => ID)
   assignmentId: string;
 
-  @Field(() => EquipmentCondition)
-  conditionAtReturn: EquipmentCondition;
+  @Field(() => EquipmentCondition, { nullable: true })
+  conditionAtReturn?: EquipmentCondition;
 
   @Field({ nullable: true })
   notes?: string;

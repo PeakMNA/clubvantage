@@ -395,13 +395,16 @@ export class EquipmentService {
       throw new BadRequestException('Equipment already returned');
     }
 
+    // Default to condition at checkout or GOOD if not specified
+    const conditionAtReturn = dto.conditionAtReturn || assignment.conditionAtCheckout || EquipmentCondition.GOOD;
+
     return this.prisma.$transaction(async (tx) => {
       // Update assignment
       const updated = await tx.equipmentAssignment.update({
         where: { id: assignmentId },
         data: {
           returnedAt: new Date(),
-          conditionAtReturn: dto.conditionAtReturn,
+          conditionAtReturn,
           notes: dto.notes ? `${assignment.notes || ''}\n${dto.notes}` : assignment.notes,
         },
         include: {
@@ -413,8 +416,8 @@ export class EquipmentService {
 
       // Update equipment status and condition
       const newStatus =
-        dto.conditionAtReturn === EquipmentCondition.NEEDS_REPAIR ||
-        dto.conditionAtReturn === EquipmentCondition.OUT_OF_SERVICE
+        conditionAtReturn === EquipmentCondition.NEEDS_REPAIR ||
+        conditionAtReturn === EquipmentCondition.OUT_OF_SERVICE
           ? EquipmentStatus.MAINTENANCE
           : EquipmentStatus.AVAILABLE;
 
@@ -422,7 +425,7 @@ export class EquipmentService {
         where: { id: assignment.equipmentId },
         data: {
           status: newStatus,
-          condition: dto.conditionAtReturn,
+          condition: conditionAtReturn,
         },
       });
 
@@ -433,7 +436,7 @@ export class EquipmentService {
         aggregateId: assignmentId,
         type: 'RETURNED',
         data: {
-          conditionAtReturn: dto.conditionAtReturn,
+          conditionAtReturn,
           newEquipmentStatus: newStatus,
         },
         userId,

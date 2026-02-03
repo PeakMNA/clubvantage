@@ -10,6 +10,6 @@ export class AssignEquipmentDto {
 }
 
 export class ReturnEquipmentDto {
-  conditionAtReturn: EquipmentCondition;
+  conditionAtReturn?: EquipmentCondition;
   notes?: string;
 }

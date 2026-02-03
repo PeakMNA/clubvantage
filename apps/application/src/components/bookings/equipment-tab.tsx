@@ -25,35 +25,24 @@ import {
   UserCircle,
   CalendarClock,
   RotateCcw,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react';
+import {
+  useEquipment,
+  useEquipmentMutations,
+  type Equipment,
+  type EquipmentCategoryType,
+  type EquipmentStatusType,
+} from '@/hooks/use-equipment';
 
-// Types
-type EquipmentCategory = 'cart' | 'bike' | 'sports' | 'fitness' | 'apparel' | 'other';
-type EquipmentStatus = 'available' | 'in_use' | 'reserved' | 'maintenance';
-
-interface EquipmentAssignment {
-  memberName: string;
-  memberNumber: string;
-  memberPhoto?: string;
-  assignedAt: string;
-  expectedReturn?: string;
-}
-
-interface Equipment {
-  id: string;
-  name: string;
-  code: string;
-  category: EquipmentCategory;
-  status: EquipmentStatus;
-  condition: 'excellent' | 'good' | 'fair' | 'needs_repair';
-  assignment?: EquipmentAssignment;
-  maintenanceNote?: string;
-  location?: string;
-  dailyRate?: number;
-}
+// Re-export types for backward compatibility
+type EquipmentCategory = EquipmentCategoryType;
+type EquipmentStatus = EquipmentStatusType;
 
 export interface EquipmentTabProps {
-  equipment?: Equipment[];
+  /** Optional pre-loaded equipment data (for testing or SSR) */
+  initialEquipment?: Equipment[];
   onViewDetails?: (equipmentId: string) => void;
   onCheckOut?: (equipmentId: string) => void;
   onCheckIn?: (equipmentId: string) => void;
@@ -61,126 +50,7 @@ export interface EquipmentTabProps {
   className?: string;
 }
 
-// Mock data
-const mockEquipment: Equipment[] = [
-  {
-    id: 'e1',
-    name: 'Golf Cart #1',
-    code: 'GC-001',
-    category: 'cart',
-    status: 'in_use',
-    condition: 'excellent',
-    assignment: {
-      memberName: 'Somchai Prasert',
-      memberNumber: 'CV-2024-0001',
-      assignedAt: '8:30 AM',
-      expectedReturn: '2:00 PM',
-    },
-    location: 'Golf Course',
-    dailyRate: 800,
-  },
-  {
-    id: 'e2',
-    name: 'Golf Cart #2',
-    code: 'GC-002',
-    category: 'cart',
-    status: 'available',
-    condition: 'good',
-    location: 'Golf Course',
-    dailyRate: 800,
-  },
-  {
-    id: 'e3',
-    name: 'Golf Cart #3',
-    code: 'GC-003',
-    category: 'cart',
-    status: 'maintenance',
-    condition: 'needs_repair',
-    maintenanceNote: 'Battery replacement needed',
-    location: 'Maintenance Bay',
-    dailyRate: 800,
-  },
-  {
-    id: 'e4',
-    name: 'Electric Bike #1',
-    code: 'EB-001',
-    category: 'bike',
-    status: 'available',
-    condition: 'excellent',
-    location: 'Bike Station',
-    dailyRate: 500,
-  },
-  {
-    id: 'e5',
-    name: 'Electric Bike #2',
-    code: 'EB-002',
-    category: 'bike',
-    status: 'reserved',
-    condition: 'good',
-    assignment: {
-      memberName: 'Nattaya Wongchai',
-      memberNumber: 'CV-2024-0042',
-      assignedAt: '10:00 AM',
-    },
-    location: 'Bike Station',
-    dailyRate: 500,
-  },
-  {
-    id: 'e6',
-    name: 'Tennis Racket Set A',
-    code: 'TR-001',
-    category: 'sports',
-    status: 'in_use',
-    condition: 'good',
-    assignment: {
-      memberName: 'Wichai Thongkam',
-      memberNumber: 'CV-2023-0188',
-      assignedAt: '9:00 AM',
-      expectedReturn: '11:00 AM',
-    },
-    location: 'Pro Shop',
-    dailyRate: 200,
-  },
-  {
-    id: 'e7',
-    name: 'Tennis Racket Set B',
-    code: 'TR-002',
-    category: 'sports',
-    status: 'available',
-    condition: 'fair',
-    location: 'Pro Shop',
-    dailyRate: 200,
-  },
-  {
-    id: 'e8',
-    name: 'Yoga Mat Set',
-    code: 'YM-001',
-    category: 'fitness',
-    status: 'available',
-    condition: 'excellent',
-    location: 'Fitness Center',
-  },
-  {
-    id: 'e9',
-    name: 'Swim Goggles',
-    code: 'SG-001',
-    category: 'apparel',
-    status: 'available',
-    condition: 'good',
-    location: 'Pool House',
-    dailyRate: 50,
-  },
-  {
-    id: 'e10',
-    name: 'Badminton Racket Set',
-    code: 'BR-001',
-    category: 'sports',
-    status: 'available',
-    condition: 'excellent',
-    location: 'Pro Shop',
-    dailyRate: 150,
-  },
-];
+// Mock data is no longer used - equipment is fetched from the API via useEquipment hook
 
 const categoryConfig: Record<EquipmentCategory, { label: string; icon: typeof Package }> = {
   cart: { label: 'Cart', icon: Car },
@@ -243,8 +113,8 @@ function getInitials(name: string): string {
 }
 
 type ViewMode = 'grid' | 'list';
-type FilterCategory = 'all' | EquipmentCategory;
-type FilterStatus = 'all' | EquipmentStatus;
+type FilterCategory = 'all' | EquipmentCategoryType;
+type FilterStatus = 'all' | EquipmentStatusType;
 
 interface EquipmentCardProps {
   equipment: Equipment;
@@ -472,9 +342,10 @@ function EquipmentCard({
  * EquipmentTab
  *
  * Displays and manages rentable/reservable equipment.
+ * Fetches data from the GraphQL API using the useEquipment hook.
  */
 export function EquipmentTab({
-  equipment = mockEquipment,
+  initialEquipment,
   onViewDetails,
   onCheckOut,
   onCheckIn,
@@ -487,6 +358,13 @@ export function EquipmentTab({
   const [statusFilter, setStatusFilter] = useState<FilterStatus>('all');
   const [showCategoryFilter, setShowCategoryFilter] = useState(false);
   const [showStatusFilter, setShowStatusFilter] = useState(false);
+
+  // Fetch equipment from API
+  const { equipment: fetchedEquipment, counts, isLoading, error, refetch } = useEquipment();
+  const { setMaintenance, isUpdating } = useEquipmentMutations();
+
+  // Use initial equipment if provided (for testing), otherwise use fetched data
+  const equipment = initialEquipment || fetchedEquipment;
 
   // Filter equipment
   const filteredEquipment = useMemo(() => {
@@ -516,15 +394,16 @@ export function EquipmentTab({
     return result;
   }, [equipment, searchQuery, categoryFilter, statusFilter]);
 
-  // Counts
-  const counts = useMemo(() => {
-    return {
-      total: equipment.length,
-      available: equipment.filter((e) => e.status === 'available').length,
-      inUse: equipment.filter((e) => e.status === 'in_use' || e.status === 'reserved').length,
-      maintenance: equipment.filter((e) => e.status === 'maintenance').length,
-    };
-  }, [equipment]);
+  // Handle maintenance toggle
+  const handleSetMaintenance = async (equipmentId: string) => {
+    const item = equipment.find(e => e.id === equipmentId);
+    if (!item) return;
+
+    const isMaintenance = item.status === 'maintenance';
+    await setMaintenance(equipmentId, !isMaintenance);
+    refetch();
+    onSetMaintenance?.(equipmentId);
+  };
 
   const categoryOptions: { value: FilterCategory; label: string }[] = [
     { value: 'all', label: 'All Categories' },
@@ -544,6 +423,32 @@ export function EquipmentTab({
     { value: 'maintenance', label: 'Maintenance' },
   ];
 
+  // Loading state
+  if (isLoading && !initialEquipment) {
+    return (
+      <div className={cn('flex h-full flex-col items-center justify-center', className)}>
+        <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
+        <p className="mt-3 text-sm text-muted-foreground">Loading equipment...</p>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error && !initialEquipment) {
+    return (
+      <div className={cn('flex h-full flex-col items-center justify-center', className)}>
+        <AlertCircle className="h-8 w-8 text-red-500" />
+        <p className="mt-3 text-sm font-medium text-foreground">Failed to load equipment</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {error instanceof Error ? error.message : 'Unknown error occurred'}
+        </p>
+        <Button onClick={() => refetch()} variant="outline" size="sm" className="mt-4">
+          Try Again
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className={cn('flex h-full flex-col', className)}>
       {/* Header */}
@@ -553,6 +458,7 @@ export function EquipmentTab({
           <div>
             <h2 className="text-lg font-semibold text-foreground sm:text-xl">
               Equipment
+              {isUpdating && <Loader2 className="ml-2 inline h-4 w-4 animate-spin" />}
             </h2>
             <p className="text-sm text-muted-foreground">
               {counts.available} available • {counts.inUse} in use
@@ -720,7 +626,7 @@ export function EquipmentTab({
                 onViewDetails={() => onViewDetails?.(item.id)}
                 onCheckOut={() => onCheckOut?.(item.id)}
                 onCheckIn={() => onCheckIn?.(item.id)}
-                onSetMaintenance={() => onSetMaintenance?.(item.id)}
+                onSetMaintenance={() => handleSetMaintenance(item.id)}
               />
             ))}
           </div>
