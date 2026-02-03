@@ -116,6 +116,10 @@ export default function MemberDetailPage() {
       setSelectedAddress(undefined);
       refetch();
     },
+    onError: (error) => {
+      console.error('Failed to create address:', error);
+      // TODO: Show toast notification to user
+    },
   });
 
   const updateAddressMutation = useUpdateMemberAddressMutation({
@@ -125,6 +129,10 @@ export default function MemberDetailPage() {
       setSelectedAddress(undefined);
       refetch();
     },
+    onError: (error) => {
+      console.error('Failed to update address:', error);
+      // TODO: Show toast notification to user
+    },
   });
 
   const deleteAddressMutation = useDeleteMemberAddressMutation({
@@ -132,6 +140,10 @@ export default function MemberDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['GetMember'] });
       setAddressActionDialog({ open: false, action: null, address: null });
       refetch();
+    },
+    onError: (error) => {
+      console.error('Failed to delete address:', error);
+      // TODO: Show toast notification to user
     },
   });
 
@@ -163,7 +175,19 @@ export default function MemberDetailPage() {
       joinDate: formatDate(apiMember.joinDate),
       balance: parseFloat(apiMember.outstandingBalance) || 0,
       autoPay: false, // Not in API yet
-      addresses: [], // Not in API yet - would need separate query
+      addresses: (apiMember.addresses ?? []).map((addr): Address => ({
+        id: addr.id,
+        type: addr.type as Address['type'],
+        isPrimary: addr.isPrimary,
+        label: addr.label ?? '',
+        addressLine1: addr.addressLine1,
+        addressLine2: addr.addressLine2 ?? undefined,
+        subDistrict: addr.subDistrict,
+        district: addr.district,
+        province: addr.province,
+        postalCode: addr.postalCode,
+        country: addr.country,
+      })),
       dependents: (apiMember.dependents ?? []).map((dep): Dependent => ({
         id: dep.id,
         memberNumber: '', // Dependents don't have member numbers in current API
