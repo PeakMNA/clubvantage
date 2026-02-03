@@ -4,9 +4,13 @@
  */
 
 import { PrismaClient, Region, SubscriptionTier, MemberStatus, UserRole, InvoiceStatus, PaymentMethod, BookingStatus, PlayerType, CartType, SkillLevel, BookingType, BookingPaymentMethod, BookingPaymentStatus, VariationPriceType, WaitlistStatus, ApplicationStatus, LineItemType, TaxType } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
 import * as bcrypt from 'bcrypt';
+import 'dotenv/config';
+import { seedLookups } from './seed-lookups';
 
-const prisma = new PrismaClient();
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
   console.log('🌱 Starting database seed...');
@@ -3643,6 +3647,12 @@ async function main() {
   console.log(`   - Partially paid member + guest (Prime Time)`);
   console.log(`   - Walk-up twilight 9-hole (Off-Peak)`);
   console.log(`   - Four-ball with forecaddy (Prime Time)`);
+
+  // ============================================================================
+  // LOOKUP TABLES (Global Defaults)
+  // ============================================================================
+  console.log('');
+  await seedLookups(prisma);
 
   console.log('');
   console.log('🎉 Database seed completed successfully!');
