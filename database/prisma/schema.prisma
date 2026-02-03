@@ -82,6 +82,7 @@ model Club {
   equipment              Equipment[]
   equipmentAssignments   EquipmentAssignment[]
   lookupValues           LookupValue[]
+  memberDocuments        MemberDocument[]
 
   @@index([slug])
   @@index([isActive])
@@ -330,6 +331,7 @@ model Member {
   interests             MemberInterest[]
   communicationPrefs    MemberCommunicationPrefs?
   addresses             MemberAddress[]
+  documents             MemberDocument[]
 
   @@unique([clubId, memberId])
   @@unique([clubId, email])
@@ -3867,4 +3869,52 @@ model LookupTranslation {
   @@unique([lookupValueId, locale])
   @@index([lookupValueId])
   @@map("lookup_translations")
+}
+
+// ─────────────────────────────────────────────────────────────
+// MEMBER DOCUMENTS
+// ─────────────────────────────────────────────────────────────
+
+enum DocumentType {
+  CONTRACT         // Signed membership contract
+  ID_DOCUMENT      // Passport, national ID
+  PROOF_OF_ADDRESS // Utility bill, bank statement
+  MEDICAL_CERT     // Health certificate
+  WAIVER           // Liability waiver
+  PHOTO            // Additional photos
+  OTHER
+}
+
+/// Member document storage for contracts, IDs, and other files
+model MemberDocument {
+  id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId      String       @db.Uuid
+  memberId    String       @db.Uuid
+
+  // Document info
+  name        String       @db.VarChar(255)
+  type        DocumentType
+  fileName    String       @db.VarChar(255)
+  fileUrl     String       @db.VarChar(500)
+  fileSize    Int?         // bytes
+  mimeType    String?      @db.VarChar(100)
+
+  // Metadata
+  description String?
+  expiryDate  DateTime?    @db.Date
+  isVerified  Boolean      @default(false)
+  verifiedBy  String?      @db.Uuid
+  verifiedAt  DateTime?
+
+  uploadedBy  String       @db.Uuid
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  deletedAt   DateTime?
+
+  club        Club         @relation(fields: [clubId], references: [id])
+  member      Member       @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@index([memberId])
+  @@index([clubId, type])
+  @@map("member_documents")
 }
