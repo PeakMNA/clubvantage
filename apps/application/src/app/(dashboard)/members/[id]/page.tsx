@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Sparkles, Loader2, Heart } from 'lucide-react';
+import { ArrowLeft, Sparkles, Loader2, Heart, FileText } from 'lucide-react';
 
 import {
   Button,
@@ -36,6 +36,7 @@ import { ContractTab } from '@/components/members/contract-tab';
 import { DependentsTab } from '@/components/members/dependents-tab';
 import { ARHistoryTab } from '@/components/members/ar-history-tab';
 import { EngagementTab } from '@/components/members/tabs/engagement-tab';
+import { DocumentsTab } from '@/components/members/tabs/documents-tab';
 import { DependentModal } from '@/components/members/dependent-modal';
 import { ChargeModal } from '@/components/members/charge-modal';
 import { AddressModal, type AddressFormData } from '@/components/members/address-modal';
@@ -646,7 +647,7 @@ export default function MemberDetailPage() {
         {/* Tabs Section */}
         <div className="relative">
           <Tabs defaultValue="profile" className="w-full">
-            <TabsList className="relative mb-6 grid w-full grid-cols-2 gap-1 rounded-xl bg-slate-100/80 p-1.5 backdrop-blur-sm sm:grid-cols-5 lg:w-fit lg:gap-2">
+            <TabsList className="relative mb-6 grid w-full grid-cols-2 gap-1 rounded-xl bg-slate-100/80 p-1.5 backdrop-blur-sm sm:grid-cols-6 lg:w-fit lg:gap-2">
               <TabsTrigger
                 value="profile"
                 className={cn(
@@ -703,6 +704,17 @@ export default function MemberDetailPage() {
                 <Heart className="mr-1.5 h-4 w-4" />
                 <span className="hidden sm:inline">Engagement</span>
               </TabsTrigger>
+              <TabsTrigger
+                value="documents"
+                className={cn(
+                  "relative rounded-lg px-4 py-2.5 text-sm font-medium transition-all",
+                  "text-slate-600 hover:text-slate-900",
+                  "data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm"
+                )}
+              >
+                <FileText className="mr-1.5 h-4 w-4" />
+                <span className="hidden sm:inline">Documents</span>
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="profile" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
@@ -747,6 +759,10 @@ export default function MemberDetailPage() {
 
             <TabsContent value="engagement" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
               <EngagementTab member={member} />
+            </TabsContent>
+
+            <TabsContent value="documents" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+              <DocumentsTab memberId={memberId} />
             </TabsContent>
           </Tabs>
         </div>
