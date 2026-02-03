@@ -3780,7 +3780,7 @@ model LookupCategory {
   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   code        String   @db.VarChar(50)   // e.g., "PLAYER_TYPE", "PAYMENT_METHOD"
   name        String   @db.VarChar(100)
-  description String?
+  description String?  @db.VarChar(500)
   isSystem    Boolean  @default(false)   // System-managed, values not deletable
   isGlobal    Boolean  @default(true)    // Available to all clubs
   sortOrder   Int      @default(0)
@@ -3801,7 +3801,7 @@ model LookupValue {
   clubId       String?  @db.Uuid          // null = global default
   code         String   @db.VarChar(50)   // Internal code (MEMBER, GUEST)
   name         String   @db.VarChar(100)  // Display name
-  description  String?
+  description  String?  @db.VarChar(500)
   icon         String?  @db.VarChar(50)   // Lucide icon name
   color        String?  @db.VarChar(7)    // Hex color
   sortOrder    Int      @default(0)
@@ -3819,6 +3819,7 @@ model LookupValue {
   @@unique([categoryId, clubId, code])
   @@index([categoryId, isActive])
   @@index([clubId])
+  @@index([clubId, categoryId, isActive])
   @@map("lookup_values")
 }
 
@@ -3833,5 +3834,6 @@ model LookupTranslation {
   lookupValue   LookupValue @relation(fields: [lookupValueId], references: [id], onDelete: Cascade)
 
   @@unique([lookupValueId, locale])
+  @@index([lookupValueId])
   @@map("lookup_translations")
 }
