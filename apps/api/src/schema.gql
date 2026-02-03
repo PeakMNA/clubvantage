@@ -28,6 +28,13 @@ input AddLineItemInput {
   variantId: ID
 }
 
+input AddLookupTranslationInput {
+  description: String
+  locale: String!
+  lookupValueId: ID!
+  name: String!
+}
+
 input AddStoredPaymentInput {
   brand: String!
   cardholderName: String
@@ -38,6 +45,13 @@ input AddStoredPaymentInput {
   memberId: String!
   stripeCustomerId: String
   stripePaymentMethodId: String!
+}
+
+"""Address type options"""
+enum AddressType {
+  BILLING
+  BOTH
+  MAILING
 }
 
 type AgingBucketType {
@@ -1071,6 +1085,20 @@ input CourseIntervalInput {
   timeStart: String!
 }
 
+input CreateAddressInput {
+  addressLine1: String!
+  addressLine2: String
+  country: String = "Thailand"
+  district: String!
+  isPrimary: Boolean = false
+  label: String
+  memberId: ID!
+  postalCode: String!
+  province: String!
+  subDistrict: String!
+  type: AddressType = BILLING
+}
+
 input CreateApplicationInput {
   email: String!
   firstName: String!
@@ -1263,6 +1291,19 @@ input CreateInvoiceInput {
   memberId: ID!
   notes: String
   sendEmail: Boolean = false
+}
+
+input CreateLookupValueInput {
+  categoryId: ID!
+  code: String!
+  color: String
+  description: String
+  icon: String
+  isActive: Boolean
+  isDefault: Boolean
+  metadata: JSON
+  name: String!
+  sortOrder: Int
 }
 
 input CreateLotteryInput {
@@ -1820,6 +1861,10 @@ enum DayType {
   WEEKEND
 }
 
+type DeleteAddressResponseType {
+  success: Boolean!
+}
+
 type DeleteDependentResponseType {
   message: String!
 }
@@ -2255,6 +2300,12 @@ type FlightPaymentSummaryType {
   totalDue: Float!
   totalPaid: Float!
   totalPlayers: Int!
+}
+
+input GenerateStatementInput {
+  endDate: DateTime!
+  memberId: ID!
+  startDate: DateTime!
 }
 
 input GenerateTicketInput {
@@ -2695,6 +2746,56 @@ enum LineItemType {
   RENTAL
 }
 
+type LookupCategory {
+  code: String!
+  description: String
+  id: ID!
+  isGlobal: Boolean!
+  isSystem: Boolean!
+  name: String!
+  sortOrder: Int!
+  valueCount: Int!
+  values: [LookupValue!]
+}
+
+input LookupCategoryFilterInput {
+  isGlobal: Boolean
+  isSystem: Boolean
+}
+
+type LookupMutationResult {
+  error: String
+  message: String
+  success: Boolean!
+  translation: LookupTranslation
+  value: LookupValue
+}
+
+type LookupTranslation {
+  description: String
+  id: ID!
+  locale: String!
+  lookupValueId: String!
+  name: String!
+}
+
+type LookupValue {
+  category: LookupCategory
+  categoryId: String!
+  clubId: String
+  code: String!
+  color: String
+  description: String
+  icon: String
+  id: ID!
+  isActive: Boolean!
+  isDefault: Boolean!
+  metadata: JSON
+  name: String!
+  sortOrder: Int!
+  translations: [LookupTranslation!]
+}
+
 type LotteryDrawResult {
   assignedCount: Int!
   lottery: GolfLotteryType
@@ -2737,6 +2838,22 @@ enum LotteryStatus {
 enum LotteryType {
   PRIME_TIME
   SPECIAL_EVENT
+}
+
+type MemberAddressType {
+  addressLine1: String!
+  addressLine2: String
+  country: String!
+  createdAt: DateTime!
+  district: String!
+  id: ID!
+  isPrimary: Boolean!
+  label: String
+  postalCode: String!
+  province: String!
+  subDistrict: String!
+  type: AddressType!
+  updatedAt: DateTime!
 }
 
 type MemberAtRiskType {
@@ -2901,6 +3018,15 @@ enum MemberSpendStatus {
   SHORTFALL
 }
 
+type MemberStatementInfoType {
+  address: String
+  email: String
+  id: ID!
+  memberNumber: String!
+  membershipType: String!
+  name: String!
+}
+
 type MemberStatsType {
   active: Float!
   inactive: Float!
@@ -2953,6 +3079,7 @@ type MemberTransactionsType {
 
 type MemberType {
   address: String
+  addresses: [MemberAddressType!]
   avatarUrl: String
   createdAt: DateTime!
   creditBalance: String!
@@ -3116,6 +3243,7 @@ type Mutation {
 
   """Add a line item to a player"""
   addLineItem(input: AddLineItemInput!): BookingLineItemType!
+  addLookupTranslation(input: AddLookupTranslationInput!): LookupMutationResult!
 
   """Add a new stored payment method"""
   addPaymentMethod(input: AddStoredPaymentInput!): StoredPaymentMethod!
@@ -3273,12 +3401,16 @@ type Mutation {
 
   """Create a new invoice"""
   createInvoice(input: CreateInvoiceInput!): InvoiceType!
+  createLookupValue(input: CreateLookupValueInput!): LookupMutationResult!
 
   """Create a lottery"""
   createLottery(input: CreateLotteryInput!): LotteryMutationResponse!
 
   """Create a new member"""
   createMember(input: CreateMemberInput!): MemberType!
+
+  """Create a new member address"""
+  createMemberAddress(input: CreateAddressInput!): MemberAddressType!
 
   """Create a billing profile for a member with custom settings"""
   createMemberBillingProfile(input: CreateMemberBillingProfileInput!): MemberBillingProfileType!
@@ -3362,12 +3494,17 @@ type Mutation {
 
   """Delete an interest category"""
   deleteInterestCategory(id: ID!): EngagementDeleteResponse!
+  deleteLookupTranslation(id: ID!): LookupMutationResult!
+  deleteLookupValue(id: ID!): LookupMutationResult!
 
   """Delete a draft lottery"""
   deleteLottery(id: ID!): LotteryMutationResponse!
 
   """Soft delete a member"""
   deleteMember(id: ID!): DeleteMemberResponseType!
+
+  """Delete a member address"""
+  deleteMemberAddress(id: ID!): DeleteAddressResponseType!
 
   """Delete (deactivate) a minimum spend requirement"""
   deleteMinimumSpendRequirement(id: ID!): MinimumSpendRequirement!
@@ -3647,12 +3784,16 @@ type Mutation {
 
   """Update line item quantity"""
   updateLineItemQuantity(input: UpdateLineItemQuantityInput!): UpdateQuantityResultType!
+  updateLookupValue(input: UpdateLookupValueInput!): LookupMutationResult!
 
   """Update a lottery"""
   updateLottery(id: ID!, input: UpdateLotteryInput!): LotteryMutationResponse!
 
   """Update an existing member"""
   updateMember(id: ID!, input: UpdateMemberInput!): MemberType!
+
+  """Update an existing member address"""
+  updateMemberAddress(id: ID!, input: UpdateAddressInput!): MemberAddressType!
 
   """Update billing profile for a member"""
   updateMemberBillingProfile(input: UpdateMemberBillingProfileInput!, memberId: ID!): MemberBillingProfileType!
@@ -4436,6 +4577,9 @@ type Query {
   """Get payment summary for a flight"""
   flightPaymentSummary(teeTimeId: ID!): FlightPaymentSummaryType!
 
+  """Generate a member statement for a date range"""
+  generateStatement(input: GenerateStatementInput!): StatementType!
+
   """Generate a tee ticket for a tee time"""
   generateTeeTicket(teeTimeId: ID!): TeeTicketType
 
@@ -4487,6 +4631,10 @@ type Query {
 
   """Get discounts applied to a line item"""
   lineItemDiscounts(lineItemId: ID!): [AppliedDiscountType!]!
+  lookupCategories(filter: LookupCategoryFilterInput): [LookupCategory!]!
+  lookupCategory(code: String!): LookupCategory
+  lookupValue(id: ID!): LookupValue
+  lookupValues(categoryCode: String!, includeInactive: Boolean): [LookupValue!]!
 
   """Get lotteries"""
   lotteries(courseId: ID, endDate: DateTime, startDate: DateTime, status: LotteryStatus): [GolfLotteryType!]!
@@ -4496,6 +4644,9 @@ type Query {
 
   """Get a single member by ID"""
   member(id: ID!): MemberType!
+
+  """Get member addresses"""
+  memberAddresses(memberId: ID!): [MemberAddressType!]!
 
   """Get auto-pay attempt history for a member"""
   memberAutoPayHistory(input: GetAutoPayHistoryInput!): [AutoPayAttempt!]!
@@ -5237,6 +5388,15 @@ type StarterTicketResponseType {
   ticketNumber: String!
 }
 
+type StatementType {
+  closingBalance: String!
+  member: MemberStatementInfoType!
+  openingBalance: String!
+  periodEnd: DateTime!
+  periodStart: DateTime!
+  transactions: [MemberTransactionType!]!
+}
+
 type StoredPaymentMethod {
   brand: String!
   cardholderName: String
@@ -5683,6 +5843,19 @@ input UndoTransferInput {
   lineItemId: ID!
 }
 
+input UpdateAddressInput {
+  addressLine1: String
+  addressLine2: String
+  country: String
+  district: String
+  isPrimary: Boolean
+  label: String
+  postalCode: String
+  province: String
+  subDistrict: String
+  type: AddressType
+}
+
 input UpdateApplicationInput {
   email: String
   firstName: String
@@ -5890,6 +6063,18 @@ input UpdateInterestCategoryInput {
 input UpdateLineItemQuantityInput {
   lineItemId: ID!
   quantity: Int!
+}
+
+input UpdateLookupValueInput {
+  color: String
+  description: String
+  icon: String
+  id: ID!
+  isActive: Boolean
+  isDefault: Boolean
+  metadata: JSON
+  name: String
+  sortOrder: Int
 }
 
 input UpdateLotteryInput {

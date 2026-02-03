@@ -10,6 +10,18 @@ registerEnumType(MemberStatus, {
   description: 'Member status options',
 });
 
+// Address type enum
+export enum AddressType {
+  BILLING = 'BILLING',
+  MAILING = 'MAILING',
+  BOTH = 'BOTH',
+}
+
+registerEnumType(AddressType, {
+  name: 'AddressType',
+  description: 'Address type options',
+});
+
 @ObjectType()
 export class MembershipTypeType {
   @Field(() => ID)
@@ -130,6 +142,49 @@ export class DependentType {
   isActive: boolean;
 }
 
+// Address Types (defined before MemberType for forward reference)
+@ObjectType()
+export class MemberAddressType {
+  @Field(() => ID)
+  id: string;
+
+  @Field({ nullable: true })
+  label?: string;
+
+  @Field(() => AddressType)
+  type: AddressType;
+
+  @Field()
+  addressLine1: string;
+
+  @Field({ nullable: true })
+  addressLine2?: string;
+
+  @Field()
+  subDistrict: string;
+
+  @Field()
+  district: string;
+
+  @Field()
+  province: string;
+
+  @Field()
+  postalCode: string;
+
+  @Field()
+  country: string;
+
+  @Field()
+  isPrimary: boolean;
+
+  @Field()
+  createdAt: Date;
+
+  @Field()
+  updatedAt: Date;
+}
+
 @ObjectType()
 export class MemberType {
   @Field(() => ID)
@@ -225,6 +280,9 @@ export class MemberType {
 
   @Field(() => [DependentType], { nullable: true })
   dependents?: DependentType[];
+
+  @Field(() => [MemberAddressType], { nullable: true })
+  addresses?: MemberAddressType[];
 }
 
 @ObjectType()
@@ -255,4 +313,10 @@ export class DeleteMemberResponseType {
 export class DeleteDependentResponseType {
   @Field()
   message: string;
+}
+
+@ObjectType()
+export class DeleteAddressResponseType {
+  @Field()
+  success: boolean;
 }

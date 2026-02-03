@@ -329,6 +329,7 @@ model Member {
   billingProfile        MemberBillingProfile?
   interests             MemberInterest[]
   communicationPrefs    MemberCommunicationPrefs?
+  addresses             MemberAddress[]
 
   @@unique([clubId, memberId])
   @@unique([clubId, email])
@@ -337,6 +338,30 @@ model Member {
   @@index([membershipTypeId])
   @@index([householdId])
   @@map("members")
+}
+
+/// Member address for billing/mailing
+model MemberAddress {
+  id           String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  memberId     String      @db.Uuid
+  label        String?     @db.VarChar(50)
+  type         AddressType @default(BILLING)
+  addressLine1 String      @db.VarChar(255)
+  addressLine2 String?     @db.VarChar(255)
+  subDistrict  String      @db.VarChar(100)
+  district     String      @db.VarChar(100)
+  province     String      @db.VarChar(100)
+  postalCode   String      @db.VarChar(20)
+  country      String      @default("Thailand") @db.VarChar(100)
+  isPrimary    Boolean     @default(false)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@index([memberId])
+  @@index([memberId, isPrimary])
+  @@map("member_addresses")
 }
 
 /// Credit limit override record for temporary limit increases
@@ -1952,6 +1977,12 @@ enum MemberStatus {
   RESIGNED
   TERMINATED
   REACTIVATED
+}
+
+enum AddressType {
+  BILLING
+  MAILING
+  BOTH
 }
 
 enum InvoiceStatus {

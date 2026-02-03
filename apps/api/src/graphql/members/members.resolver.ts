@@ -13,6 +13,9 @@ import {
   DeleteDependentResponseType,
   DependentType,
   MembershipTypeType,
+  MemberAddressType,
+  DeleteAddressResponseType,
+  AddressType,
 } from './members.types';
 import {
   CreateMemberInput,
@@ -21,6 +24,8 @@ import {
   CreateDependentInput,
   UpdateDependentInput,
   MembersQueryArgs,
+  CreateAddressInput,
+  UpdateAddressInput,
 } from './members.input';
 import { encodeCursor, decodeCursor } from '../common/pagination';
 
@@ -312,6 +317,150 @@ export class MembersResolver {
     return { message: 'Dependent deleted successfully' };
   }
 
+  // ============================================================================
+  // ADDRESS MUTATIONS
+  // ============================================================================
+
+  @Query(() => [MemberAddressType], { name: 'memberAddresses', description: 'Get member addresses' })
+  async getMemberAddresses(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('memberId', { type: () => ID }) memberId: string,
+  ): Promise<MemberAddressType[]> {
+    // Verify the member belongs to this tenant
+    const member = await this.prisma.member.findFirst({
+      where: { id: memberId, clubId: user.tenantId },
+    });
+    if (!member) {
+      throw new Error('Member not found');
+    }
+
+    const addresses = await this.prisma.memberAddress.findMany({
+      where: { memberId },
+      orderBy: [{ isPrimary: 'desc' }, { createdAt: 'desc' }],
+    });
+
+    return addresses.map((addr) => this.transformAddress(addr));
+  }
+
+  @Mutation(() => MemberAddressType, { name: 'createMemberAddress', description: 'Create a new member address' })
+  async createMemberAddress(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('input') input: CreateAddressInput,
+  ): Promise<MemberAddressType> {
+    // Verify the member belongs to this tenant
+    const member = await this.prisma.member.findFirst({
+      where: { id: input.memberId, clubId: user.tenantId },
+    });
+    if (!member) {
+      throw new Error('Member not found');
+    }
+
+    // If this is set as primary, unset any existing primary addresses
+    if (input.isPrimary) {
+      await this.prisma.memberAddress.updateMany({
+        where: { memberId: input.memberId, isPrimary: true },
+        data: { isPrimary: false },
+      });
+    }
+
+    const address = await this.prisma.memberAddress.create({
+      data: {
+        memberId: input.memberId,
+        label: input.label,
+        type: input.type || 'BILLING',
+        addressLine1: input.addressLine1,
+        addressLine2: input.addressLine2,
+        subDistrict: input.subDistrict,
+        district: input.district,
+        province: input.province,
+        postalCode: input.postalCode,
+        country: input.country || 'Thailand',
+        isPrimary: input.isPrimary ?? false,
+      },
+    });
+
+    return this.transformAddress(address);
+  }
+
+  @Mutation(() => MemberAddressType, { name: 'updateMemberAddress', description: 'Update an existing member address' })
+  async updateMemberAddress(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('id', { type: () => ID }) id: string,
+    @Args('input') input: UpdateAddressInput,
+  ): Promise<MemberAddressType> {
+    // Verify the address belongs to a member in this tenant
+    const existing = await this.prisma.memberAddress.findFirst({
+      where: { id },
+      include: { member: true },
+    });
+    if (!existing || existing.member.clubId !== user.tenantId) {
+      throw new Error('Address not found');
+    }
+
+    // If setting as primary, unset any existing primary addresses
+    if (input.isPrimary) {
+      await this.prisma.memberAddress.updateMany({
+        where: { memberId: existing.memberId, isPrimary: true, id: { not: id } },
+        data: { isPrimary: false },
+      });
+    }
+
+    const address = await this.prisma.memberAddress.update({
+      where: { id },
+      data: {
+        label: input.label,
+        type: input.type,
+        addressLine1: input.addressLine1,
+        addressLine2: input.addressLine2,
+        subDistrict: input.subDistrict,
+        district: input.district,
+        province: input.province,
+        postalCode: input.postalCode,
+        country: input.country,
+        isPrimary: input.isPrimary,
+      },
+    });
+
+    return this.transformAddress(address);
+  }
+
+  @Mutation(() => DeleteAddressResponseType, { name: 'deleteMemberAddress', description: 'Delete a member address' })
+  async deleteMemberAddress(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('id', { type: () => ID }) id: string,
+  ): Promise<DeleteAddressResponseType> {
+    // Verify the address belongs to a member in this tenant
+    const existing = await this.prisma.memberAddress.findFirst({
+      where: { id },
+      include: { member: true },
+    });
+    if (!existing || existing.member.clubId !== user.tenantId) {
+      throw new Error('Address not found');
+    }
+
+    await this.prisma.memberAddress.delete({ where: { id } });
+
+    return { success: true };
+  }
+
+  private transformAddress(addr: any): MemberAddressType {
+    return {
+      id: addr.id,
+      label: addr.label ?? undefined,
+      type: addr.type as AddressType,
+      addressLine1: addr.addressLine1,
+      addressLine2: addr.addressLine2 ?? undefined,
+      subDistrict: addr.subDistrict,
+      district: addr.district,
+      province: addr.province,
+      postalCode: addr.postalCode,
+      country: addr.country,
+      isPrimary: addr.isPrimary,
+      createdAt: addr.createdAt,
+      updatedAt: addr.updatedAt,
+    };
+  }
+
   private transformMember(member: any): MemberType {
     return {
       id: member.id,
@@ -354,6 +503,7 @@ export class MembersResolver {
         phone: d.phone,
         isActive: d.isActive,
       })),
+      addresses: member.addresses?.map((addr: any) => this.transformAddress(addr)),
     };
   }
 }

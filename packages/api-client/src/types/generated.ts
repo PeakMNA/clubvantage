@@ -65,6 +65,12 @@ export type AddStoredPaymentInput = {
   stripePaymentMethodId: Scalars['String']['input'];
 };
 
+/** Address type options */
+export type AddressType =
+  | 'BILLING'
+  | 'BOTH'
+  | 'MAILING';
+
 export type AgingBucketType = {
   __typename?: 'AgingBucketType';
   id: Scalars['String']['output'];
@@ -1112,6 +1118,20 @@ export type CourseIntervalInput = {
   timeStart: Scalars['String']['input'];
 };
 
+export type CreateAddressInput = {
+  addressLine1: Scalars['String']['input'];
+  addressLine2?: InputMaybe<Scalars['String']['input']>;
+  country?: InputMaybe<Scalars['String']['input']>;
+  district: Scalars['String']['input'];
+  isPrimary?: InputMaybe<Scalars['Boolean']['input']>;
+  label?: InputMaybe<Scalars['String']['input']>;
+  memberId: Scalars['ID']['input'];
+  postalCode: Scalars['String']['input'];
+  province: Scalars['String']['input'];
+  subDistrict: Scalars['String']['input'];
+  type?: InputMaybe<AddressType>;
+};
+
 export type CreateApplicationInput = {
   email: Scalars['String']['input'];
   firstName: Scalars['String']['input'];
@@ -1871,6 +1891,11 @@ export type DayType =
   | 'HOLIDAY'
   | 'WEEKDAY'
   | 'WEEKEND';
+
+export type DeleteAddressResponseType = {
+  __typename?: 'DeleteAddressResponseType';
+  success: Scalars['Boolean']['output'];
+};
 
 export type DeleteDependentResponseType = {
   __typename?: 'DeleteDependentResponseType';
@@ -2886,6 +2911,23 @@ export type LotteryType =
   | 'PRIME_TIME'
   | 'SPECIAL_EVENT';
 
+export type MemberAddressType = {
+  __typename?: 'MemberAddressType';
+  addressLine1: Scalars['String']['output'];
+  addressLine2?: Maybe<Scalars['String']['output']>;
+  country: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  district: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  isPrimary: Scalars['Boolean']['output'];
+  label?: Maybe<Scalars['String']['output']>;
+  postalCode: Scalars['String']['output'];
+  province: Scalars['String']['output'];
+  subDistrict: Scalars['String']['output'];
+  type: AddressType;
+  updatedAt: Scalars['DateTime']['output'];
+};
+
 export type MemberAtRiskType = {
   __typename?: 'MemberAtRiskType';
   creditLimit: Scalars['Float']['output'];
@@ -3102,6 +3144,7 @@ export type MemberTransactionsType = {
 export type MemberType = {
   __typename?: 'MemberType';
   address?: Maybe<Scalars['String']['output']>;
+  addresses?: Maybe<Array<MemberAddressType>>;
   avatarUrl?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['DateTime']['output'];
   creditBalance: Scalars['String']['output'];
@@ -3382,6 +3425,8 @@ export type Mutation = {
   createLottery: LotteryMutationResponse;
   /** Create a new member */
   createMember: MemberType;
+  /** Create a new member address */
+  createMemberAddress: MemberAddressType;
   /** Create a billing profile for a member with custom settings */
   createMemberBillingProfile: MemberBillingProfileType;
   /** Create a new minimum spend requirement */
@@ -3445,6 +3490,8 @@ export type Mutation = {
   deleteLottery: LotteryMutationResponse;
   /** Soft delete a member */
   deleteMember: DeleteMemberResponseType;
+  /** Delete a member address */
+  deleteMemberAddress: DeleteAddressResponseType;
   /** Delete (deactivate) a minimum spend requirement */
   deleteMinimumSpendRequirement: MinimumSpendRequirement;
   /** Delete a POS template */
@@ -3637,6 +3684,8 @@ export type Mutation = {
   updateLottery: LotteryMutationResponse;
   /** Update an existing member */
   updateMember: MemberType;
+  /** Update an existing member address */
+  updateMemberAddress: MemberAddressType;
   /** Update billing profile for a member */
   updateMemberBillingProfile: MemberBillingProfileType;
   /** Update communication preferences for a member */
@@ -4028,6 +4077,11 @@ export type MutationCreateMemberArgs = {
 };
 
 
+export type MutationCreateMemberAddressArgs = {
+  input: CreateAddressInput;
+};
+
+
 export type MutationCreateMemberBillingProfileArgs = {
   input: CreateMemberBillingProfileInput;
 };
@@ -4202,6 +4256,11 @@ export type MutationDeleteLotteryArgs = {
 
 
 export type MutationDeleteMemberArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteMemberAddressArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -4719,6 +4778,12 @@ export type MutationUpdateLotteryArgs = {
 export type MutationUpdateMemberArgs = {
   id: Scalars['ID']['input'];
   input: UpdateMemberInput;
+};
+
+
+export type MutationUpdateMemberAddressArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateAddressInput;
 };
 
 
@@ -5629,6 +5694,8 @@ export type Query = {
   lottery: GolfLotteryType;
   /** Get a single member by ID */
   member: MemberType;
+  /** Get member addresses */
+  memberAddresses: Array<MemberAddressType>;
   /** Get auto-pay attempt history for a member */
   memberAutoPayHistory: Array<AutoPayAttempt>;
   /** Get auto-pay settings for a member */
@@ -6141,6 +6208,11 @@ export type QueryLotteryArgs = {
 
 export type QueryMemberArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type QueryMemberAddressesArgs = {
+  memberId: Scalars['ID']['input'];
 };
 
 
@@ -7551,6 +7623,19 @@ export type UndoCheckInInput = {
 
 export type UndoTransferInput = {
   lineItemId: Scalars['ID']['input'];
+};
+
+export type UpdateAddressInput = {
+  addressLine1?: InputMaybe<Scalars['String']['input']>;
+  addressLine2?: InputMaybe<Scalars['String']['input']>;
+  country?: InputMaybe<Scalars['String']['input']>;
+  district?: InputMaybe<Scalars['String']['input']>;
+  isPrimary?: InputMaybe<Scalars['Boolean']['input']>;
+  label?: InputMaybe<Scalars['String']['input']>;
+  postalCode?: InputMaybe<Scalars['String']['input']>;
+  province?: InputMaybe<Scalars['String']['input']>;
+  subDistrict?: InputMaybe<Scalars['String']['input']>;
+  type?: InputMaybe<AddressType>;
 };
 
 export type UpdateApplicationInput = {
@@ -9734,7 +9819,7 @@ export type DeleteLookupTranslationMutation = { __typename?: 'Mutation', deleteL
 export type GetMyMemberQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetMyMemberQuery = { __typename?: 'Query', myMember?: { __typename?: 'MemberType', id: string, memberId: string, firstName: string, lastName: string, email?: string | null | undefined, phone?: string | null | undefined, dateOfBirth?: string | null | undefined, gender?: string | null | undefined, avatarUrl?: string | null | undefined, address?: string | null | undefined, nationality?: string | null | undefined, status: MemberStatus, joinDate: string, expiryDate?: string | null | undefined, renewalDate?: string | null | undefined, isPrimaryMember: boolean, creditBalance: string, outstandingBalance: string, notes?: string | null | undefined, isActive: boolean, membershipType?: { __typename?: 'MembershipTypeType', id: string, name: string, code: string, description?: string | null | undefined } | null | undefined, membershipTier?: { __typename?: 'MembershipTierType', id: string, name: string, code: string } | null | undefined, dependents?: Array<{ __typename?: 'DependentType', id: string, firstName: string, lastName: string, relationship: string, dateOfBirth?: string | null | undefined, email?: string | null | undefined, phone?: string | null | undefined, isActive: boolean }> | null | undefined } | null | undefined };
+export type GetMyMemberQuery = { __typename?: 'Query', myMember?: { __typename?: 'MemberType', id: string, memberId: string, firstName: string, lastName: string, email?: string | null | undefined, phone?: string | null | undefined, dateOfBirth?: string | null | undefined, gender?: string | null | undefined, avatarUrl?: string | null | undefined, address?: string | null | undefined, nationality?: string | null | undefined, status: MemberStatus, joinDate: string, expiryDate?: string | null | undefined, renewalDate?: string | null | undefined, isPrimaryMember: boolean, creditBalance: string, outstandingBalance: string, notes?: string | null | undefined, isActive: boolean, membershipType?: { __typename?: 'MembershipTypeType', id: string, name: string, code: string, description?: string | null | undefined } | null | undefined, membershipTier?: { __typename?: 'MembershipTierType', id: string, name: string, code: string } | null | undefined, dependents?: Array<{ __typename?: 'DependentType', id: string, firstName: string, lastName: string, relationship: string, dateOfBirth?: string | null | undefined, email?: string | null | undefined, phone?: string | null | undefined, isActive: boolean }> | null | undefined, addresses?: Array<{ __typename?: 'MemberAddressType', id: string, label?: string | null | undefined, type: AddressType, addressLine1: string, addressLine2?: string | null | undefined, subDistrict: string, district: string, province: string, postalCode: string, country: string, isPrimary: boolean }> | null | undefined } | null | undefined };
 
 export type GetMembersQueryVariables = Exact<{
   first?: InputMaybe<Scalars['Int']['input']>;
@@ -9752,7 +9837,7 @@ export type GetMemberQueryVariables = Exact<{
 }>;
 
 
-export type GetMemberQuery = { __typename?: 'Query', member: { __typename?: 'MemberType', id: string, memberId: string, firstName: string, lastName: string, email?: string | null | undefined, phone?: string | null | undefined, dateOfBirth?: string | null | undefined, gender?: string | null | undefined, avatarUrl?: string | null | undefined, address?: string | null | undefined, nationality?: string | null | undefined, idNumber?: string | null | undefined, emergencyContact?: string | null | undefined, emergencyPhone?: string | null | undefined, status: MemberStatus, joinDate: string, expiryDate?: string | null | undefined, renewalDate?: string | null | undefined, isPrimaryMember: boolean, creditBalance: string, outstandingBalance: string, notes?: string | null | undefined, tags: Array<string>, isActive: boolean, createdAt: string, updatedAt: string, membershipType?: { __typename?: 'MembershipTypeType', id: string, name: string, code: string, description?: string | null | undefined } | null | undefined, membershipTier?: { __typename?: 'MembershipTierType', id: string, name: string, code: string, description?: string | null | undefined } | null | undefined, household?: { __typename?: 'HouseholdType', id: string, name: string, address?: string | null | undefined, phone?: string | null | undefined, email?: string | null | undefined } | null | undefined, referredBy?: { __typename?: 'MemberSummaryType', id: string, memberId: string, firstName: string, lastName: string } | null | undefined, dependents?: Array<{ __typename?: 'DependentType', id: string, firstName: string, lastName: string, relationship: string, dateOfBirth?: string | null | undefined, email?: string | null | undefined, phone?: string | null | undefined, isActive: boolean }> | null | undefined } };
+export type GetMemberQuery = { __typename?: 'Query', member: { __typename?: 'MemberType', id: string, memberId: string, firstName: string, lastName: string, email?: string | null | undefined, phone?: string | null | undefined, dateOfBirth?: string | null | undefined, gender?: string | null | undefined, avatarUrl?: string | null | undefined, address?: string | null | undefined, nationality?: string | null | undefined, idNumber?: string | null | undefined, emergencyContact?: string | null | undefined, emergencyPhone?: string | null | undefined, status: MemberStatus, joinDate: string, expiryDate?: string | null | undefined, renewalDate?: string | null | undefined, isPrimaryMember: boolean, creditBalance: string, outstandingBalance: string, notes?: string | null | undefined, tags: Array<string>, isActive: boolean, createdAt: string, updatedAt: string, membershipType?: { __typename?: 'MembershipTypeType', id: string, name: string, code: string, description?: string | null | undefined } | null | undefined, membershipTier?: { __typename?: 'MembershipTierType', id: string, name: string, code: string, description?: string | null | undefined } | null | undefined, household?: { __typename?: 'HouseholdType', id: string, name: string, address?: string | null | undefined, phone?: string | null | undefined, email?: string | null | undefined } | null | undefined, referredBy?: { __typename?: 'MemberSummaryType', id: string, memberId: string, firstName: string, lastName: string } | null | undefined, dependents?: Array<{ __typename?: 'DependentType', id: string, firstName: string, lastName: string, relationship: string, dateOfBirth?: string | null | undefined, email?: string | null | undefined, phone?: string | null | undefined, isActive: boolean }> | null | undefined, addresses?: Array<{ __typename?: 'MemberAddressType', id: string, label?: string | null | undefined, type: AddressType, addressLine1: string, addressLine2?: string | null | undefined, subDistrict: string, district: string, province: string, postalCode: string, country: string, isPrimary: boolean }> | null | undefined } };
 
 export type GetMemberStatsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -9810,6 +9895,35 @@ export type DeleteDependentMutationVariables = Exact<{
 
 
 export type DeleteDependentMutation = { __typename?: 'Mutation', deleteDependent: { __typename?: 'DeleteDependentResponseType', message: string } };
+
+export type GetMemberAddressesQueryVariables = Exact<{
+  memberId: Scalars['ID']['input'];
+}>;
+
+
+export type GetMemberAddressesQuery = { __typename?: 'Query', memberAddresses: Array<{ __typename?: 'MemberAddressType', id: string, label?: string | null | undefined, type: AddressType, addressLine1: string, addressLine2?: string | null | undefined, subDistrict: string, district: string, province: string, postalCode: string, country: string, isPrimary: boolean, createdAt: string, updatedAt: string }> };
+
+export type CreateMemberAddressMutationVariables = Exact<{
+  input: CreateAddressInput;
+}>;
+
+
+export type CreateMemberAddressMutation = { __typename?: 'Mutation', createMemberAddress: { __typename?: 'MemberAddressType', id: string, label?: string | null | undefined, type: AddressType, addressLine1: string, addressLine2?: string | null | undefined, subDistrict: string, district: string, province: string, postalCode: string, country: string, isPrimary: boolean } };
+
+export type UpdateMemberAddressMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  input: UpdateAddressInput;
+}>;
+
+
+export type UpdateMemberAddressMutation = { __typename?: 'Mutation', updateMemberAddress: { __typename?: 'MemberAddressType', id: string, label?: string | null | undefined, type: AddressType, addressLine1: string, addressLine2?: string | null | undefined, subDistrict: string, district: string, province: string, postalCode: string, country: string, isPrimary: boolean } };
+
+export type DeleteMemberAddressMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type DeleteMemberAddressMutation = { __typename?: 'Mutation', deleteMemberAddress: { __typename?: 'DeleteAddressResponseType', success: boolean } };
 
 export type GetMinimumSpendRequirementsQueryVariables = Exact<{
   activeOnly?: InputMaybe<Scalars['Boolean']['input']>;

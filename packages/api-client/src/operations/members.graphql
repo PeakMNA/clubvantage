@@ -43,6 +43,19 @@ query GetMyMember {
       phone
       isActive
     }
+    addresses {
+      id
+      label
+      type
+      addressLine1
+      addressLine2
+      subDistrict
+      district
+      province
+      postalCode
+      country
+      isPrimary
+    }
   }
 }
 
@@ -162,6 +175,19 @@ query GetMember($id: ID!) {
       phone
       isActive
     }
+    addresses {
+      id
+      label
+      type
+      addressLine1
+      addressLine2
+      subDistrict
+      district
+      province
+      postalCode
+      country
+      isPrimary
+    }
   }
 }
 
@@ -245,5 +271,65 @@ mutation UpdateDependent($id: ID!, $input: UpdateDependentInput!) {
 mutation DeleteDependent($id: ID!) {
   deleteDependent(id: $id) {
     message
+  }
+}
+
+# Address Queries
+
+query GetMemberAddresses($memberId: ID!) {
+  memberAddresses(memberId: $memberId) {
+    id
+    label
+    type
+    addressLine1
+    addressLine2
+    subDistrict
+    district
+    province
+    postalCode
+    country
+    isPrimary
+    createdAt
+    updatedAt
+  }
+}
+
+# Address Mutations
+
+mutation CreateMemberAddress($input: CreateAddressInput!) {
+  createMemberAddress(input: $input) {
+    id
+    label
+    type
+    addressLine1
+    addressLine2
+    subDistrict
+    district
+    province
+    postalCode
+    country
+    isPrimary
+  }
+}
+
+mutation UpdateMemberAddress($id: ID!, $input: UpdateAddressInput!) {
+  updateMemberAddress(id: $id, input: $input) {
+    id
+    label
+    type
+    addressLine1
+    addressLine2
+    subDistrict
+    district
+    province
+    postalCode
+    country
+    isPrimary
+  }
+}
+
+mutation DeleteMemberAddress($id: ID!) {
+  deleteMemberAddress(id: $id) {
+    success
   }
 }

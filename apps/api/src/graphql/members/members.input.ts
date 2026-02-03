@@ -1,6 +1,6 @@
 import { InputType, Field, ID, ArgsType, Int } from '@nestjs/graphql';
 import { IsOptional, IsString, IsEmail, IsUUID, IsEnum, IsBoolean, IsInt, Min, Max, IsArray } from 'class-validator';
-import { MemberStatus } from './members.types';
+import { MemberStatus, AddressType } from './members.types';
 import { PaginationArgs } from '../common/pagination';
 
 @InputType()
@@ -314,4 +314,113 @@ export class MembersQueryArgs extends PaginationArgs {
   @IsOptional()
   @IsString()
   sortOrder?: 'asc' | 'desc';
+}
+
+// ============================================================================
+// ADDRESS INPUTS
+// ============================================================================
+
+@InputType()
+export class CreateAddressInput {
+  @Field(() => ID)
+  @IsUUID()
+  memberId: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  label?: string;
+
+  @Field(() => AddressType, { nullable: true, defaultValue: AddressType.BILLING })
+  @IsOptional()
+  @IsEnum(AddressType)
+  type?: AddressType;
+
+  @Field()
+  @IsString()
+  addressLine1: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  addressLine2?: string;
+
+  @Field()
+  @IsString()
+  subDistrict: string;
+
+  @Field()
+  @IsString()
+  district: string;
+
+  @Field()
+  @IsString()
+  province: string;
+
+  @Field()
+  @IsString()
+  postalCode: string;
+
+  @Field({ nullable: true, defaultValue: 'Thailand' })
+  @IsOptional()
+  @IsString()
+  country?: string;
+
+  @Field({ nullable: true, defaultValue: false })
+  @IsOptional()
+  @IsBoolean()
+  isPrimary?: boolean;
+}
+
+@InputType()
+export class UpdateAddressInput {
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  label?: string;
+
+  @Field(() => AddressType, { nullable: true })
+  @IsOptional()
+  @IsEnum(AddressType)
+  type?: AddressType;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  addressLine1?: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  addressLine2?: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  subDistrict?: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  district?: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  province?: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  postalCode?: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  country?: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsBoolean()
+  isPrimary?: boolean;
 }
