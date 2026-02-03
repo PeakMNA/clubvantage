@@ -12,6 +12,7 @@ import {
   Filter,
   ChevronDown,
   Palette,
+  Globe,
   // Common icons for selector
   User,
   Users,
@@ -59,6 +60,7 @@ import {
   cn,
 } from '@clubvantage/ui';
 import { useLookupValues, useLookupMutations, type LookupValueDisplay } from '@/hooks/use-lookups';
+import { TranslationEditor } from './translation-editor';
 
 // Icon mapping for selector
 const ICON_OPTIONS: { value: string; label: string; icon: LucideIcon }[] = [
@@ -130,6 +132,7 @@ export function LookupValuesManager({
   const [editingValue, setEditingValue] = useState<LookupValueDisplay | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [deleteConfirmValue, setDeleteConfirmValue] = useState<LookupValueDisplay | null>(null);
+  const [editingTranslations, setEditingTranslations] = useState<LookupValueDisplay | null>(null);
 
   // Filter values
   const filteredValues = useMemo(() => {
@@ -280,6 +283,7 @@ export function LookupValuesManager({
               isSystemCategory={isSystemCategory}
               onEdit={() => setEditingValue(value)}
               onDelete={() => setDeleteConfirmValue(value)}
+              onTranslations={() => setEditingTranslations(value)}
             />
           ))}
         </div>
@@ -326,6 +330,19 @@ export function LookupValuesManager({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Translation Editor */}
+      {editingTranslations && (
+        <TranslationEditor
+          lookupValueId={editingTranslations.id}
+          lookupValueName={editingTranslations.name}
+          translations={editingTranslations.translations ?? []}
+          onClose={() => setEditingTranslations(null)}
+          onSave={() => {
+            refetch();
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -339,9 +356,10 @@ interface LookupValueCardProps {
   isSystemCategory: boolean;
   onEdit: () => void;
   onDelete: () => void;
+  onTranslations: () => void;
 }
 
-function LookupValueCard({ value, isSystemCategory, onEdit, onDelete }: LookupValueCardProps) {
+function LookupValueCard({ value, isSystemCategory, onEdit, onDelete, onTranslations }: LookupValueCardProps) {
   const IconComponent = getIconComponent(value.icon);
   const canDelete = !isSystemCategory || !value.isGlobal;
 
@@ -404,6 +422,9 @@ function LookupValueCard({ value, isSystemCategory, onEdit, onDelete }: LookupVa
 
       {/* Actions (visible on hover) */}
       <div className="absolute bottom-4 right-4 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onTranslations} title="Translations">
+          <Globe className="h-4 w-4 text-stone-500" />
+        </Button>
         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onEdit}>
           <Pencil className="h-4 w-4 text-stone-500" />
         </Button>
