@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Sparkles, Loader2 } from 'lucide-react';
+import { ArrowLeft, Sparkles, Loader2, Heart } from 'lucide-react';
 
 import {
   Button,
@@ -31,10 +31,12 @@ import { ProfileTab } from '@/components/members/profile-tab';
 import { ContractTab } from '@/components/members/contract-tab';
 import { DependentsTab } from '@/components/members/dependents-tab';
 import { ARHistoryTab } from '@/components/members/ar-history-tab';
+import { EngagementTab } from '@/components/members/tabs/engagement-tab';
 import { DependentModal } from '@/components/members/dependent-modal';
 import { ChargeModal } from '@/components/members/charge-modal';
 import { StatusChangeDialog, ConfirmationDialog } from '@/components/members/confirmation-dialog';
 import type { Dependent, Charge, MemberStatus, Member } from '@/components/members/types';
+import { useMemberTransactions } from '@/hooks/use-billing';
 
 export default function MemberDetailPage() {
   const params = useParams();
@@ -161,10 +163,8 @@ export default function MemberDetailPage() {
     };
   }, [data]);
 
-  // A/R transactions would need a separate query - return empty for now
-  const arTransactions = useMemo(() => {
-    return []; // TODO: Implement GetMemberTransactions query
-  }, []);
+  // Fetch A/R transactions for this member
+  const { transactions: arTransactions } = useMemberTransactions(memberId);
 
   // State for modals
   const [isDependentModalOpen, setIsDependentModalOpen] = useState(false);
@@ -505,7 +505,7 @@ export default function MemberDetailPage() {
         {/* Tabs Section */}
         <div className="relative">
           <Tabs defaultValue="profile" className="w-full">
-            <TabsList className="relative mb-6 grid w-full grid-cols-2 gap-1 rounded-xl bg-slate-100/80 p-1.5 backdrop-blur-sm sm:grid-cols-4 lg:w-fit lg:gap-2">
+            <TabsList className="relative mb-6 grid w-full grid-cols-2 gap-1 rounded-xl bg-slate-100/80 p-1.5 backdrop-blur-sm sm:grid-cols-5 lg:w-fit lg:gap-2">
               <TabsTrigger
                 value="profile"
                 className={cn(
@@ -551,6 +551,17 @@ export default function MemberDetailPage() {
                 <span className="hidden sm:inline">Billing History</span>
                 <span className="sm:hidden">Billing</span>
               </TabsTrigger>
+              <TabsTrigger
+                value="engagement"
+                className={cn(
+                  "relative rounded-lg px-4 py-2.5 text-sm font-medium transition-all",
+                  "text-slate-600 hover:text-slate-900",
+                  "data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm"
+                )}
+              >
+                <Heart className="mr-1.5 h-4 w-4" />
+                <span className="hidden sm:inline">Engagement</span>
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="profile" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
@@ -589,6 +600,10 @@ export default function MemberDetailPage() {
 
             <TabsContent value="ar-history" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
               <ARHistoryTab member={member} transactions={arTransactions} />
+            </TabsContent>
+
+            <TabsContent value="engagement" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+              <EngagementTab member={member} />
             </TabsContent>
           </Tabs>
         </div>
