@@ -44,6 +44,7 @@ import { POSConfigModule } from './pos-config/pos-config.module';
 import { ProductsModule } from './products/products.module';
 import { EngagementGraphqlModule } from './engagement/engagement.module';
 import { EquipmentGraphQLModule } from './equipment/equipment.module';
+import { LookupsGraphQLModule } from './lookups/lookups.module';
 
 // GraphQL error formatter logger
 const graphqlLogger = new Logger('GraphQL');
@@ -156,6 +157,7 @@ function formatGraphQLError(
     ProductsModule,
     EngagementGraphqlModule,
     EquipmentGraphQLModule,
+    LookupsGraphQLModule,
   ],
 })
 export class GraphqlModule {}
