@@ -539,10 +539,11 @@ export class BillingService {
     }
 
     // 2. Calculate opening balance (sum of all transactions before startDate)
-    const openingBalance = await this.calculateBalanceAsOf(memberId, startDate);
+    const openingBalance = await this.calculateBalanceAsOf(tenantId, memberId, startDate);
 
     // 3. Fetch transactions within the date range
     const transactions = await this.getTransactionsInRange(
+      tenantId,
       memberId,
       startDate,
       endDate,
@@ -581,12 +582,14 @@ export class BillingService {
    * This sums all invoices and subtracts all payments before the given date
    */
   private async calculateBalanceAsOf(
+    tenantId: string,
     memberId: string,
     asOfDate: Date,
   ): Promise<number> {
     // Get sum of all invoice totals before the date
     const invoiceSum = await this.prisma.invoice.aggregate({
       where: {
+        clubId: tenantId,
         memberId,
         invoiceDate: { lt: asOfDate },
         deletedAt: null,
@@ -598,6 +601,7 @@ export class BillingService {
     // Get sum of all payments before the date
     const paymentSum = await this.prisma.payment.aggregate({
       where: {
+        clubId: tenantId,
         memberId,
         paymentDate: { lt: asOfDate },
       },
@@ -615,6 +619,7 @@ export class BillingService {
    * Returns them sorted by date in ascending order
    */
   private async getTransactionsInRange(
+    tenantId: string,
     memberId: string,
     startDate: Date,
     endDate: Date,
@@ -631,6 +636,7 @@ export class BillingService {
     // Get invoices in date range
     const invoices = await this.prisma.invoice.findMany({
       where: {
+        clubId: tenantId,
         memberId,
         invoiceDate: {
           gte: startDate,
@@ -645,6 +651,7 @@ export class BillingService {
     // Get payments in date range
     const payments = await this.prisma.payment.findMany({
       where: {
+        clubId: tenantId,
         memberId,
         paymentDate: {
           gte: startDate,
