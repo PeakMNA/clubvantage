@@ -202,6 +202,10 @@ export {
   useCreateDependentMutation,
   useUpdateDependentMutation,
   useDeleteDependentMutation,
+  // Address hooks
+  useCreateMemberAddressMutation,
+  useUpdateMemberAddressMutation,
+  useDeleteMemberAddressMutation,
   // Application hooks
   useGetApplicationsQuery,
   useInfiniteGetApplicationsQuery,

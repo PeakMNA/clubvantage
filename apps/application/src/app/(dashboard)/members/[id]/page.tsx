@@ -21,7 +21,11 @@ import {
   useCreateDependentMutation,
   useUpdateDependentMutation,
   useDeleteDependentMutation,
+  useCreateMemberAddressMutation,
+  useUpdateMemberAddressMutation,
+  useDeleteMemberAddressMutation,
   type MemberStatus as ApiMemberStatus,
+  type AddressType,
 } from '@clubvantage/api-client';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -34,8 +38,9 @@ import { ARHistoryTab } from '@/components/members/ar-history-tab';
 import { EngagementTab } from '@/components/members/tabs/engagement-tab';
 import { DependentModal } from '@/components/members/dependent-modal';
 import { ChargeModal } from '@/components/members/charge-modal';
+import { AddressModal, type AddressFormData } from '@/components/members/address-modal';
 import { StatusChangeDialog, ConfirmationDialog } from '@/components/members/confirmation-dialog';
-import type { Dependent, Charge, MemberStatus, Member } from '@/components/members/types';
+import type { Dependent, Charge, MemberStatus, Member, Address } from '@/components/members/types';
 import { useMemberTransactions } from '@/hooks/use-billing';
 
 export default function MemberDetailPage() {
@@ -99,6 +104,33 @@ export default function MemberDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['GetMember'] });
       setDependentActionDialog({ open: false, action: null, dependent: null });
+      refetch();
+    },
+  });
+
+  // Address mutations
+  const createAddressMutation = useCreateMemberAddressMutation({
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['GetMember'] });
+      setIsAddressModalOpen(false);
+      setSelectedAddress(undefined);
+      refetch();
+    },
+  });
+
+  const updateAddressMutation = useUpdateMemberAddressMutation({
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['GetMember'] });
+      setIsAddressModalOpen(false);
+      setSelectedAddress(undefined);
+      refetch();
+    },
+  });
+
+  const deleteAddressMutation = useDeleteMemberAddressMutation({
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['GetMember'] });
+      setAddressActionDialog({ open: false, action: null, address: null });
       refetch();
     },
   });
@@ -171,6 +203,8 @@ export default function MemberDetailPage() {
   const [selectedDependent, setSelectedDependent] = useState<Dependent | undefined>();
   const [isChargeModalOpen, setIsChargeModalOpen] = useState(false);
   const [selectedCharge, setSelectedCharge] = useState<Charge | undefined>();
+  const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+  const [selectedAddress, setSelectedAddress] = useState<Address | undefined>();
 
   // State for confirmation dialogs
   const [statusChangeDialog, setStatusChangeDialog] = useState<{
@@ -194,6 +228,12 @@ export default function MemberDetailPage() {
     action: 'toggle' | 'remove' | null;
     dependent: Dependent | null;
   }>({ open: false, action: null, dependent: null });
+
+  const [addressActionDialog, setAddressActionDialog] = useState<{
+    open: boolean;
+    action: 'remove' | null;
+    address: Address | null;
+  }>({ open: false, action: null, address: null });
 
   // Header Handlers
   const handleEditClick = useCallback(() => {
@@ -323,6 +363,83 @@ export default function MemberDetailPage() {
       deleteDependentMutation.mutate({ id: dependent.id });
     }
   }, [dependentActionDialog, updateDependentMutation, deleteDependentMutation]);
+
+  // Address handlers
+  const handleAddAddress = useCallback(() => {
+    setSelectedAddress(undefined);
+    setIsAddressModalOpen(true);
+  }, []);
+
+  const handleEditAddress = useCallback((addressId: string) => {
+    const address = member?.addresses.find((a) => a.id === addressId);
+    if (address) {
+      setSelectedAddress(address);
+      setIsAddressModalOpen(true);
+    }
+  }, [member?.addresses]);
+
+  const handleAddressSubmit = useCallback((formData: AddressFormData) => {
+    if (selectedAddress) {
+      // Editing existing address
+      updateAddressMutation.mutate({
+        id: selectedAddress.id,
+        input: {
+          label: formData.label || undefined,
+          type: formData.type as AddressType,
+          addressLine1: formData.addressLine1,
+          addressLine2: formData.addressLine2 || undefined,
+          subDistrict: formData.subDistrict,
+          district: formData.district,
+          province: formData.province,
+          postalCode: formData.postalCode,
+          country: formData.country,
+          isPrimary: formData.isPrimary,
+        },
+      });
+    } else {
+      // Creating new address
+      createAddressMutation.mutate({
+        input: {
+          memberId,
+          label: formData.label || undefined,
+          type: formData.type as AddressType,
+          addressLine1: formData.addressLine1,
+          addressLine2: formData.addressLine2 || undefined,
+          subDistrict: formData.subDistrict,
+          district: formData.district,
+          province: formData.province,
+          postalCode: formData.postalCode,
+          country: formData.country,
+          isPrimary: formData.isPrimary,
+        },
+      });
+    }
+  }, [selectedAddress, memberId, createAddressMutation, updateAddressMutation]);
+
+  const handleRemoveAddress = useCallback((addressId: string) => {
+    const address = member?.addresses.find((a) => a.id === addressId);
+    if (address) {
+      setAddressActionDialog({ open: true, action: 'remove', address });
+    }
+  }, [member?.addresses]);
+
+  const handleSetPrimaryAddress = useCallback((addressId: string) => {
+    updateAddressMutation.mutate({
+      id: addressId,
+      input: {
+        isPrimary: true,
+      },
+    });
+  }, [updateAddressMutation]);
+
+  const handleConfirmAddressAction = useCallback(async () => {
+    if (!addressActionDialog.address) return;
+    const { action, address } = addressActionDialog;
+
+    if (action === 'remove') {
+      deleteAddressMutation.mutate({ id: address.id });
+    }
+  }, [addressActionDialog, deleteAddressMutation]);
 
   // Charge handlers
   const handleAddCharge = useCallback(() => {
@@ -568,8 +685,10 @@ export default function MemberDetailPage() {
               <ProfileTab
                 member={member}
                 onEditPersonalInfo={handleEditClick}
-                onAddAddress={() => router.push(`/members/${memberId}/address/new`)}
-                onEditAddress={(id) => router.push(`/members/${memberId}/address/${id}`)}
+                onAddAddress={handleAddAddress}
+                onEditAddress={handleEditAddress}
+                onRemoveAddress={handleRemoveAddress}
+                onSetPrimaryAddress={handleSetPrimaryAddress}
               />
             </TabsContent>
 
@@ -623,6 +742,16 @@ export default function MemberDetailPage() {
           onOpenChange={setIsChargeModalOpen}
           charge={selectedCharge}
           onSubmit={handleChargeSubmit}
+        />
+
+        {/* Address Modal */}
+        <AddressModal
+          open={isAddressModalOpen}
+          onOpenChange={setIsAddressModalOpen}
+          address={selectedAddress}
+          onSubmit={handleAddressSubmit}
+          isLoading={createAddressMutation.isPending || updateAddressMutation.isPending}
+          isFirstAddress={member.addresses.length === 0 && !selectedAddress}
         />
 
         {/* Status Change Confirmation */}
@@ -706,6 +835,19 @@ export default function MemberDetailPage() {
                 : 'Remove'
             }
             onConfirm={handleConfirmDependentAction}
+          />
+        )}
+
+        {/* Address Action Confirmation */}
+        {addressActionDialog.address && (
+          <ConfirmationDialog
+            open={addressActionDialog.open}
+            onOpenChange={(open) => setAddressActionDialog((prev) => ({ ...prev, open }))}
+            title="Remove Address"
+            description={`Are you sure you want to remove this address? This action cannot be undone.`}
+            variant="danger"
+            confirmLabel="Remove"
+            onConfirm={handleConfirmAddressAction}
           />
         )}
       </div>
