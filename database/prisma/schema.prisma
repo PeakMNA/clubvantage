@@ -1,12 +1,11 @@
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["multiSchema", "postgresqlExtensions"]
+  output          = "../../node_modules/.prisma/client"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
   provider   = "postgresql"
-  url        = env("DATABASE_URL")
-  directUrl  = env("DIRECT_URL")
   extensions = [pgcrypto, uuid_ossp(map: "uuid-ossp")]
 }
 
@@ -43,6 +42,7 @@ model Club {
   chargeTypes            ChargeType[]
   checkInPaymentMethods  CheckInPaymentMethod[]
   golfSettings           ClubGolfSettings?
+  billingSettings        ClubBillingSettings?
   consumables            Consumable[]
   facilities             Facility[]
   golfCourses            GolfCourse[]
@@ -76,6 +76,11 @@ model Club {
   posOutlets             POSOutlet[]
   creditNotes            CreditNote[]
   collectionActions      CollectionAction[]
+  cityLedgers            CityLedger[]
+  interestCategories     InterestCategory[]
+  equipmentCategories    EquipmentCategory[]
+  equipment              Equipment[]
+  equipmentAssignments   EquipmentAssignment[]
 
   @@index([slug])
   @@index([isActive])
@@ -126,6 +131,61 @@ model ClubGolfSettings {
 
   @@index([clubId])
   @@map("club_golf_settings")
+}
+
+/// Club billing settings for cycle configuration
+model ClubBillingSettings {
+  id                    String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId                String           @unique @db.Uuid
+  defaultFrequency      BillingFrequency @default(MONTHLY)
+  defaultTiming         BillingTiming    @default(ADVANCE)
+  defaultAlignment      CycleAlignment   @default(CALENDAR)
+  defaultBillingDay     Int              @default(1)
+  invoiceGenerationLead Int              @default(5)
+  invoiceDueDays        Int              @default(15)
+  gracePeriodDays       Int              @default(15)
+  lateFeeType           LateFeeType      @default(PERCENTAGE)
+  lateFeeAmount         Decimal          @default(0) @db.Decimal(12, 2)
+  lateFeePercentage     Decimal          @default(1.5) @db.Decimal(5, 2)
+  maxLateFee            Decimal?         @db.Decimal(12, 2)
+  autoApplyLateFee      Boolean          @default(false)
+  prorateNewMembers     Boolean          @default(true)
+  prorateChanges        Boolean          @default(true)
+  prorationMethod       ProrationMethod  @default(DAILY)
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+  club                  Club             @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  @@index([clubId])
+  @@map("club_billing_settings")
+}
+
+/// Member-specific billing profile overrides
+model MemberBillingProfile {
+  id                  String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  memberId            String            @unique @db.Uuid
+  billingFrequency    BillingFrequency?
+  billingTiming       BillingTiming?
+  billingAlignment    CycleAlignment?
+  customBillingDay    Int?
+  nextBillingDate     DateTime?
+  lastBillingDate     DateTime?
+  currentPeriodStart  DateTime?
+  currentPeriodEnd    DateTime?
+  billingHold         Boolean           @default(false)
+  billingHoldReason   String?
+  billingHoldUntil    DateTime?
+  prorationOverride   ProrationMethod?
+  customGracePeriod   Int?
+  customLateFeeExempt Boolean           @default(false)
+  notes               String?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  member              Member            @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@index([memberId])
+  @@index([nextBillingDate])
+  @@map("member_billing_profiles")
 }
 
 /// Membership type configuration
@@ -254,17 +314,20 @@ model Member {
   waitlistEntries       WaitlistEntry[]
 
   // Credit Limit Settings
-  creditLimit           Decimal?              @db.Decimal(12, 2)
-  creditLimitEnabled    Boolean               @default(false)
-  creditAlertThreshold  Int                   @default(80)
-  creditBlockEnabled    Boolean               @default(true)
-  creditOverrideAllowed Boolean               @default(false)
+  creditLimit           Decimal?                  @db.Decimal(12, 2)
+  creditLimitEnabled    Boolean                   @default(false)
+  creditAlertThreshold  Int                       @default(80)
+  creditBlockEnabled    Boolean                   @default(true)
+  creditOverrideAllowed Boolean                   @default(false)
   creditLimitOverrides  CreditLimitOverride[]
   minimumSpends         MemberMinimumSpend[]
   subAccounts           SubAccount[]
   storedPaymentMethods  StoredPaymentMethod[]
   creditNotes           CreditNote[]
   collectionActions     CollectionAction[]
+  billingProfile        MemberBillingProfile?
+  interests             MemberInterest[]
+  communicationPrefs    MemberCommunicationPrefs?
 
   @@unique([clubId, memberId])
   @@unique([clubId, email])
@@ -298,19 +361,20 @@ model CreditLimitOverride {
 
 /// Dependent family member
 model Dependent {
-  id             String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  memberId       String          @db.Uuid
-  firstName      String          @db.VarChar(100)
-  lastName       String          @db.VarChar(100)
-  relationship   String          @db.VarChar(50)
-  dateOfBirth    DateTime?       @db.Date
-  email          String?         @db.VarChar(255)
-  phone          String?         @db.VarChar(50)
-  isActive       Boolean         @default(true)
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  member         Member          @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  id             String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  memberId       String              @db.Uuid
+  firstName      String              @db.VarChar(100)
+  lastName       String              @db.VarChar(100)
+  relationship   String              @db.VarChar(50)
+  dateOfBirth    DateTime?           @db.Date
+  email          String?             @db.VarChar(255)
+  phone          String?             @db.VarChar(50)
+  isActive       Boolean             @default(true)
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  member         Member              @relation(fields: [memberId], references: [id], onDelete: Cascade)
   teeTimePlayers TeeTimePlayer[]
+  interests      DependentInterest[]
 
   @@index([memberId])
   @@map("dependents")
@@ -318,64 +382,67 @@ model Dependent {
 
 /// Charge type for billing categorization
 model ChargeType {
-  id           String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clubId       String            @db.Uuid
-  name         String            @db.VarChar(100)
-  code         String            @db.VarChar(20)
-  description  String?
-  defaultPrice Decimal?          @db.Decimal(12, 2)
-  taxable      Boolean           @default(true)
-  glCode       String?           @db.VarChar(20)
-  category     String?           @db.VarChar(50)
-  isActive     Boolean           @default(true)
-  createdAt    DateTime          @default(now())
-  updatedAt    DateTime          @updatedAt
-  club                 Club                   @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  lineItems            InvoiceLineItem[]
-  creditNoteLineItems  CreditNoteLineItem[]
+  id                  String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId              String               @db.Uuid
+  name                String               @db.VarChar(100)
+  code                String               @db.VarChar(20)
+  description         String?
+  defaultPrice        Decimal?             @db.Decimal(12, 2)
+  taxable             Boolean              @default(true)
+  glCode              String?              @db.VarChar(20)
+  category            String?              @db.VarChar(50)
+  isActive            Boolean              @default(true)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  club                Club                 @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  lineItems           InvoiceLineItem[]
+  creditNoteLineItems CreditNoteLineItem[]
 
   @@unique([clubId, code])
   @@index([clubId])
   @@map("charge_types")
 }
 
-/// Invoice for member billing
+/// Invoice for member or city ledger billing
 model Invoice {
-  id              String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clubId          String              @db.Uuid
-  invoiceNumber   String              @db.VarChar(30)
-  memberId        String              @db.Uuid
-  invoiceDate     DateTime            @db.Date
-  dueDate         DateTime            @db.Date
-  paidDate        DateTime?           @db.Date
-  subtotal        Decimal             @db.Decimal(12, 2)
-  taxAmount       Decimal             @default(0) @db.Decimal(12, 2)
-  discountAmount  Decimal             @default(0) @db.Decimal(12, 2)
-  totalAmount     Decimal             @db.Decimal(12, 2)
-  paidAmount      Decimal             @default(0) @db.Decimal(12, 2)
-  balanceDue      Decimal             @db.Decimal(12, 2)
-  status          InvoiceStatus       @default(DRAFT)
-  notes           String?
-  internalNotes   String?
-  billingPeriod   String?             @db.VarChar(50)
-  sentAt          DateTime?
-  viewedAt        DateTime?
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
-  deletedAt       DateTime?
-  lineItems            InvoiceLineItem[]
-  club                 Club                    @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  member               Member                  @relation(fields: [memberId], references: [id])
-  payments             PaymentAllocation[]
-  autoPayAttempts      AutoPayAttempt[]
-  creditNoteSources    CreditNote[]            @relation("CreditNoteSource")
-  creditNoteApps       CreditNoteApplication[]
-  collectionActions    CollectionAction[]
+  id                String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId            String                  @db.Uuid
+  invoiceNumber     String                  @db.VarChar(30)
+  memberId          String?                 @db.Uuid
+  cityLedgerId      String?                 @db.Uuid
+  invoiceDate       DateTime                @db.Date
+  dueDate           DateTime                @db.Date
+  paidDate          DateTime?               @db.Date
+  subtotal          Decimal                 @db.Decimal(12, 2)
+  taxAmount         Decimal                 @default(0) @db.Decimal(12, 2)
+  discountAmount    Decimal                 @default(0) @db.Decimal(12, 2)
+  totalAmount       Decimal                 @db.Decimal(12, 2)
+  paidAmount        Decimal                 @default(0) @db.Decimal(12, 2)
+  balanceDue        Decimal                 @db.Decimal(12, 2)
+  status            InvoiceStatus           @default(DRAFT)
+  notes             String?
+  internalNotes     String?
+  billingPeriod     String?                 @db.VarChar(50)
+  sentAt            DateTime?
+  viewedAt          DateTime?
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+  deletedAt         DateTime?
+  lineItems         InvoiceLineItem[]
+  club              Club                    @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  member            Member?                 @relation(fields: [memberId], references: [id])
+  cityLedger        CityLedger?             @relation(fields: [cityLedgerId], references: [id])
+  payments          PaymentAllocation[]
+  autoPayAttempts   AutoPayAttempt[]
+  creditNoteSources CreditNote[]            @relation("CreditNoteSource")
+  creditNoteApps    CreditNoteApplication[]
+  collectionActions CollectionAction[]
 
   @@unique([clubId, invoiceNumber])
   @@index([clubId])
   @@index([clubId, status])
   @@index([memberId])
+  @@index([cityLedgerId])
   @@index([dueDate])
   @@map("invoices")
 }
@@ -401,12 +468,13 @@ model InvoiceLineItem {
   @@map("invoice_line_items")
 }
 
-/// Payment received
+/// Payment received from member or city ledger
 model Payment {
   id              String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   clubId          String              @db.Uuid
   receiptNumber   String              @db.VarChar(30)
-  memberId        String              @db.Uuid
+  memberId        String?             @db.Uuid
+  cityLedgerId    String?             @db.Uuid
   amount          Decimal             @db.Decimal(12, 2)
   method          PaymentMethod
   referenceNumber String?             @db.VarChar(100)
@@ -420,11 +488,13 @@ model Payment {
   updatedAt       DateTime            @updatedAt
   allocations     PaymentAllocation[]
   club            Club                @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  member          Member              @relation(fields: [memberId], references: [id])
+  member          Member?             @relation(fields: [memberId], references: [id])
+  cityLedger      CityLedger?         @relation(fields: [cityLedgerId], references: [id])
 
   @@unique([clubId, receiptNumber])
   @@index([clubId])
   @@index([memberId])
+  @@index([cityLedgerId])
   @@map("payments")
 }
 
@@ -442,6 +512,37 @@ model PaymentAllocation {
   @@index([paymentId])
   @@index([invoiceId])
   @@map("payment_allocations")
+}
+
+/// City Ledger / AR Account for non-member billing (Corporate, House, Vendor accounts)
+model CityLedger {
+  id                 String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId             String           @db.Uuid
+  accountNumber      String           @db.VarChar(30)
+  accountName        String           @db.VarChar(255)
+  accountType        CityLedgerType   @default(CORPORATE)
+  contactName        String?          @db.VarChar(200)
+  contactEmail       String?          @db.VarChar(255)
+  contactPhone       String?          @db.VarChar(50)
+  billingAddress     String?
+  taxId              String?          @db.VarChar(50)
+  creditLimit        Decimal?         @db.Decimal(12, 2)
+  creditBalance      Decimal          @default(0) @db.Decimal(12, 2)
+  outstandingBalance Decimal          @default(0) @db.Decimal(12, 2)
+  paymentTerms       Int              @default(30)
+  status             CityLedgerStatus @default(ACTIVE)
+  notes              String?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  club     Club      @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  invoices Invoice[]
+  payments Payment[]
+
+  @@unique([clubId, accountNumber])
+  @@index([clubId])
+  @@index([clubId, status])
+  @@map("city_ledgers")
 }
 
 /// Facility (e.g., Tennis Court, Gym, Pool)
@@ -473,10 +574,11 @@ model Facility {
   sortOrder          Int        @default(0)
   createdAt          DateTime   @default(now())
   updatedAt          DateTime   @updatedAt
-  bookings           Booking[]
-  club               Club       @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  resources          Resource[]
-  staff              Staff[]
+  bookings         Booking[]
+  club             Club                      @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  resources        Resource[]
+  staff            Staff[]
+  equipmentOptions FacilityEquipmentOption[]
 
   @@unique([clubId, code])
   @@index([clubId])
@@ -485,25 +587,32 @@ model Facility {
 
 /// Resource within a facility (e.g., Court 1, Treadmill #5)
 model Resource {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  facilityId  String    @db.Uuid
-  clubId      String    @db.Uuid
-  name        String    @db.VarChar(100)
-  code        String    @db.VarChar(20)
-  description String?
-  capacity    Int       @default(1)
-  equipment   String[]  @default([])
-  isActive    Boolean   @default(true)
-  sortOrder   Int       @default(0)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  bookings    Booking[]
-  club        Club      @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  facility    Facility  @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  facilityId       String    @db.Uuid
+  clubId           String    @db.Uuid
+  parentResourceId String?   @db.Uuid
+  name             String    @db.VarChar(100)
+  code             String    @db.VarChar(20)
+  description      String?
+  capacity         Int       @default(1)
+  equipment        String[]  @default([])
+  isBookable       Boolean   @default(true)
+  configuration    Json?
+  isActive         Boolean   @default(true)
+  sortOrder        Int       @default(0)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  bookings Booking[]
+  club     Club      @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  facility Facility  @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  parent   Resource? @relation("ResourceHierarchy", fields: [parentResourceId], references: [id])
+  children Resource[] @relation("ResourceHierarchy")
 
   @@unique([facilityId, code])
   @@index([facilityId])
   @@index([clubId])
+  @@index([parentResourceId])
   @@map("resources")
 }
 
@@ -556,6 +665,7 @@ model Booking {
   staff                Staff?               @relation(fields: [staffId], references: [id])
   guests               Guest[]
   waitlistEntry        WaitlistEntry?
+  equipmentAssignments EquipmentAssignment[]
 
   @@unique([clubId, bookingNumber])
   @@index([clubId])
@@ -673,10 +783,11 @@ model Service {
   sortOrder            Int                @default(0)
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt
-  bookings             Booking[]
-  variations           ServiceVariation[]
-  club                 Club               @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  waitlistEntries      WaitlistEntry[]
+  bookings              Booking[]
+  variations            ServiceVariation[]
+  club                  Club                          @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  waitlistEntries       WaitlistEntry[]
+  equipmentRequirements ServiceEquipmentRequirement[]
 
   @@index([clubId])
   @@index([category])
@@ -1330,6 +1441,9 @@ model TeeTimePlayer {
   itemsTransferredFrom BookingLineItem[] @relation("TransferredFromPlayer")
   itemsTransferredTo   BookingLineItem[] @relation("TransferredToPlayer")
 
+  // Equipment assignments
+  equipmentAssignments EquipmentAssignment[]
+
   @@unique([teeTimeId, position])
   @@index([teeTimeId])
   @@index([memberId])
@@ -1595,11 +1709,12 @@ model User {
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
   deletedAt       DateTime?
-  auditLogs       AuditLog[]
-  leads           Lead[]
-  staff           Staff?
-  club            Club?      @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  member          Member?    @relation(fields: [memberId], references: [id])
+  auditLogs            AuditLog[]
+  leads                Lead[]
+  staff                Staff?
+  club                 Club?                 @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  member               Member?               @relation(fields: [memberId], references: [id])
+  equipmentAssignments EquipmentAssignment[]
 
   @@unique([clubId, email])
   @@index([clubId])
@@ -1846,6 +1961,20 @@ enum InvoiceStatus {
   OVERDUE
   VOID
   CANCELLED
+}
+
+enum CityLedgerType {
+  CORPORATE // Company accounts
+  HOUSE_ACCOUNT // Internal club accounts
+  VENDOR // Supplier credits
+  OTHER // Custom account types
+}
+
+enum CityLedgerStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  CLOSED
 }
 
 enum PaymentMethod {
@@ -2109,15 +2238,15 @@ enum DiscountScope {
 // =============================================================================
 
 enum ProductType {
-  SIMPLE      // Add to cart immediately
-  VARIABLE    // Show variant picker
-  SERVICE     // May trigger booking flow
-  COMPOSITE   // Bundle/combo
+  SIMPLE // Add to cart immediately
+  VARIABLE // Show variant picker
+  SERVICE // May trigger booking flow
+  COMPOSITE // Bundle/combo
 }
 
 enum ModifierSelectionType {
-  SINGLE    // Pick one (cooking temperature)
-  MULTIPLE  // Pick many (toppings)
+  SINGLE // Pick one (cooking temperature)
+  MULTIPLE // Pick many (toppings)
 }
 
 enum TileSize {
@@ -2150,24 +2279,24 @@ enum InventoryVisibilityRule {
 }
 
 model ProductCategory {
-  id          String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clubId      String            @db.Uuid
-  parentId    String?           @db.Uuid
+  id       String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId   String  @db.Uuid
+  parentId String? @db.Uuid
 
-  name        String            @db.VarChar(100)
-  description String?           @db.VarChar(500)
-  color       String?           @db.VarChar(7)  // Hex color for POS button
-  iconName    String?           @db.VarChar(50) // Lucide icon name
+  name        String  @db.VarChar(100)
+  description String? @db.VarChar(500)
+  color       String? @db.VarChar(7) // Hex color for POS button
+  iconName    String? @db.VarChar(50) // Lucide icon name
 
-  sortOrder   Int               @default(0)
-  isActive    Boolean           @default(true)
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  club        Club              @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  parent      ProductCategory?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
-  children    ProductCategory[] @relation("CategoryHierarchy")
-  products    Product[]
+  club                  Club                   @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  parent                ProductCategory?       @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children              ProductCategory[]      @relation("CategoryHierarchy")
+  products              Product[]
   outletCategoryConfigs OutletCategoryConfig[]
 
   @@index([clubId])
@@ -2177,49 +2306,49 @@ model ProductCategory {
 }
 
 model Product {
-  id                   String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clubId               String           @db.Uuid
-  categoryId           String           @db.Uuid
+  id         String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId     String @db.Uuid
+  categoryId String @db.Uuid
 
-  name                 String           @db.VarChar(200)
-  description          String?          @db.VarChar(1000)
-  sku                  String?          @db.VarChar(50)
-  productType          ProductType      @default(SIMPLE)
+  name        String      @db.VarChar(200)
+  description String?     @db.VarChar(1000)
+  sku         String?     @db.VarChar(50)
+  productType ProductType @default(SIMPLE)
 
   // Pricing
-  basePrice            Decimal          @db.Decimal(10, 2)
-  costPrice            Decimal?         @db.Decimal(10, 2)
-  taxRate              Decimal          @default(0) @db.Decimal(5, 2)
-  taxType              TaxType          @default(ADD)
+  basePrice Decimal  @db.Decimal(10, 2)
+  costPrice Decimal? @db.Decimal(10, 2)
+  taxRate   Decimal  @default(0) @db.Decimal(5, 2)
+  taxType   TaxType  @default(ADD)
 
   // Service-specific (null for retail)
   durationMinutes      Int?
-  bufferMinutes        Int?             @default(0)
-  requiredCapabilities String[]         @default([])
+  bufferMinutes        Int?     @default(0)
+  requiredCapabilities String[] @default([])
 
   // Inventory (null for services)
-  trackInventory       Boolean          @default(false)
-  stockQuantity        Int?
-  lowStockThreshold    Int?
+  trackInventory    Boolean @default(false)
+  stockQuantity     Int?
+  lowStockThreshold Int?
 
   // Display
-  imageUrl             String?          @db.VarChar(500)
-  thumbnailUrl         String?          @db.VarChar(500)
-  sortPriority         Int              @default(50)
+  imageUrl     String? @db.VarChar(500)
+  thumbnailUrl String? @db.VarChar(500)
+  sortPriority Int     @default(50)
 
   // Status
-  isActive             Boolean          @default(true)
-  createdAt            DateTime         @default(now())
-  updatedAt            DateTime         @updatedAt
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  club                 Club             @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  category             ProductCategory  @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-  variants             ProductVariant[]
-  modifierGroups       ProductModifierGroup[]
-  outletConfigs        OutletProductConfig[]
-  salesMetrics         ProductSalesMetric[]
-  staffUsage           StaffProductUsage[]
+  club           Club                   @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  category       ProductCategory        @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  variants       ProductVariant[]
+  modifierGroups ProductModifierGroup[]
+  outletConfigs  OutletProductConfig[]
+  salesMetrics   ProductSalesMetric[]
+  staffUsage     StaffProductUsage[]
 
   @@unique([clubId, sku])
   @@index([clubId])
@@ -2230,22 +2359,22 @@ model Product {
 }
 
 model ProductVariant {
-  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  productId       String   @db.Uuid
+  id        String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productId String @db.Uuid
 
-  name            String   @db.VarChar(100)
-  sku             String?  @db.VarChar(50)
-  priceAdjustment Decimal  @default(0) @db.Decimal(10, 2)
-  attributes      Json     @default("{}")
+  name            String  @db.VarChar(100)
+  sku             String? @db.VarChar(50)
+  priceAdjustment Decimal @default(0) @db.Decimal(10, 2)
+  attributes      Json    @default("{}")
 
-  stockQuantity   Int?
-  imageUrl        String?  @db.VarChar(500)
-  sortOrder       Int      @default(0)
-  isActive        Boolean  @default(true)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  stockQuantity Int?
+  imageUrl      String?  @db.VarChar(500)
+  sortOrder     Int      @default(0)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@unique([productId, sku])
   @@index([productId])
@@ -2254,22 +2383,22 @@ model ProductVariant {
 
 /// Modifier group for product customization (e.g., "Cooking Temperature", "Toppings")
 model ModifierGroup {
-  id            String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clubId        String                @db.Uuid
+  id     String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId String @db.Uuid
 
   name          String                @db.VarChar(100)
   selectionType ModifierSelectionType @default(SINGLE)
   minSelections Int                   @default(0)
   maxSelections Int?
 
-  sortOrder     Int                   @default(0)
-  isActive      Boolean               @default(true)
-  createdAt     DateTime              @default(now())
-  updatedAt     DateTime              @updatedAt
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  club          Club                  @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  modifiers     Modifier[]
-  productLinks  ProductModifierGroup[]
+  club         Club                   @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  modifiers    Modifier[]
+  productLinks ProductModifierGroup[]
 
   @@index([clubId])
   @@map("modifier_groups")
@@ -2277,19 +2406,19 @@ model ModifierGroup {
 
 /// Individual modifier option within a group (e.g., "Rare", "Medium", "Well Done")
 model Modifier {
-  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  groupId         String        @db.Uuid
+  id      String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  groupId String @db.Uuid
 
-  name            String        @db.VarChar(100)
-  priceAdjustment Decimal       @default(0) @db.Decimal(10, 2)
-  isDefault       Boolean       @default(false)
+  name            String  @db.VarChar(100)
+  priceAdjustment Decimal @default(0) @db.Decimal(10, 2)
+  isDefault       Boolean @default(false)
 
-  sortOrder       Int           @default(0)
-  isActive        Boolean       @default(true)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  group           ModifierGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  group ModifierGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
   @@index([groupId])
   @@map("modifiers")
@@ -2297,15 +2426,15 @@ model Modifier {
 
 /// Junction table linking products to modifier groups
 model ProductModifierGroup {
-  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  productId       String        @db.Uuid
-  modifierGroupId String        @db.Uuid
+  id              String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productId       String @db.Uuid
+  modifierGroupId String @db.Uuid
 
-  isRequired      Boolean       @default(false)
-  sortOrder       Int           @default(0)
+  isRequired Boolean @default(false)
+  sortOrder  Int     @default(0)
 
-  product         Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
-  modifierGroup   ModifierGroup @relation(fields: [modifierGroupId], references: [id], onDelete: Cascade)
+  product       Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  modifierGroup ModifierGroup @relation(fields: [modifierGroupId], references: [id], onDelete: Cascade)
 
   @@unique([productId, modifierGroupId])
   @@index([productId])
@@ -2319,19 +2448,19 @@ model ProductModifierGroup {
 
 /// POS outlet/station for product sales (e.g., Pro Shop, Restaurant, Bar)
 model POSOutlet {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clubId       String   @db.Uuid
-  name         String   @db.VarChar(100)
-  code         String?  @db.VarChar(20)
-  outletType   String?  @db.VarChar(50)
-  description  String?  @db.VarChar(500)
-  location     String?  @db.VarChar(200)
-  templateId   String?  @db.Uuid
-  customConfig Json     @default("{}")
+  id           String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId       String  @db.Uuid
+  name         String  @db.VarChar(100)
+  code         String? @db.VarChar(20)
+  outletType   String? @db.VarChar(50)
+  description  String? @db.VarChar(500)
+  location     String? @db.VarChar(200)
+  templateId   String? @db.Uuid
+  customConfig Json    @default("{}")
 
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   club             Club                   @relation(fields: [clubId], references: [id], onDelete: Cascade)
   template         POSTemplate?           @relation(fields: [templateId], references: [id])
@@ -2351,13 +2480,13 @@ model POSOutlet {
 
 /// Product configuration per outlet (visibility, display settings, quick keys)
 model OutletProductConfig {
-  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  outletId     String    @db.Uuid
-  productId    String    @db.Uuid
-  categoryId   String?   @db.Uuid
+  id         String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  outletId   String  @db.Uuid
+  productId  String  @db.Uuid
+  categoryId String? @db.Uuid
 
-  displayName  String?   @db.VarChar(100)
-  buttonColor  String?   @db.VarChar(7)
+  displayName  String? @db.VarChar(100)
+  buttonColor  String? @db.VarChar(7)
   sortPriority Int?
   gridPosition Json?
 
@@ -2367,11 +2496,11 @@ model OutletProductConfig {
   isQuickKey       Boolean @default(false)
   quickKeyPosition Int?
 
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  outlet       POSOutlet @relation(fields: [outletId], references: [id], onDelete: Cascade)
-  product      Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  outlet  POSOutlet @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  product Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@unique([outletId, productId])
   @@index([outletId])
@@ -2382,19 +2511,19 @@ model OutletProductConfig {
 
 /// Category configuration per outlet (visibility, sort order, color override)
 model OutletCategoryConfig {
-  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  outletId      String          @db.Uuid
-  categoryId    String          @db.Uuid
+  id         String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  outletId   String @db.Uuid
+  categoryId String @db.Uuid
 
-  isVisible     Boolean         @default(true)
+  isVisible     Boolean @default(true)
   sortOrder     Int?
-  colorOverride String?         @db.VarChar(7)
+  colorOverride String? @db.VarChar(7)
 
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  outlet        POSOutlet       @relation(fields: [outletId], references: [id], onDelete: Cascade)
-  category      ProductCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  outlet   POSOutlet       @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  category ProductCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
   @@unique([outletId, categoryId])
   @@index([outletId])
@@ -2403,46 +2532,46 @@ model OutletCategoryConfig {
 
 /// Grid layout configuration per outlet
 model OutletGridConfig {
-  id                String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  outletId          String               @unique @db.Uuid
+  id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  outletId String @unique @db.Uuid
 
-  gridColumns       Int                  @default(6)
-  gridRows          Int                  @default(4)
-  tileSize          TileSize             @default(MEDIUM)
-  showImages        Boolean              @default(true)
-  showPrices        Boolean              @default(true)
+  gridColumns Int      @default(6)
+  gridRows    Int      @default(4)
+  tileSize    TileSize @default(MEDIUM)
+  showImages  Boolean  @default(true)
+  showPrices  Boolean  @default(true)
 
-  categoryStyle     CategoryDisplayStyle @default(TABS)
-  showAllCategory   Boolean              @default(true)
+  categoryStyle   CategoryDisplayStyle @default(TABS)
+  showAllCategory Boolean              @default(true)
 
-  quickKeysEnabled  Boolean              @default(true)
-  quickKeysCount    Int                  @default(8)
-  quickKeysPosition QuickKeysPosition    @default(TOP)
+  quickKeysEnabled  Boolean           @default(true)
+  quickKeysCount    Int               @default(8)
+  quickKeysPosition QuickKeysPosition @default(TOP)
 
-  createdAt         DateTime             @default(now())
-  updatedAt         DateTime             @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  outlet            POSOutlet            @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  outlet POSOutlet @relation(fields: [outletId], references: [id], onDelete: Cascade)
 
   @@map("outlet_grid_configs")
 }
 
 /// Daily sales metrics aggregated per product per outlet
 model ProductSalesMetric {
-  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  productId        String    @db.Uuid
-  outletId         String    @db.Uuid
-  date             DateTime  @db.Date
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productId String   @db.Uuid
+  outletId  String   @db.Uuid
+  date      DateTime @db.Date
 
-  quantitySold     Int       @default(0)
-  revenue          Decimal   @default(0) @db.Decimal(12, 2)
-  transactionCount Int       @default(0)
-  salesByHour      Json      @default("{}")
+  quantitySold     Int     @default(0)
+  revenue          Decimal @default(0) @db.Decimal(12, 2)
+  transactionCount Int     @default(0)
+  salesByHour      Json    @default("{}")
 
-  updatedAt        DateTime  @updatedAt
+  updatedAt DateTime @updatedAt
 
-  product          Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
-  outlet           POSOutlet @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  product Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  outlet  POSOutlet @relation(fields: [outletId], references: [id], onDelete: Cascade)
 
   @@unique([productId, outletId, date])
   @@index([outletId, date])
@@ -2452,18 +2581,18 @@ model ProductSalesMetric {
 
 /// Tracks staff product usage patterns for personalized suggestions
 model StaffProductUsage {
-  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  staffId    String    @db.Uuid
-  productId  String    @db.Uuid
-  outletId   String    @db.Uuid
+  id        String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  staffId   String @db.Uuid
+  productId String @db.Uuid
+  outletId  String @db.Uuid
 
-  usageCount Int       @default(0)
-  lastUsedAt DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  usageCount Int      @default(0)
+  lastUsedAt DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  staff      Staff     @relation(fields: [staffId], references: [id], onDelete: Cascade)
-  product    Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
-  outlet     POSOutlet @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  staff   Staff     @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  product Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  outlet  POSOutlet @relation(fields: [outletId], references: [id], onDelete: Cascade)
 
   @@unique([staffId, productId, outletId])
   @@index([staffId, outletId])
@@ -2473,23 +2602,23 @@ model StaffProductUsage {
 
 /// Configuration for smart product suggestions per outlet
 model SmartSuggestionConfig {
-  id                     String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  outletId               String             @unique @db.Uuid
+  id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  outletId String @unique @db.Uuid
 
-  enabled                Boolean            @default(true)
-  suggestionCount        Int                @default(6)
-  position               SuggestionPosition @default(TOP_ROW)
+  enabled         Boolean            @default(true)
+  suggestionCount Int                @default(6)
+  position        SuggestionPosition @default(TOP_ROW)
 
-  timeOfDayWeight        Int                @default(40)
-  salesVelocityWeight    Int                @default(35)
-  staffHistoryWeight     Int                @default(25)
+  timeOfDayWeight     Int @default(40)
+  salesVelocityWeight Int @default(35)
+  staffHistoryWeight  Int @default(25)
 
-  refreshIntervalMinutes Int                @default(30)
+  refreshIntervalMinutes Int @default(30)
 
-  createdAt              DateTime           @default(now())
-  updatedAt              DateTime           @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  outlet                 POSOutlet          @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  outlet POSOutlet @relation(fields: [outletId], references: [id], onDelete: Cascade)
 
   @@map("smart_suggestion_configs")
 }
@@ -2759,7 +2888,6 @@ model POSTemplate {
   @@index([clubId, outletType])
   @@map("pos_templates")
 }
-
 
 /// Role-based button overrides for a POS outlet
 model POSOutletRoleConfig {
@@ -3176,11 +3304,11 @@ model AutoPayAttempt {
 
 /// Credit note for refunds, adjustments, and courtesy credits
 model CreditNote {
-  id               String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clubId           String              @db.Uuid
-  memberId         String              @db.Uuid
-  creditNoteNumber String              @db.VarChar(30)
-  issueDate        DateTime            @default(now())
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId           String   @db.Uuid
+  memberId         String   @db.Uuid
+  creditNoteNumber String   @db.VarChar(30)
+  issueDate        DateTime @default(now())
 
   // Type and reason
   type         CreditNoteType
@@ -3191,8 +3319,8 @@ model CreditNote {
   sourceInvoiceId String? @db.Uuid
 
   // Amounts
-  subtotal   Decimal @db.Decimal(12, 2)
-  taxAmount  Decimal @default(0) @db.Decimal(12, 2)
+  subtotal    Decimal @db.Decimal(12, 2)
+  taxAmount   Decimal @default(0) @db.Decimal(12, 2)
   totalAmount Decimal @db.Decimal(12, 2)
 
   // Application tracking
@@ -3211,11 +3339,11 @@ model CreditNote {
   memberVisibleNotes String?
 
   // Audit
-  createdBy String   @db.Uuid
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdBy String    @db.Uuid
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   voidedAt  DateTime?
-  voidedBy  String?  @db.Uuid
+  voidedBy  String?   @db.Uuid
 
   // Relations
   club          Club                    @relation(fields: [clubId], references: [id], onDelete: Cascade)
@@ -3365,4 +3493,271 @@ enum CollectionResult {
   HARDSHIP
   REFUSED
   CONTACT_INVALID
+}
+
+// Billing Cycle Configuration Enums
+enum BillingFrequency {
+  MONTHLY
+  QUARTERLY
+  SEMI_ANNUAL
+  ANNUAL
+}
+
+enum BillingTiming {
+  ADVANCE
+  ARREARS
+}
+
+enum CycleAlignment {
+  CALENDAR
+  ANNIVERSARY
+}
+
+enum ProrationMethod {
+  DAILY
+  MONTHLY
+  NONE
+}
+
+enum LateFeeType {
+  PERCENTAGE
+  FIXED
+  TIERED
+}
+
+// ============================================================================
+// MEMBER ENGAGEMENT / INTEREST TRACKING
+// ============================================================================
+
+enum InterestSource {
+  EXPLICIT // Member/staff selected
+  BOOKING // Inferred from bookings
+  INFERRED // AI/algorithm inferred
+}
+
+/// Flexible interest category - configurable per club
+model InterestCategory {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId      String   @db.Uuid
+  code        String   @db.VarChar(30)
+  name        String   @db.VarChar(100)
+  description String?
+  icon        String?  @db.VarChar(50) // Lucide icon name
+  color       String?  @db.VarChar(7) // Hex color
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  club               Club                @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  memberInterests    MemberInterest[]
+  dependentInterests DependentInterest[]
+
+  @@unique([clubId, code])
+  @@index([clubId, isActive])
+  @@map("interest_categories")
+}
+
+/// Member interest in an activity category
+model MemberInterest {
+  id             String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  memberId       String         @db.Uuid
+  categoryId     String         @db.Uuid
+  interestLevel  Int            @default(50) @db.SmallInt // 0-100
+  source         InterestSource @default(EXPLICIT)
+  lastActivityAt DateTime?
+  activityCount  Int            @default(0)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  member   Member           @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  category InterestCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([memberId, categoryId])
+  @@index([memberId])
+  @@map("member_interests")
+}
+
+/// Dependent interest in an activity category
+model DependentInterest {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  dependentId   String   @db.Uuid
+  categoryId    String   @db.Uuid
+  interestLevel Int      @default(50) @db.SmallInt
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  dependent Dependent        @relation(fields: [dependentId], references: [id], onDelete: Cascade)
+  category  InterestCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([dependentId, categoryId])
+  @@index([dependentId])
+  @@map("dependent_interests")
+}
+
+/// Member communication preferences
+model MemberCommunicationPrefs {
+  id                     String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  memberId               String   @unique @db.Uuid
+  emailPromotions        Boolean  @default(true)
+  smsPromotions          Boolean  @default(false)
+  pushNotifications      Boolean  @default(true)
+  unsubscribedCategories String[] @default([])
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@map("member_communication_prefs")
+}
+
+// ============================================================================
+// EQUIPMENT MANAGEMENT
+// ============================================================================
+
+enum EquipmentAttachmentType {
+  OPTIONAL_ADDON    // Equipment that can be optionally added to bookings (golf carts, ball machines)
+  REQUIRED_RESOURCE // Equipment required for service delivery (G5 machines for spa treatments)
+}
+
+enum EquipmentCondition {
+  EXCELLENT
+  GOOD
+  FAIR
+  NEEDS_REPAIR
+  OUT_OF_SERVICE
+}
+
+enum EquipmentStatus {
+  AVAILABLE
+  IN_USE
+  RESERVED
+  MAINTENANCE
+  RETIRED
+}
+
+/// Equipment category for grouping similar equipment types
+model EquipmentCategory {
+  id                String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId            String                  @db.Uuid
+  code              String                  @db.VarChar(50)
+  name              String                  @db.VarChar(100)
+  description       String?
+  icon              String?                 @db.VarChar(50) // Lucide icon name
+  color             String?                 @db.VarChar(20) // Hex color
+  attachmentType    EquipmentAttachmentType @default(OPTIONAL_ADDON)
+  defaultRentalRate Decimal?                @db.Decimal(10, 2)
+  requiresDeposit   Boolean                 @default(false)
+  depositAmount     Decimal?                @db.Decimal(10, 2)
+  sortOrder         Int                     @default(0)
+  isActive          Boolean                 @default(true)
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+
+  club                Club                          @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  equipment           Equipment[]
+  serviceRequirements ServiceEquipmentRequirement[]
+  facilityOptions     FacilityEquipmentOption[]
+
+  @@unique([clubId, code])
+  @@index([clubId])
+  @@map("equipment_categories")
+}
+
+/// Individual equipment item that can be assigned to bookings
+model Equipment {
+  id                String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId            String             @db.Uuid
+  categoryId        String             @db.Uuid
+  assetNumber       String             @db.VarChar(50)
+  name              String             @db.VarChar(100)
+  serialNumber      String?            @db.VarChar(100)
+  manufacturer      String?            @db.VarChar(100)
+  model             String?            @db.VarChar(100)
+  purchaseDate      DateTime?
+  warrantyExpiry    DateTime?
+  condition         EquipmentCondition @default(GOOD)
+  status            EquipmentStatus    @default(AVAILABLE)
+  location          String?            @db.VarChar(100)
+  notes             String?
+  lastMaintenanceAt DateTime?
+  nextMaintenanceAt DateTime?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  club        Club                  @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  category    EquipmentCategory     @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  assignments EquipmentAssignment[]
+
+  @@unique([clubId, assetNumber])
+  @@index([clubId])
+  @@index([categoryId])
+  @@index([status])
+  @@map("equipment")
+}
+
+/// Tracks equipment assigned to bookings or tee time players
+model EquipmentAssignment {
+  id                  String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId              String              @db.Uuid
+  equipmentId         String              @db.Uuid
+  bookingId           String?             @db.Uuid
+  teeTimePlayerId     String?             @db.Uuid
+  assignedAt          DateTime            @default(now())
+  returnedAt          DateTime?
+  assignedById        String?             @db.Uuid
+  rentalFee           Decimal?            @db.Decimal(10, 2)
+  conditionAtCheckout EquipmentCondition?
+  conditionAtReturn   EquipmentCondition?
+  notes               String?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  club          Club           @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  equipment     Equipment      @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  booking       Booking?       @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  teeTimePlayer TeeTimePlayer? @relation(fields: [teeTimePlayerId], references: [id], onDelete: SetNull)
+  assignedBy    User?          @relation(fields: [assignedById], references: [id], onDelete: SetNull)
+
+  @@index([clubId])
+  @@index([equipmentId])
+  @@index([bookingId])
+  @@index([teeTimePlayerId])
+  @@map("equipment_assignments")
+}
+
+/// Links equipment categories to services as required or suggested
+model ServiceEquipmentRequirement {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  serviceId           String   @db.Uuid
+  equipmentCategoryId String   @db.Uuid
+  quantity            Int      @default(1)
+  isRequired          Boolean  @default(true)
+  notes               String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  service           Service           @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  equipmentCategory EquipmentCategory @relation(fields: [equipmentCategoryId], references: [id], onDelete: Cascade)
+
+  @@unique([serviceId, equipmentCategoryId])
+  @@map("service_equipment_requirements")
+}
+
+/// Links equipment categories to facilities as optional rentals
+model FacilityEquipmentOption {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  facilityId          String   @db.Uuid
+  equipmentCategoryId String   @db.Uuid
+  isIncluded          Boolean  @default(false)
+  rentalRate          Decimal? @db.Decimal(10, 2)
+  maxQuantity         Int      @default(1)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  facility          Facility          @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  equipmentCategory EquipmentCategory @relation(fields: [equipmentCategoryId], references: [id], onDelete: Cascade)
+
+  @@unique([facilityId, equipmentCategoryId])
+  @@map("facility_equipment_options")
 }
