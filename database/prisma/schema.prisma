@@ -575,38 +575,38 @@ model CityLedger {
 
 /// Facility (e.g., Tennis Court, Gym, Pool)
 model Facility {
-  id                 String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clubId             String     @db.Uuid
-  name               String     @db.VarChar(100)
-  code               String     @db.VarChar(20)
+  id                 String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId             String                    @db.Uuid
+  name               String                    @db.VarChar(100)
+  code               String                    @db.VarChar(20)
   description        String?
-  category           String     @db.VarChar(50)
-  location           String?    @db.VarChar(255)
+  category           String                    @db.VarChar(50)
+  location           String?                   @db.VarChar(255)
   capacity           Int?
-  imageUrl           String?    @db.VarChar(500)
-  amenities          String[]   @default([])
+  imageUrl           String?                   @db.VarChar(500)
+  amenities          String[]                  @default([])
   rules              String?
-  bookingDuration    Int        @default(60)
-  minAdvanceHours    Int        @default(1)
-  maxAdvanceDays     Int        @default(14)
-  cancellationHours  Int        @default(24)
-  requiresApproval   Boolean    @default(false)
-  allowGuests        Boolean    @default(true)
-  maxGuests          Int        @default(3)
-  operatingHours     Json       @default("{}")
-  memberRate         Decimal?   @db.Decimal(12, 2)
-  guestRate          Decimal?   @db.Decimal(12, 2)
-  peakRateMultiplier Decimal    @default(1.0) @db.Decimal(5, 2)
-  peakHours          Json       @default("[]")
-  isActive           Boolean    @default(true)
-  sortOrder          Int        @default(0)
-  createdAt          DateTime   @default(now())
-  updatedAt          DateTime   @updatedAt
-  bookings         Booking[]
-  club             Club                      @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  resources        Resource[]
-  staff            Staff[]
-  equipmentOptions FacilityEquipmentOption[]
+  bookingDuration    Int                       @default(60)
+  minAdvanceHours    Int                       @default(1)
+  maxAdvanceDays     Int                       @default(14)
+  cancellationHours  Int                       @default(24)
+  requiresApproval   Boolean                   @default(false)
+  allowGuests        Boolean                   @default(true)
+  maxGuests          Int                       @default(3)
+  operatingHours     Json                      @default("{}")
+  memberRate         Decimal?                  @db.Decimal(12, 2)
+  guestRate          Decimal?                  @db.Decimal(12, 2)
+  peakRateMultiplier Decimal                   @default(1.0) @db.Decimal(5, 2)
+  peakHours          Json                      @default("[]")
+  isActive           Boolean                   @default(true)
+  sortOrder          Int                       @default(0)
+  createdAt          DateTime                  @default(now())
+  updatedAt          DateTime                  @updatedAt
+  bookings           Booking[]
+  club               Club                      @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  resources          Resource[]
+  staff              Staff[]
+  equipmentOptions   FacilityEquipmentOption[]
 
   @@unique([clubId, code])
   @@index([clubId])
@@ -615,26 +615,26 @@ model Facility {
 
 /// Resource within a facility (e.g., Court 1, Treadmill #5)
 model Resource {
-  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  facilityId       String    @db.Uuid
-  clubId           String    @db.Uuid
-  parentResourceId String?   @db.Uuid
-  name             String    @db.VarChar(100)
-  code             String    @db.VarChar(20)
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  facilityId       String   @db.Uuid
+  clubId           String   @db.Uuid
+  parentResourceId String?  @db.Uuid
+  name             String   @db.VarChar(100)
+  code             String   @db.VarChar(20)
   description      String?
-  capacity         Int       @default(1)
-  equipment        String[]  @default([])
-  isBookable       Boolean   @default(true)
+  capacity         Int      @default(1)
+  equipment        String[] @default([])
+  isBookable       Boolean  @default(true)
   configuration    Json?
-  isActive         Boolean   @default(true)
-  sortOrder        Int       @default(0)
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  isActive         Boolean  @default(true)
+  sortOrder        Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   bookings Booking[]
-  club     Club      @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  facility Facility  @relation(fields: [facilityId], references: [id], onDelete: Cascade)
-  parent   Resource? @relation("ResourceHierarchy", fields: [parentResourceId], references: [id])
+  club     Club       @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  facility Facility   @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  parent   Resource?  @relation("ResourceHierarchy", fields: [parentResourceId], references: [id])
   children Resource[] @relation("ResourceHierarchy")
 
   @@unique([facilityId, code])
@@ -646,51 +646,51 @@ model Resource {
 
 /// Facility booking
 model Booking {
-  id                   String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clubId               String               @db.Uuid
-  bookingNumber        String               @db.VarChar(30)
-  memberId             String               @db.Uuid
-  bookingType          BookingType          @default(FACILITY)
-  facilityId           String?              @db.Uuid
-  resourceId           String?              @db.Uuid
-  serviceId            String?              @db.Uuid
-  staffId              String?              @db.Uuid
+  id                   String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId               String                @db.Uuid
+  bookingNumber        String                @db.VarChar(30)
+  memberId             String                @db.Uuid
+  bookingType          BookingType           @default(FACILITY)
+  facilityId           String?               @db.Uuid
+  resourceId           String?               @db.Uuid
+  serviceId            String?               @db.Uuid
+  staffId              String?               @db.Uuid
   startTime            DateTime
   endTime              DateTime
   durationMinutes      Int
-  status               BookingStatus        @default(PENDING)
+  status               BookingStatus         @default(PENDING)
   checkedInAt          DateTime?
   checkedOutAt         DateTime?
   noShowMarkedAt       DateTime?
-  guestCount           Int                  @default(0)
+  guestCount           Int                   @default(0)
   guestInfo            Json?
   sponsoringMemberId   String?
   selectedVariations   Json?
-  basePrice            Decimal              @db.Decimal(10, 2)
-  tierDiscount         Decimal              @default(0) @db.Decimal(10, 2)
-  variationsTotal      Decimal              @default(0) @db.Decimal(10, 2)
-  totalAmount          Decimal?             @db.Decimal(12, 2)
-  bookingPaymentMethod BookingPaymentMethod @default(ON_ACCOUNT)
-  bookingPaymentStatus BookingPaymentStatus @default(PENDING)
-  creditsUsed          Decimal              @default(0) @db.Decimal(10, 2)
-  isPaid               Boolean              @default(false)
-  revenueCenterId      String?              @db.VarChar(50)
-  outletId             String?              @db.VarChar(50)
+  basePrice            Decimal               @db.Decimal(10, 2)
+  tierDiscount         Decimal               @default(0) @db.Decimal(10, 2)
+  variationsTotal      Decimal               @default(0) @db.Decimal(10, 2)
+  totalAmount          Decimal?              @db.Decimal(12, 2)
+  bookingPaymentMethod BookingPaymentMethod  @default(ON_ACCOUNT)
+  bookingPaymentStatus BookingPaymentStatus  @default(PENDING)
+  creditsUsed          Decimal               @default(0) @db.Decimal(10, 2)
+  isPaid               Boolean               @default(false)
+  revenueCenterId      String?               @db.VarChar(50)
+  outletId             String?               @db.VarChar(50)
   consumablesUsed      Json?
   notes                String?
   internalNotes        String?
-  cancelReason         String?              @db.VarChar(500)
+  cancelReason         String?               @db.VarChar(500)
   cancelledAt          DateTime?
-  cancelledBy          String?              @db.Uuid
+  cancelledBy          String?               @db.Uuid
   createdBy            String?
-  createdAt            DateTime             @default(now())
-  updatedAt            DateTime             @updatedAt
-  club                 Club                 @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  facility             Facility?            @relation(fields: [facilityId], references: [id])
-  member               Member               @relation(fields: [memberId], references: [id])
-  resource             Resource?            @relation(fields: [resourceId], references: [id])
-  service              Service?             @relation(fields: [serviceId], references: [id])
-  staff                Staff?               @relation(fields: [staffId], references: [id])
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  club                 Club                  @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  facility             Facility?             @relation(fields: [facilityId], references: [id])
+  member               Member                @relation(fields: [memberId], references: [id])
+  resource             Resource?             @relation(fields: [resourceId], references: [id])
+  service              Service?              @relation(fields: [serviceId], references: [id])
+  staff                Staff?                @relation(fields: [staffId], references: [id])
   guests               Guest[]
   waitlistEntry        WaitlistEntry?
   equipmentAssignments EquipmentAssignment[]
@@ -793,24 +793,24 @@ model StaffCertification {
 
 /// Service (e.g., massage, personal training)
 model Service {
-  id                   String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clubId               String             @db.Uuid
-  name                 String             @db.VarChar(255)
-  description          String?
-  category             String             @db.VarChar(100)
-  durationMinutes      Int
-  bufferMinutes        Int                @default(0)
-  basePrice            Decimal            @db.Decimal(10, 2)
-  tierDiscounts        Json?
-  requiredCapabilities String[]           @default([])
-  requiredFeatures     String[]           @default([])
-  equipmentNeeds       Json?
-  consumableNeeds      Json?
-  revenueCenterId      String?            @db.VarChar(50)
-  isActive             Boolean            @default(true)
-  sortOrder            Int                @default(0)
-  createdAt            DateTime           @default(now())
-  updatedAt            DateTime           @updatedAt
+  id                    String                        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId                String                        @db.Uuid
+  name                  String                        @db.VarChar(255)
+  description           String?
+  category              String                        @db.VarChar(100)
+  durationMinutes       Int
+  bufferMinutes         Int                           @default(0)
+  basePrice             Decimal                       @db.Decimal(10, 2)
+  tierDiscounts         Json?
+  requiredCapabilities  String[]                      @default([])
+  requiredFeatures      String[]                      @default([])
+  equipmentNeeds        Json?
+  consumableNeeds       Json?
+  revenueCenterId       String?                       @db.VarChar(50)
+  isActive              Boolean                       @default(true)
+  sortOrder             Int                           @default(0)
+  createdAt             DateTime                      @default(now())
+  updatedAt             DateTime                      @updatedAt
   bookings              Booking[]
   variations            ServiceVariation[]
   club                  Club                          @relation(fields: [clubId], references: [id], onDelete: Cascade)
@@ -1713,30 +1713,30 @@ model Lead {
 
 /// System user (staff, admin, member portal)
 model User {
-  id              String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clubId          String?    @db.Uuid
-  memberId        String?    @unique @db.Uuid
-  email           String     @db.VarChar(255)
-  passwordHash    String     @db.VarChar(255)
-  firstName       String     @db.VarChar(100)
-  lastName        String     @db.VarChar(100)
-  avatarUrl       String?    @db.VarChar(500)
-  phone           String?    @db.VarChar(50)
-  role            UserRole   @default(STAFF)
-  permissions     String[]   @default([])
-  isActive        Boolean    @default(true)
-  emailVerified   Boolean    @default(false)
-  emailVerifiedAt DateTime?
-  lastLoginAt     DateTime?
-  lastLoginIp     String?    @db.VarChar(45)
-  failedAttempts  Int        @default(0)
-  lockedUntil     DateTime?
-  refreshToken    String?    @db.VarChar(500)
-  resetToken      String?    @db.VarChar(255)
-  resetTokenExp   DateTime?
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-  deletedAt       DateTime?
+  id                   String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId               String?               @db.Uuid
+  memberId             String?               @unique @db.Uuid
+  email                String                @db.VarChar(255)
+  passwordHash         String                @db.VarChar(255)
+  firstName            String                @db.VarChar(100)
+  lastName             String                @db.VarChar(100)
+  avatarUrl            String?               @db.VarChar(500)
+  phone                String?               @db.VarChar(50)
+  role                 UserRole              @default(STAFF)
+  permissions          String[]              @default([])
+  isActive             Boolean               @default(true)
+  emailVerified        Boolean               @default(false)
+  emailVerifiedAt      DateTime?
+  lastLoginAt          DateTime?
+  lastLoginIp          String?               @db.VarChar(45)
+  failedAttempts       Int                   @default(0)
+  lockedUntil          DateTime?
+  refreshToken         String?               @db.VarChar(500)
+  resetToken           String?               @db.VarChar(255)
+  resetTokenExp        DateTime?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  deletedAt            DateTime?
   auditLogs            AuditLog[]
   leads                Lead[]
   staff                Staff?
@@ -3650,7 +3650,7 @@ model MemberCommunicationPrefs {
 // ============================================================================
 
 enum EquipmentAttachmentType {
-  OPTIONAL_ADDON    // Equipment that can be optionally added to bookings (golf carts, ball machines)
+  OPTIONAL_ADDON // Equipment that can be optionally added to bookings (golf carts, ball machines)
   REQUIRED_RESOURCE // Equipment required for service delivery (G5 machines for spa treatments)
 }
 
@@ -3671,10 +3671,10 @@ enum EquipmentStatus {
 }
 
 enum OperationType {
-  GOLF      // Golf carts, clubs, pull carts, range balls
-  FACILITY  // Tennis rackets, yoga mats, general facility equipment
-  SPA       // Robes, towels, spa-specific equipment
-  EVENT     // Projectors, AV systems, tables, chairs
+  GOLF // Golf carts, clubs, pull carts, range balls
+  FACILITY // Tennis rackets, yoga mats, general facility equipment
+  SPA // Robes, towels, spa-specific equipment
+  EVENT // Projectors, AV systems, tables, chairs
 }
 
 /// Equipment category for grouping similar equipment types
@@ -3811,16 +3811,16 @@ model FacilityEquipmentOption {
 /// Lookup category for configurable enum values (e.g., PLAYER_TYPE, PAYMENT_METHOD)
 model LookupCategory {
   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  code        String   @db.VarChar(50)   // e.g., "PLAYER_TYPE", "PAYMENT_METHOD"
+  code        String   @db.VarChar(50) // e.g., "PLAYER_TYPE", "PAYMENT_METHOD"
   name        String   @db.VarChar(100)
   description String?  @db.VarChar(500)
-  isSystem    Boolean  @default(false)   // System-managed, values not deletable
-  isGlobal    Boolean  @default(true)    // Available to all clubs
+  isSystem    Boolean  @default(false) // System-managed, values not deletable
+  isGlobal    Boolean  @default(true) // Available to all clubs
   sortOrder   Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  values      LookupValue[]
+  values LookupValue[]
 
   @@unique([code])
   @@index([isGlobal])
@@ -3829,24 +3829,24 @@ model LookupCategory {
 
 /// Individual lookup value within a category
 model LookupValue {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  categoryId   String   @db.Uuid
-  clubId       String?  @db.Uuid          // null = global default
-  code         String   @db.VarChar(50)   // Internal code (MEMBER, GUEST)
-  name         String   @db.VarChar(100)  // Display name
-  description  String?  @db.VarChar(500)
-  icon         String?  @db.VarChar(50)   // Lucide icon name
-  color        String?  @db.VarChar(7)    // Hex color
-  sortOrder    Int      @default(0)
-  isActive     Boolean  @default(true)
-  isDefault    Boolean  @default(false)
-  metadata     Json     @default("{}")    // Custom attributes
+  id          String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  categoryId  String  @db.Uuid
+  clubId      String? @db.Uuid // null = global default
+  code        String  @db.VarChar(50) // Internal code (MEMBER, GUEST)
+  name        String  @db.VarChar(100) // Display name
+  description String? @db.VarChar(500)
+  icon        String? @db.VarChar(50) // Lucide icon name
+  color       String? @db.VarChar(7) // Hex color
+  sortOrder   Int     @default(0)
+  isActive    Boolean @default(true)
+  isDefault   Boolean @default(false)
+  metadata    Json    @default("{}") // Custom attributes
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  category     LookupCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  club         Club?          @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  category     LookupCategory      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  club         Club?               @relation(fields: [clubId], references: [id], onDelete: Cascade)
   translations LookupTranslation[]
 
   @@unique([categoryId, clubId, code])
@@ -3858,13 +3858,13 @@ model LookupValue {
 
 /// Translations for lookup values supporting i18n
 model LookupTranslation {
-  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  lookupValueId String   @db.Uuid
-  locale        String   @db.VarChar(10)  // e.g., "th", "zh-CN", "ja"
-  name          String   @db.VarChar(100)
+  id            String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  lookupValueId String  @db.Uuid
+  locale        String  @db.VarChar(10) // e.g., "th", "zh-CN", "ja"
+  name          String  @db.VarChar(100)
   description   String?
 
-  lookupValue   LookupValue @relation(fields: [lookupValueId], references: [id], onDelete: Cascade)
+  lookupValue LookupValue @relation(fields: [lookupValueId], references: [id], onDelete: Cascade)
 
   @@unique([lookupValueId, locale])
   @@index([lookupValueId])
@@ -3876,45 +3876,103 @@ model LookupTranslation {
 // ─────────────────────────────────────────────────────────────
 
 enum DocumentType {
-  CONTRACT         // Signed membership contract
-  ID_DOCUMENT      // Passport, national ID
+  CONTRACT // Signed membership contract
+  ID_DOCUMENT // Passport, national ID
   PROOF_OF_ADDRESS // Utility bill, bank statement
-  MEDICAL_CERT     // Health certificate
-  WAIVER           // Liability waiver
-  PHOTO            // Additional photos
+  MEDICAL_CERT // Health certificate
+  WAIVER // Liability waiver
+  PHOTO // Additional photos
   OTHER
 }
 
 /// Member document storage for contracts, IDs, and other files
 model MemberDocument {
-  id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clubId      String       @db.Uuid
-  memberId    String       @db.Uuid
+  id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId   String @db.Uuid
+  memberId String @db.Uuid
 
   // Document info
-  name        String       @db.VarChar(255)
-  type        DocumentType
-  fileName    String       @db.VarChar(255)
-  fileUrl     String       @db.VarChar(500)
-  fileSize    Int?         // bytes
-  mimeType    String?      @db.VarChar(100)
+  name     String       @db.VarChar(255)
+  type     DocumentType
+  fileName String       @db.VarChar(255)
+  fileUrl  String       @db.VarChar(500)
+  fileSize Int? // bytes
+  mimeType String?      @db.VarChar(100)
 
   // Metadata
   description String?
-  expiryDate  DateTime?    @db.Date
-  isVerified  Boolean      @default(false)
-  verifiedBy  String?      @db.Uuid
+  expiryDate  DateTime? @db.Date
+  isVerified  Boolean   @default(false)
+  verifiedBy  String?   @db.Uuid
   verifiedAt  DateTime?
 
-  uploadedBy  String       @db.Uuid
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  deletedAt   DateTime?
+  uploadedBy String    @db.Uuid
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
 
-  club        Club         @relation(fields: [clubId], references: [id])
-  member      Member       @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  club   Club   @relation(fields: [clubId], references: [id])
+  member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
   @@index([memberId])
   @@index([clubId, type])
   @@map("member_documents")
+}
+
+// ─────────────────────────────────────────────────────────────
+// AR STATEMENT SYSTEM
+// ─────────────────────────────────────────────────────────────
+
+/// Type of AR profile - member or city ledger account
+enum ARProfileType {
+  MEMBER
+  CITY_LEDGER
+}
+
+/// Status of an AR profile
+enum ARProfileStatus {
+  ACTIVE // Normal billing
+  SUSPENDED // Temporarily suspended
+  CLOSED // Account closed
+}
+
+/// How statements are delivered to the account holder
+enum StatementDelivery {
+  EMAIL
+  PRINT
+  PORTAL
+  SMS
+  EMAIL_AND_PRINT
+  ALL
+}
+
+/// Status of a billing period
+enum PeriodStatus {
+  OPEN // Active period, transactions can be added
+  CLOSED // Period closed via AR close process
+  REOPENED // Closed period that was reopened (requires approval)
+}
+
+/// Type of statement run
+enum StatementRunType {
+  PREVIEW // Preview run for audit/review before AR close
+  FINAL // Final run at AR close - statements get numbers
+}
+
+/// Status of a statement generation run
+enum StatementRunStatus {
+  PENDING // Run created but not started
+  IN_PROGRESS // Generation in progress
+  COMPLETED // All statements generated successfully
+  FAILED // Run failed with errors
+  CANCELLED // Run was cancelled
+}
+
+/// Delivery status for individual statements
+enum DeliveryStatus {
+  PENDING // Not yet sent
+  SENT // Sent to recipient
+  DELIVERED // Confirmed delivered (email opened, etc)
+  FAILED // Delivery failed
+  NOT_APPLICABLE // Delivery method doesn't apply (e.g., portal only)
 }
