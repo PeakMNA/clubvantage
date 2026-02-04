@@ -950,7 +950,7 @@ input CheckLimitInput {
 """City ledger account type"""
 enum CityLedgerAccountType {
   CORPORATE
-  HOUSE_ACCOUNT
+  HOUSE
   OTHER
   VENDOR
 }
