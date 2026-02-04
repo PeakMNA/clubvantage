@@ -1999,7 +1999,7 @@ enum InvoiceStatus {
 
 enum CityLedgerType {
   CORPORATE // Company accounts
-  HOUSE_ACCOUNT // Internal club accounts
+  HOUSE // Internal club accounts (house accounts)
   VENDOR // Supplier credits
   OTHER // Custom account types
 }

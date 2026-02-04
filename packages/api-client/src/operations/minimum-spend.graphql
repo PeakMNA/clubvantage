@@ -1,0 +1,255 @@
+# Minimum Spend Queries
+
+query GetMinimumSpendRequirements($activeOnly: Boolean) {
+  minimumSpendRequirements(activeOnly: $activeOnly) {
+    id
+    clubId
+    name
+    description
+    membershipTypes
+    minimumAmount
+    period
+    includeFoodBeverage
+    includeGolf
+    includeSpa
+    includeRetail
+    includeEvents
+    includedCategories
+    excludedCategories
+    defaultShortfallAction
+    gracePeriodDays
+    allowPartialCredit
+    notifyAtPercent
+    notifyDaysBeforeEnd
+    isActive
+    effectiveFrom
+    effectiveTo
+    createdAt
+    updatedAt
+  }
+}
+
+query GetMinimumSpendRequirement($id: ID!) {
+  minimumSpendRequirement(id: $id) {
+    id
+    clubId
+    name
+    description
+    membershipTypes
+    minimumAmount
+    period
+    includeFoodBeverage
+    includeGolf
+    includeSpa
+    includeRetail
+    includeEvents
+    includedCategories
+    excludedCategories
+    defaultShortfallAction
+    gracePeriodDays
+    allowPartialCredit
+    notifyAtPercent
+    notifyDaysBeforeEnd
+    isActive
+    effectiveFrom
+    effectiveTo
+    createdAt
+    updatedAt
+  }
+}
+
+query GetMemberMinimumSpends($input: GetMemberSpendsInput!) {
+  memberMinimumSpends(input: $input) {
+    id
+    clubId
+    memberId
+    requirementId
+    periodStart
+    periodEnd
+    periodLabel
+    requiredAmount
+    currentSpend
+    projectedSpend
+    shortfallAmount
+    carryForwardAmount
+    status
+    isExempt
+    exemptReason
+    exemptBy
+    exemptAt
+    shortfallAction
+    shortfallResolvedBy
+    shortfallResolvedAt
+    shortfallNote
+    shortfallInvoiceId
+    lastCalculatedAt
+    createdAt
+    updatedAt
+    requirement {
+      id
+      name
+      minimumAmount
+      period
+    }
+  }
+}
+
+query GetMemberMinimumSpend($id: ID!) {
+  memberMinimumSpend(id: $id) {
+    id
+    clubId
+    memberId
+    requirementId
+    periodStart
+    periodEnd
+    periodLabel
+    requiredAmount
+    currentSpend
+    projectedSpend
+    shortfallAmount
+    carryForwardAmount
+    status
+    isExempt
+    exemptReason
+    exemptBy
+    exemptAt
+    shortfallAction
+    shortfallResolvedBy
+    shortfallResolvedAt
+    shortfallNote
+    shortfallInvoiceId
+    lastCalculatedAt
+    createdAt
+    updatedAt
+    requirement {
+      id
+      name
+      minimumAmount
+      period
+      defaultShortfallAction
+    }
+  }
+}
+
+query GetCurrentMemberSpend($memberId: ID!, $requirementId: ID!) {
+  currentMemberSpend(memberId: $memberId, requirementId: $requirementId) {
+    id
+    clubId
+    memberId
+    requirementId
+    periodStart
+    periodEnd
+    periodLabel
+    requiredAmount
+    currentSpend
+    projectedSpend
+    shortfallAmount
+    carryForwardAmount
+    status
+    isExempt
+    lastCalculatedAt
+    requirement {
+      id
+      name
+      minimumAmount
+      period
+    }
+  }
+}
+
+# Minimum Spend Mutations
+
+mutation CreateMinimumSpendRequirement($input: CreateRequirementInput!) {
+  createMinimumSpendRequirement(input: $input) {
+    id
+    name
+    description
+    membershipTypes
+    minimumAmount
+    period
+    isActive
+    createdAt
+  }
+}
+
+mutation UpdateMinimumSpendRequirement($input: UpdateRequirementInput!) {
+  updateMinimumSpendRequirement(input: $input) {
+    id
+    name
+    description
+    membershipTypes
+    minimumAmount
+    period
+    isActive
+    updatedAt
+  }
+}
+
+mutation DeleteMinimumSpendRequirement($id: ID!) {
+  deleteMinimumSpendRequirement(id: $id) {
+    id
+    isActive
+  }
+}
+
+mutation RecordMinimumSpend($input: RecordSpendInput!) {
+  recordMinimumSpend(input: $input) {
+    id
+    currentSpend
+    status
+    lastCalculatedAt
+    requirement {
+      id
+      name
+      minimumAmount
+    }
+  }
+}
+
+mutation ResolveMinimumSpendShortfall($input: ResolveShortfallInput!) {
+  resolveMinimumSpendShortfall(input: $input) {
+    id
+    status
+    shortfallAction
+    shortfallResolvedBy
+    shortfallResolvedAt
+    shortfallNote
+  }
+}
+
+mutation ExemptMemberFromMinimumSpend($input: ExemptMemberInput!) {
+  exemptMemberFromMinimumSpend(input: $input) {
+    id
+    status
+    isExempt
+    exemptReason
+    exemptBy
+    exemptAt
+  }
+}
+
+mutation RemoveMinimumSpendExemption($memberSpendId: ID!) {
+  removeMinimumSpendExemption(memberSpendId: $memberSpendId) {
+    id
+    status
+    isExempt
+  }
+}
+
+mutation CloseMinimumSpendPeriod($input: ClosePeriodInput!) {
+  closeMinimumSpendPeriod(input: $input) {
+    id
+    status
+    shortfallAmount
+    shortfallAction
+  }
+}
+
+mutation RecalculateMemberSpend($memberSpendId: ID!) {
+  recalculateMemberSpend(memberSpendId: $memberSpendId) {
+    id
+    currentSpend
+    status
+    lastCalculatedAt
+  }
+}

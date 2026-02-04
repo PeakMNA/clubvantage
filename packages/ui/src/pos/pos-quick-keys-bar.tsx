@@ -43,7 +43,7 @@ export function POSQuickKeysBar({
 
         // Position-specific layout
         isHorizontal
-          ? 'flex items-center gap-2 overflow-x-auto border-b'
+          ? 'flex items-center gap-2 overflow-x-auto border-b [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-thumb]:bg-amber-300 [&::-webkit-scrollbar-track]:bg-transparent'
           : 'flex flex-col gap-2 w-24 overflow-y-auto border-r',
 
         className

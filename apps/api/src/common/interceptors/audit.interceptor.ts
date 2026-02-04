@@ -3,6 +3,7 @@ import {
   NestInterceptor,
   ExecutionContext,
   CallHandler,
+  Logger,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
@@ -12,6 +13,8 @@ import { EventStoreService } from '@/shared/events/event-store.service';
 
 @Injectable()
 export class AuditInterceptor implements NestInterceptor {
+  private readonly logger = new Logger(AuditInterceptor.name);
+
   constructor(
     private reflector: Reflector,
     private eventStore: EventStoreService,
@@ -62,7 +65,7 @@ export class AuditInterceptor implements NestInterceptor {
           }
         } catch (error) {
           // Log but don't fail the request if audit fails
-          console.error('Failed to create audit event:', error);
+          this.logger.error('Failed to create audit event', error instanceof Error ? error.stack : error);
         }
       }),
     );

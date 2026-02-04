@@ -1,15 +1,39 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe, VersioningType } from '@nestjs/common';
+import { ValidationPipe, VersioningType, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const logger = new Logger('Bootstrap');
+  const app = await NestFactory.create(AppModule, {
+    logger: ['error', 'warn', 'log', 'debug', 'verbose'],
+  });
 
-  // Security
-  app.use(helmet());
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  // Security - Configure Helmet properly for GraphQL
+  app.use(
+    helmet({
+      // Disable CSP in development to allow GraphQL Playground
+      // In production, configure CSP properly for your needs
+      contentSecurityPolicy: isProduction
+        ? {
+            directives: {
+              defaultSrc: ["'self'"],
+              styleSrc: ["'self'", "'unsafe-inline'"],
+              imgSrc: ["'self'", 'data:', 'https:'],
+              scriptSrc: ["'self'"],
+            },
+          }
+        : false,
+      // Allow GraphQL Playground to work with cross-origin resources
+      crossOriginEmbedderPolicy: isProduction,
+      // Required for GraphQL Playground in non-production
+      crossOriginResourcePolicy: isProduction ? { policy: 'same-origin' } : false,
+    }),
+  );
 
   // Cookie parser (must be before other middleware that uses cookies)
   app.use(cookieParser());
@@ -92,15 +116,18 @@ async function bootstrap() {
   const port = process.env.PORT || 3001;
   await app.listen(port);
 
-  console.log(`
-    =============================================
-    ClubVantage API is running!
-
-    Environment: ${process.env.NODE_ENV || 'development'}
-    Port: ${port}
-    API Docs: http://localhost:${port}/api/docs
-    =============================================
-  `);
+  logger.log('=============================================');
+  logger.log('ClubVantage API is running!');
+  logger.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  logger.log(`Port: ${port}`);
+  if (!isProduction) {
+    logger.log(`API Docs: http://localhost:${port}/api/docs`);
+    logger.log(`GraphQL Playground: http://localhost:${port}/graphql`);
+  }
+  logger.log('=============================================');
 }
 
-bootstrap();
+bootstrap().catch((err) => {
+  console.error('Failed to start application:', err);
+  process.exit(1);
+});

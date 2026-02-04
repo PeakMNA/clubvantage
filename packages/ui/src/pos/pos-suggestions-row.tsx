@@ -47,7 +47,7 @@ export function POSSuggestionsRow({
         'border-emerald-200 p-2',
 
         // Position-specific container styles
-        isTop && 'flex items-center gap-2 overflow-x-auto border-b',
+        isTop && 'flex items-center gap-2 overflow-x-auto border-b [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-thumb]:bg-emerald-300 [&::-webkit-scrollbar-track]:bg-transparent',
         isSidebar && 'flex flex-col gap-2 w-28 border-l',
         isFloating && 'rounded-lg shadow-lg border',
 

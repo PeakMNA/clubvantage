@@ -1869,6 +1869,11 @@ type DeleteDependentResponseType {
   message: String!
 }
 
+type DeleteDocumentResultType {
+  message: String
+  success: Boolean!
+}
+
 type DeleteMemberResponseType {
   message: String!
 }
@@ -2005,6 +2010,17 @@ type DiscountValidityType {
   usageLimit: Float
   validFrom: DateTime
   validTo: DateTime
+}
+
+"""Type of member document"""
+enum DocumentType {
+  CONTRACT
+  ID_DOCUMENT
+  MEDICAL_CERT
+  OTHER
+  PHOTO
+  PROOF_OF_ADDRESS
+  WAIVER
 }
 
 type EffectiveScheduleType {
@@ -2955,6 +2971,37 @@ type MemberConnection {
   totalCount: Int!
 }
 
+type MemberDocumentConnection {
+  edges: [MemberDocumentTypeEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type MemberDocumentType {
+  clubId: String!
+  createdAt: DateTime!
+  description: String
+  expiryDate: DateTime
+  fileName: String!
+  fileSize: Int
+  fileUrl: String!
+  id: ID!
+  isVerified: Boolean!
+  memberId: String!
+  mimeType: String
+  name: String!
+  type: DocumentType!
+  updatedAt: DateTime!
+  uploadedBy: String!
+  verifiedAt: DateTime
+  verifiedBy: String
+}
+
+type MemberDocumentTypeEdge {
+  cursor: String!
+  node: MemberDocumentType!
+}
+
 """Single interest entry for a member"""
 input MemberInterestInput {
   categoryId: ID!
@@ -3506,6 +3553,9 @@ type Mutation {
   """Delete a member address"""
   deleteMemberAddress(id: ID!): DeleteAddressResponseType!
 
+  """Delete a member document (soft delete)"""
+  deleteMemberDocument(id: ID!): DeleteDocumentResultType!
+
   """Delete (deactivate) a minimum spend requirement"""
   deleteMinimumSpendRequirement(id: ID!): MinimumSpendRequirement!
 
@@ -3804,6 +3854,9 @@ type Mutation {
   """Update credit limit settings for a member"""
   updateMemberCreditSettings(input: UpdateCreditSettingsInput!): Boolean!
 
+  """Update document metadata"""
+  updateMemberDocument(id: ID!, input: UpdateDocumentInput!): MemberDocumentType!
+
   """Update a minimum spend requirement"""
   updateMinimumSpendRequirement(input: UpdateRequirementInput!): MinimumSpendRequirement!
   updateModifierGroup(id: ID!, input: UpdateModifierGroupInput!): ModifierGroup!
@@ -3879,11 +3932,17 @@ type Mutation {
   """Update a waitlist entry"""
   updateWaitlistEntry(id: ID!, input: UpdateWaitlistEntryInput!): WaitlistMutationResponse!
 
+  """Upload a new document for a member"""
+  uploadMemberDocument(input: UploadDocumentInput!): UploadDocumentResultType!
+
   """Create or update auto-pay settings"""
   upsertAutoPaySetting(input: AutoPaySettingInput!): AutoPaySetting!
 
   """Create or update a POS template"""
   upsertPOSTemplate(id: ID, input: POSTemplateInput!): UpsertTemplateMutationResponse!
+
+  """Verify or unverify a member document"""
+  verifyDocument(input: VerifyDocumentInput!): VerifyDocumentResultType!
 
   """Verify a sub-account PIN"""
   verifySubAccountPin(input: VerifyPinInput!): PinVerificationResult!
@@ -4562,6 +4621,12 @@ type Query {
 
   """Get all discounts for the current club with filtering and pagination"""
   discounts(after: String, first: Int = 10, isActive: Boolean, scope: DiscountScope, search: String, skip: Int, sortBy: String = "name", sortOrder: String = "asc", type: DiscountType): DiscountConnection!
+
+  """Get a single document by ID"""
+  document(id: ID!): MemberDocumentType
+
+  """Get a signed URL for temporary document access"""
+  documentSignedUrl(expiresIn: Int = 3600, id: ID!): String!
   equipment(filter: EquipmentFilterInput): [Equipment!]!
   equipmentAvailability(input: EquipmentAvailabilityInput!): [Equipment!]!
   equipmentCategories(filter: EquipmentCategoryFilterInput): [EquipmentCategory!]!
@@ -4674,6 +4739,9 @@ type Query {
 
   """Get member dependents"""
   memberDependents(memberId: ID!): [DependentType!]!
+
+  """Get all documents for a member with optional filtering"""
+  memberDocuments(after: String, first: Int = 10, includeExpired: Boolean, isVerified: Boolean, memberId: ID!, skip: Int, type: DocumentType): MemberDocumentConnection!
 
   """Get all interests for a member"""
   memberInterests(memberId: ID!): [MemberInterestType!]!
@@ -5983,6 +6051,13 @@ input UpdateDiscountInput {
   value: Float
 }
 
+input UpdateDocumentInput {
+  description: String
+  expiryDate: DateTime
+  name: String
+  type: DocumentType
+}
+
 input UpdateEquipmentCategoryInput {
   attachmentType: EquipmentAttachmentType
   color: String
@@ -6458,6 +6533,24 @@ input UpdateWaitlistEntryInput {
   timeRangeStart: String
 }
 
+input UploadDocumentInput {
+  description: String
+  expiryDate: DateTime
+  fileName: String!
+  fileSize: Int
+  fileUrl: String!
+  memberId: ID!
+  mimeType: String
+  name: String!
+  type: DocumentType!
+}
+
+type UploadDocumentResultType {
+  document: MemberDocumentType
+  message: String
+  success: Boolean!
+}
+
 type UpsertTemplateMutationResponse {
   message: String
   success: Boolean!
@@ -6470,6 +6563,17 @@ input ValidateDiscountInput {
   discountId: ID
   membershipTypeId: ID
   playerType: String
+}
+
+input VerifyDocumentInput {
+  documentId: ID!
+  isVerified: Boolean!
+}
+
+type VerifyDocumentResultType {
+  document: MemberDocumentType
+  message: String
+  success: Boolean!
 }
 
 input VerifyPinInput {

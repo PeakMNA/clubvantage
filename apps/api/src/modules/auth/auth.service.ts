@@ -206,6 +206,69 @@ export class AuthService {
     });
   }
 
+  /**
+   * Invalidate a user's auth cache.
+   * Call this when a user is deactivated, locked, or permissions change.
+   * This forces the next request to re-validate against the database.
+   */
+  async invalidateUserAuthCache(userId: string): Promise<void> {
+    await this.redisService.del(`auth:user:${userId}`);
+    this.logger.debug(`Invalidated auth cache for user ${userId}`);
+  }
+
+  /**
+   * Deactivate a user and invalidate their session.
+   * This immediately blocks further access.
+   */
+  async deactivateUser(userId: string): Promise<void> {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { isActive: false },
+    });
+
+    // Invalidate auth cache so next request will fail
+    await this.invalidateUserAuthCache(userId);
+
+    // Revoke all refresh tokens
+    await this.revokeAllRefreshTokens(userId);
+
+    this.logger.log(`User ${userId} deactivated and sessions invalidated`);
+  }
+
+  /**
+   * Lock a user account and invalidate their session.
+   * Used for security lockouts after failed login attempts.
+   */
+  async lockUser(userId: string, durationMinutes: number): Promise<void> {
+    const lockedUntil = new Date(Date.now() + durationMinutes * 60000);
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { lockedUntil },
+    });
+
+    // Invalidate auth cache so next request will fail
+    await this.invalidateUserAuthCache(userId);
+
+    this.logger.log(`User ${userId} locked until ${lockedUntil.toISOString()}`);
+  }
+
+  /**
+   * Update user permissions and invalidate their cache.
+   * The next request will pick up the new permissions.
+   */
+  async updateUserPermissions(userId: string, permissions: string[]): Promise<void> {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { permissions },
+    });
+
+    // Invalidate auth cache so next request picks up new permissions
+    await this.invalidateUserAuthCache(userId);
+
+    this.logger.log(`User ${userId} permissions updated, cache invalidated`);
+  }
+
   private async generateTokens(user: any): Promise<TokenPair> {
     const payload: JwtPayload = {
       sub: user.id,

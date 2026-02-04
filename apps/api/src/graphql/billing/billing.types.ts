@@ -9,7 +9,7 @@ export { InvoiceStatus, PaymentMethod };
 // City Ledger enums
 export enum CityLedgerTypeEnum {
   CORPORATE = 'CORPORATE',
-  HOUSE_ACCOUNT = 'HOUSE_ACCOUNT',
+  HOUSE = 'HOUSE',
   VENDOR = 'VENDOR',
   OTHER = 'OTHER',
 }

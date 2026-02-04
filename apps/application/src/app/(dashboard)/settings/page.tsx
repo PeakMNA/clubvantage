@@ -6,6 +6,7 @@ import {
   ClubProfileSection,
   OrganizationSection,
   BillingDefaultsSection,
+  BillingCycleSection,
   LocalizationSection,
   NotificationsSection,
   BrandingSection,
@@ -20,6 +21,7 @@ const sectionIds: SettingsSection[] = [
   'club-profile',
   'organization',
   'billing-defaults',
+  'billing-cycle',
   'localization',
   'notifications',
   'branding',
@@ -106,6 +108,10 @@ export default function SettingsPage() {
 
         <div ref={(el) => setSectionRef('billing-defaults', el)}>
           <BillingDefaultsSection id="billing-defaults" />
+        </div>
+
+        <div ref={(el) => setSectionRef('billing-cycle', el)}>
+          <BillingCycleSection id="billing-cycle" />
         </div>
 
         <div ref={(el) => setSectionRef('localization', el)}>

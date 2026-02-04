@@ -1,0 +1,232 @@
+# Stored Payment Method Queries
+
+query GetMemberPaymentMethods($memberId: ID!, $activeOnly: Boolean) {
+  memberPaymentMethods(memberId: $memberId, activeOnly: $activeOnly) {
+    id
+    clubId
+    memberId
+    stripeCustomerId
+    stripePaymentMethodId
+    type
+    brand
+    last4
+    expiryMonth
+    expiryYear
+    cardholderName
+    status
+    isDefault
+    isAutoPayEnabled
+    verifiedAt
+    lastUsedAt
+    failureCount
+    lastFailureReason
+    createdAt
+    updatedAt
+  }
+}
+
+query GetPaymentMethod($id: ID!) {
+  paymentMethod(id: $id) {
+    id
+    clubId
+    memberId
+    stripeCustomerId
+    stripePaymentMethodId
+    type
+    brand
+    last4
+    expiryMonth
+    expiryYear
+    cardholderName
+    status
+    isDefault
+    isAutoPayEnabled
+    verifiedAt
+    lastUsedAt
+    failureCount
+    lastFailureReason
+    createdAt
+    updatedAt
+  }
+}
+
+query GetMemberAutoPaySetting($memberId: ID!) {
+  memberAutoPaySetting(memberId: $memberId) {
+    id
+    clubId
+    memberId
+    paymentMethodId
+    isEnabled
+    schedule
+    paymentDayOfMonth
+    maxPaymentAmount
+    monthlyMaxAmount
+    requireApprovalAbove
+    payDuesOnly
+    excludeCategories
+    notifyBeforePayment
+    notifyDaysBefore
+    notifyOnSuccess
+    notifyOnFailure
+    maxRetryAttempts
+    retryIntervalDays
+    createdAt
+    updatedAt
+    paymentMethod {
+      id
+      brand
+      last4
+      isDefault
+    }
+  }
+}
+
+query GetMemberAutoPayHistory($input: GetAutoPayHistoryInput!) {
+  memberAutoPayHistory(input: $input) {
+    id
+    clubId
+    memberId
+    paymentMethodId
+    invoiceId
+    amount
+    attemptNumber
+    status
+    stripePaymentIntentId
+    stripeChargeId
+    processedAt
+    succeededAt
+    failedAt
+    failureCode
+    failureMessage
+    nextRetryAt
+    isManualRetry
+    paymentTransactionId
+    createdAt
+    updatedAt
+    paymentMethod {
+      id
+      brand
+      last4
+    }
+  }
+}
+
+query GetInvoiceAutoPayAttempts($invoiceId: ID!) {
+  invoiceAutoPayAttempts(invoiceId: $invoiceId) {
+    id
+    memberId
+    paymentMethodId
+    amount
+    attemptNumber
+    status
+    processedAt
+    succeededAt
+    failedAt
+    failureCode
+    failureMessage
+    createdAt
+    paymentMethod {
+      id
+      brand
+      last4
+    }
+  }
+}
+
+# Stored Payment Method Mutations
+
+mutation AddPaymentMethod($input: AddStoredPaymentInput!) {
+  addPaymentMethod(input: $input) {
+    id
+    memberId
+    brand
+    last4
+    expiryMonth
+    expiryYear
+    cardholderName
+    status
+    isDefault
+    isAutoPayEnabled
+    createdAt
+  }
+}
+
+mutation UpdatePaymentMethod($input: UpdateStoredPaymentInput!) {
+  updatePaymentMethod(input: $input) {
+    id
+    isDefault
+    isAutoPayEnabled
+    updatedAt
+  }
+}
+
+mutation RemovePaymentMethod($id: ID!) {
+  removePaymentMethod(id: $id) {
+    success
+    error
+  }
+}
+
+mutation SetDefaultPaymentMethod($id: ID!) {
+  setDefaultPaymentMethod(id: $id) {
+    id
+    isDefault
+    updatedAt
+  }
+}
+
+mutation UpsertAutoPaySetting($input: AutoPaySettingInput!) {
+  upsertAutoPaySetting(input: $input) {
+    id
+    memberId
+    paymentMethodId
+    isEnabled
+    schedule
+    paymentDayOfMonth
+    maxPaymentAmount
+    monthlyMaxAmount
+    requireApprovalAbove
+    payDuesOnly
+    excludeCategories
+    notifyBeforePayment
+    notifyDaysBefore
+    notifyOnSuccess
+    notifyOnFailure
+    maxRetryAttempts
+    retryIntervalDays
+    createdAt
+    updatedAt
+    paymentMethod {
+      id
+      brand
+      last4
+    }
+  }
+}
+
+mutation DisableAutoPay($memberId: ID!) {
+  disableAutoPay(memberId: $memberId) {
+    success
+    error
+  }
+}
+
+mutation ProcessAutoPay($input: ProcessAutoPayInput!) {
+  processAutoPay(input: $input) {
+    success
+    attemptId
+    message
+    stripePaymentIntentId
+    error
+  }
+}
+
+mutation RetryAutoPayAttempt($attemptId: ID!) {
+  retryAutoPayAttempt(attemptId: $attemptId) {
+    success
+    attemptId
+    message
+    stripePaymentIntentId
+    error
+  }
+}

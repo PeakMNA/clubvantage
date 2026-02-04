@@ -1,22 +1,25 @@
 'use client'
 
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import { cn } from '@clubvantage/ui'
 import { Button } from '@clubvantage/ui'
 import { Input } from '@clubvantage/ui'
 import {
   ChevronDown,
-  Search,
   Upload,
   Loader2,
-  X,
+  Zap,
+  List,
+  CreditCard,
 } from 'lucide-react'
 import { AllocationTableRow, type AllocationInvoice } from './allocation-table-row'
 import { MemberSelectionCard, type MemberSelectionData } from './member-selection-card'
 import { SettlementSummary, type SettlementSummaryData } from './settlement-summary'
 import { type AgingStatus } from './aging-badge'
+import { ArAccountSearch, type ArAccountSearchResult, type ArAccountType } from './ar-account-search'
 
 export type PaymentMethod = 'cash' | 'card' | 'transfer' | 'check'
+export type SettlementMode = 'manual' | 'fifo' | 'full'
 
 export interface ReceiptFormData {
   amount: number
@@ -30,7 +33,10 @@ export interface ReceiptFormData {
   whtCertificateNumber: string
   whtCertificateDate: string
   memberId: string | null
+  cityLedgerId: string | null
+  accountType: ArAccountType | null
   allocations: Record<string, number>
+  settlementMode: SettlementMode
 }
 
 export interface MemberSearchResult {
@@ -48,24 +54,34 @@ interface ReceiptFormProps {
   initialData?: Partial<ReceiptFormData>
   /** Available outlets */
   outlets: { id: string; name: string }[]
-  /** Currently selected member (if any) */
+  /** Currently selected member (if any) - DEPRECATED: use selectedAccount */
   selectedMember?: MemberSelectionData | null
-  /** Pending invoices for the selected member */
+  /** Currently selected AR account (Member or City Ledger) */
+  selectedAccount?: ArAccountSearchResult | null
+  /** Pending invoices for the selected account */
   pendingInvoices: AllocationInvoice[]
-  /** Member search results */
+  /** Member search results - DEPRECATED: use arSearchResults */
   memberSearchResults?: MemberSearchResult[]
+  /** AR Account search results (Members + City Ledger) */
+  arSearchResults?: ArAccountSearchResult[]
   /** Loading states */
   isSearching?: boolean
   isSubmitting?: boolean
   isLoadingInvoices?: boolean
   /** Edit mode */
   isEditMode?: boolean
-  /** Callback when member search is triggered */
+  /** Callback when member search is triggered - DEPRECATED: use onArAccountSearch */
   onMemberSearch?: (query: string) => void
-  /** Callback when member is selected */
+  /** Callback when AR account search is triggered */
+  onArAccountSearch?: (query: string) => void
+  /** Callback when member is selected - DEPRECATED: use onAccountSelect */
   onMemberSelect?: (memberId: string) => void
-  /** Callback when member selection is cleared */
+  /** Callback when AR account is selected */
+  onAccountSelect?: (account: ArAccountSearchResult) => void
+  /** Callback when member selection is cleared - DEPRECATED: use onAccountClear */
   onMemberClear?: () => void
+  /** Callback when account selection is cleared */
+  onAccountClear?: () => void
   /** Callback when form is submitted */
   onSubmit?: (data: ReceiptFormData) => void
   /** Callback when form is cancelled */
@@ -102,15 +118,20 @@ export function ReceiptForm({
   initialData,
   outlets,
   selectedMember,
+  selectedAccount,
   pendingInvoices,
   memberSearchResults = [],
+  arSearchResults = [],
   isSearching = false,
   isSubmitting = false,
   isLoadingInvoices = false,
   isEditMode = false,
   onMemberSearch,
+  onArAccountSearch,
   onMemberSelect,
+  onAccountSelect,
   onMemberClear,
+  onAccountClear,
   onSubmit,
   onCancel,
   onApplyCredit,
@@ -143,7 +164,12 @@ export function ReceiptForm({
     initialData?.whtCertificateDate || ''
   )
 
-  // Member search state
+  // Settlement mode state
+  const [settlementMode, setSettlementMode] = useState<SettlementMode>(
+    initialData?.settlementMode || 'manual'
+  )
+
+  // Member search state (deprecated, kept for backwards compatibility)
   const [memberSearchQuery, setMemberSearchQuery] = useState('')
   const [showSearchResults, setShowSearchResults] = useState(false)
 
@@ -152,6 +178,20 @@ export function ReceiptForm({
   const [allocations, setAllocations] = useState<Record<string, number>>(
     initialData?.allocations || {}
   )
+
+  // Derive the active account from either new or legacy props
+  const activeAccount = selectedAccount || (selectedMember ? {
+    id: selectedMember.id,
+    accountType: 'MEMBER' as ArAccountType,
+    accountNumber: selectedMember.memberNumber,
+    accountName: selectedMember.name,
+    subType: selectedMember.membershipType,
+    outstandingBalance: 0, // Not available from legacy props
+    creditBalance: selectedMember.creditBalance,
+    invoiceCount: pendingInvoices.length,
+    agingStatus: selectedMember.agingStatus,
+    photoUrl: selectedMember.photoUrl,
+  } : null)
 
   // Calculated values
   const cashAmount = parseCurrencyInput(amount)
@@ -162,16 +202,87 @@ export function ReceiptForm({
     [allocations]
   )
 
+  // Calculate FIFO allocations when in FIFO mode
+  const fifoAllocations = useMemo(() => {
+    if (settlementMode !== 'fifo' || totalSettlement <= 0 || pendingInvoices.length === 0) {
+      return null
+    }
+
+    // Sort invoices by due date (oldest first)
+    const sorted = [...pendingInvoices].sort(
+      (a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
+    )
+
+    let remaining = totalSettlement
+    const result: Record<string, number> = {}
+
+    for (const invoice of sorted) {
+      if (remaining <= 0) break
+      const toAllocate = Math.min(remaining, invoice.balance)
+      result[invoice.id] = toAllocate
+      remaining -= toAllocate
+    }
+
+    return {
+      allocations: result,
+      totalAllocated: totalSettlement - remaining,
+      creditToAdd: Math.max(0, remaining),
+    }
+  }, [settlementMode, totalSettlement, pendingInvoices])
+
+  // Apply FIFO allocations when mode changes or amount changes
+  const applyFifoAllocations = useCallback(() => {
+    if (fifoAllocations) {
+      setAllocations(fifoAllocations.allocations)
+      setSelectedInvoices(new Set(Object.keys(fifoAllocations.allocations)))
+    }
+  }, [fifoAllocations])
+
+  // Auto-apply FIFO when in FIFO mode and amount changes
+  useEffect(() => {
+    if (settlementMode === 'fifo' && fifoAllocations) {
+      applyFifoAllocations()
+    }
+  }, [settlementMode, totalSettlement, fifoAllocations, applyFifoAllocations])
+
+  // Handle settlement mode change
+  const handleSettlementModeChange = useCallback((mode: SettlementMode) => {
+    setSettlementMode(mode)
+
+    if (mode === 'full') {
+      // Full settlement: allocate to all invoices
+      const fullAllocations: Record<string, number> = {}
+      pendingInvoices.forEach(inv => {
+        fullAllocations[inv.id] = inv.balance
+      })
+      setAllocations(fullAllocations)
+      setSelectedInvoices(new Set(pendingInvoices.map(inv => inv.id)))
+    } else if (mode === 'manual') {
+      // Manual: clear allocations
+      setAllocations({})
+      setSelectedInvoices(new Set())
+    }
+    // FIFO is handled by the effect above
+  }, [pendingInvoices])
+
+  // Credit to add calculation
+  const creditToAdd = useMemo(() => {
+    const unapplied = totalSettlement - totalAllocated
+    return Math.max(0, unapplied)
+  }, [totalSettlement, totalAllocated])
+
   // Settlement summary data
   const settlementData: SettlementSummaryData = useMemo(() => {
     const data: SettlementSummaryData = {
       cashAmount,
       whtAmount: whtAmountValue,
       allocatedAmount: totalAllocated,
+      creditToAdd: creditToAdd > 0 ? creditToAdd : undefined,
     }
 
     // Check if this would result in reinstatement
-    if (selectedMember?.agingStatus === 'suspended') {
+    const agingStatus = activeAccount?.agingStatus || selectedMember?.agingStatus
+    if (agingStatus === 'suspended') {
       const outstandingAfter = pendingInvoices.reduce((sum, inv) => {
         const allocated = allocations[inv.id] || 0
         return sum + (inv.balance - allocated)
@@ -194,9 +305,44 @@ export function ReceiptForm({
     }
 
     return data
-  }, [cashAmount, whtAmountValue, totalAllocated, selectedMember, pendingInvoices, allocations])
+  }, [cashAmount, whtAmountValue, totalAllocated, creditToAdd, activeAccount, selectedMember, pendingInvoices, allocations])
 
-  // Debounced member search
+  // AR Account search handler
+  const handleArAccountSearch = useCallback(
+    (query: string) => {
+      onArAccountSearch?.(query)
+      // Fallback to legacy handler
+      onMemberSearch?.(query)
+    },
+    [onArAccountSearch, onMemberSearch]
+  )
+
+  // AR Account select handler
+  const handleAccountSelect = useCallback(
+    (account: ArAccountSearchResult) => {
+      onAccountSelect?.(account)
+      // Fallback to legacy handler for members
+      if (account.accountType === 'MEMBER') {
+        onMemberSelect?.(account.id)
+      }
+      // Reset allocations when account changes
+      setSelectedInvoices(new Set())
+      setAllocations({})
+      setSettlementMode('manual')
+    },
+    [onAccountSelect, onMemberSelect]
+  )
+
+  // AR Account clear handler
+  const handleAccountClear = useCallback(() => {
+    onAccountClear?.()
+    onMemberClear?.()
+    setSelectedInvoices(new Set())
+    setAllocations({})
+    setSettlementMode('manual')
+  }, [onAccountClear, onMemberClear])
+
+  // Debounced member search (deprecated, kept for backwards compatibility)
   const handleMemberSearchChange = useCallback(
     (value: string) => {
       setMemberSearchQuery(value)
@@ -274,13 +420,17 @@ export function ReceiptForm({
       whtRate,
       whtCertificateNumber,
       whtCertificateDate,
-      memberId: selectedMember?.id || null,
+      memberId: activeAccount?.accountType === 'MEMBER' ? activeAccount.id : null,
+      cityLedgerId: activeAccount?.accountType === 'CITY_LEDGER' ? activeAccount.id : null,
+      accountType: activeAccount?.accountType || null,
       allocations,
+      settlementMode,
     }
     onSubmit?.(formData)
   }
 
-  const isValid = cashAmount > 0 && selectedMember && totalAllocated > 0
+  // Validation: need amount, account, and either allocations or credit mode
+  const isValid = cashAmount > 0 && activeAccount && (totalAllocated > 0 || creditToAdd > 0)
 
   return (
     <div className={cn('flex flex-col gap-6', className)}>
@@ -513,63 +663,115 @@ export function ReceiptForm({
         )}
       </section>
 
-      {/* Section 3: Member Selection */}
+      {/* Section 3: Account Selection */}
       <section className="rounded-xl border border bg-card p-4 sm:p-6">
-        <h2 className="mb-4 text-base sm:text-lg font-semibold text-foreground">Member</h2>
-        {selectedMember ? (
-          <div className="space-y-3">
-            <MemberSelectionCard
-              member={selectedMember}
-              onApplyCredit={onApplyCredit}
-            />
-            <button
-              onClick={handleMemberClear}
-              className="text-sm text-amber-600 hover:underline"
-            >
-              Change member
-            </button>
-          </div>
-        ) : (
-          <div className="relative">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={memberSearchQuery}
-                onChange={(e) => handleMemberSearchChange(e.target.value)}
-                placeholder="Search by name, member #, or phone"
-                className="pl-9"
-              />
-              {isSearching && (
-                <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
-              )}
-            </div>
-            {showSearchResults && memberSearchResults.length > 0 && (
-              <div className="absolute z-10 mt-1 w-full rounded-lg border border bg-card shadow-lg">
-                {memberSearchResults.map((result) => (
-                  <button
-                    key={result.id}
-                    onClick={() => handleMemberSelect(result.id)}
-                    className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-muted"
-                  >
-                    <div className="h-8 w-8 rounded-full bg-muted" />
-                    <div>
-                      <div className="font-medium text-foreground">{result.name}</div>
-                      <div className="text-sm text-muted-foreground">{result.memberNumber}</div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+        <h2 className="mb-4 text-base sm:text-lg font-semibold text-foreground">Account</h2>
+        <ArAccountSearch
+          selectedAccount={activeAccount}
+          searchResults={arSearchResults.length > 0 ? arSearchResults : memberSearchResults.map(m => ({
+            id: m.id,
+            accountType: 'MEMBER' as ArAccountType,
+            accountNumber: m.memberNumber,
+            accountName: m.name,
+            subType: m.membershipType,
+            outstandingBalance: 0,
+            creditBalance: m.creditBalance,
+            invoiceCount: 0,
+            agingStatus: m.agingStatus,
+            photoUrl: m.photoUrl,
+          }))}
+          onSelect={handleAccountSelect}
+          onClear={handleAccountClear}
+          onSearch={handleArAccountSearch}
+          isLoading={isSearching}
+          placeholder="Search members or accounts..."
+        />
       </section>
 
-      {/* Section 4: Invoice Allocation */}
-      {selectedMember && (
+      {/* Section 4: Settlement Mode */}
+      {activeAccount && pendingInvoices.length > 0 && (
+        <section className="rounded-xl border border bg-card p-4 sm:p-6">
+          <h2 className="mb-4 text-base sm:text-lg font-semibold text-foreground">Settlement Mode</h2>
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              type="button"
+              onClick={() => handleSettlementModeChange('manual')}
+              className={cn(
+                'flex flex-col items-center gap-2 rounded-lg border px-4 py-3 transition-colors',
+                settlementMode === 'manual'
+                  ? 'border-amber-500 bg-amber-50 text-amber-700'
+                  : 'border hover:border-border'
+              )}
+            >
+              <List className="h-5 w-5" />
+              <span className="text-sm font-medium">Manual</span>
+              <span className="text-xs text-muted-foreground text-center">Select invoices</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSettlementModeChange('fifo')}
+              className={cn(
+                'flex flex-col items-center gap-2 rounded-lg border px-4 py-3 transition-colors',
+                settlementMode === 'fifo'
+                  ? 'border-amber-500 bg-amber-50 text-amber-700'
+                  : 'border hover:border-border'
+              )}
+            >
+              <Zap className="h-5 w-5" />
+              <span className="text-sm font-medium">FIFO</span>
+              <span className="text-xs text-muted-foreground text-center">Auto oldest first</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSettlementModeChange('full')}
+              className={cn(
+                'flex flex-col items-center gap-2 rounded-lg border px-4 py-3 transition-colors',
+                settlementMode === 'full'
+                  ? 'border-amber-500 bg-amber-50 text-amber-700'
+                  : 'border hover:border-border'
+              )}
+            >
+              <CreditCard className="h-5 w-5" />
+              <span className="text-sm font-medium">Full</span>
+              <span className="text-xs text-muted-foreground text-center">Settle all</span>
+            </button>
+          </div>
+          {settlementMode === 'fifo' && fifoAllocations && (
+            <div className="mt-4 rounded-lg bg-amber-50 p-3">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-amber-700">FIFO Preview:</span>
+                <span className="font-medium text-amber-900">
+                  ฿{new Intl.NumberFormat('th-TH').format(fifoAllocations.totalAllocated)} allocated
+                  {fifoAllocations.creditToAdd > 0 && (
+                    <>, ฿{new Intl.NumberFormat('th-TH').format(fifoAllocations.creditToAdd)} to credit</>
+                  )}
+                </span>
+              </div>
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* Section 5: Invoice Allocation */}
+      {activeAccount && (
         <section className="rounded-xl border border bg-card">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border p-3 sm:p-4">
             <h2 className="text-base sm:text-lg font-semibold text-foreground">Invoice Allocation</h2>
-            <span className="text-xs sm:text-sm text-muted-foreground">Oldest invoices selected first (FIFO)</span>
+            <div className="flex items-center gap-2">
+              {settlementMode === 'manual' && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={applyFifoAllocations}
+                  disabled={!totalSettlement || pendingInvoices.length === 0}
+                  className="text-xs"
+                >
+                  <Zap className="mr-1 h-3 w-3" />
+                  Apply FIFO
+                </Button>
+              )}
+              <span className="text-xs sm:text-sm text-muted-foreground">Oldest invoices first</span>
+            </div>
           </div>
           {isLoadingInvoices ? (
             <div className="flex items-center justify-center py-12">
@@ -577,7 +779,7 @@ export function ReceiptForm({
             </div>
           ) : pendingInvoices.length === 0 ? (
             <div className="py-12 text-center text-muted-foreground">
-              No pending invoices for this member
+              No pending invoices for this account
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -637,7 +839,7 @@ export function ReceiptForm({
         </section>
       )}
 
-      {/* Section 5: Settlement Summary (Sticky) */}
+      {/* Section 6: Settlement Summary (Sticky) */}
       <div className="sticky bottom-4">
         <SettlementSummary data={settlementData} />
       </div>

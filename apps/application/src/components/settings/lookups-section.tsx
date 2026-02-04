@@ -23,6 +23,8 @@ import {
   mockPaymentMethodLookups,
 } from './mock-data'
 import type { LookupTab, MembershipType, ContractTemplate, LookupValue } from './types'
+import { useInterestCategories, useEngagementMutations } from '@/hooks/use-engagement'
+import type { InterestCategory } from '@/components/members/engagement/types'
 
 interface LookupsSectionProps {
   id: string
@@ -34,12 +36,16 @@ const tabs: Array<{ id: LookupTab; label: string }> = [
   { id: 'member-lookups', label: 'Member Lookups' },
   { id: 'billing-lookups', label: 'Billing Lookups' },
   { id: 'facility-types', label: 'Facility Types' },
+  { id: 'interest-categories', label: 'Interest Categories' },
 ]
 
 export function LookupsSection({ id }: LookupsSectionProps) {
   const [activeTab, setActiveTab] = useState<LookupTab>('membership-types')
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [editingItem, setEditingItem] = useState<MembershipType | ContractTemplate | LookupValue | null>(null)
+  const [editingItem, setEditingItem] = useState<MembershipType | ContractTemplate | LookupValue | InterestCategory | null>(null)
+
+  // Interest categories data
+  const { categories: interestCategories, isLoading: categoriesLoading } = useInterestCategories({ isActive: undefined })
 
   const handleAdd = () => {
     setEditingItem(null)
@@ -178,6 +184,76 @@ export function LookupsSection({ id }: LookupsSectionProps) {
         return (
           <div className="text-center py-12 text-muted-foreground">
             Facility types configuration coming soon
+          </div>
+        )
+
+      case 'interest-categories':
+        if (categoriesLoading) {
+          return (
+            <div className="text-center py-12 text-muted-foreground">
+              Loading interest categories...
+            </div>
+          )
+        }
+        return (
+          <div className="border rounded-lg overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-muted/50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Code</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Name</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Icon</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Color</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Status</th>
+                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {interestCategories?.map((category: InterestCategory) => (
+                  <tr key={category.id} className="border-t hover:bg-muted/30">
+                    <td className="px-4 py-3 font-mono text-sm">{category.code}</td>
+                    <td className="px-4 py-3 font-medium">{category.name}</td>
+                    <td className="px-4 py-3 text-sm text-muted-foreground">{category.icon || '-'}</td>
+                    <td className="px-4 py-3">
+                      {category.color ? (
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-4 h-4 rounded-full border"
+                            style={{ backgroundColor: category.color }}
+                          />
+                          <span className="text-sm font-mono">{category.color}</span>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <Badge
+                        variant={category.isActive ? 'default' : 'secondary'}
+                        className={category.isActive ? 'bg-emerald-500' : ''}
+                      >
+                        {category.isActive ? 'Active' : 'Inactive'}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <Button variant="ghost" size="sm" onClick={() => handleEdit(category as any)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm" className="text-red-600">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+                {(!interestCategories || interestCategories.length === 0) && (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
+                      No interest categories configured. Click Add to create one.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         )
     }

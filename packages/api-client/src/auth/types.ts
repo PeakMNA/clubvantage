@@ -62,4 +62,8 @@ export interface AuthContextValue extends AuthState {
   signOut: () => Promise<void>;
   refreshSession: () => Promise<void>;
   checkSession: () => Promise<AuthUser | null>;
+  /** Extend the session - resets inactivity timer and refreshes tokens */
+  extendSession: () => Promise<void>;
+  /** Get milliseconds until session timeout due to inactivity */
+  getTimeUntilTimeout: () => number;
 }

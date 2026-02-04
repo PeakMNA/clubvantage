@@ -1,10 +1,12 @@
 'use client'
 
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import {
   POSProductPanel,
   POSLineItemPanel,
   POSReceiptTotals,
+  POSActionBar,
+  POSToolbar,
   Button,
   type POSProduct,
   type POSCategory,
@@ -14,6 +16,10 @@ import {
   type ProductVariant,
   type SelectedModifier,
   type LineItem,
+  type ActionBarConfig,
+  type ActionBarButton,
+  type ButtonDefinition,
+  type ButtonState,
 } from '@clubvantage/ui'
 import {
   Store,
@@ -22,9 +28,14 @@ import {
   ChevronDown,
   Trash2,
   CreditCard,
-  User,
+  Users,
+  UserCheck,
+  Calendar,
+  RefreshCw,
+  Loader2,
 } from 'lucide-react'
 import { cn } from '@clubvantage/ui'
+import { useGetPosConfigQuery, useGetPosOutletsQuery } from '@clubvantage/api-client'
 
 // ============================================================================
 // Types
@@ -47,11 +58,35 @@ interface Outlet {
   name: string
 }
 
+// Template configuration types (from template editor)
+interface ToolbarGroup {
+  id: string
+  label: string
+  zone: 'left' | 'center' | 'right'
+  items: string[]
+}
+
+interface TemplateToolbarConfig {
+  groups: ToolbarGroup[]
+}
+
+interface TemplateActionButton {
+  id: string
+  label: string
+  actionType: string
+  variant: 'primary' | 'secondary' | 'danger' | 'ghost'
+  position: 'left' | 'center' | 'right'
+}
+
+interface TemplateActionBarConfig {
+  buttons: TemplateActionButton[]
+}
+
 // ============================================================================
-// Mock Data
+// Fallback Data (used when API data is not available)
 // ============================================================================
 
-const mockOutlets: Outlet[] = [
+const fallbackOutlets: Outlet[] = [
   { id: 'outlet-1', name: 'Clubhouse Restaurant' },
   { id: 'outlet-2', name: 'Poolside Bar' },
   { id: 'outlet-3', name: 'Pro Shop' },
@@ -431,6 +466,137 @@ const mockProducts: POSProduct[] = [
   },
 ]
 
+// ============================================================================
+// Template Configurations (would come from API/database in production)
+// ============================================================================
+
+// F&B Template - includes table operations
+// Note: categoryTabs removed since category tabs are in the product panel
+const defaultTemplateToolbarConfig: TemplateToolbarConfig = {
+  groups: [
+    { id: 'table-group', label: 'Table Operations', zone: 'left', items: ['openTable', 'floorPlan', 'search'] },
+    { id: 'member-group', label: 'Member', zone: 'center', items: ['memberLookup', 'attachMember', 'chargeToMember'] },
+    { id: 'actions-group', label: 'Table & Ticket', zone: 'right', items: ['splitCheck', 'mergeTables', 'transferTable', 'holdTicket', 'newTicket'] },
+  ],
+}
+
+const defaultTemplateActionBarConfig: TemplateActionBarConfig = {
+  buttons: [
+    { id: 'cancel', label: 'Cancel', actionType: 'CANCEL_TRANSACTION', variant: 'danger', position: 'left' },
+    { id: 'void', label: 'Void', actionType: 'VOID_ITEM', variant: 'ghost', position: 'left' },
+    { id: 'discount', label: 'Discount', actionType: 'APPLY_DISCOUNT', variant: 'secondary', position: 'center' },
+    { id: 'hold', label: 'Hold', actionType: 'HOLD_TICKET', variant: 'secondary', position: 'center' },
+    { id: 'print', label: 'Print', actionType: 'PRINT_RECEIPT', variant: 'ghost', position: 'center' },
+    { id: 'cash', label: 'Cash', actionType: 'PROCESS_CASH_PAYMENT', variant: 'secondary', position: 'right' },
+    { id: 'card', label: 'Card', actionType: 'PROCESS_CARD_PAYMENT', variant: 'secondary', position: 'right' },
+    { id: 'pay', label: 'Pay', actionType: 'OPEN_PAYMENT_MODAL', variant: 'primary', position: 'right' },
+  ],
+}
+
+// ============================================================================
+// Config Converter Functions
+// ============================================================================
+
+// Convert template toolbar config to POSToolbar format
+function convertToolbarConfig(templateConfig: TemplateToolbarConfig) {
+  const zones: { left: string[]; center: string[]; right: string[] } = {
+    left: [],
+    center: [],
+    right: [],
+  }
+
+  for (const group of templateConfig.groups) {
+    zones[group.zone].push(...group.items)
+  }
+
+  return { zones }
+}
+
+// Map action type to icon
+const actionTypeToIcon: Record<string, string> = {
+  CANCEL_TRANSACTION: 'X',
+  VOID_ITEM: 'Ban',
+  VOID_TRANSACTION: 'Trash2',
+  APPLY_DISCOUNT: 'Percent',
+  HOLD_TICKET: 'Pause',
+  RECALL_TICKET: 'Play',
+  PRINT_RECEIPT: 'Printer',
+  OPEN_DRAWER: 'Archive',
+  PRICE_CHECK: 'Search',
+  OPEN_PAYMENT_MODAL: 'CreditCard',
+  PROCESS_CASH_PAYMENT: 'Banknote',
+  PROCESS_CARD_PAYMENT: 'CreditCard',
+  CHARGE_TO_MEMBER: 'UserCheck',
+  SPLIT_PAYMENT: 'Split',
+  MEMBER_LOOKUP: 'Users',
+  ATTACH_MEMBER: 'UserPlus',
+  DETACH_MEMBER: 'UserMinus',
+  NEW_TICKET: 'Plus',
+  CHANGE_QUANTITY: 'Hash',
+  CUSTOM: 'Settings',
+}
+
+// Map variant to color
+const variantToColor: Record<string, string> = {
+  primary: 'primary',
+  secondary: 'neutral',
+  danger: 'danger',
+  ghost: 'neutral',
+}
+
+// Convert template action bar config to POSActionBar format
+function convertActionBarConfig(templateConfig: TemplateActionBarConfig): {
+  actionBarConfig: ActionBarConfig
+  buttonRegistry: Record<string, ButtonDefinition>
+} {
+  const leftButtons = templateConfig.buttons.filter(b => b.position === 'left')
+  const centerButtons = templateConfig.buttons.filter(b => b.position === 'center')
+  const rightButtons = templateConfig.buttons.filter(b => b.position === 'right')
+
+  // Calculate total buttons per position and determine grid layout
+  const maxButtons = Math.max(leftButtons.length, centerButtons.length, rightButtons.length, 3)
+  const columns = maxButtons * 3 // 3 positions, each can have maxButtons
+  const rows = 1
+
+  // Create button positions
+  const buttons: ActionBarButton[] = []
+
+  // Left buttons start at column 0
+  leftButtons.forEach((btn, idx) => {
+    buttons.push({ position: [0, idx], buttonId: btn.id })
+  })
+
+  // Center buttons start in the middle
+  const centerStart = maxButtons
+  centerButtons.forEach((btn, idx) => {
+    buttons.push({ position: [0, centerStart + idx], buttonId: btn.id })
+  })
+
+  // Right buttons start towards the end
+  const rightStart = maxButtons * 2
+  rightButtons.forEach((btn, idx) => {
+    buttons.push({ position: [0, rightStart + idx], buttonId: btn.id })
+  })
+
+  // Create button registry
+  const buttonRegistry: Record<string, ButtonDefinition> = {}
+  templateConfig.buttons.forEach(btn => {
+    buttonRegistry[btn.id] = {
+      id: btn.id,
+      label: btn.label,
+      icon: actionTypeToIcon[btn.actionType] || 'Circle',
+      color: variantToColor[btn.variant] || 'neutral',
+      shortcut: btn.actionType === 'OPEN_PAYMENT_MODAL' ? 'F12' :
+                btn.actionType === 'CANCEL_TRANSACTION' ? 'Esc' : undefined,
+    }
+  })
+
+  return {
+    actionBarConfig: { rows, columns, buttons },
+    buttonRegistry,
+  }
+}
+
 // Quick keys - first 8 popular items
 const mockQuickKeys: QuickKeyProduct[] = mockProducts.slice(0, 8).map((p) => ({
   id: p.id,
@@ -496,12 +662,103 @@ function getCartItemKey(
 export default function POSSalesPage() {
   // State
   const [cart, setCart] = useState<CartItem[]>([])
-  const [selectedOutletId, setSelectedOutletId] = useState<string>('outlet-1')
+  const [selectedOutletId, setSelectedOutletId] = useState<string | null>(null)
   const [isOutletDropdownOpen, setIsOutletDropdownOpen] = useState(false)
   const [isSuggestionsRefreshing, setIsSuggestionsRefreshing] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [activeCategory, setActiveCategory] = useState<string | undefined>(undefined)
+
+  // Fetch outlets from API
+  const { data: outletsData, isLoading: isLoadingOutlets } = useGetPosOutletsQuery({})
+  const outlets: Outlet[] = useMemo(() => {
+    if (outletsData?.posOutlets && outletsData.posOutlets.length > 0) {
+      return outletsData.posOutlets.map((o) => ({ id: o.id, name: o.name }))
+    }
+    return fallbackOutlets
+  }, [outletsData])
+
+  // Set default outlet when outlets are loaded
+  useEffect(() => {
+    if (outlets.length > 0 && selectedOutletId === null) {
+      setSelectedOutletId(outlets[0]!.id)
+    }
+  }, [outlets, selectedOutletId])
+
+  // Fetch POS config for selected outlet
+  const { data: posConfigData, isLoading: isLoadingConfig } = useGetPosConfigQuery(
+    {
+      outletId: selectedOutletId || '',
+      userRole: 'staff', // TODO: Get from user context
+      userPermissions: [],
+    },
+    {
+      enabled: !!selectedOutletId, // Only fetch when outlet is selected
+    }
+  )
 
   // Get the selected outlet
-  const selectedOutlet = mockOutlets.find((o) => o.id === selectedOutletId)
+  const selectedOutlet = outlets.find((o) => o.id === selectedOutletId)
+
+  // Parse and use API config, or fall back to defaults
+  // Note: Template page stores toolbarGroups and actionButtons inside toolbarConfig JSON
+  const templateToolbarConfig: TemplateToolbarConfig = useMemo(() => {
+    if (posConfigData?.posConfig?.toolbarConfig) {
+      const config = posConfigData.posConfig.toolbarConfig as any
+      // toolbarGroups is stored inside toolbarConfig
+      if (config.toolbarGroups && Array.isArray(config.toolbarGroups)) {
+        return { groups: config.toolbarGroups } as TemplateToolbarConfig
+      }
+      // Fallback: check for groups directly (alternate format)
+      if (config.groups && Array.isArray(config.groups)) {
+        return config as TemplateToolbarConfig
+      }
+    }
+    return defaultTemplateToolbarConfig
+  }, [posConfigData])
+
+  const templateActionBarConfig: TemplateActionBarConfig = useMemo(() => {
+    // First check toolbarConfig for actionButtons (where template page stores them)
+    if (posConfigData?.posConfig?.toolbarConfig) {
+      const config = posConfigData.posConfig.toolbarConfig as any
+      if (config.actionButtons && Array.isArray(config.actionButtons)) {
+        return { buttons: config.actionButtons } as TemplateActionBarConfig
+      }
+    }
+    // Then check actionBarConfig directly
+    if (posConfigData?.posConfig?.actionBarConfig) {
+      const config = posConfigData.posConfig.actionBarConfig as any
+      if (config.buttons && Array.isArray(config.buttons)) {
+        return config as TemplateActionBarConfig
+      }
+    }
+    return defaultTemplateActionBarConfig
+  }, [posConfigData])
+
+  // Convert template configs to component-compatible formats
+  const toolbarConfig = useMemo(() => {
+    return convertToolbarConfig(templateToolbarConfig)
+  }, [templateToolbarConfig])
+
+  const { actionBarConfig: convertedActionBarConfig, buttonRegistry: convertedButtonRegistry } = useMemo(() => {
+    return convertActionBarConfig(templateActionBarConfig)
+  }, [templateActionBarConfig])
+
+  // Create button states based on cart state
+  const buttonStates = useMemo(() => {
+    const hasItems = cart.length > 0
+    return new Map<string, ButtonState>(
+      Object.keys(convertedButtonRegistry).map(id => [
+        id,
+        {
+          visible: true,
+          enabled: id === 'pay' || id === 'cash' || id === 'card' || id === 'void' || id === 'cancel'
+            ? hasItems
+            : true,
+          requiresApproval: false,
+        },
+      ])
+    )
+  }, [cart.length, convertedButtonRegistry])
 
   // Calculate totals
   const { subtotal, tax, total } = useMemo(() => {
@@ -627,6 +884,139 @@ export default function POSSalesPage() {
     alert(`Payment of ${formatCurrency(total)} would be processed here.`)
   }, [cart, subtotal, tax, total])
 
+  // Handle action bar button click
+  const handleActionBarClick = useCallback((buttonId: string) => {
+    console.log('Action bar button clicked:', buttonId)
+    switch (buttonId) {
+      case 'cancel':
+        handleClearCart()
+        break
+      case 'pay':
+      case 'cash':
+      case 'card':
+        handlePay()
+        break
+      case 'void':
+        // TODO: Implement void item
+        alert('Void item - select an item to void')
+        break
+      case 'discount':
+        // TODO: Implement discount
+        alert('Discount - apply discount to order')
+        break
+      case 'hold':
+        // TODO: Implement hold order
+        alert('Hold - order placed on hold')
+        break
+      case 'member':
+        // TODO: Implement member lookup
+        alert('Member lookup')
+        break
+      case 'print':
+        // TODO: Implement print receipt
+        alert('Print receipt')
+        break
+      case 'priceCheck':
+        // TODO: Implement price check
+        alert('Price check mode')
+        break
+      default:
+        console.log('Unknown action:', buttonId)
+    }
+  }, [handleClearCart, handlePay])
+
+  // Toolbar callbacks
+  const handleSearch = useCallback((query: string) => {
+    setSearchQuery(query)
+    // TODO: Filter products based on search query
+    console.log('Searching for:', query)
+  }, [])
+
+  const handleMemberLookup = useCallback(() => {
+    // TODO: Open member lookup modal
+    console.log('Member lookup clicked')
+    alert('Member lookup - search for a member')
+  }, [])
+
+  const handleCategoryChange = useCallback((categoryId: string) => {
+    setActiveCategory(categoryId)
+    console.log('Category changed to:', categoryId)
+  }, [])
+
+  const handleNewTicket = useCallback(() => {
+    // TODO: Create new ticket
+    console.log('New ticket clicked')
+    handleClearCart()
+  }, [handleClearCart])
+
+  const handleHoldTicket = useCallback(() => {
+    // TODO: Hold current ticket
+    console.log('Hold ticket clicked')
+    alert('Ticket placed on hold')
+  }, [])
+
+  // F&B Table Operation Callbacks
+  const handleOpenTable = useCallback(() => {
+    // TODO: Open table selection modal
+    console.log('Open table clicked')
+    alert('Open Table - Select a table to take orders')
+  }, [])
+
+  const handleFloorPlan = useCallback(() => {
+    // TODO: Open floor plan view
+    console.log('Floor plan clicked')
+    alert('Floor Plan - View restaurant table layout')
+  }, [])
+
+  const handleTransferTable = useCallback(() => {
+    // TODO: Open transfer table modal
+    console.log('Transfer table clicked')
+    alert('Transfer Table - Move order to another table')
+  }, [])
+
+  const handleMergeTables = useCallback(() => {
+    // TODO: Open merge tables modal
+    console.log('Merge tables clicked')
+    alert('Merge Tables - Combine multiple tables into one check')
+  }, [])
+
+  const handleSplitCheck = useCallback(() => {
+    // TODO: Open split check modal
+    console.log('Split check clicked')
+    alert('Split Check - Divide order into separate checks')
+  }, [])
+
+  const handleTableStatus = useCallback(() => {
+    // TODO: Open table status modal
+    console.log('Table status clicked')
+    alert('Table Status - View/change table status (available, occupied, reserved)')
+  }, [])
+
+  // Member Operation Callbacks
+  const handleAttachMember = useCallback(() => {
+    // TODO: Open attach member modal
+    console.log('Attach member clicked')
+    alert('Attach Member - Link a member to this order')
+  }, [])
+
+  const handleDetachMember = useCallback(() => {
+    // TODO: Detach member from order
+    console.log('Detach member clicked')
+    alert('Detach Member - Remove member from this order')
+  }, [])
+
+  const handleMemberInfo = useCallback(() => {
+    // TODO: Show member info panel
+    console.log('Member info clicked')
+    alert('Member Info - View attached member details')
+  }, [])
+
+  const handleChargeToMember = useCallback(() => {
+    // TODO: Open charge to member modal
+    console.log('Charge to member clicked')
+    alert('Charge to Member - Bill this order to member account')
+  }, [])
+
   // Convert cart items to line items for POSLineItemPanel
   const lineItems: LineItem[] = cart.map((item) => {
     // Build the display name with variant and modifiers
@@ -646,93 +1036,188 @@ export default function POSSalesPage() {
   })
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] bg-stone-100 -m-4 md:-m-6">
+    <div className="flex flex-col h-full bg-stone-100 overflow-hidden">
       {/* POS Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-stone-200 shadow-sm">
-        {/* Left: Outlet Selector */}
-        <div className="flex items-center gap-4">
+      <div className="flex-shrink-0 bg-white border-b border-stone-200 shadow-sm">
+        {/* Top row: Date, Time, Outlet, Stats */}
+        <div className="flex items-center justify-between px-4 py-2 border-b border-stone-100">
+          {/* Left: Date & Time */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-stone-700">
+              <Calendar className="h-4 w-4 text-stone-500" />
+              <span className="font-medium">
+                {new Date().toLocaleDateString('en-US', {
+                  weekday: 'short',
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric',
+                })}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-stone-700">
+              <Clock className="h-4 w-4 text-stone-500" />
+              <span className="font-medium tabular-nums">
+                {new Date().toLocaleTimeString([], {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </span>
+            </div>
+          </div>
+
+          {/* Center: Outlet Selector */}
           <div className="relative">
             <button
               type="button"
               onClick={() => setIsOutletDropdownOpen(!isOutletDropdownOpen)}
-              className="flex items-center gap-2 px-3 py-2 bg-stone-100 hover:bg-stone-200 rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-colors"
+              disabled={isLoadingOutlets}
             >
-              <Store className="h-4 w-4 text-stone-600" />
-              <span className="font-medium text-stone-900">
-                {selectedOutlet?.name || 'Select Outlet'}
+              <Store className="h-4 w-4 text-amber-600" />
+              <span className="font-semibold text-amber-900">
+                {isLoadingOutlets ? 'Loading...' : (selectedOutlet?.name || 'Select Outlet')}
               </span>
+              {isLoadingConfig && selectedOutletId && (
+                <Loader2 className="h-4 w-4 text-amber-600 animate-spin" />
+              )}
               <ChevronDown
                 className={cn(
-                  'h-4 w-4 text-stone-500 transition-transform',
+                  'h-4 w-4 text-amber-600 transition-transform',
                   isOutletDropdownOpen && 'rotate-180'
                 )}
               />
             </button>
 
             {isOutletDropdownOpen && (
-              <div className="absolute top-full left-0 mt-1 z-50 min-w-[200px] bg-white border border-stone-200 rounded-lg shadow-lg py-1">
-                {mockOutlets.map((outlet) => (
-                  <button
-                    key={outlet.id}
-                    type="button"
-                    onClick={() => {
-                      setSelectedOutletId(outlet.id)
-                      setIsOutletDropdownOpen(false)
-                    }}
-                    className={cn(
-                      'w-full px-3 py-2 text-left text-sm hover:bg-stone-50 transition-colors',
-                      outlet.id === selectedOutletId &&
-                        'bg-amber-50 text-amber-700 font-medium'
-                    )}
-                  >
-                    {outlet.name}
-                  </button>
-                ))}
+              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 z-50 min-w-[220px] bg-white border border-stone-200 rounded-lg shadow-lg py-1">
+                {isLoadingOutlets ? (
+                  <div className="px-4 py-2 text-sm text-stone-500 flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading outlets...
+                  </div>
+                ) : (
+                  outlets.map((outlet) => (
+                    <button
+                      key={outlet.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedOutletId(outlet.id)
+                        setIsOutletDropdownOpen(false)
+                      }}
+                      className={cn(
+                        'w-full px-4 py-2 text-left text-sm hover:bg-stone-50 transition-colors',
+                        outlet.id === selectedOutletId &&
+                          'bg-amber-50 text-amber-700 font-medium'
+                      )}
+                    >
+                      {outlet.name}
+                    </button>
+                  ))
+                )}
               </div>
             )}
           </div>
 
-          {/* Session info */}
-          <div className="hidden md:flex items-center gap-2 text-sm text-stone-500">
-            <Clock className="h-4 w-4" />
-            <span>
-              {new Date().toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-            </span>
-            <span className="text-stone-300">|</span>
-            <span>Shift started: 8:00 AM</span>
+          {/* Right: Session Stats */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-lg">
+              <Users className="h-4 w-4 text-blue-600" />
+              <div className="text-sm">
+                <span className="font-semibold text-blue-900">3</span>
+                <span className="text-blue-600 ml-1">Servers</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 rounded-lg">
+              <UserCheck className="h-4 w-4 text-emerald-600" />
+              <div className="text-sm">
+                <span className="font-semibold text-emerald-900">24</span>
+                <span className="text-emerald-600 ml-1">Pax</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Right: Staff info and actions */}
-        <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-2">
-            <div className="h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center">
-              <User className="h-4 w-4 text-amber-600" />
+        {/* Bottom row: Server info and actions */}
+        <div className="flex items-center justify-between px-4 py-2">
+          {/* Left: Current Server */}
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-500 flex items-center justify-center text-white font-semibold">
+              SJ
             </div>
-            <div className="text-sm">
-              <p className="font-medium text-stone-900">Sarah Johnson</p>
-              <p className="text-xs text-stone-500">Server</p>
+            <div>
+              <p className="font-semibold text-stone-900">Sarah Johnson</p>
+              <p className="text-xs text-stone-500">Server • Shift started 8:00 AM</p>
             </div>
           </div>
 
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-2 text-stone-600 hover:text-red-600 hover:border-red-200"
-          >
-            <LogOut className="h-4 w-4" />
-            <span className="hidden sm:inline">End Shift</span>
-          </Button>
+          {/* Center: Quick stats */}
+          <div className="flex items-center gap-6 text-sm">
+            <div className="text-center">
+              <p className="text-stone-500">Tables</p>
+              <p className="font-semibold text-stone-900">4 / 8</p>
+            </div>
+            <div className="text-center">
+              <p className="text-stone-500">Orders</p>
+              <p className="font-semibold text-stone-900">12</p>
+            </div>
+            <div className="text-center">
+              <p className="text-stone-500">Sales</p>
+              <p className="font-semibold text-emerald-600">$847.50</p>
+            </div>
+          </div>
+
+          {/* Right: Actions */}
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Sync
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 hover:border-red-200"
+            >
+              <LogOut className="h-4 w-4" />
+              End Shift
+            </Button>
+          </div>
         </div>
       </div>
 
+      {/* Toolbar */}
+      <POSToolbar
+        toolbarConfig={toolbarConfig}
+        onSearch={handleSearch}
+        onMemberLookup={handleMemberLookup}
+        onCategoryChange={handleCategoryChange}
+        onNewTicket={handleNewTicket}
+        onHoldTicket={handleHoldTicket}
+        // F&B Table Operations
+        onOpenTable={handleOpenTable}
+        onFloorPlan={handleFloorPlan}
+        onTransferTable={handleTransferTable}
+        onMergeTables={handleMergeTables}
+        onSplitCheck={handleSplitCheck}
+        onTableStatus={handleTableStatus}
+        // Member Operations
+        onAttachMember={handleAttachMember}
+        onDetachMember={handleDetachMember}
+        onMemberInfo={handleMemberInfo}
+        onChargeToMember={handleChargeToMember}
+        categories={mockCategories.map(c => ({ id: c.id, name: c.name }))}
+        activeCategory={activeCategory}
+        searchQuery={searchQuery}
+        className="flex-shrink-0"
+      />
+
       {/* Main Content */}
-      <div className="flex flex-1 min-h-0 overflow-hidden">
+      <div className="flex flex-1 min-h-0 min-w-0 overflow-hidden">
         {/* Product Panel */}
-        <div className="flex-1 p-4 overflow-hidden">
+        <div className="flex-1 min-w-0 p-4 overflow-hidden">
           <POSProductPanel
             config={mockConfig}
             categories={mockCategories}
@@ -747,7 +1232,7 @@ export default function POSSalesPage() {
         </div>
 
         {/* Cart Sidebar */}
-        <div className="w-80 lg:w-96 bg-white border-l border-stone-200 flex flex-col">
+        <div className="w-80 lg:w-96 flex-shrink-0 bg-white border-l border-stone-200 flex flex-col overflow-hidden">
           {/* Cart Header */}
           <div className="px-4 py-3 border-b border-stone-200 bg-stone-50">
             <div className="flex items-center justify-between">
@@ -804,6 +1289,15 @@ export default function POSSalesPage() {
           </div>
         </div>
       </div>
+
+      {/* Action Bar at Bottom - Using converted template config */}
+      <POSActionBar
+        actionBarConfig={convertedActionBarConfig}
+        buttonStates={buttonStates}
+        buttonRegistry={convertedButtonRegistry}
+        onButtonClick={handleActionBarClick}
+        className="shrink-0"
+      />
     </div>
   )
 }

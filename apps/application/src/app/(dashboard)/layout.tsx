@@ -69,7 +69,7 @@ export default function DashboardLayout({
         />
       }
     >
-      <div className="page-enter">{children}</div>
+      <div className="page-enter h-full">{children}</div>
     </AppShell>
   );
 }

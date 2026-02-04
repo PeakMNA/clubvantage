@@ -1262,6 +1262,134 @@ For members with auto-pay checkout enabled:
 
 ---
 
+## Feature 8: Toolbar Configuration
+
+### Overview
+
+The POS toolbar uses a zone-based layout system for flexible customization. Toolbar items are organized into three zones (left, center, right) and configured through templates.
+
+### Zone Layout
+
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│  [LEFT ZONE]          │    [CENTER ZONE]         │    [RIGHT ZONE]       │
+│  Table Operations     │    Member Functions      │    Ticket Actions     │
+└──────────────────────────────────────────────────────────────────────────┘
+```
+
+### Available Toolbar Items
+
+| Category | ID | Label | Description |
+|----------|----|----|-------------|
+| General | `search` | Search | Global product/member search |
+| Member | `memberLookup` | Member Lookup | Open member search modal |
+| Member | `attachMember` | Attach Member | Attach member to ticket |
+| Member | `detachMember` | Detach Member | Remove member from ticket |
+| Member | `memberInfo` | Member Info | View attached member details |
+| Member | `chargeToMember` | Charge to Member | Charge ticket to member account |
+| Ticket | `holdTicket` | Hold Ticket | Hold current ticket for later |
+| Ticket | `newTicket` | New Ticket | Create a new ticket |
+| Ticket | `splitCheck` | Split Check | Split ticket across payments |
+| F&B | `openTable` | Open Table | Quick access to open a table |
+| F&B | `floorPlan` | Floor Plan | Visual floor plan view |
+| F&B | `transferTable` | Transfer Table | Transfer to another server |
+| F&B | `mergeTables` | Merge Tables | Combine multiple tables |
+
+### Default Configuration
+
+```typescript
+const defaultToolbarConfig = {
+  toolbarGroups: [
+    {
+      id: 'table-group',
+      label: 'Table Operations',
+      zone: 'left',
+      items: ['openTable', 'floorPlan', 'search']
+    },
+    {
+      id: 'member-group',
+      label: 'Member',
+      zone: 'center',
+      items: ['memberLookup', 'attachMember', 'chargeToMember']
+    },
+    {
+      id: 'actions-group',
+      label: 'Table & Ticket',
+      zone: 'right',
+      items: ['splitCheck', 'mergeTables', 'transferTable', 'holdTicket', 'newTicket']
+    }
+  ]
+};
+```
+
+### Template Editor Integration
+
+The Template Editor modal allows admins to:
+1. Select a zone (Left | Center | Right)
+2. Browse available items by category
+3. Drag-drop to arrange items within zones
+4. Save configuration to template
+
+---
+
+## Feature 9: Session Management
+
+### Activity-Based Timeout
+
+Instead of fixed token expiration, POS uses activity-based session timeout for security while maintaining usability during active work.
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| Inactivity Timeout | 15 min | Logout after no activity |
+| Check Interval | 1 min | How often to verify |
+| Warning | 2 min | When to show "Stay logged in?" |
+
+### Activity Events
+
+The following user events reset the inactivity timer:
+- Mouse clicks and movements
+- Keyboard input
+- Touch events
+- Scroll events
+
+Updates are throttled to once per second to minimize performance impact.
+
+### UX Flow: Session Warning
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ ⏱️ Session Expiring                                    [X]  │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│ Your session will expire in 1:45 due to inactivity.        │
+│                                                             │
+│ Any unsaved work will be lost.                              │
+│                                                             │
+│                          [Log Out]  [Stay Logged In]        │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Session Extension API
+
+```typescript
+interface AuthContextValue {
+  // Extend session - reset timer + refresh tokens
+  extendSession: () => Promise<void>;
+
+  // Get time remaining in milliseconds
+  getTimeUntilTimeout: () => number;
+}
+```
+
+### Tab Visibility Handling
+
+When browser tab becomes visible:
+1. Check session validity
+2. Refresh tokens if needed
+3. Show login if session expired
+
+---
+
 ## Summary
 
 | Feature | Priority | Complexity |
@@ -1273,12 +1401,16 @@ For members with auto-pay checkout enabled:
 | 5. Cash Drawer | Critical | Medium |
 | 6. EOD Settlement | Critical | High |
 | 7. Stored Payments | Medium | Medium |
+| 8. Toolbar Configuration | High | Low |
+| 9. Session Management | Critical | Low |
 
 **Recommended Implementation Order:**
 1. Discounts (foundational for all transactions)
 2. Credit Limits (simple, high value)
-3. Cash Drawer (required for POS operations)
-4. EOD Settlement (depends on cash drawer)
-5. Minimum Spend (month-end processing)
-6. Sub-Accounts (member experience)
-7. Stored Payments (convenience, requires payment provider integration)
+3. Session Management (security foundation)
+4. Toolbar Configuration (staff efficiency)
+5. Cash Drawer (required for POS operations)
+6. EOD Settlement (depends on cash drawer)
+7. Minimum Spend (month-end processing)
+8. Sub-Accounts (member experience)
+9. Stored Payments (convenience, requires payment provider integration)

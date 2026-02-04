@@ -789,10 +789,127 @@ function calculateSuggestions(
 
 ---
 
-## 9. Success Criteria
+## 9. Toolbar Configuration System
+
+### 9.1 Zone-Based Toolbar Layout
+
+The POS toolbar uses a three-zone layout system for flexible customization:
+
+| Zone | Purpose | Default Items |
+|------|---------|---------------|
+| Left | Table/floor operations | Open Table, Floor Plan, Search |
+| Center | Member interactions | Member Lookup, Attach Member, Charge to Member |
+| Right | Ticket management | Split Check, Merge Tables, Transfer, Hold Ticket, New Ticket |
+
+### 9.2 Available Toolbar Items
+
+**General:**
+- `search` - Global product/member search
+- `categoryTabs` - Category navigation (use only if not in product panel)
+
+**Member Operations:**
+- `memberLookup` - Open member search modal
+- `attachMember` - Attach member to current ticket
+- `detachMember` - Remove member from ticket
+- `memberInfo` - View attached member details
+- `chargeToMember` - Charge ticket to member account
+
+**Ticket Actions:**
+- `holdTicket` - Hold current ticket for later
+- `newTicket` - Create a new ticket
+- `splitCheck` - Split ticket across payments
+
+**F&B Table Operations:**
+- `openTable` - Quick access to open a table
+- `floorPlan` - Visual floor plan view
+- `transferTable` - Transfer table to another server
+- `mergeTables` - Combine multiple tables
+
+### 9.3 Template Toolbar Configuration
+
+Toolbar groups are stored in the template's `toolbarConfig` field:
+
+```typescript
+interface TemplateToolbarConfig {
+  toolbarGroups: ToolbarGroup[];
+}
+
+interface ToolbarGroup {
+  id: string;           // Unique group identifier
+  label: string;        // Display label for admin UI
+  zone: 'left' | 'center' | 'right';
+  items: string[];      // Array of item IDs
+}
+```
+
+### 9.4 API Integration
+
+```typescript
+// Fetch POS config including toolbar
+const { data } = useGetPosConfigQuery({
+  outletId: selectedOutletId,
+  userRole: 'staff',
+  userPermissions: []
+});
+
+// Parse toolbar config
+const toolbarConfig = data?.posConfig?.toolbarConfig;
+const toolbarGroups = toolbarConfig?.toolbarGroups || defaultGroups;
+```
+
+---
+
+## 10. Session Management
+
+### 10.1 Activity-Based Timeout
+
+POS sessions use activity-based timeout for security:
+
+| Setting | Default Value | Description |
+|---------|---------------|-------------|
+| Inactivity Timeout | 15 minutes | Time without activity before logout |
+| Activity Check Interval | 1 minute | How often to check for timeout |
+| Warning Before Logout | 2 minutes | When to show "Stay logged in?" prompt |
+
+### 10.2 Activity Events Tracked
+
+- Mouse clicks and movements
+- Keyboard input
+- Touch events
+- Scroll events
+
+Activity updates are throttled to once per second to minimize performance impact.
+
+### 10.3 Session Extension
+
+When the warning modal appears, users can:
+
+1. **Stay Logged In**: Resets timer and refreshes session tokens
+2. **Log Out**: Immediately ends session
+
+```typescript
+interface AuthContextValue {
+  extendSession: () => Promise<void>;      // Reset timer + refresh tokens
+  getTimeUntilTimeout: () => number;       // Milliseconds until timeout
+}
+```
+
+### 10.4 Visibility Change Handling
+
+When a browser tab becomes visible again:
+- Session validity is checked
+- Tokens are refreshed if needed
+- User is logged out if session has expired
+
+---
+
+## 11. Success Criteria
 
 1. **Performance**: Product grid loads in <500ms with 500+ products
 2. **Usability**: Staff can find any product in <3 seconds
 3. **Flexibility**: Managers can configure layouts without developer help
 4. **Accuracy**: Visibility rules apply correctly 100% of the time
 5. **Suggestions**: Smart suggestions show relevant items >70% of the time
+6. **Toolbar Customization**: Template changes reflect immediately on POS sales page
+7. **Session Security**: Activity-based timeout prevents unauthorized access
+8. **Member Operations**: All member functions accessible from toolbar center zone

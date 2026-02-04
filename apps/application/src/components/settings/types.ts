@@ -5,6 +5,7 @@ export type SettingsSection =
   | 'organization'
   | 'gl-mapping'
   | 'billing-defaults'
+  | 'billing-cycle'
   | 'localization'
   | 'notifications'
   | 'branding'
@@ -13,7 +14,7 @@ export type SettingsSection =
   | 'audit-trail'
 
 export type OrganizationTab = 'outlets' | 'revenue-centers' | 'cost-centers' | 'profit-centers'
-export type LookupTab = 'membership-types' | 'contract-templates' | 'member-lookups' | 'billing-lookups' | 'facility-types'
+export type LookupTab = 'membership-types' | 'contract-templates' | 'member-lookups' | 'billing-lookups' | 'facility-types' | 'interest-categories'
 
 export interface ClubProfile {
   clubName: string

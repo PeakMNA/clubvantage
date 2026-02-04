@@ -1902,6 +1902,12 @@ export type DeleteDependentResponseType = {
   message: Scalars['String']['output'];
 };
 
+export type DeleteDocumentResultType = {
+  __typename?: 'DeleteDocumentResultType';
+  message?: Maybe<Scalars['String']['output']>;
+  success: Scalars['Boolean']['output'];
+};
+
 export type DeleteMemberResponseType = {
   __typename?: 'DeleteMemberResponseType';
   message: Scalars['String']['output'];
@@ -2050,6 +2056,16 @@ export type DiscountValidityType = {
   validFrom?: Maybe<Scalars['DateTime']['output']>;
   validTo?: Maybe<Scalars['DateTime']['output']>;
 };
+
+/** Type of member document */
+export type DocumentType =
+  | 'CONTRACT'
+  | 'ID_DOCUMENT'
+  | 'MEDICAL_CERT'
+  | 'OTHER'
+  | 'PHOTO'
+  | 'PROOF_OF_ADDRESS'
+  | 'WAIVER';
 
 export type EffectiveScheduleType = {
   __typename?: 'EffectiveScheduleType';
@@ -3014,6 +3030,40 @@ export type MemberConnection = {
   totalCount: Scalars['Int']['output'];
 };
 
+export type MemberDocumentConnection = {
+  __typename?: 'MemberDocumentConnection';
+  edges: Array<MemberDocumentTypeEdge>;
+  pageInfo: PageInfo;
+  totalCount: Scalars['Int']['output'];
+};
+
+export type MemberDocumentType = {
+  __typename?: 'MemberDocumentType';
+  clubId: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  description?: Maybe<Scalars['String']['output']>;
+  expiryDate?: Maybe<Scalars['DateTime']['output']>;
+  fileName: Scalars['String']['output'];
+  fileSize?: Maybe<Scalars['Int']['output']>;
+  fileUrl: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  isVerified: Scalars['Boolean']['output'];
+  memberId: Scalars['String']['output'];
+  mimeType?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  type: DocumentType;
+  updatedAt: Scalars['DateTime']['output'];
+  uploadedBy: Scalars['String']['output'];
+  verifiedAt?: Maybe<Scalars['DateTime']['output']>;
+  verifiedBy?: Maybe<Scalars['String']['output']>;
+};
+
+export type MemberDocumentTypeEdge = {
+  __typename?: 'MemberDocumentTypeEdge';
+  cursor: Scalars['String']['output'];
+  node: MemberDocumentType;
+};
+
 /** Single interest entry for a member */
 export type MemberInterestInput = {
   categoryId: Scalars['ID']['input'];
@@ -3492,6 +3542,8 @@ export type Mutation = {
   deleteMember: DeleteMemberResponseType;
   /** Delete a member address */
   deleteMemberAddress: DeleteAddressResponseType;
+  /** Delete a member document (soft delete) */
+  deleteMemberDocument: DeleteDocumentResultType;
   /** Delete (deactivate) a minimum spend requirement */
   deleteMinimumSpendRequirement: MinimumSpendRequirement;
   /** Delete a POS template */
@@ -3692,6 +3744,8 @@ export type Mutation = {
   updateMemberCommunicationPrefs: MemberCommunicationPrefsType;
   /** Update credit limit settings for a member */
   updateMemberCreditSettings: Scalars['Boolean']['output'];
+  /** Update document metadata */
+  updateMemberDocument: MemberDocumentType;
   /** Update a minimum spend requirement */
   updateMinimumSpendRequirement: MinimumSpendRequirement;
   updateModifierGroup: ModifierGroup;
@@ -3744,10 +3798,14 @@ export type Mutation = {
   updateTimePeriod: TimePeriodMutationResponse;
   /** Update a waitlist entry */
   updateWaitlistEntry: WaitlistMutationResponse;
+  /** Upload a new document for a member */
+  uploadMemberDocument: UploadDocumentResultType;
   /** Create or update auto-pay settings */
   upsertAutoPaySetting: AutoPaySetting;
   /** Create or update a POS template */
   upsertPOSTemplate: UpsertTemplateMutationResponse;
+  /** Verify or unverify a member document */
+  verifyDocument: VerifyDocumentResultType;
   /** Verify a sub-account PIN */
   verifySubAccountPin: PinVerificationResult;
   /** Void a credit note */
@@ -4261,6 +4319,11 @@ export type MutationDeleteMemberArgs = {
 
 
 export type MutationDeleteMemberAddressArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteMemberDocumentArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -4803,6 +4866,12 @@ export type MutationUpdateMemberCreditSettingsArgs = {
 };
 
 
+export type MutationUpdateMemberDocumentArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateDocumentInput;
+};
+
+
 export type MutationUpdateMinimumSpendRequirementArgs = {
   input: UpdateRequirementInput;
 };
@@ -4967,6 +5036,11 @@ export type MutationUpdateWaitlistEntryArgs = {
 };
 
 
+export type MutationUploadMemberDocumentArgs = {
+  input: UploadDocumentInput;
+};
+
+
 export type MutationUpsertAutoPaySettingArgs = {
   input: AutoPaySettingInput;
 };
@@ -4975,6 +5049,11 @@ export type MutationUpsertAutoPaySettingArgs = {
 export type MutationUpsertPosTemplateArgs = {
   id?: InputMaybe<Scalars['ID']['input']>;
   input: PosTemplateInput;
+};
+
+
+export type MutationVerifyDocumentArgs = {
+  input: VerifyDocumentInput;
 };
 
 
@@ -5641,6 +5720,10 @@ export type Query = {
   discountByCode?: Maybe<DiscountGraphQlType>;
   /** Get all discounts for the current club with filtering and pagination */
   discounts: DiscountConnection;
+  /** Get a single document by ID */
+  document?: Maybe<MemberDocumentType>;
+  /** Get a signed URL for temporary document access */
+  documentSignedUrl: Scalars['String']['output'];
   equipment: Array<Equipment>;
   equipmentAvailability: Array<Equipment>;
   equipmentCategories: Array<EquipmentCategory>;
@@ -5714,6 +5797,8 @@ export type Query = {
   memberCreditStatus?: Maybe<CreditStatusType>;
   /** Get member dependents */
   memberDependents: Array<DependentType>;
+  /** Get all documents for a member with optional filtering */
+  memberDocuments: MemberDocumentConnection;
   /** Get all interests for a member */
   memberInterests: Array<MemberInterestType>;
   /** Get a member minimum spend record by ID */
@@ -6042,6 +6127,17 @@ export type QueryDiscountsArgs = {
 };
 
 
+export type QueryDocumentArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryDocumentSignedUrlArgs = {
+  expiresIn?: InputMaybe<Scalars['Int']['input']>;
+  id: Scalars['ID']['input'];
+};
+
+
 export type QueryEquipmentArgs = {
   filter?: InputMaybe<EquipmentFilterInput>;
 };
@@ -6259,6 +6355,17 @@ export type QueryMemberCreditStatusArgs = {
 
 export type QueryMemberDependentsArgs = {
   memberId: Scalars['ID']['input'];
+};
+
+
+export type QueryMemberDocumentsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  includeExpired?: InputMaybe<Scalars['Boolean']['input']>;
+  isVerified?: InputMaybe<Scalars['Boolean']['input']>;
+  memberId: Scalars['ID']['input'];
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  type?: InputMaybe<DocumentType>;
 };
 
 
@@ -7757,6 +7864,13 @@ export type UpdateDiscountInput = {
   value?: InputMaybe<Scalars['Float']['input']>;
 };
 
+export type UpdateDocumentInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  expiryDate?: InputMaybe<Scalars['DateTime']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  type?: InputMaybe<DocumentType>;
+};
+
 export type UpdateEquipmentCategoryInput = {
   attachmentType?: InputMaybe<EquipmentAttachmentType>;
   color?: InputMaybe<Scalars['String']['input']>;
@@ -8224,6 +8338,25 @@ export type UpdateWaitlistEntryInput = {
   timeRangeStart?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type UploadDocumentInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  expiryDate?: InputMaybe<Scalars['DateTime']['input']>;
+  fileName: Scalars['String']['input'];
+  fileSize?: InputMaybe<Scalars['Int']['input']>;
+  fileUrl: Scalars['String']['input'];
+  memberId: Scalars['ID']['input'];
+  mimeType?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+  type: DocumentType;
+};
+
+export type UploadDocumentResultType = {
+  __typename?: 'UploadDocumentResultType';
+  document?: Maybe<MemberDocumentType>;
+  message?: Maybe<Scalars['String']['output']>;
+  success: Scalars['Boolean']['output'];
+};
+
 export type UpsertTemplateMutationResponse = {
   __typename?: 'UpsertTemplateMutationResponse';
   message?: Maybe<Scalars['String']['output']>;
@@ -8237,6 +8370,18 @@ export type ValidateDiscountInput = {
   discountId?: InputMaybe<Scalars['ID']['input']>;
   membershipTypeId?: InputMaybe<Scalars['ID']['input']>;
   playerType?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type VerifyDocumentInput = {
+  documentId: Scalars['ID']['input'];
+  isVerified: Scalars['Boolean']['input'];
+};
+
+export type VerifyDocumentResultType = {
+  __typename?: 'VerifyDocumentResultType';
+  document?: Maybe<MemberDocumentType>;
+  message?: Maybe<Scalars['String']['output']>;
+  success: Scalars['Boolean']['output'];
 };
 
 export type VerifyPinInput = {
@@ -9012,6 +9157,62 @@ export type RemoveAppliedDiscountMutationVariables = Exact<{
 
 
 export type RemoveAppliedDiscountMutation = { __typename?: 'Mutation', removeAppliedDiscount: boolean };
+
+export type GetMemberDocumentsQueryVariables = Exact<{
+  memberId: Scalars['ID']['input'];
+  first?: InputMaybe<Scalars['Int']['input']>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  type?: InputMaybe<DocumentType>;
+  isVerified?: InputMaybe<Scalars['Boolean']['input']>;
+  includeExpired?: InputMaybe<Scalars['Boolean']['input']>;
+}>;
+
+
+export type GetMemberDocumentsQuery = { __typename?: 'Query', memberDocuments: { __typename?: 'MemberDocumentConnection', totalCount: number, edges: Array<{ __typename?: 'MemberDocumentTypeEdge', cursor: string, node: { __typename?: 'MemberDocumentType', id: string, clubId: string, memberId: string, name: string, type: DocumentType, fileName: string, fileUrl: string, fileSize?: number | null | undefined, mimeType?: string | null | undefined, description?: string | null | undefined, expiryDate?: string | null | undefined, isVerified: boolean, verifiedBy?: string | null | undefined, verifiedAt?: string | null | undefined, uploadedBy: string, createdAt: string, updatedAt: string } }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean, startCursor?: string | null | undefined, endCursor?: string | null | undefined } } };
+
+export type GetDocumentQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetDocumentQuery = { __typename?: 'Query', document?: { __typename?: 'MemberDocumentType', id: string, clubId: string, memberId: string, name: string, type: DocumentType, fileName: string, fileUrl: string, fileSize?: number | null | undefined, mimeType?: string | null | undefined, description?: string | null | undefined, expiryDate?: string | null | undefined, isVerified: boolean, verifiedBy?: string | null | undefined, verifiedAt?: string | null | undefined, uploadedBy: string, createdAt: string, updatedAt: string } | null | undefined };
+
+export type GetDocumentSignedUrlQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+  expiresIn?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type GetDocumentSignedUrlQuery = { __typename?: 'Query', documentSignedUrl: string };
+
+export type UploadMemberDocumentMutationVariables = Exact<{
+  input: UploadDocumentInput;
+}>;
+
+
+export type UploadMemberDocumentMutation = { __typename?: 'Mutation', uploadMemberDocument: { __typename?: 'UploadDocumentResultType', success: boolean, message?: string | null | undefined, document?: { __typename?: 'MemberDocumentType', id: string, clubId: string, memberId: string, name: string, type: DocumentType, fileName: string, fileUrl: string, fileSize?: number | null | undefined, mimeType?: string | null | undefined, description?: string | null | undefined, expiryDate?: string | null | undefined, isVerified: boolean, uploadedBy: string, createdAt: string, updatedAt: string } | null | undefined } };
+
+export type UpdateMemberDocumentMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  input: UpdateDocumentInput;
+}>;
+
+
+export type UpdateMemberDocumentMutation = { __typename?: 'Mutation', updateMemberDocument: { __typename?: 'MemberDocumentType', id: string, clubId: string, memberId: string, name: string, type: DocumentType, fileName: string, fileUrl: string, fileSize?: number | null | undefined, mimeType?: string | null | undefined, description?: string | null | undefined, expiryDate?: string | null | undefined, isVerified: boolean, verifiedBy?: string | null | undefined, verifiedAt?: string | null | undefined, uploadedBy: string, createdAt: string, updatedAt: string } };
+
+export type DeleteMemberDocumentMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type DeleteMemberDocumentMutation = { __typename?: 'Mutation', deleteMemberDocument: { __typename?: 'DeleteDocumentResultType', success: boolean, message?: string | null | undefined } };
+
+export type VerifyDocumentMutationVariables = Exact<{
+  input: VerifyDocumentInput;
+}>;
+
+
+export type VerifyDocumentMutation = { __typename?: 'Mutation', verifyDocument: { __typename?: 'VerifyDocumentResultType', success: boolean, message?: string | null | undefined, document?: { __typename?: 'MemberDocumentType', id: string, isVerified: boolean, verifiedBy?: string | null | undefined, verifiedAt?: string | null | undefined, updatedAt: string } | null | undefined } };
 
 export type GetTodaySettlementQueryVariables = Exact<{ [key: string]: never; }>;
 

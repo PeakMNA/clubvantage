@@ -1,0 +1,231 @@
+# Cash Drawer Queries
+
+query GetCashDrawers($activeOnly: Boolean) {
+  cashDrawers(activeOnly: $activeOnly) {
+    id
+    clubId
+    name
+    location
+    isActive
+    createdAt
+    updatedAt
+    currentShift {
+      id
+      status
+      openedAt
+      openedBy
+      openingFloat
+    }
+  }
+}
+
+query GetCashDrawer($id: ID!) {
+  cashDrawer(id: $id) {
+    id
+    clubId
+    name
+    location
+    isActive
+    createdAt
+    updatedAt
+    currentShift {
+      id
+      status
+      openedAt
+      openedBy
+      openingFloat
+      totalSales
+      totalRefunds
+      totalPaidIn
+      totalPaidOut
+      totalDrops
+    }
+  }
+}
+
+query GetCurrentShift($cashDrawerId: ID!) {
+  currentShift(cashDrawerId: $cashDrawerId) {
+    id
+    cashDrawerId
+    status
+    openedBy
+    openedAt
+    openingFloat
+    openingDenominations
+    totalSales
+    totalRefunds
+    totalPaidIn
+    totalPaidOut
+    totalDrops
+    createdAt
+  }
+}
+
+query GetCashDrawerShift($shiftId: ID!) {
+  cashDrawerShift(shiftId: $shiftId) {
+    id
+    cashDrawerId
+    status
+    openedBy
+    openedAt
+    openingFloat
+    openingDenominations
+    closedBy
+    closedAt
+    closingCount
+    closingDenominations
+    expectedCash
+    actualCash
+    variance
+    varianceNote
+    totalSales
+    totalRefunds
+    totalPaidIn
+    totalPaidOut
+    totalDrops
+    createdAt
+    movements {
+      id
+      type
+      amount
+      description
+      performedAt
+    }
+  }
+}
+
+query GetShiftSummary($shiftId: ID!) {
+  shiftSummary(shiftId: $shiftId) {
+    shiftId
+    status
+    openedAt
+    openedBy
+    closedAt
+    closedBy
+    openingFloat
+    closingCount
+    expectedCash
+    actualCash
+    variance
+    totalSales
+    totalRefunds
+    totalPaidIn
+    totalPaidOut
+    totalDrops
+    movementCount
+  }
+}
+
+query GetShiftHistory($cashDrawerId: ID!, $limit: Int) {
+  shiftHistory(cashDrawerId: $cashDrawerId, limit: $limit) {
+    id
+    status
+    openedAt
+    openedBy
+    closedAt
+    closedBy
+    openingFloat
+    closingCount
+    expectedCash
+    actualCash
+    variance
+    totalSales
+    totalRefunds
+  }
+}
+
+query GetShiftMovements($shiftId: ID!, $type: CashMovementType) {
+  shiftMovements(shiftId: $shiftId, type: $type) {
+    id
+    shiftId
+    type
+    amount
+    description
+    reference
+    reason
+    approvedBy
+    transactionId
+    performedBy
+    performedAt
+  }
+}
+
+# Cash Drawer Mutations
+
+mutation CreateCashDrawer($input: CreateCashDrawerInput!) {
+  createCashDrawer(input: $input) {
+    id
+    clubId
+    name
+    location
+    isActive
+    createdAt
+  }
+}
+
+mutation UpdateCashDrawer($input: UpdateCashDrawerInput!) {
+  updateCashDrawer(input: $input) {
+    id
+    name
+    location
+    isActive
+    updatedAt
+  }
+}
+
+mutation OpenShift($input: OpenShiftInput!) {
+  openShift(input: $input) {
+    id
+    cashDrawerId
+    status
+    openedBy
+    openedAt
+    openingFloat
+    openingDenominations
+  }
+}
+
+mutation CloseShift($input: CloseShiftInput!) {
+  closeShift(input: $input) {
+    id
+    status
+    closedBy
+    closedAt
+    closingCount
+    closingDenominations
+    expectedCash
+    actualCash
+    variance
+    varianceNote
+  }
+}
+
+mutation SuspendShift($shiftId: ID!) {
+  suspendShift(shiftId: $shiftId) {
+    id
+    status
+  }
+}
+
+mutation ResumeShift($shiftId: ID!) {
+  resumeShift(shiftId: $shiftId) {
+    id
+    status
+  }
+}
+
+mutation RecordCashMovement($input: RecordMovementInput!, $approvedBy: ID) {
+  recordCashMovement(input: $input, approvedBy: $approvedBy) {
+    id
+    shiftId
+    type
+    amount
+    description
+    reference
+    reason
+    approvedBy
+    transactionId
+    performedBy
+    performedAt
+  }
+}

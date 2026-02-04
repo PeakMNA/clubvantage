@@ -407,7 +407,7 @@ function RuleRow({ rule, index, onUpdate, onDelete }: RuleRowProps) {
 
   const handleTypeChange = useCallback((newType: VisibilityRuleType) => {
     const newConfig = RULE_TYPE_CONFIG[newType]
-    const defaultOperator = newConfig.operators[0].value
+    const defaultOperator = newConfig?.operators?.[0]?.value ?? 'IS'
     onUpdate({
       ...rule,
       type: newType,

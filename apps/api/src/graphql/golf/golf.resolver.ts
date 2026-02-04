@@ -1,5 +1,5 @@
 import { Resolver, Query, Mutation, Subscription, Args, ID } from '@nestjs/graphql';
-import { UseGuards, Inject } from '@nestjs/common';
+import { UseGuards, Inject, Logger } from '@nestjs/common';
 import { GolfService } from '@/modules/golf/golf.service';
 import { TeeTicketService } from '@/modules/golf/tee-ticket.service';
 import { PrismaService } from '@/shared/prisma/prisma.service';
@@ -80,6 +80,8 @@ import { LineItemGeneratorService } from './line-item-generator.service';
 @Resolver(() => TeeTimeType)
 @UseGuards(GqlAuthGuard)
 export class GolfResolver {
+  private readonly logger = new Logger(GolfResolver.name);
+
   constructor(
     private readonly golfService: GolfService,
     private readonly teeTicketService: TeeTicketService,
@@ -96,7 +98,7 @@ export class GolfResolver {
     @Args() args: TeeSheetArgs,
   ): Promise<TeeSheetSlotType[]> {
     const dateStr = args.date.toISOString().split('T')[0];
-    console.log(`[GolfResolver] getTeeSheet - tenantId: ${user.tenantId}, courseId: ${args.courseId}, date: ${dateStr}`);
+    this.logger.debug(`getTeeSheet - tenantId: ${user.tenantId}, courseId: ${args.courseId}, date: ${dateStr}`);
     const slots = await this.golfService.getTeeSheet(user.tenantId, args.courseId, dateStr);
 
     return slots.map((slot: any) => ({
@@ -321,16 +323,14 @@ export class GolfResolver {
     @GqlCurrentUser() user: JwtPayload,
     @Args('input') input: CreateTeeTimeInput,
   ): Promise<TeeTimeType> {
-    // Debug logging
-    console.log('createTeeTime called with input:', JSON.stringify({
+    this.logger.debug('createTeeTime called', {
       courseId: input.courseId,
       teeDate: input.teeDate,
       teeTime: input.teeTime,
       holes: input.holes,
-      players: input.players,
-      notes: input.notes,
-    }, null, 2));
-    console.log('User tenantId:', user.tenantId);
+      playerCount: input.players?.length,
+      tenantId: user.tenantId,
+    });
 
     try {
       const teeTime = await this.golfService.createFlight(
@@ -356,10 +356,10 @@ export class GolfResolver {
         tenantId: user.tenantId,
       });
 
-      console.log('Tee time created successfully:', teeTime.id);
+      this.logger.log(`Tee time created successfully: ${teeTime.id}`);
       return transformedTeeTime;
     } catch (error) {
-      console.error('Error creating tee time:', error);
+      this.logger.error('Error creating tee time', error instanceof Error ? error.stack : error);
       throw error;
     }
   }
@@ -925,10 +925,21 @@ export class GolfResolver {
   // Subscriptions
   // ============================================
 
+  /**
+   * SECURITY: All subscription filters MUST verify tenantId to prevent cross-tenant data leakage.
+   * The filter function receives (payload, variables, context) where context contains the user.
+   */
+
   @Subscription(() => TeeTimeType, {
     name: 'teeTimeUpdated',
     description: 'Subscribe to tee time updates for a specific course and date',
-    filter: (payload, variables) => {
+    filter: (payload, variables, context) => {
+      // SECURITY: Always verify tenant isolation first
+      const userTenantId = context?.req?.user?.tenantId;
+      if (!userTenantId || payload.tenantId !== userTenantId) {
+        return false;
+      }
+
       // Filter by courseId and date if provided
       const teeTime = payload.teeTimeUpdated;
       if (variables.courseId && teeTime.course?.id !== variables.courseId) {
@@ -954,7 +965,13 @@ export class GolfResolver {
   @Subscription(() => TeeTimeType, {
     name: 'teeTimeCreated',
     description: 'Subscribe to new tee time creations',
-    filter: (payload, variables) => {
+    filter: (payload, variables, context) => {
+      // SECURITY: Always verify tenant isolation first
+      const userTenantId = context?.req?.user?.tenantId;
+      if (!userTenantId || payload.tenantId !== userTenantId) {
+        return false;
+      }
+
       const teeTime = payload.teeTimeCreated;
       if (variables.courseId && teeTime.course?.id !== variables.courseId) {
         return false;
@@ -971,6 +988,11 @@ export class GolfResolver {
   @Subscription(() => TeeTimeType, {
     name: 'teeTimeCancelled',
     description: 'Subscribe to tee time cancellations',
+    filter: (payload, _variables, context) => {
+      // SECURITY: Always verify tenant isolation
+      const userTenantId = context?.req?.user?.tenantId;
+      return userTenantId && payload.tenantId === userTenantId;
+    },
   })
   teeTimeCancelled() {
     return this.pubSub.asyncIterator(SubscriptionEvents.TEE_TIME_CANCELLED);
@@ -979,6 +1001,11 @@ export class GolfResolver {
   @Subscription(() => TeeTimeType, {
     name: 'teeTimeCheckedIn',
     description: 'Subscribe to tee time check-ins',
+    filter: (payload, _variables, context) => {
+      // SECURITY: Always verify tenant isolation
+      const userTenantId = context?.req?.user?.tenantId;
+      return userTenantId && payload.tenantId === userTenantId;
+    },
   })
   teeTimeCheckedIn() {
     return this.pubSub.asyncIterator(SubscriptionEvents.TEE_TIME_CHECKED_IN);

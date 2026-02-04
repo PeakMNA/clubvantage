@@ -7,6 +7,7 @@ import {
   Req,
   Res,
   Get,
+  Logger,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -25,6 +26,8 @@ import { JwtPayload } from './interfaces/jwt-payload.interface';
 @ApiTags('Auth')
 @Controller({ path: 'auth', version: '1' })
 export class AuthController {
+  private readonly logger = new Logger(AuthController.name);
+
   constructor(
     private readonly authService: AuthService,
     private readonly configService: ConfigService,
@@ -177,15 +180,13 @@ export class AuthController {
     const accessCookieOptions = this.getCookieOptions(7 * 24 * 60 * 60);
 
     // Debug logging for development
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('[Auth] Setting session cookies:', {
-        accessCookieName,
-        refreshCookieName,
-        cookieOptions: { ...accessCookieOptions, maxAge: `${accessCookieOptions.maxAge / 1000}s` },
-        hasAccessToken: !!dto.accessToken,
-        hasRefreshToken: !!dto.refreshToken,
-      });
-    }
+    this.logger.debug('Setting session cookies', {
+      accessCookieName,
+      refreshCookieName,
+      cookieOptions: { ...accessCookieOptions, maxAge: `${accessCookieOptions.maxAge / 1000}s` },
+      hasAccessToken: !!dto.accessToken,
+      hasRefreshToken: !!dto.refreshToken,
+    });
 
     // Set access token cookie (7 day cookie expiry - JWT expiration is checked separately)
     res.cookie(accessCookieName, dto.accessToken, accessCookieOptions);

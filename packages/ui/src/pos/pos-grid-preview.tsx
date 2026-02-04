@@ -101,7 +101,7 @@ export function POSGridPreview({
             {tiles.map((tile) => (
               <TilePreview
                 key={tile.id}
-                color={tile.color}
+                color={tile.color ?? '#fcd34d'}
                 width={tileConfig.width}
                 height={tileConfig.height}
                 showImage={showImages}

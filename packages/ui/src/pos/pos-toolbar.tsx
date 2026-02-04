@@ -2,7 +2,23 @@
 
 import * as React from 'react'
 import { cn } from '../lib/utils'
-import { Search, User, Plus, Pause } from 'lucide-react'
+import {
+  Search,
+  User,
+  Plus,
+  Pause,
+  LayoutGrid,
+  ArrowRightLeft,
+  Merge,
+  Split,
+  CircleDot,
+  UtensilsCrossed,
+  UserPlus,
+  UserMinus,
+  UserCheck,
+  Users,
+  CreditCard,
+} from 'lucide-react'
 import { Input } from '../primitives/input'
 import { Button } from '../primitives/button'
 
@@ -25,11 +41,25 @@ export interface POSToolbarProps {
   onCategoryChange?: (category: string) => void
   onNewTicket?: () => void
   onHoldTicket?: () => void
+  // F&B Table operation callbacks
+  onOpenTable?: () => void
+  onFloorPlan?: () => void
+  onTransferTable?: () => void
+  onMergeTables?: () => void
+  onSplitCheck?: () => void
+  onTableStatus?: () => void
+  // Member operation callbacks
+  onAttachMember?: () => void
+  onDetachMember?: () => void
+  onMemberInfo?: () => void
+  onChargeToMember?: () => void
   // Categories for center zone
   categories?: { id: string; name: string }[]
   activeCategory?: string
   // Search state
   searchQuery?: string
+  // Current table info (for F&B mode)
+  currentTable?: { id: string; name: string } | null
 }
 
 // ============================================================================
@@ -186,6 +216,195 @@ function NewTicketButton({ onClick }: NewTicketButtonProps) {
 }
 
 // ============================================================================
+// F&B Table Operation Sub-components
+// ============================================================================
+
+interface OpenTableButtonProps {
+  onClick?: () => void
+  currentTable?: { id: string; name: string } | null
+}
+
+function OpenTableButton({ onClick, currentTable }: OpenTableButtonProps) {
+  return (
+    <Button
+      variant={currentTable ? 'default' : 'outline'}
+      size="sm"
+      onClick={onClick}
+      className="gap-2"
+    >
+      <UtensilsCrossed className="h-4 w-4" />
+      <span>{currentTable ? currentTable.name : 'Open Table'}</span>
+    </Button>
+  )
+}
+
+interface FloorPlanButtonProps {
+  onClick?: () => void
+}
+
+function FloorPlanButton({ onClick }: FloorPlanButtonProps) {
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={onClick}
+      className="gap-2"
+    >
+      <LayoutGrid className="h-4 w-4" />
+      <span>Floor Plan</span>
+    </Button>
+  )
+}
+
+interface TransferTableButtonProps {
+  onClick?: () => void
+}
+
+function TransferTableButton({ onClick }: TransferTableButtonProps) {
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={onClick}
+      className="gap-2"
+    >
+      <ArrowRightLeft className="h-4 w-4" />
+      <span>Transfer</span>
+    </Button>
+  )
+}
+
+interface MergeTablesButtonProps {
+  onClick?: () => void
+}
+
+function MergeTablesButton({ onClick }: MergeTablesButtonProps) {
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={onClick}
+      className="gap-2"
+    >
+      <Merge className="h-4 w-4" />
+      <span>Merge</span>
+    </Button>
+  )
+}
+
+interface SplitCheckButtonProps {
+  onClick?: () => void
+}
+
+function SplitCheckButton({ onClick }: SplitCheckButtonProps) {
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={onClick}
+      className="gap-2"
+    >
+      <Split className="h-4 w-4" />
+      <span>Split Check</span>
+    </Button>
+  )
+}
+
+interface TableStatusButtonProps {
+  onClick?: () => void
+}
+
+function TableStatusButton({ onClick }: TableStatusButtonProps) {
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={onClick}
+      className="gap-2"
+    >
+      <CircleDot className="h-4 w-4" />
+      <span>Status</span>
+    </Button>
+  )
+}
+
+// ============================================================================
+// Member Operation Sub-components
+// ============================================================================
+
+interface AttachMemberButtonProps {
+  onClick?: () => void
+}
+
+function AttachMemberButton({ onClick }: AttachMemberButtonProps) {
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={onClick}
+      className="gap-2"
+    >
+      <UserPlus className="h-4 w-4" />
+      <span>Attach Member</span>
+    </Button>
+  )
+}
+
+interface DetachMemberButtonProps {
+  onClick?: () => void
+}
+
+function DetachMemberButton({ onClick }: DetachMemberButtonProps) {
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={onClick}
+      className="gap-2"
+    >
+      <UserMinus className="h-4 w-4" />
+      <span>Detach Member</span>
+    </Button>
+  )
+}
+
+interface MemberInfoButtonProps {
+  onClick?: () => void
+}
+
+function MemberInfoButton({ onClick }: MemberInfoButtonProps) {
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={onClick}
+      className="gap-2"
+    >
+      <UserCheck className="h-4 w-4" />
+      <span>Member Info</span>
+    </Button>
+  )
+}
+
+interface ChargeToMemberButtonProps {
+  onClick?: () => void
+}
+
+function ChargeToMemberButton({ onClick }: ChargeToMemberButtonProps) {
+  return (
+    <Button
+      variant="default"
+      size="sm"
+      onClick={onClick}
+      className="gap-2"
+    >
+      <CreditCard className="h-4 w-4" />
+      <span>Charge to Member</span>
+    </Button>
+  )
+}
+
+// ============================================================================
 // Main Component
 // ============================================================================
 
@@ -197,9 +416,20 @@ export function POSToolbar({
   onCategoryChange,
   onNewTicket,
   onHoldTicket,
+  onOpenTable,
+  onFloorPlan,
+  onTransferTable,
+  onMergeTables,
+  onSplitCheck,
+  onTableStatus,
+  onAttachMember,
+  onDetachMember,
+  onMemberInfo,
+  onChargeToMember,
   categories = [],
   activeCategory,
   searchQuery = '',
+  currentTable,
 }: POSToolbarProps) {
   // Render items based on zone config
   const renderItem = (itemId: string) => {
@@ -221,6 +451,28 @@ export function POSToolbar({
         return <HoldButton key={itemId} onClick={onHoldTicket} />
       case 'newTicket':
         return <NewTicketButton key={itemId} onClick={onNewTicket} />
+      // F&B Table Operations
+      case 'openTable':
+        return <OpenTableButton key={itemId} onClick={onOpenTable} currentTable={currentTable} />
+      case 'floorPlan':
+        return <FloorPlanButton key={itemId} onClick={onFloorPlan} />
+      case 'transferTable':
+        return <TransferTableButton key={itemId} onClick={onTransferTable} />
+      case 'mergeTables':
+        return <MergeTablesButton key={itemId} onClick={onMergeTables} />
+      case 'splitCheck':
+        return <SplitCheckButton key={itemId} onClick={onSplitCheck} />
+      case 'tableStatus':
+        return <TableStatusButton key={itemId} onClick={onTableStatus} />
+      // Member Operations
+      case 'attachMember':
+        return <AttachMemberButton key={itemId} onClick={onAttachMember} />
+      case 'detachMember':
+        return <DetachMemberButton key={itemId} onClick={onDetachMember} />
+      case 'memberInfo':
+        return <MemberInfoButton key={itemId} onClick={onMemberInfo} />
+      case 'chargeToMember':
+        return <ChargeToMemberButton key={itemId} onClick={onChargeToMember} />
       default:
         return null
     }
@@ -256,4 +508,22 @@ export function POSToolbar({
 }
 
 // Export sub-components for individual use if needed
-export { SearchInput, MemberLookupButton, CategoryTabs, HoldButton, NewTicketButton }
+export {
+  SearchInput,
+  MemberLookupButton,
+  CategoryTabs,
+  HoldButton,
+  NewTicketButton,
+  // F&B Table Operations
+  OpenTableButton,
+  FloorPlanButton,
+  TransferTableButton,
+  MergeTablesButton,
+  SplitCheckButton,
+  TableStatusButton,
+  // Member Operations
+  AttachMemberButton,
+  DetachMemberButton,
+  MemberInfoButton,
+  ChargeToMemberButton,
+}

@@ -2,12 +2,36 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { cn } from '@clubvantage/ui'
-import { X, Loader2 } from 'lucide-react'
+import { X, Loader2, Plus, GripVertical, Trash2, ChevronDown } from 'lucide-react'
 import { POSGridPreview } from '@clubvantage/ui'
+import { POS_ACTION_TYPES, type POSActionType } from './utils/action-types'
 
 // ============================================================================
 // Types
 // ============================================================================
+
+export interface ToolbarGroup {
+  id: string
+  label: string
+  zone: 'left' | 'center' | 'right'
+  items: string[]
+}
+
+export interface ToolbarConfig {
+  groups: ToolbarGroup[]
+}
+
+export interface ActionButton {
+  id: string
+  label: string
+  actionType: POSActionType
+  variant: 'primary' | 'secondary' | 'danger' | 'ghost'
+  position: 'left' | 'center' | 'right'
+}
+
+export interface ActionBarConfig {
+  buttons: ActionButton[]
+}
 
 export interface POSTemplateData {
   id: string
@@ -29,6 +53,8 @@ export interface POSTemplateData {
   timeOfDayWeight: number
   salesVelocityWeight: number
   staffHistoryWeight: number
+  toolbarConfig?: ToolbarConfig
+  actionBarConfig?: ActionBarConfig
 }
 
 export interface POSTemplateInput {
@@ -50,6 +76,8 @@ export interface POSTemplateInput {
   timeOfDayWeight: number
   salesVelocityWeight: number
   staffHistoryWeight: number
+  toolbarConfig: ToolbarConfig
+  actionBarConfig: ActionBarConfig
 }
 
 export interface TemplateEditorModalProps {
@@ -64,14 +92,61 @@ export interface TemplateEditorModalProps {
 // Constants
 // ============================================================================
 
-type TabKey = 'general' | 'grid' | 'quickKeys' | 'suggestions'
+type TabKey = 'general' | 'grid' | 'quickKeys' | 'suggestions' | 'toolbar' | 'actions'
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'general', label: 'General' },
-  { key: 'grid', label: 'Grid Layout' },
+  { key: 'grid', label: 'Grid' },
   { key: 'quickKeys', label: 'Quick Keys' },
   { key: 'suggestions', label: 'Suggestions' },
+  { key: 'toolbar', label: 'Toolbar' },
+  { key: 'actions', label: 'Actions' },
 ]
+
+// Available toolbar items organized by category
+const TOOLBAR_ITEMS: { id: string; label: string; category: string }[] = [
+  // General items
+  { id: 'search', label: 'Search', category: 'General' },
+  { id: 'categoryTabs', label: 'Category Tabs', category: 'General' },
+  // Ticket actions
+  { id: 'holdTicket', label: 'Hold Ticket', category: 'Ticket' },
+  { id: 'newTicket', label: 'New Ticket', category: 'Ticket' },
+  // Member Operations
+  { id: 'memberLookup', label: 'Member Lookup', category: 'Member' },
+  { id: 'attachMember', label: 'Attach Member', category: 'Member' },
+  { id: 'detachMember', label: 'Detach Member', category: 'Member' },
+  { id: 'memberInfo', label: 'Member Info', category: 'Member' },
+  { id: 'chargeToMember', label: 'Charge to Member', category: 'Member' },
+  // F&B Table Operations
+  { id: 'openTable', label: 'Open Table', category: 'F&B Tables' },
+  { id: 'floorPlan', label: 'Floor Plan', category: 'F&B Tables' },
+  { id: 'transferTable', label: 'Transfer Table', category: 'F&B Tables' },
+  { id: 'mergeTables', label: 'Merge Tables', category: 'F&B Tables' },
+  { id: 'splitCheck', label: 'Split Check', category: 'F&B Tables' },
+  { id: 'tableStatus', label: 'Table Status', category: 'F&B Tables' },
+]
+
+// F&B Default - includes table operations for restaurant/bar workflows
+// Note: categoryTabs removed since category tabs are in the product panel
+const DEFAULT_TOOLBAR_CONFIG: ToolbarConfig = {
+  groups: [
+    { id: 'left-zone', label: 'Table Operations', zone: 'left', items: ['openTable', 'floorPlan', 'search'] },
+    { id: 'center-zone', label: 'Member', zone: 'center', items: ['memberLookup', 'attachMember', 'chargeToMember'] },
+    { id: 'right-zone', label: 'Table & Ticket', zone: 'right', items: ['splitCheck', 'mergeTables', 'transferTable', 'holdTicket', 'newTicket'] },
+  ],
+}
+
+const DEFAULT_ACTION_BAR_CONFIG: ActionBarConfig = {
+  buttons: [
+    { id: 'cancel', label: 'Cancel', actionType: POS_ACTION_TYPES.CANCEL_TRANSACTION, variant: 'danger', position: 'left' },
+    { id: 'void', label: 'Void', actionType: POS_ACTION_TYPES.VOID_ITEM, variant: 'ghost', position: 'left' },
+    { id: 'discount', label: 'Discount', actionType: POS_ACTION_TYPES.APPLY_DISCOUNT, variant: 'secondary', position: 'center' },
+    { id: 'hold', label: 'Hold', actionType: POS_ACTION_TYPES.HOLD_TICKET, variant: 'secondary', position: 'center' },
+    { id: 'cash', label: 'Cash', actionType: POS_ACTION_TYPES.PROCESS_CASH_PAYMENT, variant: 'secondary', position: 'right' },
+    { id: 'card', label: 'Card', actionType: POS_ACTION_TYPES.PROCESS_CARD_PAYMENT, variant: 'secondary', position: 'right' },
+    { id: 'pay', label: 'Pay', actionType: POS_ACTION_TYPES.OPEN_PAYMENT_MODAL, variant: 'primary', position: 'right' },
+  ],
+}
 
 const DEFAULT_FORM_STATE: POSTemplateInput = {
   name: '',
@@ -92,6 +167,8 @@ const DEFAULT_FORM_STATE: POSTemplateInput = {
   timeOfDayWeight: 40,
   salesVelocityWeight: 35,
   staffHistoryWeight: 25,
+  toolbarConfig: DEFAULT_TOOLBAR_CONFIG,
+  actionBarConfig: DEFAULT_ACTION_BAR_CONFIG,
 }
 
 // ============================================================================
@@ -109,7 +186,7 @@ interface ToggleSwitchProps {
 function ToggleSwitch({ checked, onChange, disabled, label, description }: ToggleSwitchProps) {
   return (
     <label className={cn(
-      'flex items-start gap-3 cursor-pointer',
+      'flex items-start gap-2.5 cursor-pointer',
       disabled && 'opacity-50 cursor-not-allowed'
     )}>
       <button
@@ -119,16 +196,16 @@ function ToggleSwitch({ checked, onChange, disabled, label, description }: Toggl
         disabled={disabled}
         onClick={() => !disabled && onChange(!checked)}
         className={cn(
-          'relative inline-flex h-6 w-11 flex-shrink-0 rounded-full transition-colors duration-200 ease-in-out',
-          'focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2',
-          checked ? 'bg-amber-500' : 'bg-stone-200',
+          'relative inline-flex h-5 w-9 flex-shrink-0 rounded-full transition-colors duration-200 ease-in-out',
+          'focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-1',
+          checked ? 'bg-amber-500' : 'bg-stone-300',
           disabled && 'pointer-events-none'
         )}
       >
         <span
           className={cn(
-            'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
-            checked ? 'translate-x-5' : 'translate-x-0.5',
+            'pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+            checked ? 'translate-x-4' : 'translate-x-0.5',
             'mt-0.5'
           )}
         />
@@ -136,12 +213,12 @@ function ToggleSwitch({ checked, onChange, disabled, label, description }: Toggl
       {(label || description) && (
         <div className="flex-1 min-w-0">
           {label && (
-            <span className="text-sm font-medium text-stone-900 dark:text-stone-100">
+            <span className="text-xs font-medium text-stone-700 dark:text-stone-200">
               {label}
             </span>
           )}
           {description && (
-            <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
+            <p className="text-[10px] text-stone-500 dark:text-stone-400 mt-0.5 leading-tight">
               {description}
             </p>
           )}
@@ -163,10 +240,10 @@ interface SliderProps {
 
 function Slider({ value, onChange, min, max, disabled, label, showPercentage }: SliderProps) {
   return (
-    <div className={cn('space-y-2', disabled && 'opacity-50')}>
+    <div className={cn('space-y-1', disabled && 'opacity-50')}>
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-stone-700 dark:text-stone-300">{label}</span>
-        <span className="text-sm font-semibold text-amber-600">
+        <span className="text-[11px] font-medium text-stone-600 dark:text-stone-400">{label}</span>
+        <span className="text-[11px] font-semibold text-amber-600 tabular-nums">
           {value}{showPercentage ? '%' : ''}
         </span>
       </div>
@@ -178,12 +255,12 @@ function Slider({ value, onChange, min, max, disabled, label, showPercentage }: 
         onChange={(e) => onChange(Number(e.target.value))}
         disabled={disabled}
         className={cn(
-          'w-full h-2 rounded-full appearance-none cursor-pointer',
+          'w-full h-1.5 rounded-full appearance-none cursor-pointer',
           'bg-stone-200 dark:bg-stone-700',
-          '[&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4',
+          '[&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3',
           '[&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-amber-500',
           '[&::-webkit-slider-thumb]:hover:bg-amber-600 [&::-webkit-slider-thumb]:cursor-pointer',
-          '[&::-webkit-slider-thumb]:shadow-md',
+          '[&::-webkit-slider-thumb]:shadow',
           disabled && 'cursor-not-allowed [&::-webkit-slider-thumb]:cursor-not-allowed'
         )}
       />
@@ -202,14 +279,14 @@ interface RadioGroupProps {
 
 function RadioGroup({ options, value, onChange, disabled, label, orientation = 'horizontal' }: RadioGroupProps) {
   return (
-    <div className="space-y-2">
+    <div className="space-y-1.5">
       {label && (
-        <label className="block text-sm font-medium text-stone-700 dark:text-stone-300">
+        <label className="block text-xs font-medium text-stone-600 dark:text-stone-400">
           {label}
         </label>
       )}
       <div className={cn(
-        'flex gap-3',
+        'flex gap-2',
         orientation === 'vertical' && 'flex-col',
         disabled && 'opacity-50'
       )}>
@@ -217,7 +294,7 @@ function RadioGroup({ options, value, onChange, disabled, label, orientation = '
           <label
             key={option.value}
             className={cn(
-              'flex items-center gap-2 cursor-pointer',
+              'flex items-center gap-1.5 cursor-pointer',
               disabled && 'cursor-not-allowed'
             )}
           >
@@ -229,11 +306,11 @@ function RadioGroup({ options, value, onChange, disabled, label, orientation = '
               onChange={() => onChange(option.value)}
               disabled={disabled}
               className={cn(
-                'w-4 h-4 text-amber-500 border-stone-300 focus:ring-amber-500',
+                'w-3.5 h-3.5 text-amber-500 border-stone-300 focus:ring-amber-500',
                 'dark:border-stone-600 dark:bg-stone-800'
               )}
             />
-            <span className="text-sm text-stone-700 dark:text-stone-300">{option.label}</span>
+            <span className="text-xs text-stone-700 dark:text-stone-300">{option.label}</span>
           </label>
         ))}
       </div>
@@ -255,10 +332,10 @@ interface GeneralTabProps {
 
 function GeneralTab({ name, description, onNameChange, onDescriptionChange, nameError }: GeneralTabProps) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Template Name */}
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-stone-700 dark:text-stone-300">
+      <div className="space-y-1.5">
+        <label className="block text-xs font-medium text-stone-600 dark:text-stone-400">
           Template Name <span className="text-red-500">*</span>
         </label>
         <input
@@ -267,7 +344,7 @@ function GeneralTab({ name, description, onNameChange, onDescriptionChange, name
           onChange={(e) => onNameChange(e.target.value)}
           placeholder="e.g., Pro Shop Default"
           className={cn(
-            'w-full px-3 py-2 rounded-lg border bg-white dark:bg-stone-800',
+            'w-full px-2.5 py-1.5 text-sm rounded-md border bg-white dark:bg-stone-800',
             'text-stone-900 dark:text-stone-100 placeholder-stone-400',
             'focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500',
             nameError
@@ -276,22 +353,22 @@ function GeneralTab({ name, description, onNameChange, onDescriptionChange, name
           )}
         />
         {nameError && (
-          <p className="text-sm text-red-500">{nameError}</p>
+          <p className="text-xs text-red-500">{nameError}</p>
         )}
       </div>
 
       {/* Description */}
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-stone-700 dark:text-stone-300">
+      <div className="space-y-1.5">
+        <label className="block text-xs font-medium text-stone-600 dark:text-stone-400">
           Description
         </label>
         <textarea
           value={description}
           onChange={(e) => onDescriptionChange(e.target.value)}
           placeholder="Describe this template's purpose..."
-          rows={4}
+          rows={3}
           className={cn(
-            'w-full px-3 py-2 rounded-lg border bg-white dark:bg-stone-800',
+            'w-full px-2.5 py-1.5 text-sm rounded-md border bg-white dark:bg-stone-800',
             'text-stone-900 dark:text-stone-100 placeholder-stone-400',
             'border-stone-300 dark:border-stone-600',
             'focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500',
@@ -337,12 +414,12 @@ function GridLayoutTab({
   onShowAllCategoryChange,
 }: GridLayoutTabProps) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Grid Dimensions */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-stone-700 dark:text-stone-300">
-            Grid Columns (2-12)
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <label className="block text-xs font-medium text-stone-600 dark:text-stone-400">
+            Columns (2-12)
           </label>
           <input
             type="number"
@@ -351,16 +428,16 @@ function GridLayoutTab({
             value={gridColumns}
             onChange={(e) => onColumnsChange(Math.min(12, Math.max(2, Number(e.target.value) || 2)))}
             className={cn(
-              'w-full px-3 py-2 rounded-lg border bg-white dark:bg-stone-800',
+              'w-full px-2.5 py-1.5 text-sm rounded-md border bg-white dark:bg-stone-800',
               'text-stone-900 dark:text-stone-100',
               'border-stone-300 dark:border-stone-600',
               'focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500'
             )}
           />
         </div>
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-stone-700 dark:text-stone-300">
-            Grid Rows (2-8)
+        <div className="space-y-1.5">
+          <label className="block text-xs font-medium text-stone-600 dark:text-stone-400">
+            Rows (2-8)
           </label>
           <input
             type="number"
@@ -369,7 +446,7 @@ function GridLayoutTab({
             value={gridRows}
             onChange={(e) => onRowsChange(Math.min(8, Math.max(2, Number(e.target.value) || 2)))}
             className={cn(
-              'w-full px-3 py-2 rounded-lg border bg-white dark:bg-stone-800',
+              'w-full px-2.5 py-1.5 text-sm rounded-md border bg-white dark:bg-stone-800',
               'text-stone-900 dark:text-stone-100',
               'border-stone-300 dark:border-stone-600',
               'focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500'
@@ -382,40 +459,38 @@ function GridLayoutTab({
       <RadioGroup
         label="Tile Size"
         options={[
-          { value: 'SMALL', label: 'Small' },
-          { value: 'MEDIUM', label: 'Medium' },
-          { value: 'LARGE', label: 'Large' },
+          { value: 'SMALL', label: 'S' },
+          { value: 'MEDIUM', label: 'M' },
+          { value: 'LARGE', label: 'L' },
         ]}
         value={tileSize}
         onChange={(v) => onTileSizeChange(v as 'SMALL' | 'MEDIUM' | 'LARGE')}
       />
 
       {/* Display Options */}
-      <div className="space-y-4">
-        <h4 className="text-sm font-medium text-stone-700 dark:text-stone-300">Display Options</h4>
-        <div className="space-y-3">
+      <div className="space-y-2.5">
+        <h4 className="text-xs font-medium text-stone-600 dark:text-stone-400">Display</h4>
+        <div className="space-y-2">
           <ToggleSwitch
             checked={showImages}
             onChange={onShowImagesChange}
-            label="Show Product Images"
-            description="Display images on product tiles"
+            label="Show Images"
           />
           <ToggleSwitch
             checked={showPrices}
             onChange={onShowPricesChange}
             label="Show Prices"
-            description="Display prices on product tiles"
           />
         </div>
       </div>
 
       {/* Category Style */}
       <RadioGroup
-        label="Category Navigation Style"
+        label="Category Style"
         options={[
           { value: 'TABS', label: 'Tabs' },
-          { value: 'SIDEBAR', label: 'Sidebar' },
-          { value: 'DROPDOWN', label: 'Dropdown' },
+          { value: 'SIDEBAR', label: 'Side' },
+          { value: 'DROPDOWN', label: 'Drop' },
         ]}
         value={categoryStyle}
         onChange={(v) => onCategoryStyleChange(v as 'TABS' | 'SIDEBAR' | 'DROPDOWN')}
@@ -426,7 +501,6 @@ function GridLayoutTab({
         checked={showAllCategory}
         onChange={onShowAllCategoryChange}
         label="Show 'All' Category"
-        description="Include an 'All Items' category option"
       />
     </div>
   )
@@ -450,22 +524,22 @@ function QuickKeysTab({
   onPositionChange,
 }: QuickKeysTabProps) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Enable Quick Keys */}
       <ToggleSwitch
         checked={enabled}
         onChange={onEnabledChange}
         label="Enable Quick Keys"
-        description="Show quick access buttons for frequently used items"
+        description="Quick access buttons for frequent items"
       />
 
       {/* Quick Keys Count */}
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         <label className={cn(
-          'block text-sm font-medium text-stone-700 dark:text-stone-300',
+          'block text-xs font-medium text-stone-600 dark:text-stone-400',
           !enabled && 'opacity-50'
         )}>
-          Number of Quick Keys (4-16)
+          Count (4-16)
         </label>
         <input
           type="number"
@@ -475,7 +549,7 @@ function QuickKeysTab({
           onChange={(e) => onCountChange(Math.min(16, Math.max(4, Number(e.target.value) || 4)))}
           disabled={!enabled}
           className={cn(
-            'w-full px-3 py-2 rounded-lg border bg-white dark:bg-stone-800',
+            'w-full px-2.5 py-1.5 text-sm rounded-md border bg-white dark:bg-stone-800',
             'text-stone-900 dark:text-stone-100',
             'border-stone-300 dark:border-stone-600',
             'focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500',
@@ -486,7 +560,7 @@ function QuickKeysTab({
 
       {/* Position */}
       <RadioGroup
-        label="Quick Keys Position"
+        label="Position"
         options={[
           { value: 'TOP', label: 'Top' },
           { value: 'LEFT', label: 'Left' },
@@ -571,22 +645,22 @@ function SuggestionsTab({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Enable Suggestions */}
       <ToggleSwitch
         checked={enabled}
         onChange={onEnabledChange}
         label="Enable Smart Suggestions"
-        description="Show AI-powered product recommendations"
+        description="AI-powered recommendations"
       />
 
       {/* Suggestions Count */}
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         <label className={cn(
-          'block text-sm font-medium text-stone-700 dark:text-stone-300',
+          'block text-xs font-medium text-stone-600 dark:text-stone-400',
           !enabled && 'opacity-50'
         )}>
-          Number of Suggestions (4-12)
+          Count (4-12)
         </label>
         <input
           type="number"
@@ -596,7 +670,7 @@ function SuggestionsTab({
           onChange={(e) => onCountChange(Math.min(12, Math.max(4, Number(e.target.value) || 4)))}
           disabled={!enabled}
           className={cn(
-            'w-full px-3 py-2 rounded-lg border bg-white dark:bg-stone-800',
+            'w-full px-2.5 py-1.5 text-sm rounded-md border bg-white dark:bg-stone-800',
             'text-stone-900 dark:text-stone-100',
             'border-stone-300 dark:border-stone-600',
             'focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500',
@@ -606,19 +680,19 @@ function SuggestionsTab({
       </div>
 
       {/* Position */}
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         <label className={cn(
-          'block text-sm font-medium text-stone-700 dark:text-stone-300',
+          'block text-xs font-medium text-stone-600 dark:text-stone-400',
           !enabled && 'opacity-50'
         )}>
-          Suggestions Position
+          Position
         </label>
         <select
           value={position}
           onChange={(e) => onPositionChange(e.target.value as 'TOP' | 'SIDEBAR' | 'FLOATING')}
           disabled={!enabled}
           className={cn(
-            'w-full px-3 py-2 rounded-lg border bg-white dark:bg-stone-800',
+            'w-full px-2.5 py-1.5 text-sm rounded-md border bg-white dark:bg-stone-800',
             'text-stone-900 dark:text-stone-100',
             'border-stone-300 dark:border-stone-600',
             'focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500',
@@ -633,11 +707,11 @@ function SuggestionsTab({
 
       {/* Algorithm Weights */}
       {enabled && (
-        <div className="space-y-4 p-4 bg-stone-50 dark:bg-stone-800/50 rounded-lg border border-stone-200 dark:border-stone-700">
+        <div className="space-y-3 p-3 bg-stone-50 dark:bg-stone-800/50 rounded-md border border-stone-200 dark:border-stone-700">
           <div className="flex items-center justify-between">
-            <h4 className="text-sm font-medium text-stone-700 dark:text-stone-300">Algorithm Weights</h4>
+            <h4 className="text-xs font-medium text-stone-600 dark:text-stone-400">Algorithm Weights</h4>
             <span className={cn(
-              'text-xs font-medium px-2 py-0.5 rounded-full',
+              'text-[10px] font-medium px-1.5 py-0.5 rounded',
               totalWeight === 100
                 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
                 : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
@@ -645,10 +719,7 @@ function SuggestionsTab({
               Total: {totalWeight}%
             </span>
           </div>
-          <p className="text-xs text-stone-500 dark:text-stone-400">
-            Adjust how different factors influence product suggestions. Weights must sum to 100%.
-          </p>
-          <div className="space-y-4">
+          <div className="space-y-3">
             <Slider
               label="Time of Day"
               value={timeOfDayWeight}
@@ -676,6 +747,618 @@ function SuggestionsTab({
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+interface ToolbarTabProps {
+  toolbarConfig: ToolbarConfig
+  onUpdate: (config: ToolbarConfig) => void
+}
+
+function ToolbarTab({ toolbarConfig, onUpdate }: ToolbarTabProps) {
+  const [expandedGroupId, setExpandedGroupId] = useState<string | null>(null)
+
+  const addGroup = () => {
+    const groups = toolbarConfig.groups ?? []
+    const usedZones = groups.map(g => g.zone)
+    const availableZone = (['left', 'center', 'right'] as const).find(z => !usedZones.includes(z)) || 'center'
+    const zoneLabels = { left: 'Left Zone', center: 'Center Zone', right: 'Right Zone' }
+    const newGroup: ToolbarGroup = {
+      id: `group-${Date.now()}`,
+      label: zoneLabels[availableZone],
+      zone: availableZone,
+      items: [],
+    }
+    onUpdate({ groups: [...groups, newGroup] })
+  }
+
+  const updateGroup = (index: number, updates: Partial<ToolbarGroup>) => {
+    const groups = toolbarConfig.groups ?? []
+    const newGroups = [...groups]
+    const currentGroup = newGroups[index]
+    if (!currentGroup) return
+    newGroups[index] = { ...currentGroup, ...updates }
+    onUpdate({ groups: newGroups })
+  }
+
+  const removeGroup = (index: number) => {
+    const groups = toolbarConfig.groups ?? []
+    onUpdate({ groups: groups.filter((_, i) => i !== index) })
+  }
+
+  const addItemToGroup = (groupIndex: number, itemId: string) => {
+    const groups = toolbarConfig.groups ?? []
+    const group = groups[groupIndex]
+    if (!group || group.items.includes(itemId)) return
+    updateGroup(groupIndex, { items: [...group.items, itemId] })
+  }
+
+  const removeItemFromGroup = (groupIndex: number, itemId: string) => {
+    const groups = toolbarConfig.groups ?? []
+    const group = groups[groupIndex]
+    if (!group) return
+    updateGroup(groupIndex, { items: group.items.filter(id => id !== itemId) })
+  }
+
+  const groups = toolbarConfig.groups ?? []
+
+  // Group items by category for the dropdown
+  const itemsByCategory = TOOLBAR_ITEMS.reduce((acc, item) => {
+    const category = item.category
+    if (!acc[category]) {
+      acc[category] = []
+    }
+    acc[category]!.push(item)
+    return acc
+  }, {} as Record<string, typeof TOOLBAR_ITEMS>)
+
+  return (
+    <div className="space-y-4">
+      {/* Info */}
+      <div className="rounded-md border border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800 p-2.5">
+        <p className="text-[11px] text-blue-700 dark:text-blue-300">
+          <strong>Toolbar</strong> appears at the top. Organize search, categories, and quick actions. Click a group to add items.
+        </p>
+      </div>
+
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h4 className="text-xs font-medium text-stone-600 dark:text-stone-400">Groups</h4>
+        <button
+          type="button"
+          onClick={addGroup}
+          className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-amber-600 hover:text-amber-700 dark:text-amber-400"
+        >
+          <Plus className="h-3 w-3" />
+          Add Group
+        </button>
+      </div>
+
+      {/* Groups List */}
+      <div className="space-y-3">
+        {groups.map((group, index) => {
+          const isExpanded = expandedGroupId === group.id
+          const usedItemIds = groups.flatMap(g => g.items)
+          const availableItems = TOOLBAR_ITEMS.filter(item => !usedItemIds.includes(item.id))
+
+          return (
+            <div
+              key={group.id}
+              className="rounded-md border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 overflow-hidden"
+            >
+              {/* Group Header */}
+              <div className="flex items-center gap-2 p-2 border-b border-stone-100 dark:border-stone-700 bg-stone-50 dark:bg-stone-850">
+                <GripVertical className="h-3.5 w-3.5 text-stone-300 dark:text-stone-600 cursor-move flex-shrink-0" />
+                <input
+                  type="text"
+                  value={group.label}
+                  onChange={(e) => updateGroup(index, { label: e.target.value })}
+                  className={cn(
+                    'flex-1 px-2 py-1 text-xs rounded border bg-white dark:bg-stone-900',
+                    'border-stone-200 dark:border-stone-600',
+                    'focus:outline-none focus:ring-1 focus:ring-amber-500'
+                  )}
+                  placeholder="Group name..."
+                />
+                <div className="relative">
+                  <select
+                    value={group.zone}
+                    onChange={(e) => updateGroup(index, { zone: e.target.value as ToolbarGroup['zone'] })}
+                    className={cn(
+                      'appearance-none pl-2 pr-6 py-1 text-xs rounded border bg-white dark:bg-stone-900',
+                      'border-stone-200 dark:border-stone-600',
+                      'focus:outline-none focus:ring-1 focus:ring-amber-500'
+                    )}
+                  >
+                    <option value="left">Left</option>
+                    <option value="center">Center</option>
+                    <option value="right">Right</option>
+                  </select>
+                  <ChevronDown className="absolute right-1.5 top-1/2 -translate-y-1/2 h-3 w-3 text-stone-400 pointer-events-none" />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setExpandedGroupId(isExpanded ? null : group.id)}
+                  className={cn(
+                    'p-1 rounded',
+                    isExpanded
+                      ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400'
+                      : 'text-stone-400 hover:text-stone-600 hover:bg-stone-100 dark:hover:bg-stone-700'
+                  )}
+                >
+                  <ChevronDown className={cn('h-3.5 w-3.5 transition-transform', isExpanded && 'rotate-180')} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => removeGroup(index)}
+                  className="p-1 text-stone-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+
+              {/* Group Items */}
+              <div className="p-2 space-y-2">
+                {/* Current Items */}
+                <div className="flex flex-wrap gap-1.5">
+                  {group.items.length === 0 ? (
+                    <span className="text-[10px] text-stone-400 italic">No items - click expand to add</span>
+                  ) : (
+                    group.items.map(itemId => {
+                      const item = TOOLBAR_ITEMS.find(i => i.id === itemId)
+                      return (
+                        <span
+                          key={itemId}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-stone-100 dark:bg-stone-700 text-stone-700 dark:text-stone-300 rounded-full"
+                        >
+                          {item?.label || itemId}
+                          <button
+                            type="button"
+                            onClick={() => removeItemFromGroup(index, itemId)}
+                            className="text-stone-400 hover:text-red-500"
+                          >
+                            <X className="h-2.5 w-2.5" />
+                          </button>
+                        </span>
+                      )
+                    })
+                  )}
+                </div>
+
+                {/* Expandable Item Picker */}
+                {isExpanded && (
+                  <div className="mt-2 pt-2 border-t border-stone-100 dark:border-stone-700">
+                    <p className="text-[10px] font-medium text-stone-500 dark:text-stone-400 mb-2">Add Items:</p>
+                    <div className="space-y-2">
+                      {Object.entries(itemsByCategory).map(([category, items]) => {
+                        const availableCategoryItems = items.filter(item => !usedItemIds.includes(item.id))
+                        if (availableCategoryItems.length === 0) return null
+
+                        return (
+                          <div key={category}>
+                            <p className="text-[9px] font-semibold text-stone-400 uppercase tracking-wider mb-1">{category}</p>
+                            <div className="flex flex-wrap gap-1">
+                              {availableCategoryItems.map(item => (
+                                <button
+                                  key={item.id}
+                                  type="button"
+                                  onClick={() => addItemToGroup(index, item.id)}
+                                  className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium border border-dashed border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-400 rounded-full hover:bg-amber-50 hover:border-amber-300 hover:text-amber-700 dark:hover:bg-amber-900/20 dark:hover:border-amber-600 dark:hover:text-amber-400 transition-colors"
+                                >
+                                  <Plus className="h-2.5 w-2.5" />
+                                  {item.label}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )
+                      })}
+                      {availableItems.length === 0 && (
+                        <p className="text-[10px] text-stone-400 italic">All items have been added</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )
+        })}
+
+        {groups.length === 0 && (
+          <div className="rounded-md border border-dashed border-stone-300 dark:border-stone-600 py-6 text-center">
+            <p className="text-xs text-stone-500">No groups. Add a group to start.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+interface ActionsTabProps {
+  actionBarConfig: ActionBarConfig
+  onUpdate: (config: ActionBarConfig) => void
+}
+
+function ActionsTab({ actionBarConfig, onUpdate }: ActionsTabProps) {
+  const addButton = () => {
+    const buttons = actionBarConfig.buttons ?? []
+    const presets: Array<{ label: string; actionType: POSActionType; variant: ActionButton['variant']; position: ActionButton['position'] }> = [
+      { label: 'Pay', actionType: POS_ACTION_TYPES.OPEN_PAYMENT_MODAL, variant: 'primary', position: 'right' },
+      { label: 'Hold', actionType: POS_ACTION_TYPES.HOLD_TICKET, variant: 'secondary', position: 'center' },
+      { label: 'Cancel', actionType: POS_ACTION_TYPES.CANCEL_TRANSACTION, variant: 'danger', position: 'left' },
+      { label: 'Cash', actionType: POS_ACTION_TYPES.PROCESS_CASH_PAYMENT, variant: 'secondary', position: 'right' },
+      { label: 'Card', actionType: POS_ACTION_TYPES.PROCESS_CARD_PAYMENT, variant: 'secondary', position: 'right' },
+    ]
+    const presetIndex = buttons.length % presets.length
+    const preset = presets[presetIndex] ?? presets[0]!
+    const newButton: ActionButton = {
+      id: `btn-${Date.now()}`,
+      label: preset.label,
+      actionType: preset.actionType,
+      variant: preset.variant,
+      position: preset.position,
+    }
+    onUpdate({ buttons: [...buttons, newButton] })
+  }
+
+  const updateButton = (index: number, updates: Partial<ActionButton>) => {
+    const buttons = actionBarConfig.buttons ?? []
+    const newButtons = [...buttons]
+    const currentButton = newButtons[index]
+    if (!currentButton) return
+    newButtons[index] = { ...currentButton, ...updates }
+    onUpdate({ buttons: newButtons })
+  }
+
+  const removeButton = (index: number) => {
+    const buttons = actionBarConfig.buttons ?? []
+    onUpdate({ buttons: buttons.filter((_, i) => i !== index) })
+  }
+
+  const buttons = actionBarConfig.buttons ?? []
+
+  return (
+    <div className="space-y-4">
+      {/* Info */}
+      <div className="rounded-md border border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800 p-2.5">
+        <p className="text-[11px] text-blue-700 dark:text-blue-300">
+          <strong>Action Bar</strong> appears at the bottom. Configure payment and transaction buttons.
+        </p>
+      </div>
+
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h4 className="text-xs font-medium text-stone-600 dark:text-stone-400">Buttons</h4>
+        <button
+          type="button"
+          onClick={addButton}
+          className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-amber-600 hover:text-amber-700 dark:text-amber-400"
+        >
+          <Plus className="h-3 w-3" />
+          Add
+        </button>
+      </div>
+
+      {/* Buttons List */}
+      <div className="space-y-2">
+        {buttons.map((btn, index) => (
+          <div
+            key={btn.id}
+            className="flex items-center gap-1.5 rounded-md border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 p-2"
+          >
+            <GripVertical className="h-3.5 w-3.5 text-stone-300 dark:text-stone-600 cursor-move flex-shrink-0" />
+            <input
+              type="text"
+              value={btn.label}
+              onChange={(e) => updateButton(index, { label: e.target.value })}
+              className={cn(
+                'w-16 px-2 py-1 text-xs rounded border bg-stone-50 dark:bg-stone-900',
+                'border-stone-200 dark:border-stone-600',
+                'focus:outline-none focus:ring-1 focus:ring-amber-500'
+              )}
+              placeholder="Label"
+            />
+            <div className="relative flex-1">
+              <select
+                value={btn.actionType}
+                onChange={(e) => updateButton(index, { actionType: e.target.value as POSActionType })}
+                className={cn(
+                  'w-full appearance-none pl-2 pr-5 py-1 text-xs rounded border bg-stone-50 dark:bg-stone-900',
+                  'border-stone-200 dark:border-stone-600',
+                  'focus:outline-none focus:ring-1 focus:ring-amber-500'
+                )}
+              >
+                <optgroup label="Payment">
+                  <option value={POS_ACTION_TYPES.OPEN_PAYMENT_MODAL}>Open Payment</option>
+                  <option value={POS_ACTION_TYPES.PROCESS_CASH_PAYMENT}>Cash</option>
+                  <option value={POS_ACTION_TYPES.PROCESS_CARD_PAYMENT}>Card</option>
+                  <option value={POS_ACTION_TYPES.CHARGE_TO_MEMBER}>Charge Member</option>
+                  <option value={POS_ACTION_TYPES.SPLIT_PAYMENT}>Split</option>
+                </optgroup>
+                <optgroup label="Transaction">
+                  <option value={POS_ACTION_TYPES.CANCEL_TRANSACTION}>Cancel</option>
+                  <option value={POS_ACTION_TYPES.HOLD_TICKET}>Hold</option>
+                  <option value={POS_ACTION_TYPES.RECALL_TICKET}>Recall</option>
+                  <option value={POS_ACTION_TYPES.VOID_TRANSACTION}>Void</option>
+                </optgroup>
+                <optgroup label="Item">
+                  <option value={POS_ACTION_TYPES.VOID_ITEM}>Void Item</option>
+                  <option value={POS_ACTION_TYPES.APPLY_DISCOUNT}>Discount</option>
+                  <option value={POS_ACTION_TYPES.CHANGE_QUANTITY}>Qty</option>
+                  <option value={POS_ACTION_TYPES.PRICE_OVERRIDE}>Price</option>
+                </optgroup>
+                <optgroup label="Utility">
+                  <option value={POS_ACTION_TYPES.PRINT_RECEIPT}>Print</option>
+                  <option value={POS_ACTION_TYPES.OPEN_DRAWER}>Drawer</option>
+                </optgroup>
+                <optgroup label="Other">
+                  <option value={POS_ACTION_TYPES.CUSTOM}>Custom</option>
+                </optgroup>
+              </select>
+              <ChevronDown className="absolute right-1 top-1/2 -translate-y-1/2 h-3 w-3 text-stone-400 pointer-events-none" />
+            </div>
+            <div className="relative w-20">
+              <select
+                value={btn.variant}
+                onChange={(e) => updateButton(index, { variant: e.target.value as ActionButton['variant'] })}
+                className={cn(
+                  'w-full appearance-none pl-2 pr-5 py-1 text-xs rounded border bg-stone-50 dark:bg-stone-900',
+                  'border-stone-200 dark:border-stone-600',
+                  'focus:outline-none focus:ring-1 focus:ring-amber-500'
+                )}
+              >
+                <option value="primary">Primary</option>
+                <option value="secondary">Secondary</option>
+                <option value="danger">Danger</option>
+                <option value="ghost">Ghost</option>
+              </select>
+              <ChevronDown className="absolute right-1 top-1/2 -translate-y-1/2 h-3 w-3 text-stone-400 pointer-events-none" />
+            </div>
+            <div className="relative w-16">
+              <select
+                value={btn.position}
+                onChange={(e) => updateButton(index, { position: e.target.value as ActionButton['position'] })}
+                className={cn(
+                  'w-full appearance-none pl-2 pr-5 py-1 text-xs rounded border bg-stone-50 dark:bg-stone-900',
+                  'border-stone-200 dark:border-stone-600',
+                  'focus:outline-none focus:ring-1 focus:ring-amber-500'
+                )}
+              >
+                <option value="left">Left</option>
+                <option value="center">Center</option>
+                <option value="right">Right</option>
+              </select>
+              <ChevronDown className="absolute right-1 top-1/2 -translate-y-1/2 h-3 w-3 text-stone-400 pointer-events-none" />
+            </div>
+            <button
+              type="button"
+              onClick={() => removeButton(index)}
+              className="p-1 text-stone-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        ))}
+
+        {buttons.length === 0 && (
+          <div className="rounded-md border border-dashed border-stone-300 dark:border-stone-600 py-6 text-center">
+            <p className="text-xs text-stone-500">No buttons. Add buttons to build your action bar.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ============================================================================
+// Preview Components for Right Panel
+// ============================================================================
+
+function ToolbarPreview({ groups }: { groups: ToolbarGroup[] }) {
+  const leftItems = groups.filter(g => g.zone === 'left').flatMap(g => g.items)
+  const centerItems = groups.filter(g => g.zone === 'center').flatMap(g => g.items)
+  const rightItems = groups.filter(g => g.zone === 'right').flatMap(g => g.items)
+
+  const getItemLabel = (itemId: string) => {
+    const item = TOOLBAR_ITEMS.find(i => i.id === itemId)
+    return item?.label || itemId
+  }
+
+  const renderItem = (itemId: string, variant: 'left' | 'center' | 'right') => {
+    const label = getItemLabel(itemId)
+    const baseClasses = 'px-2.5 py-1.5 rounded-md text-[10px] font-medium transition-colors'
+
+    if (variant === 'center') {
+      return (
+        <div key={itemId} className={cn(baseClasses, 'bg-amber-500/20 border border-amber-500/40 text-amber-200')}>
+          {label}
+        </div>
+      )
+    }
+
+    return (
+      <div key={itemId} className={cn(baseClasses, 'bg-stone-700/60 text-stone-200')}>
+        {label}
+      </div>
+    )
+  }
+
+  return (
+    <div className="w-full max-w-2xl">
+      {/* POS Screen Mockup */}
+      <div className="rounded-xl border-2 border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-900 shadow-lg overflow-hidden">
+        {/* Toolbar Area - Highlighted */}
+        <div className="bg-gradient-to-r from-stone-800 to-stone-900 p-3 border-b-2 border-amber-500">
+          <div className="flex items-center justify-between gap-4">
+            {/* Left Zone */}
+            <div className="flex items-center gap-1.5 flex-1">
+              {leftItems.length > 0 ? (
+                leftItems.map(id => renderItem(id, 'left'))
+              ) : (
+                <span className="text-[10px] text-stone-500 italic px-2 py-1.5">Left zone</span>
+              )}
+            </div>
+            {/* Center Zone */}
+            <div className="flex items-center justify-center gap-1.5 flex-1">
+              {centerItems.length > 0 ? (
+                centerItems.map(id => renderItem(id, 'center'))
+              ) : (
+                <span className="text-[10px] text-stone-500 italic px-2 py-1.5">Center zone</span>
+              )}
+            </div>
+            {/* Right Zone */}
+            <div className="flex items-center justify-end gap-1.5 flex-1">
+              {rightItems.length > 0 ? (
+                rightItems.map(id => renderItem(id, 'right'))
+              ) : (
+                <span className="text-[10px] text-stone-500 italic px-2 py-1.5">Right zone</span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Content Area Placeholder */}
+        <div className="p-6 bg-stone-50 dark:bg-stone-800/50">
+          <div className="grid grid-cols-4 gap-3">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="aspect-square rounded-lg bg-stone-200 dark:bg-stone-700/50 flex items-center justify-center">
+                <div className="w-8 h-8 rounded bg-stone-300 dark:bg-stone-600" />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Bottom Bar Placeholder */}
+        <div className="bg-stone-100 dark:bg-stone-800 p-3 border-t border-stone-200 dark:border-stone-700">
+          <div className="flex gap-2 justify-end">
+            <div className="px-4 py-2 rounded-lg bg-stone-200 dark:bg-stone-700" />
+            <div className="px-4 py-2 rounded-lg bg-stone-200 dark:bg-stone-700" />
+            <div className="px-6 py-2 rounded-lg bg-stone-300 dark:bg-stone-600" />
+          </div>
+        </div>
+      </div>
+
+      {/* Legend */}
+      <div className="mt-4 flex items-center justify-center gap-6 text-[10px] text-stone-500 dark:text-stone-400">
+        <div className="flex items-center gap-1.5">
+          <div className="w-3 h-3 rounded bg-amber-500/30 border border-amber-500/50" />
+          <span>Toolbar (configuring)</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ActionBarPreview({ buttons }: { buttons: ActionButton[] }) {
+  const leftButtons = buttons.filter(b => b.position === 'left')
+  const centerButtons = buttons.filter(b => b.position === 'center')
+  const rightButtons = buttons.filter(b => b.position === 'right')
+
+  const getButtonClasses = (variant: ActionButton['variant']) => {
+    switch (variant) {
+      case 'primary':
+        return 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md hover:from-amber-600 hover:to-amber-700'
+      case 'danger':
+        return 'bg-red-500 text-white hover:bg-red-600'
+      case 'ghost':
+        return 'bg-transparent border border-stone-400 text-stone-300 hover:bg-stone-700/50'
+      case 'secondary':
+      default:
+        return 'bg-stone-600 text-stone-200 hover:bg-stone-500'
+    }
+  }
+
+  return (
+    <div className="w-full max-w-2xl">
+      {/* POS Screen Mockup */}
+      <div className="rounded-xl border-2 border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-900 shadow-lg overflow-hidden">
+        {/* Top Bar Placeholder */}
+        <div className="bg-stone-800 p-3 border-b border-stone-700">
+          <div className="flex items-center justify-between">
+            <div className="flex gap-2">
+              <div className="px-3 py-1.5 rounded bg-stone-700 text-xs text-stone-400">Search</div>
+              <div className="px-3 py-1.5 rounded bg-stone-700 text-xs text-stone-400">Categories</div>
+            </div>
+            <div className="flex gap-2">
+              <div className="px-3 py-1.5 rounded bg-stone-700 text-xs text-stone-400">Actions</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Content Area Placeholder */}
+        <div className="p-6 bg-stone-50 dark:bg-stone-800/50">
+          <div className="grid grid-cols-4 gap-3">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="aspect-square rounded-lg bg-stone-200 dark:bg-stone-700/50 flex items-center justify-center">
+                <div className="w-8 h-8 rounded bg-stone-300 dark:bg-stone-600" />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Action Bar - Highlighted */}
+        <div className="bg-gradient-to-r from-stone-800 to-stone-900 p-3 border-t-2 border-amber-500">
+          <div className="flex items-center justify-between gap-4">
+            {/* Left Buttons */}
+            <div className="flex items-center gap-2 flex-1">
+              {leftButtons.length > 0 ? leftButtons.map(btn => (
+                <button
+                  key={btn.id}
+                  className={cn(
+                    'px-3 py-2 rounded-lg text-xs font-medium transition-all',
+                    getButtonClasses(btn.variant)
+                  )}
+                >
+                  {btn.label}
+                </button>
+              )) : (
+                <span className="text-xs text-stone-500 italic px-3 py-2">Left</span>
+              )}
+            </div>
+            {/* Center Buttons */}
+            <div className="flex items-center justify-center gap-2 flex-1">
+              {centerButtons.length > 0 ? centerButtons.map(btn => (
+                <button
+                  key={btn.id}
+                  className={cn(
+                    'px-3 py-2 rounded-lg text-xs font-medium transition-all',
+                    getButtonClasses(btn.variant)
+                  )}
+                >
+                  {btn.label}
+                </button>
+              )) : (
+                <span className="text-xs text-stone-500 italic px-3 py-2">Center</span>
+              )}
+            </div>
+            {/* Right Buttons */}
+            <div className="flex items-center justify-end gap-2 flex-1">
+              {rightButtons.length > 0 ? rightButtons.map(btn => (
+                <button
+                  key={btn.id}
+                  className={cn(
+                    'px-3 py-2 rounded-lg text-xs font-medium transition-all',
+                    getButtonClasses(btn.variant)
+                  )}
+                >
+                  {btn.label}
+                </button>
+              )) : (
+                <span className="text-xs text-stone-500 italic px-3 py-2">Right</span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Legend */}
+      <div className="mt-4 flex items-center justify-center gap-6 text-[10px] text-stone-500 dark:text-stone-400">
+        <div className="flex items-center gap-1.5">
+          <div className="w-3 h-3 rounded bg-amber-500/30 border border-amber-500/50" />
+          <span>Action Bar (configuring)</span>
+        </div>
+      </div>
     </div>
   )
 }
@@ -721,6 +1404,8 @@ export function TemplateEditorModal({
           timeOfDayWeight: template.timeOfDayWeight,
           salesVelocityWeight: template.salesVelocityWeight,
           staffHistoryWeight: template.staffHistoryWeight,
+          toolbarConfig: template.toolbarConfig || DEFAULT_TOOLBAR_CONFIG,
+          actionBarConfig: template.actionBarConfig || DEFAULT_ACTION_BAR_CONFIG,
         })
       } else {
         setFormState(DEFAULT_FORM_STATE)
@@ -910,10 +1595,10 @@ export function TemplateEditorModal({
           </div>
 
           {/* Body */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-hidden">
             <div className="flex h-full">
-              {/* Form Section */}
-              <div className="flex-1 px-6 py-5 overflow-y-auto">
+              {/* Form Section - Compact */}
+              <div className="w-80 flex-shrink-0 px-5 py-4 overflow-y-auto border-r border-stone-100 dark:border-stone-700">
                 {activeTab === 'general' && (
                   <GeneralTab
                     name={formState.name}
@@ -965,15 +1650,59 @@ export function TemplateEditorModal({
                     onWeightsChange={handleWeightsChange}
                   />
                 )}
+                {activeTab === 'toolbar' && (
+                  <ToolbarTab
+                    toolbarConfig={formState.toolbarConfig}
+                    onUpdate={(v) => updateField('toolbarConfig', v)}
+                  />
+                )}
+                {activeTab === 'actions' && (
+                  <ActionsTab
+                    actionBarConfig={formState.actionBarConfig}
+                    onUpdate={(v) => updateField('actionBarConfig', v)}
+                  />
+                )}
               </div>
 
-              {/* Preview Section */}
-              <div className="w-80 border-l border-stone-100 dark:border-stone-700 bg-stone-50/50 dark:bg-stone-800/50 p-5 flex flex-col">
-                <h3 className="text-sm font-semibold text-stone-700 dark:text-stone-300 mb-4">
-                  Live Preview
-                </h3>
-                <div className="flex-1 flex items-start justify-center">
-                  <POSGridPreview {...previewProps} />
+              {/* Preview Section - Hero */}
+              <div className="flex-1 bg-gradient-to-br from-stone-50 to-stone-100/80 dark:from-stone-800/50 dark:to-stone-900/50 p-5 flex flex-col min-w-0">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-stone-500 dark:text-stone-400">
+                    Live Preview
+                  </h3>
+                  {activeTab !== 'toolbar' && activeTab !== 'actions' && (
+                    <span className="text-[10px] font-medium text-stone-400 dark:text-stone-500 bg-stone-200/60 dark:bg-stone-700/60 px-2 py-0.5 rounded">
+                      {formState.gridColumns} × {formState.gridRows} grid ({formState.tileSize.toLowerCase()})
+                    </span>
+                  )}
+                  {activeTab === 'toolbar' && (
+                    <span className="text-[10px] font-medium text-stone-400 dark:text-stone-500 bg-stone-200/60 dark:bg-stone-700/60 px-2 py-0.5 rounded">
+                      {formState.toolbarConfig.groups.length} groups
+                    </span>
+                  )}
+                  {activeTab === 'actions' && (
+                    <span className="text-[10px] font-medium text-stone-400 dark:text-stone-500 bg-stone-200/60 dark:bg-stone-700/60 px-2 py-0.5 rounded">
+                      {formState.actionBarConfig.buttons.length} buttons
+                    </span>
+                  )}
+                </div>
+                <div className="flex-1 flex items-center justify-center overflow-auto">
+                  {/* Grid Preview for General, Grid, Quick Keys, Suggestions tabs */}
+                  {activeTab !== 'toolbar' && activeTab !== 'actions' && (
+                    <div className="transform origin-center">
+                      <POSGridPreview {...previewProps} />
+                    </div>
+                  )}
+
+                  {/* Toolbar Preview */}
+                  {activeTab === 'toolbar' && (
+                    <ToolbarPreview groups={formState.toolbarConfig.groups} />
+                  )}
+
+                  {/* Action Bar Preview */}
+                  {activeTab === 'actions' && (
+                    <ActionBarPreview buttons={formState.actionBarConfig.buttons} />
+                  )}
                 </div>
               </div>
             </div>

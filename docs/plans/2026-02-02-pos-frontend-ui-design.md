@@ -323,7 +323,183 @@ function useOutletConfig(outletId: string) {
 
 ---
 
-## 7. Success Criteria
+## 7. Toolbar Configuration System
+
+### 7.1 Zone-Based Layout
+
+The POS toolbar uses a three-zone layout system for flexible customization:
+
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│  [LEFT ZONE]          │    [CENTER ZONE]         │    [RIGHT ZONE]       │
+│  Table Operations     │    Member Functions      │    Ticket Actions     │
+└──────────────────────────────────────────────────────────────────────────┘
+```
+
+| Zone | Purpose | Default Items |
+|------|---------|---------------|
+| Left | Table/floor operations | Open Table, Floor Plan, Search |
+| Center | Member interactions | Member Lookup, Attach Member, Charge to Member |
+| Right | Ticket management | Split Check, Merge Tables, Transfer Table, Hold Ticket, New Ticket |
+
+### 7.2 Available Toolbar Items
+
+#### General Items
+| ID | Label | Description |
+|----|-------|-------------|
+| `search` | Search | Global product/member search |
+| `categoryTabs` | Category Tabs | Category navigation tabs (use only if not in product panel) |
+
+#### Member Operations
+| ID | Label | Description |
+|----|-------|-------------|
+| `memberLookup` | Member Lookup | Open member search modal |
+| `attachMember` | Attach Member | Attach a member to current ticket |
+| `detachMember` | Detach Member | Remove member from current ticket |
+| `memberInfo` | Member Info | View attached member details |
+| `chargeToMember` | Charge to Member | Charge ticket to member account |
+
+#### Ticket Actions
+| ID | Label | Description |
+|----|-------|-------------|
+| `holdTicket` | Hold Ticket | Hold current ticket for later |
+| `newTicket` | New Ticket | Create a new ticket |
+| `splitCheck` | Split Check | Split ticket across multiple payments |
+
+#### F&B Table Operations
+| ID | Label | Description |
+|----|-------|-------------|
+| `openTable` | Open Table | Quick access to open a table |
+| `floorPlan` | Floor Plan | Visual floor plan view |
+| `transferTable` | Transfer Table | Transfer table to another server |
+| `mergeTables` | Merge Tables | Combine multiple tables into one ticket |
+
+### 7.3 Template Configuration Structure
+
+Toolbar configuration is stored in the `toolbarConfig` field of POS templates:
+
+```typescript
+interface TemplateToolbarConfig {
+  groups: ToolbarGroup[];
+}
+
+interface ToolbarGroup {
+  id: string;           // Unique group identifier
+  label: string;        // Display label for admin UI
+  zone: 'left' | 'center' | 'right';
+  items: string[];      // Array of item IDs
+}
+
+// Example configuration
+const defaultToolbarConfig: TemplateToolbarConfig = {
+  groups: [
+    {
+      id: 'table-group',
+      label: 'Table Operations',
+      zone: 'left',
+      items: ['openTable', 'floorPlan', 'search']
+    },
+    {
+      id: 'member-group',
+      label: 'Member',
+      zone: 'center',
+      items: ['memberLookup', 'attachMember', 'chargeToMember']
+    },
+    {
+      id: 'actions-group',
+      label: 'Table & Ticket',
+      zone: 'right',
+      items: ['splitCheck', 'mergeTables', 'transferTable', 'holdTicket', 'newTicket']
+    }
+  ]
+};
+```
+
+### 7.4 Template Editor Integration
+
+The Template Editor modal allows admins to configure toolbar groups:
+
+```
+TemplateEditorModal
+└── ToolbarTab
+    ├── Zone Selector (Left | Center | Right)
+    ├── Available Items (filtered by category)
+    │   ├── General: Search, Category Tabs
+    │   ├── Ticket: Hold Ticket, New Ticket
+    │   ├── Member: Member Lookup, Attach/Detach, Info, Charge
+    │   └── F&B Tables: Open Table, Floor Plan, Transfer, Merge
+    └── Zone Configuration (drag-drop item arrangement)
+```
+
+### 7.5 API Integration
+
+Toolbar configuration is fetched via GraphQL:
+
+```typescript
+// Query outlet-specific POS config
+const { data } = useGetPosConfigQuery({
+  outletId: selectedOutletId,
+  userRole: 'staff',
+  userPermissions: []
+});
+
+// Parse toolbar config from API response
+const toolbarConfig = data?.posConfig?.toolbarConfig as TemplateToolbarConfig;
+
+// Access toolbar groups for rendering
+const toolbarGroups = toolbarConfig?.toolbarGroups || defaultGroups;
+```
+
+---
+
+## 8. Session Management
+
+### 8.1 Activity-Based Timeout
+
+POS sessions use activity-based timeout rather than fixed token expiration:
+
+| Setting | Default Value | Description |
+|---------|---------------|-------------|
+| Inactivity Timeout | 15 minutes | Time without activity before logout |
+| Activity Check Interval | 1 minute | How often to check for timeout |
+| Warning Before Logout | 2 minutes | When to show "Stay logged in?" prompt |
+
+### 8.2 Activity Detection
+
+The following events reset the inactivity timer:
+
+- Mouse clicks and movements
+- Keyboard input
+- Touch events
+- Scroll events
+
+Activity updates are throttled to once per second to minimize performance impact.
+
+### 8.3 Session Extension
+
+When the warning is shown, users can:
+
+1. **Stay Logged In**: Resets timer and refreshes session tokens
+2. **Log Out**: Immediately ends session
+
+```typescript
+interface AuthContextValue {
+  // Existing methods...
+  extendSession: () => Promise<void>;      // Reset timer + refresh tokens
+  getTimeUntilTimeout: () => number;       // Milliseconds until timeout
+}
+```
+
+### 8.4 Visibility Change Handling
+
+When a browser tab becomes visible again:
+- Session validity is checked
+- Tokens are refreshed if needed
+- User is logged out if session has expired
+
+---
+
+## 9. Success Criteria
 
 1. **Staff efficiency**: Find and add any product in <3 taps
 2. **Quick keys**: One-tap access to top 8-12 items
@@ -332,3 +508,6 @@ function useOutletConfig(outletId: string) {
 5. **Template inheritance**: Changes to template cascade to outlets using defaults
 6. **Visibility rules**: Rules apply correctly 100% of the time
 7. **Performance**: Grid loads in <500ms with 500+ products
+8. **Toolbar customization**: Changes in template editor reflect on POS sales page
+9. **Session security**: Activity-based timeout prevents unauthorized access
+10. **Member operations**: All member functions accessible from toolbar center zone

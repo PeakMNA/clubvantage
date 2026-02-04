@@ -1,0 +1,295 @@
+# EOD Settlement Queries
+
+query GetTodaySettlement {
+  todaySettlement {
+    id
+    clubId
+    businessDate
+    status
+    totalGrossSales
+    totalDiscounts
+    totalNetSales
+    totalTax
+    totalServiceCharge
+    totalCash
+    totalCard
+    totalMemberAccount
+    totalOther
+    totalRefunds
+    totalVoids
+    expectedCash
+    actualCash
+    cashVariance
+    transactionCount
+    refundCount
+    voidCount
+    openedBy
+    openedAt
+    reviewedBy
+    reviewedAt
+    closedBy
+    closedAt
+    notes
+    createdAt
+    updatedAt
+    exceptions {
+      id
+      type
+      severity
+      resolution
+      description
+      amount
+      createdAt
+    }
+  }
+}
+
+query GetSettlement($id: ID!) {
+  settlement(id: $id) {
+    id
+    clubId
+    businessDate
+    status
+    totalGrossSales
+    totalDiscounts
+    totalNetSales
+    totalTax
+    totalServiceCharge
+    totalCash
+    totalCard
+    totalMemberAccount
+    totalOther
+    totalRefunds
+    totalVoids
+    expectedCash
+    actualCash
+    cashVariance
+    transactionCount
+    refundCount
+    voidCount
+    openedBy
+    openedAt
+    reviewedBy
+    reviewedAt
+    closedBy
+    closedAt
+    notes
+    createdAt
+    updatedAt
+    exceptions {
+      id
+      type
+      severity
+      resolution
+      description
+      amount
+      resolvedBy
+      resolvedAt
+      resolutionNote
+      createdAt
+    }
+  }
+}
+
+query GetSettlementByDate($date: DateTime!) {
+  settlementByDate(date: $date) {
+    id
+    clubId
+    businessDate
+    status
+    totalGrossSales
+    totalNetSales
+    totalCash
+    totalCard
+    totalMemberAccount
+    expectedCash
+    actualCash
+    cashVariance
+    transactionCount
+    createdAt
+    exceptions {
+      id
+      type
+      severity
+      resolution
+    }
+  }
+}
+
+query GetSettlements($input: GetSettlementsInput!) {
+  settlements(input: $input) {
+    id
+    businessDate
+    status
+    totalGrossSales
+    totalNetSales
+    totalCash
+    totalCard
+    totalMemberAccount
+    expectedCash
+    actualCash
+    cashVariance
+    transactionCount
+    closedAt
+    exceptions {
+      id
+      type
+      severity
+      resolution
+    }
+  }
+}
+
+query GetSettlementSummary($settlementId: ID!) {
+  settlementSummary(settlementId: $settlementId) {
+    settlementId
+    businessDate
+    status
+    totalGrossSales
+    totalNetSales
+    totalCash
+    totalCard
+    totalMemberAccount
+    expectedCash
+    actualCash
+    cashVariance
+    exceptionCount
+    unresolvedExceptionCount
+  }
+}
+
+query GetSettlementExceptions($settlementId: ID!, $pendingOnly: Boolean) {
+  settlementExceptions(settlementId: $settlementId, pendingOnly: $pendingOnly) {
+    id
+    settlementId
+    type
+    severity
+    resolution
+    description
+    amount
+    transactionId
+    shiftId
+    lineItemId
+    resolvedBy
+    resolvedAt
+    resolutionNote
+    createdAt
+    updatedAt
+  }
+}
+
+# EOD Settlement Mutations
+
+mutation OpenDay($input: OpenDayInput!) {
+  openDay(input: $input) {
+    id
+    clubId
+    businessDate
+    status
+    openedBy
+    openedAt
+  }
+}
+
+mutation SubmitSettlementForReview($settlementId: ID!) {
+  submitSettlementForReview(settlementId: $settlementId) {
+    id
+    status
+    reviewedBy
+    reviewedAt
+  }
+}
+
+mutation CloseSettlement($input: CloseSettlementInput!) {
+  closeSettlement(input: $input) {
+    id
+    status
+    closedBy
+    closedAt
+    notes
+  }
+}
+
+mutation ReopenSettlement($input: ReopenSettlementInput!) {
+  reopenSettlement(input: $input) {
+    id
+    status
+  }
+}
+
+mutation UpdateSettlementTotals($input: UpdateSettlementTotalsInput!) {
+  updateSettlementTotals(input: $input) {
+    id
+    totalGrossSales
+    totalDiscounts
+    totalNetSales
+    totalTax
+    totalServiceCharge
+    totalCash
+    totalCard
+    totalMemberAccount
+    totalOther
+    totalRefunds
+    totalVoids
+    expectedCash
+    transactionCount
+    refundCount
+    voidCount
+  }
+}
+
+mutation RecordCashCount($input: RecordCashCountInput!) {
+  recordCashCount(input: $input) {
+    id
+    actualCash
+    cashVariance
+    exceptions {
+      id
+      type
+      severity
+      description
+      amount
+    }
+  }
+}
+
+mutation RecalculateSettlementTotals($settlementId: ID!) {
+  recalculateSettlementTotals(settlementId: $settlementId) {
+    id
+    totalGrossSales
+    totalNetSales
+    totalCash
+    totalCard
+    totalMemberAccount
+    totalOther
+    totalRefunds
+    totalVoids
+    expectedCash
+    transactionCount
+    refundCount
+    voidCount
+  }
+}
+
+mutation CreateSettlementException($input: CreateExceptionInput!) {
+  createSettlementException(input: $input) {
+    id
+    settlementId
+    type
+    severity
+    resolution
+    description
+    amount
+    createdAt
+  }
+}
+
+mutation ResolveSettlementException($input: ResolveExceptionInput!) {
+  resolveSettlementException(input: $input) {
+    id
+    resolution
+    resolvedBy
+    resolvedAt
+    resolutionNote
+  }
+}

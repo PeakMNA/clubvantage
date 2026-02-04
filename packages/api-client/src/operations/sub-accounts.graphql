@@ -1,0 +1,213 @@
+# Sub-Account Queries
+
+query GetSubAccounts($status: SubAccountStatus) {
+  subAccounts(status: $status) {
+    id
+    clubId
+    memberId
+    name
+    relationship
+    email
+    phone
+    status
+    validFrom
+    validUntil
+    permissions
+    dailyLimit
+    weeklyLimit
+    monthlyLimit
+    perTransactionLimit
+    dailySpend
+    weeklySpend
+    monthlySpend
+    notifyPrimaryOnUse
+    notifyOnLimitReached
+    pinAttempts
+    pinLockedUntil
+    createdAt
+    updatedAt
+  }
+}
+
+query GetSubAccount($id: ID!) {
+  subAccount(id: $id) {
+    id
+    clubId
+    memberId
+    name
+    relationship
+    email
+    phone
+    status
+    validFrom
+    validUntil
+    permissions
+    dailyLimit
+    weeklyLimit
+    monthlyLimit
+    perTransactionLimit
+    dailySpend
+    weeklySpend
+    monthlySpend
+    lastResetDaily
+    lastResetWeekly
+    lastResetMonthly
+    notifyPrimaryOnUse
+    notifyOnLimitReached
+    pinAttempts
+    pinLockedUntil
+    createdAt
+    updatedAt
+  }
+}
+
+query GetMemberSubAccounts($memberId: ID!, $activeOnly: Boolean) {
+  memberSubAccounts(memberId: $memberId, activeOnly: $activeOnly) {
+    id
+    name
+    relationship
+    status
+    permissions
+    dailyLimit
+    weeklyLimit
+    monthlyLimit
+    perTransactionLimit
+    dailySpend
+    weeklySpend
+    monthlySpend
+    validUntil
+    pinLockedUntil
+  }
+}
+
+query CheckSubAccountLimit($input: CheckLimitInput!) {
+  checkSubAccountLimit(input: $input) {
+    allowed
+    reason
+    currentDaily
+    currentWeekly
+    currentMonthly
+    dailyLimit
+    weeklyLimit
+    monthlyLimit
+    perTransactionLimit
+  }
+}
+
+query GetSubAccountTransactions($input: GetTransactionsInput!) {
+  subAccountTransactions(input: $input) {
+    id
+    clubId
+    subAccountId
+    amount
+    description
+    category
+    paymentTransactionId
+    lineItemId
+    teeTimeId
+    verifiedAt
+    verifiedBy
+    locationName
+    notes
+    createdAt
+    subAccount {
+      id
+      name
+      memberId
+    }
+  }
+}
+
+# Sub-Account Mutations
+
+mutation CreateSubAccount($input: CreateSubAccountInput!) {
+  createSubAccount(input: $input) {
+    id
+    name
+    relationship
+    status
+    permissions
+    createdAt
+  }
+}
+
+mutation UpdateSubAccount($input: UpdateSubAccountInput!) {
+  updateSubAccount(input: $input) {
+    id
+    name
+    relationship
+    email
+    phone
+    permissions
+    dailyLimit
+    weeklyLimit
+    monthlyLimit
+    perTransactionLimit
+    validUntil
+    notifyPrimaryOnUse
+    notifyOnLimitReached
+    updatedAt
+  }
+}
+
+mutation VerifySubAccountPin($input: VerifyPinInput!) {
+  verifySubAccountPin(input: $input) {
+    success
+    message
+    remainingAttempts
+  }
+}
+
+mutation ChangeSubAccountPin($input: ChangePinInput!) {
+  changeSubAccountPin(input: $input) {
+    id
+    pinAttempts
+    pinLockedUntil
+  }
+}
+
+mutation ChangeSubAccountStatus($input: ChangeSubAccountStatusInput!) {
+  changeSubAccountStatus(input: $input) {
+    id
+    status
+    updatedAt
+  }
+}
+
+mutation UnlockSubAccountPin($subAccountId: ID!) {
+  unlockSubAccountPin(subAccountId: $subAccountId) {
+    id
+    pinAttempts
+    pinLockedUntil
+  }
+}
+
+mutation DeleteSubAccount($id: ID!) {
+  deleteSubAccount(id: $id) {
+    id
+    status
+  }
+}
+
+mutation RecordSubAccountTransaction($input: RecordTransactionInput!) {
+  recordSubAccountTransaction(input: $input) {
+    id
+    amount
+    description
+    category
+    verifiedAt
+    createdAt
+  }
+}
+
+mutation ResetSubAccountSpending($subAccountId: ID!) {
+  resetSubAccountSpending(subAccountId: $subAccountId) {
+    id
+    dailySpend
+    weeklySpend
+    monthlySpend
+    lastResetDaily
+    lastResetWeekly
+    lastResetMonthly
+  }
+}

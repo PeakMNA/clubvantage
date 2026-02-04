@@ -1,7 +1,7 @@
 'use client'
 
 import { cn } from '@clubvantage/ui'
-import { CheckCircle, AlertTriangle } from 'lucide-react'
+import { CheckCircle, AlertTriangle, TrendingDown, TrendingUp } from 'lucide-react'
 
 export interface SettlementSummaryData {
   /** Cash/transfer payment amount */
@@ -10,6 +10,20 @@ export interface SettlementSummaryData {
   whtAmount?: number
   /** Total amount allocated to invoices */
   allocatedAmount: number
+  /** Credit to add (if overpayment) */
+  creditToAdd?: number
+  /** Number of invoices selected */
+  invoiceCount?: number
+  /** Account balance before payment */
+  balanceBefore?: {
+    outstanding: number
+    credit: number
+  }
+  /** Account balance after payment (calculated) */
+  balanceAfter?: {
+    outstanding: number
+    credit: number
+  }
   /** Status change information */
   statusChange?: {
     /** Type of status change */
@@ -41,11 +55,13 @@ export function SettlementSummary({ data, className }: SettlementSummaryProps) {
   const whtAmount = data.whtAmount ?? 0
   const totalSettlement = cashAmount + whtAmount
   const allocatedAmount = data.allocatedAmount ?? 0
+  const creditToAdd = data.creditToAdd ?? Math.max(0, totalSettlement - allocatedAmount)
   const remainder = totalSettlement - allocatedAmount
 
   const hasWht = whtAmount > 0
   const isShortfall = remainder < 0
-  const hasRemainder = remainder > 0
+  const hasCredit = creditToAdd > 0
+  const hasBalanceInfo = data.balanceBefore || data.balanceAfter
 
   return (
     <div
@@ -58,6 +74,9 @@ export function SettlementSummary({ data, className }: SettlementSummaryProps) {
     >
       {/* Payment Section */}
       <div className="space-y-2">
+        <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          Payment
+        </div>
         {/* Cash/Transfer row */}
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">Cash/Transfer</span>
@@ -95,6 +114,18 @@ export function SettlementSummary({ data, className }: SettlementSummaryProps) {
 
       {/* Allocation Section */}
       <div className="space-y-2">
+        <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          Allocation
+        </div>
+        {/* Invoices selected */}
+        {data.invoiceCount !== undefined && (
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Invoices selected</span>
+            <span className="text-sm font-medium text-foreground">
+              {data.invoiceCount}
+            </span>
+          </div>
+        )}
         {/* Allocated to Invoices row */}
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">Allocated to Invoices</span>
@@ -103,28 +134,66 @@ export function SettlementSummary({ data, className }: SettlementSummaryProps) {
           </span>
         </div>
 
-        {/* Remainder to Credit OR Shortfall row */}
-        {isShortfall ? (
+        {/* Shortfall warning */}
+        {isShortfall && (
           <div className="flex items-center justify-between">
             <span className="text-sm text-red-600">Shortfall</span>
             <span className="text-sm font-medium text-red-600">
               {formatCurrency(Math.abs(remainder))}
             </span>
           </div>
-        ) : (
+        )}
+
+        {/* Credit to add (overpayment) */}
+        {hasCredit && (
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Remainder to Credit</span>
-            <span
-              className={cn(
-                'text-sm font-medium',
-                hasRemainder ? 'text-emerald-600' : 'text-foreground'
-              )}
-            >
-              {formatCurrency(remainder)}
+            <span className="text-sm text-emerald-600">Credit to add</span>
+            <span className="text-sm font-medium text-emerald-600">
+              +{formatCurrency(creditToAdd)}
             </span>
           </div>
         )}
       </div>
+
+      {/* Account Balance Section - only if balance info provided */}
+      {hasBalanceInfo && (
+        <>
+          <hr className="my-4 border" />
+          <div className="space-y-2">
+            <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Account Balance
+            </div>
+            {/* Outstanding balance change */}
+            {data.balanceBefore?.outstanding !== undefined && data.balanceAfter?.outstanding !== undefined && (
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground flex items-center gap-1">
+                  <TrendingDown className="h-3 w-3 text-emerald-600" />
+                  Outstanding
+                </span>
+                <span className="text-sm font-medium text-foreground">
+                  {formatCurrency(data.balanceBefore.outstanding)}
+                  <span className="text-muted-foreground mx-1">&rarr;</span>
+                  <span className="text-emerald-600">{formatCurrency(data.balanceAfter.outstanding)}</span>
+                </span>
+              </div>
+            )}
+            {/* Credit balance change */}
+            {data.balanceBefore?.credit !== undefined && data.balanceAfter?.credit !== undefined && hasCredit && (
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground flex items-center gap-1">
+                  <TrendingUp className="h-3 w-3 text-emerald-600" />
+                  Credit
+                </span>
+                <span className="text-sm font-medium text-foreground">
+                  {formatCurrency(data.balanceBefore.credit)}
+                  <span className="text-muted-foreground mx-1">&rarr;</span>
+                  <span className="text-emerald-600">{formatCurrency(data.balanceAfter.credit)}</span>
+                </span>
+              </div>
+            )}
+          </div>
+        </>
+      )}
 
       {/* Status Change Alert Banner */}
       {data.statusChange && (

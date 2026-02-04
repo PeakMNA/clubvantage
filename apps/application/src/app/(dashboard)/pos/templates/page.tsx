@@ -14,6 +14,9 @@ import {
   TemplateEditorModal,
   type POSTemplateData,
   type POSTemplateInput,
+  type TemplateToolbarGroup,
+  type TemplateActionButton,
+  POS_ACTION_TYPES,
 } from '@/components/pos'
 
 // ============================================================================
@@ -37,6 +40,9 @@ interface APITemplateConfig {
   timeOfDayWeight?: number
   salesVelocityWeight?: number
   staffHistoryWeight?: number
+  // Toolbar and Action Bar configs
+  toolbarGroups?: TemplateToolbarGroup[]
+  actionButtons?: TemplateActionButton[]
 }
 
 interface APITemplate {
@@ -51,9 +57,35 @@ interface APITemplate {
   updatedAt: string
 }
 
+// Default F&B toolbar config
+// Note: categoryTabs removed since category tabs are in the product panel
+const DEFAULT_TOOLBAR_GROUPS: TemplateToolbarGroup[] = [
+  { id: 'left-zone', label: 'Table Operations', zone: 'left', items: ['openTable', 'floorPlan', 'search'] },
+  { id: 'center-zone', label: 'Member', zone: 'center', items: ['memberLookup', 'attachMember', 'chargeToMember'] },
+  { id: 'right-zone', label: 'Table & Ticket', zone: 'right', items: ['splitCheck', 'mergeTables', 'transferTable', 'holdTicket', 'newTicket'] },
+]
+
+// Default action bar buttons
+const DEFAULT_ACTION_BUTTONS: TemplateActionButton[] = [
+  { id: 'cancel', label: 'Cancel', actionType: POS_ACTION_TYPES.CANCEL_TRANSACTION, variant: 'danger', position: 'left' },
+  { id: 'void', label: 'Void', actionType: POS_ACTION_TYPES.VOID_ITEM, variant: 'ghost', position: 'left' },
+  { id: 'discount', label: 'Discount', actionType: POS_ACTION_TYPES.APPLY_DISCOUNT, variant: 'secondary', position: 'center' },
+  { id: 'hold', label: 'Hold', actionType: POS_ACTION_TYPES.HOLD_TICKET, variant: 'secondary', position: 'center' },
+  { id: 'print', label: 'Print', actionType: POS_ACTION_TYPES.PRINT_RECEIPT, variant: 'ghost', position: 'center' },
+  { id: 'cash', label: 'Cash', actionType: POS_ACTION_TYPES.PROCESS_CASH_PAYMENT, variant: 'secondary', position: 'right' },
+  { id: 'card', label: 'Card', actionType: POS_ACTION_TYPES.PROCESS_CARD_PAYMENT, variant: 'secondary', position: 'right' },
+  { id: 'pay', label: 'Pay', actionType: POS_ACTION_TYPES.OPEN_PAYMENT_MODAL, variant: 'primary', position: 'right' },
+]
+
 // Convert API template to modal data format
 function apiTemplateToModalData(template: APITemplate): POSTemplateData {
   const config = (template.toolbarConfig || {}) as APITemplateConfig
+  // Debug: log what's being loaded
+  console.log('Loading template config:', {
+    toolbarConfig: template.toolbarConfig,
+    toolbarGroups: config.toolbarGroups,
+    actionButtons: config.actionButtons
+  })
   return {
     id: template.id,
     name: template.name,
@@ -74,15 +106,26 @@ function apiTemplateToModalData(template: APITemplate): POSTemplateData {
     timeOfDayWeight: config.timeOfDayWeight ?? 40,
     salesVelocityWeight: config.salesVelocityWeight ?? 35,
     staffHistoryWeight: config.staffHistoryWeight ?? 25,
+    // Toolbar and Action Bar configs
+    toolbarConfig: {
+      groups: config.toolbarGroups ?? DEFAULT_TOOLBAR_GROUPS,
+    },
+    actionBarConfig: {
+      buttons: config.actionButtons ?? DEFAULT_ACTION_BUTTONS,
+    },
   }
 }
 
 // Convert modal input to API format
 function modalInputToAPIFormat(
   input: POSTemplateInput,
-  outletType: string = 'RESTAURANT',
-  existingActionBarConfig?: unknown
+  outletType: string = 'RESTAURANT'
 ) {
+  // Debug: log what's being saved
+  console.log('Saving template input:', {
+    toolbarConfig: input.toolbarConfig,
+    actionBarConfig: input.actionBarConfig
+  })
   const toolbarConfig: APITemplateConfig = {
     gridColumns: input.gridColumns,
     gridRows: input.gridRows,
@@ -100,6 +143,9 @@ function modalInputToAPIFormat(
     timeOfDayWeight: input.timeOfDayWeight,
     salesVelocityWeight: input.salesVelocityWeight,
     staffHistoryWeight: input.staffHistoryWeight,
+    // Save toolbar and action bar configs
+    toolbarGroups: input.toolbarConfig?.groups ?? DEFAULT_TOOLBAR_GROUPS,
+    actionButtons: input.actionBarConfig?.buttons ?? DEFAULT_ACTION_BUTTONS,
   }
 
   return {
@@ -107,7 +153,7 @@ function modalInputToAPIFormat(
     description: input.description || '',
     outletType,
     toolbarConfig,
-    actionBarConfig: existingActionBarConfig || { buttons: [] },
+    actionBarConfig: { buttons: input.actionBarConfig?.buttons ?? DEFAULT_ACTION_BUTTONS },
     isDefault: false,
   }
 }
@@ -435,9 +481,9 @@ export default function POSTemplatesPage() {
   const handleModalSave = useCallback((input: POSTemplateInput) => {
     // Determine outlet type from the existing template or default to RESTAURANT
     const outletType = editingApiTemplate?.outletType || 'RESTAURANT'
-    const actionBarConfig = editingApiTemplate?.actionBarConfig
 
-    const apiInput = modalInputToAPIFormat(input, outletType, actionBarConfig)
+    const apiInput = modalInputToAPIFormat(input, outletType)
+    console.log('API Input being sent:', apiInput)
 
     if (editingApiTemplate) {
       // Update existing template

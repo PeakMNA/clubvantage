@@ -15,6 +15,7 @@ import {
   FileText,
   Clock,
   AlertCircle,
+  Heart,
 } from 'lucide-react';
 
 import {
@@ -35,6 +36,9 @@ import {
   TabsTrigger,
   Separator,
 } from '@clubvantage/ui';
+
+import { EngagementTab } from './tabs/engagement-tab';
+import type { Member as EngagementMember } from './types';
 
 interface Member {
   id: string;
@@ -196,6 +200,10 @@ export function MemberDetailView({ member }: MemberDetailViewProps) {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="billing">Billing</TabsTrigger>
           <TabsTrigger value="bookings">Bookings</TabsTrigger>
+          <TabsTrigger value="engagement">
+            <Heart className="h-4 w-4 mr-1" />
+            Engagement
+          </TabsTrigger>
           <TabsTrigger value="activity">Activity</TabsTrigger>
         </TabsList>
 
@@ -370,6 +378,30 @@ export function MemberDetailView({ member }: MemberDetailViewProps) {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="engagement" className="space-y-4">
+          <EngagementTab
+            member={{
+              id: member.id,
+              memberNumber: member.memberId,
+              firstName: member.firstName,
+              lastName: member.lastName,
+              email: member.email,
+              phone: member.phone,
+              photoUrl: member.avatar,
+              dateOfBirth: '',
+              nationality: '',
+              membershipTypeId: '',
+              membershipTypeName: member.membershipType,
+              status: member.status.toUpperCase() as 'ACTIVE' | 'SUSPENDED' | 'INACTIVE',
+              joinDate: member.joinDate,
+              balance: member.balance,
+              autoPay: false,
+              addresses: [],
+              dependents: [],
+            } as EngagementMember}
+          />
         </TabsContent>
 
         <TabsContent value="activity" className="space-y-4">

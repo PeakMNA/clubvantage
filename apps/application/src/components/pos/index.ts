@@ -117,6 +117,10 @@ export {
   type TemplateEditorModalProps,
   type POSTemplateData,
   type POSTemplateInput,
+  type ToolbarGroup as TemplateToolbarGroup,
+  type ToolbarConfig as TemplateToolbarConfig,
+  type ActionButton as TemplateActionButton,
+  type ActionBarConfig as TemplateActionBarConfig,
 } from './template-editor-modal';
 
 // Visibility Rules Builder
