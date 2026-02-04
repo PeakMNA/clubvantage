@@ -46,6 +46,7 @@ import { EngagementGraphqlModule } from './engagement/engagement.module';
 import { EquipmentGraphQLModule } from './equipment/equipment.module';
 import { LookupsGraphQLModule } from './lookups/lookups.module';
 import { DocumentsModule } from './documents/documents.module';
+import { ARStatementsModule } from './ar-statements/ar-statements.module';
 
 // GraphQL error formatter logger
 const graphqlLogger = new Logger('GraphQL');
@@ -160,6 +161,7 @@ function formatGraphQLError(
     EquipmentGraphQLModule,
     LookupsGraphQLModule,
     DocumentsModule,
+    ARStatementsModule,
   ],
 })
 export class GraphqlModule {}
