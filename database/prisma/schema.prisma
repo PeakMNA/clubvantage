@@ -86,6 +86,7 @@ model Club {
   arProfiles             ARProfile[]
   statementPeriods       StatementPeriod[]
   statementRuns          StatementRun[]
+  arStatements           Statement[]
 
   @@index([slug])
   @@index([isActive])
@@ -246,7 +247,7 @@ model ARProfile {
   club       Club        @relation(fields: [clubId], references: [id], onDelete: Cascade)
   member     Member?     @relation(fields: [memberId], references: [id])
   cityLedger CityLedger? @relation(fields: [cityLedgerId], references: [id])
-  // statements relation added in Task 7 when Statement model is created
+  statements Statement[]
 
   @@unique([clubId, accountNumber])
   @@unique([clubId, profileType, memberId], name: "unique_member_profile")
@@ -344,11 +345,91 @@ model StatementRun {
   club            Club            @relation(fields: [clubId], references: [id], onDelete: Cascade)
   statementPeriod StatementPeriod @relation(fields: [statementPeriodId], references: [id])
   createdByUser   User?           @relation("StatementRunCreatedBy", fields: [createdBy], references: [id])
-  // statements relation added in Task 7
+  statements      Statement[]
 
   @@index([clubId, statementPeriodId])
   @@index([status])
   @@map("statement_runs")
+}
+
+/// Statement - individual member/account statement document
+model Statement {
+  id             String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId         String @db.Uuid
+  statementRunId String @db.Uuid
+  arProfileId    String @db.Uuid
+
+  // Statement identification (null until FINAL run)
+  statementNumber String? @db.VarChar(20)
+
+  // Period
+  periodStart DateTime @db.Date
+  periodEnd   DateTime @db.Date
+  dueDate     DateTime @db.Date
+
+  // Balances
+  openingBalance Decimal @db.Decimal(12, 2)
+  totalDebits    Decimal @db.Decimal(12, 2)
+  totalCredits   Decimal @db.Decimal(12, 2)
+  closingBalance Decimal @db.Decimal(12, 2)
+
+  // Aging breakdown
+  agingCurrent Decimal @default(0) @db.Decimal(12, 2)
+  aging1to30   Decimal @default(0) @db.Decimal(12, 2)
+  aging31to60  Decimal @default(0) @db.Decimal(12, 2)
+  aging61to90  Decimal @default(0) @db.Decimal(12, 2)
+  aging90Plus  Decimal @default(0) @db.Decimal(12, 2)
+
+  // Profile snapshot (billing info at generation time)
+  profileSnapshot Json
+
+  // Transactions
+  transactionCount Int   @default(0)
+  transactions     Json?
+
+  // PDF storage
+  pdfUrl         String?   @db.VarChar(500)
+  pdfGeneratedAt DateTime?
+
+  // Delivery configuration
+  deliveryMethod StatementDelivery
+
+  // Delivery status tracking - Email
+  emailStatus      DeliveryStatus @default(PENDING)
+  emailSentAt      DateTime?
+  emailDeliveredAt DateTime?
+  emailError       String?
+
+  // Delivery status tracking - Print
+  printStatus  DeliveryStatus @default(PENDING)
+  printedAt    DateTime?
+  printBatchId String?        @db.Uuid
+
+  // Delivery status tracking - Portal
+  portalStatus      DeliveryStatus @default(PENDING)
+  portalPublishedAt DateTime?
+  portalViewedAt    DateTime?
+
+  // Delivery status tracking - SMS
+  smsStatus      DeliveryStatus @default(PENDING)
+  smsSentAt      DateTime?
+  smsDeliveredAt DateTime?
+  smsError       String?
+
+  // Audit
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  club         Club         @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  statementRun StatementRun @relation(fields: [statementRunId], references: [id])
+  arProfile    ARProfile    @relation(fields: [arProfileId], references: [id])
+
+  @@unique([clubId, statementNumber])
+  @@index([clubId, arProfileId])
+  @@index([statementRunId])
+  @@index([closingBalance])
+  @@map("statements")
 }
 
 /// Membership type configuration
