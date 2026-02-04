@@ -83,6 +83,7 @@ model Club {
   equipmentAssignments   EquipmentAssignment[]
   lookupValues           LookupValue[]
   memberDocuments        MemberDocument[]
+  arProfiles             ARProfile[]
 
   @@index([slug])
   @@index([isActive])
@@ -198,6 +199,59 @@ model MemberBillingProfile {
   @@index([memberId])
   @@index([nextBillingDate])
   @@map("member_billing_profiles")
+}
+
+/// AR Profile - unified account for statement generation
+/// Polymorphic link to either Member or CityLedger
+model ARProfile {
+  id     String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId String @db.Uuid
+
+  // Account identification
+  accountNumber String @db.VarChar(30)
+
+  // Polymorphic link
+  profileType  ARProfileType
+  memberId     String?       @unique @db.Uuid
+  cityLedgerId String?       @unique @db.Uuid
+
+  // Billing configuration
+  statementDelivery StatementDelivery @default(EMAIL)
+  paymentTermsDays  Int               @default(15)
+  creditLimit       Decimal?          @db.Decimal(12, 2)
+
+  // Current state
+  currentBalance       Decimal   @default(0) @db.Decimal(12, 2)
+  lastStatementDate    DateTime? @db.Date
+  lastStatementBalance Decimal?  @db.Decimal(12, 2)
+  lastPaymentDate      DateTime? @db.Date
+  lastPaymentAmount    Decimal?  @db.Decimal(12, 2)
+
+  // Status
+  status          ARProfileStatus @default(ACTIVE)
+  suspendedAt     DateTime?
+  suspendedReason String?
+  closedAt        DateTime?
+  closedReason    String?
+
+  // Audit
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?  @db.Uuid
+  updatedBy String?  @db.Uuid
+
+  // Relations
+  club       Club        @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  member     Member?     @relation(fields: [memberId], references: [id])
+  cityLedger CityLedger? @relation(fields: [cityLedgerId], references: [id])
+  // statements relation added in Task 7 when Statement model is created
+
+  @@unique([clubId, accountNumber])
+  @@unique([clubId, profileType, memberId], name: "unique_member_profile")
+  @@unique([clubId, profileType, cityLedgerId], name: "unique_cityledger_profile")
+  @@index([clubId, status])
+  @@index([clubId, profileType])
+  @@map("ar_profiles")
 }
 
 /// Membership type configuration
@@ -342,6 +396,7 @@ model Member {
   communicationPrefs    MemberCommunicationPrefs?
   addresses             MemberAddress[]
   documents             MemberDocument[]
+  arProfile             ARProfile?
 
   @@unique([clubId, memberId])
   @@unique([clubId, email])
@@ -573,9 +628,10 @@ model CityLedger {
   createdAt          DateTime         @default(now())
   updatedAt          DateTime         @updatedAt
 
-  club     Club      @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  invoices Invoice[]
-  payments Payment[]
+  club      Club       @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  invoices  Invoice[]
+  payments  Payment[]
+  arProfile ARProfile?
 
   @@unique([clubId, accountNumber])
   @@index([clubId])
