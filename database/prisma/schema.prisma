@@ -84,6 +84,7 @@ model Club {
   lookupValues           LookupValue[]
   memberDocuments        MemberDocument[]
   arProfiles             ARProfile[]
+  statementPeriods       StatementPeriod[]
 
   @@index([slug])
   @@index([isActive])
@@ -252,6 +253,54 @@ model ARProfile {
   @@index([clubId, status])
   @@index([clubId, profileType])
   @@map("ar_profiles")
+}
+
+/// Statement Period - billing period for AR statements
+model StatementPeriod {
+  id     String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId String @db.Uuid
+
+  // Period identification
+  periodYear   Int
+  periodNumber Int
+  periodLabel  String @db.VarChar(50)
+
+  // Date range
+  periodStart DateTime @db.Date
+  periodEnd   DateTime @db.Date
+  cutoffDate  DateTime @db.Date
+
+  // Status & locking
+  status           PeriodStatus @default(OPEN)
+  closedAt         DateTime?
+  closedBy         String?      @db.Uuid
+  reopenedAt       DateTime?
+  reopenedBy       String?      @db.Uuid
+  reopenReason     String?
+  reopenApprovedBy String?      @db.Uuid
+
+  // Totals (populated at close)
+  totalProfiles       Int?
+  totalStatements     Int?
+  totalOpeningBalance Decimal? @db.Decimal(14, 2)
+  totalDebits         Decimal? @db.Decimal(14, 2)
+  totalCredits        Decimal? @db.Decimal(14, 2)
+  totalClosingBalance Decimal? @db.Decimal(14, 2)
+
+  // Audit
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  club                 Club  @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  closedByUser         User? @relation("PeriodClosedBy", fields: [closedBy], references: [id])
+  reopenedByUser       User? @relation("PeriodReopenedBy", fields: [reopenedBy], references: [id])
+  reopenApprovedByUser User? @relation("PeriodReopenApprovedBy", fields: [reopenApprovedBy], references: [id])
+  // statementRuns relation added in Task 6
+
+  @@unique([clubId, periodYear, periodNumber])
+  @@index([clubId, status])
+  @@map("statement_periods")
 }
 
 /// Membership type configuration
@@ -1809,6 +1858,11 @@ model User {
   club                 Club?                 @relation(fields: [clubId], references: [id], onDelete: Cascade)
   member               Member?               @relation(fields: [memberId], references: [id])
   equipmentAssignments EquipmentAssignment[]
+
+  // Statement period audit relations
+  periodsClosed         StatementPeriod[] @relation("PeriodClosedBy")
+  periodsReopened       StatementPeriod[] @relation("PeriodReopenedBy")
+  periodsReopenApproved StatementPeriod[] @relation("PeriodReopenApprovedBy")
 
   @@unique([clubId, email])
   @@index([clubId])
