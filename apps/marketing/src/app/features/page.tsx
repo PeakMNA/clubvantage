@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Users, Receipt, CalendarDays, Trophy, Smartphone, Sparkles, ArrowRight } from 'lucide-react';
+import { Users, Receipt, CalendarDays, Trophy, Smartphone, Sparkles, ArrowRight, ShoppingBag, Megaphone } from 'lucide-react';
 
 const features = [
   {
@@ -40,6 +40,18 @@ const features = [
     description: 'AI-powered assistant that learns your operations.',
     icon: Sparkles,
     href: '/features/aura',
+  },
+  {
+    title: 'POS & Retail',
+    description: 'Pro shop sales, inventory management, and member charging.',
+    icon: ShoppingBag,
+    href: '/features/retail',
+  },
+  {
+    title: 'AI Marketing Agency',
+    description: 'AI-driven engagement and acquisition marketing campaigns.',
+    icon: Megaphone,
+    href: '/features/marketing',
   },
 ];
 

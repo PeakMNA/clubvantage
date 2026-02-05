@@ -4,7 +4,7 @@ import * as React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { ArrowRight, Users, Receipt, CalendarDays, Trophy, Smartphone, Sparkles, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, Users, Receipt, CalendarDays, Trophy, Smartphone, Sparkles, CheckCircle2, ShoppingBag, Megaphone } from 'lucide-react';
 
 const modules = [
   {
@@ -101,6 +101,38 @@ const modules = [
     image: '/images/module-ai.png',
     href: '/features/aura',
     icon: Sparkles,
+    accent: 'accent',
+  },
+  {
+    pretitle: 'Retail',
+    title: 'POS & Retail',
+    description:
+      'Full-featured point-of-sale for pro shops and retail operations. Manage inventory, process sales, and charge directly to member accounts seamlessly.',
+    features: [
+      'Pro shop point-of-sale',
+      'Inventory management',
+      'Member account charging',
+      'Sales analytics & reporting',
+    ],
+    image: '/images/module-retail.png',
+    href: '/features/retail',
+    icon: ShoppingBag,
+    accent: 'primary',
+  },
+  {
+    pretitle: 'Marketing',
+    title: 'AI Marketing Agency',
+    description:
+      'Your AI-powered digital marketing team. Automate engagement campaigns for existing members and acquisition campaigns to attract new ones—all optimized by AI.',
+    features: [
+      'AI-driven engagement campaigns',
+      'Automated acquisition marketing',
+      'Multi-channel campaign orchestration',
+      'ROI tracking & optimization',
+    ],
+    image: '/images/module-marketing.png',
+    href: '/features/marketing',
+    icon: Megaphone,
     accent: 'accent',
   },
 ];
