@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Image from 'next/image';
-import { Play, Users, Calendar } from 'lucide-react';
+import { Play, Pause, Users, Calendar } from 'lucide-react';
 
 const stats = [
   { icon: Users, value: '50', label: 'Founding Spots' },
@@ -12,6 +12,18 @@ const stats = [
 
 export function VideoSection() {
   const [isPlaying, setIsPlaying] = React.useState(false);
+  const videoRef = React.useRef<HTMLVideoElement>(null);
+
+  const handlePlayPause = () => {
+    if (videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
 
   return (
     <section id="video" className="py-20 md:py-28 bg-cream-100">
@@ -31,19 +43,24 @@ export function VideoSection() {
 
         {/* Video Player */}
         <div className="relative max-w-4xl mx-auto rounded-2xl overflow-hidden shadow-2xl group">
-          <div className="aspect-video relative">
-            {!isPlaying ? (
+          <div className="aspect-video relative bg-charcoal-900">
+            {/* Video element */}
+            <video
+              ref={videoRef}
+              className="absolute inset-0 w-full h-full object-cover"
+              poster="/images/clubvantage-golf.png"
+              onEnded={() => setIsPlaying(false)}
+            >
+              <source src="/video/clubvantage-video.mp4" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+
+            {/* Play/Pause overlay */}
+            {!isPlaying && (
               <>
-                <Image
-                  src="/images/clubvantage-golf.png"
-                  alt="ClubVantage Golf Tee Sheet"
-                  fill
-                  className="object-cover"
-                  priority
-                />
                 <div className="absolute inset-0 bg-charcoal-900/30" />
                 <button
-                  onClick={() => setIsPlaying(true)}
+                  onClick={handlePlayPause}
                   className="absolute inset-0 flex items-center justify-center group/play"
                   aria-label="Play video"
                 >
@@ -61,10 +78,18 @@ export function VideoSection() {
                   1:30
                 </div>
               </>
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center bg-charcoal-900 text-cream-100">
-                <p>Video player placeholder - embed actual video here</p>
-              </div>
+            )}
+
+            {/* Pause button when playing */}
+            {isPlaying && (
+              <button
+                onClick={handlePlayPause}
+                className="absolute bottom-4 right-4 flex items-center justify-center w-12 h-12 rounded-full
+                         bg-charcoal-900/70 text-cream-100 opacity-0 group-hover:opacity-100 transition-opacity"
+                aria-label="Pause video"
+              >
+                <Pause className="h-5 w-5" fill="currentColor" />
+              </button>
             )}
           </div>
 
