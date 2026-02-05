@@ -47,7 +47,7 @@ const faqCategories = [
     faqs: [
       {
         question: 'How much does ClubVantage cost?',
-        answer: 'Pricing will be announced closer to launch. Founding members who join the waitlist will receive exclusive lifetime founder pricing—locked in forever, even as we add features.',
+        answer: 'Pricing will be announced closer to launch. Founding members who join the waitlist will receive 50% off—locked in for life, even as we add features.',
       },
       {
         question: 'What is the founding member program?',
