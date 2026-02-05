@@ -21,27 +21,27 @@ const milestones = [
   {
     year: '1999',
     title: 'The Beginning',
-    description: 'Started building club management systems for golf courses in Southeast Asia.',
+    description: 'Started implementing club management systems for golf courses in Thailand.',
   },
   {
     year: '2005',
     title: 'Regional Expansion',
-    description: 'Extended services across Thailand, Singapore, and Malaysia.',
+    description: 'Extended services to Singapore, Malaysia, and Hong Kong.',
   },
   {
-    year: '2012',
-    title: 'Cloud Transformation',
-    description: 'Pioneered cloud-based club management for the region.',
+    year: '2015',
+    title: 'Southeast Asia Coverage',
+    description: 'Expanded to Indonesia and Philippines, serving 150+ clubs.',
   },
   {
-    year: '2020',
-    title: 'AI Integration',
-    description: 'Began developing AI-powered automation for club operations.',
+    year: 'Dec 2025',
+    title: 'ClubVantage Founded',
+    description: 'Started fresh with AI-first architecture, built on 25 years of experience.',
   },
   {
-    year: '2024',
-    title: 'ClubVantage Launch',
-    description: 'Unveiled the next generation AI-first club management platform.',
+    year: 'Q3 2026',
+    title: 'MVP Launch',
+    description: 'First release to founding members.',
   },
 ];
 
@@ -72,7 +72,7 @@ const stats = [
   { value: '25+', label: 'Years Experience' },
   { value: '150+', label: 'Clubs Served' },
   { value: '500K+', label: 'Members Managed' },
-  { value: '5', label: 'Countries' },
+  { value: '6', label: 'Countries' },
 ];
 
 export default function AboutPage() {
@@ -133,9 +133,9 @@ export default function AboutPage() {
 
               {/* Headline */}
               <h1 className="font-serif text-display text-cream-50 leading-tight opacity-0 animate-fade-up fill-forwards delay-1">
-                Built by Club Experts,
+                25 Years of Club Expertise,
                 <br />
-                <span className="text-accent-300">For Club Experts</span>
+                <span className="text-accent-300">Rebuilt for the AI Era</span>
               </h1>
 
               {/* Description */}
@@ -209,15 +209,14 @@ export default function AboutPage() {
                     We saw an opportunity to bring modern technology to an industry steeped in tradition.
                   </p>
                   <p>
-                    Over the next 25 years, we built systems for over 150 clubs across Southeast Asia—from
-                    prestigious golf courses to exclusive fitness centers, from traditional country clubs
-                    to modern sports facilities. Each implementation taught us something new about what
-                    clubs truly need.
+                    Over the next 25 years, we built systems for over 150 clubs across Southeast Asia—Thailand,
+                    Singapore, Malaysia, Hong Kong, Indonesia, and the Philippines. Each implementation
+                    taught us something new about what clubs truly need.
                   </p>
                   <p>
-                    ClubVantage represents the culmination of this experience. It&apos;s not just software;
-                    it&apos;s decades of institutional knowledge encoded into an intelligent platform that
-                    understands clubs the way we do.
+                    After 25 years, we knew exactly what clubs need—and what legacy systems can&apos;t deliver.
+                    In late 2025, we started fresh: AI-first architecture, modern design, built on decades
+                    of experience. Now we&apos;re looking for founding members to build it with us.
                   </p>
                 </div>
               </div>
