@@ -43,61 +43,65 @@ interface TimelineQuarter {
 
 const timeline: TimelineQuarter[] = [
   {
-    quarter: 'Q1 2026',
-    label: 'MVP Launch',
+    quarter: 'Now',
+    label: 'Foundation (Built)',
     isCurrent: true,
     features: [
       'Member Management & Directory',
-      'Basic Billing & Invoicing',
-      'Tee Sheet & Golf Booking',
-      'Facility Booking Calendar',
-      'Aura AI Assistant (Basic)',
-      'Member Portal (Web)',
-    ],
-  },
-  {
-    quarter: 'Q2 2026',
-    label: 'Mobile & Integrations',
-    features: [
-      'Member Mobile App (iOS & Android)',
-      'Golf Handicap Integration',
-      'WhatsApp Notifications',
-      'Advanced Reporting Dashboard',
-      'Payment Gateway Integrations',
+      'Billing & Invoicing',
+      'Golf Tee Sheet',
+      'Facility Booking',
+      'POS & Retail',
     ],
   },
   {
     quarter: 'Q3 2026',
-    label: 'Advanced Features',
+    label: 'Launch',
     features: [
-      'Tournament Management',
-      'Multi-Currency Billing',
-      'Dependent Portal Access',
-      'F&B POS Integration',
-      'Automated Marketing Campaigns',
+      'Member Portal (PWA)',
+      'Aura AI Assistant (Basic)',
+      'Mobile Apps (iOS & Android)',
     ],
   },
   {
     quarter: 'Q4 2026',
-    label: 'AI & Analytics',
+    label: 'Engagement',
     features: [
-      'AI-Powered Revenue Insights',
-      'Predictive Member Churn',
-      'Smart Scheduling Optimization',
-      'Advanced Analytics Suite',
-      'API for Third-Party Apps',
+      'AI Marketing - Engagement',
+      'Advanced Reporting',
+      'WhatsApp Notifications',
+    ],
+  },
+  {
+    quarter: '2027',
+    label: 'Intelligence',
+    features: [
+      'AI Marketing - Acquisition',
+      'Predictive Analytics',
+      'Handicap Integration',
+      'Tournament Management',
+    ],
+  },
+  {
+    quarter: '2028',
+    label: 'Ecosystem',
+    features: [
+      'Public API',
+      'Integration Marketplace',
+      'Multi-location Support',
+      'White-label Option',
     ],
   },
 ];
 
 const statusConfig: Record<FeatureStatus, { label: string; color: string; icon: React.ComponentType<{ className?: string }> }> = {
-  considering: { label: 'Under Consideration', color: 'bg-accent-100 text-accent-700', icon: Lightbulb },
-  planned: { label: 'Planned', color: 'bg-primary-100 text-primary-700', icon: Clock },
-  'in-progress': { label: 'In Progress', color: 'bg-amber-100 text-amber-700', icon: Rocket },
-  completed: { label: 'Completed', color: 'bg-emerald-100 text-emerald-700', icon: CheckCircle2 },
+  completed: { label: 'Built', color: 'bg-emerald-100 text-emerald-700', icon: CheckCircle2 },
+  'in-progress': { label: 'In Development', color: 'bg-amber-100 text-amber-700', icon: Rocket },
+  planned: { label: 'Planned', color: 'bg-blue-100 text-blue-700', icon: Clock },
+  considering: { label: 'Considering', color: 'bg-gray-100 text-gray-600', icon: Lightbulb },
 };
 
-const categories = ['All', 'Membership', 'Billing', 'Booking', 'Golf', 'Portal', 'AI', 'Integrations'];
+const categories = ['All', 'Membership', 'Billing', 'Booking', 'Golf', 'Portal', 'AI', 'Integrations', 'Retail', 'Marketing'];
 
 const initialFeatures: Feature[] = [
   // MVP Features (Q1 2026)
@@ -268,6 +272,88 @@ const initialFeatures: Feature[] = [
     category: 'Integrations',
     eta: 'Q4 2026',
   },
+  // POS Retail Features
+  {
+    id: '17',
+    title: 'POS Retail System',
+    description: 'Full-featured point-of-sale for pro shops, merchandise, and retail operations. Integrated inventory, barcode scanning, and member charging.',
+    status: 'planned',
+    votes: 73,
+    comments: 18,
+    category: 'Retail',
+    eta: 'Q2 2026',
+  },
+  {
+    id: '18',
+    title: 'Pro Shop Inventory Management',
+    description: 'Track stock levels, automate reordering, manage suppliers, and analyze sales trends for golf equipment and merchandise.',
+    status: 'considering',
+    votes: 42,
+    comments: 9,
+    category: 'Retail',
+    eta: 'Q3 2026',
+  },
+  {
+    id: '19',
+    title: 'Retail Analytics & Reporting',
+    description: 'Sales dashboards, inventory turnover analysis, margin reporting, and seasonal trend insights for retail operations.',
+    status: 'considering',
+    votes: 35,
+    comments: 7,
+    category: 'Retail',
+    eta: 'Q3 2026',
+  },
+  // AI Marketing Agency Features
+  {
+    id: '20',
+    title: 'AI Marketing Agency - Member Engagement',
+    description: 'AI-powered digital agency that creates personalized engagement campaigns. Automated email sequences, push notifications, and in-app messages based on member behavior and preferences.',
+    status: 'considering',
+    votes: 68,
+    comments: 21,
+    category: 'Marketing',
+    eta: 'Q4 2026',
+  },
+  {
+    id: '21',
+    title: 'AI Marketing Agency - Acquisition Campaigns',
+    description: 'AI creates and optimizes digital ad campaigns across Google, Facebook, and Instagram to acquire new members. Automated A/B testing, audience targeting, and budget optimization.',
+    status: 'considering',
+    votes: 56,
+    comments: 14,
+    category: 'Marketing',
+    eta: 'Q4 2026',
+  },
+  {
+    id: '22',
+    title: 'AI Content Generation',
+    description: 'Aura generates marketing content including social media posts, email newsletters, event promotions, and member communications tailored to your club\'s voice.',
+    status: 'considering',
+    votes: 49,
+    comments: 12,
+    category: 'Marketing',
+    eta: 'Q4 2026',
+  },
+  {
+    id: '23',
+    title: 'Marketing Campaign Analytics',
+    description: 'Track ROI across all marketing channels. Attribution modeling, conversion funnels, and AI-powered recommendations to optimize marketing spend.',
+    status: 'considering',
+    votes: 41,
+    comments: 8,
+    category: 'Marketing',
+    eta: 'Q4 2026',
+  },
+  {
+    id: '24',
+    title: 'Referral Program Management',
+    description: 'Automated member referral programs with customizable rewards, tracking, and AI-optimized incentive structures to maximize member acquisition.',
+    status: 'considering',
+    votes: 38,
+    comments: 11,
+    category: 'Marketing',
+    eta: 'Q4 2026',
+  },
 ];
 
 export default function RoadmapPage() {
@@ -354,7 +440,7 @@ export default function RoadmapPage() {
               <h2 className="font-serif text-2xl text-charcoal-800">Projected Timeline</h2>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-4">
+            <div className="grid gap-6 md:grid-cols-5">
               {timeline.map((quarter, index) => (
                 <div
                   key={quarter.quarter}
