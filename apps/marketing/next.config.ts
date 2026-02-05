@@ -9,6 +9,14 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Improve HMR performance by excluding large static files from webpack watching
+  webpack: (config) => {
+    config.watchOptions = {
+      ...config.watchOptions,
+      ignored: ['**/node_modules/**', '**/public/video/**'],
+    };
+    return config;
+  },
 };
 
 export default nextConfig;
