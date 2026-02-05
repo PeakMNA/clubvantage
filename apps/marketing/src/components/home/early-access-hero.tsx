@@ -4,7 +4,7 @@ import * as React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight, Play, Sparkles } from 'lucide-react';
 
 const stats = [
   { value: '50', label: 'Founding Spots', suffix: '' },
@@ -151,9 +151,8 @@ export function EarlyAccessHero() {
 
             {/* Subheadline */}
             <p className="mt-10 text-body-xl text-cream-100 max-w-xl leading-relaxed opacity-0 animate-fade-up fill-forwards" style={{ animationDelay: '400ms' }}>
-              Join our founding community of visionary club managers.
-              Shape the AI-first platform that will transform how prestigious
-              clubs operate across Southeast Asia.
+              AI-first platform for golf clubs, fitness centers, and recreational facilities across Southeast Asia.
+              Join our founding members to shape what we build.
             </p>
 
             {/* CTA buttons */}
@@ -165,16 +164,12 @@ export function EarlyAccessHero() {
                   <ArrowRight className="h-4 w-4 ml-2 transition-transform group-hover:translate-x-1" />
                 </Link>
               </Button>
-              <Link
-                href="/roadmap"
-                className="group inline-flex items-center gap-2 px-6 py-3 text-cream-100 font-medium
-                         border border-cream-100/20 rounded-lg
-                         transition-all duration-300 hover:border-cream-100/40 hover:bg-cream-100/5
-                         hover:pl-7 hover:pr-5"
-              >
-                View Roadmap
-                <ArrowRight className="h-4 w-4 opacity-0 -ml-2 transition-all duration-300 group-hover:opacity-100 group-hover:ml-0" />
-              </Link>
+              <Button asChild size="lg" variant="secondary" className="border-cream-100/30 text-cream-100 hover:bg-cream-100/10">
+                <Link href="#video">
+                  <Play className="h-4 w-4 mr-2" />
+                  Watch Video
+                </Link>
+              </Button>
             </div>
           </div>
 
