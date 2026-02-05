@@ -9,24 +9,27 @@ import { cn } from '@/lib/utils';
 const topFeatures = [
   {
     id: '1',
-    title: 'Member Mobile App (iOS & Android)',
-    description: 'Native mobile apps for members to book, pay, and access their member card.',
-    votes: 89,
-    category: 'Portal',
+    title: 'AI Marketing - Member Engagement',
+    description: 'AI-powered campaigns for retention: smart emails, push notifications, and personalized offers.',
+    votes: 68,
+    category: 'Marketing',
+    eta: 'Q4 2026',
   },
   {
     id: '2',
-    title: 'Tournament Management',
-    description: 'Full tournament setup with brackets, scoring, leaderboards, and prizes.',
-    votes: 52,
-    category: 'Golf',
+    title: 'WhatsApp Notifications',
+    description: 'Booking confirmations, payment reminders, and announcements via WhatsApp.',
+    votes: 67,
+    category: 'Integrations',
+    eta: 'Q4 2026',
   },
   {
     id: '3',
-    title: 'AI Marketing Agency - Engagement',
-    description: 'AI-powered campaigns for member engagement and retention.',
-    votes: 68,
+    title: 'AI Marketing - Acquisition',
+    description: 'AI creates and optimizes ad campaigns on Google, Facebook, and Instagram.',
+    votes: 56,
     category: 'Marketing',
+    eta: '2027',
   },
 ];
 
