@@ -6,81 +6,65 @@ import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Check, Users, Lightbulb, Gift, Zap, Star, ArrowRight } from 'lucide-react';
+import { Check, Users, Lightbulb, Gift, Zap, Vote, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faGolfBallTee, faDumbbell, faTableTennis, faBuildingColumns, faLocationDot, type IconDefinition } from '@fortawesome/free-solid-svg-icons';
 
-const clubTypes: Array<{ id: string; label: string; icon: IconDefinition }> = [
-  { id: 'golf', label: 'Golf & Country Club', icon: faGolfBallTee },
-  { id: 'fitness', label: 'Fitness Center', icon: faDumbbell },
-  { id: 'sports', label: 'Sports Club', icon: faTableTennis },
-  { id: 'social', label: 'Social Club', icon: faBuildingColumns },
-  { id: 'other', label: 'Other', icon: faLocationDot },
+const countries = [
+  { id: 'thailand', label: 'Thailand' },
+  { id: 'singapore', label: 'Singapore' },
+  { id: 'malaysia', label: 'Malaysia' },
+  { id: 'hongkong', label: 'Hong Kong' },
+  { id: 'indonesia', label: 'Indonesia' },
+  { id: 'philippines', label: 'Philippines' },
+  { id: 'other', label: 'Other' },
 ];
 
-const interestAreas = [
-  { id: 'membership', label: 'Membership Management' },
-  { id: 'billing', label: 'Billing & Payments' },
-  { id: 'booking', label: 'Facility Booking' },
-  { id: 'golf', label: 'Golf Operations' },
-  { id: 'portal', label: 'Member Portal' },
-  { id: 'ai', label: 'AI Assistant (Aura)' },
-  { id: 'reporting', label: 'Reporting & Analytics' },
-  { id: 'communication', label: 'Member Communication' },
+const clubTypes = [
+  { id: 'golf', label: 'Golf Club' },
+  { id: 'country', label: 'Country Club' },
+  { id: 'fitness', label: 'Fitness Center' },
+  { id: 'sports', label: 'Sports Club' },
+  { id: 'other', label: 'Other' },
 ];
 
 const founderBenefits = [
   {
     icon: Gift,
-    title: 'Lifetime Discount',
-    description: 'Lock in 50% off our standard pricing forever',
+    title: 'Lifetime Founder Pricing',
+    description: 'Lock in exclusive pricing forever',
   },
   {
-    icon: Lightbulb,
-    title: 'Feature Influence',
-    description: 'Vote on features and shape our development roadmap',
+    icon: Vote,
+    title: 'Vote on Roadmap',
+    description: 'Influence what we build next',
   },
   {
     icon: Zap,
     title: 'Early Access',
-    description: 'Try new features weeks before public release',
+    description: 'Try features before public launch',
   },
   {
     icon: Users,
     title: 'Direct Line',
-    description: 'Private Slack channel with our founding team',
-  },
-  {
-    icon: Star,
-    title: 'Founder Badge',
-    description: 'Permanent recognition as a founding member',
+    description: 'Connect directly with our team',
   },
 ];
 
 interface FormData {
-  firstName: string;
-  lastName: string;
+  name: string;
   email: string;
   clubName: string;
+  country: string;
   clubType: string;
-  memberCount: string;
-  interests: string[];
-  biggestChallenge: string;
-  howHeard: string;
 }
 
 export default function WaitlistPage() {
   const [formData, setFormData] = React.useState<FormData>({
-    firstName: '',
-    lastName: '',
+    name: '',
     email: '',
     clubName: '',
+    country: '',
     clubType: '',
-    memberCount: '',
-    interests: [],
-    biggestChallenge: '',
-    howHeard: '',
   });
   const [errors, setErrors] = React.useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -89,15 +73,14 @@ export default function WaitlistPage() {
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    if (!formData.firstName.trim()) newErrors.firstName = 'Required';
-    if (!formData.lastName.trim()) newErrors.lastName = 'Required';
+    if (!formData.name.trim()) newErrors.name = 'Required';
     if (!formData.email.trim()) newErrors.email = 'Required';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Invalid email';
     }
     if (!formData.clubName.trim()) newErrors.clubName = 'Required';
+    if (!formData.country) newErrors.country = 'Please select a country';
     if (!formData.clubType) newErrors.clubType = 'Please select a club type';
-    if (formData.interests.length === 0) newErrors.interests = 'Select at least one area';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -112,18 +95,6 @@ export default function WaitlistPage() {
     setIsSubmitting(false);
     setWaitlistPosition(Math.floor(Math.random() * 20) + 13); // Mock position
     setIsSubmitted(true);
-  };
-
-  const toggleInterest = (id: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      interests: prev.interests.includes(id)
-        ? prev.interests.filter((i) => i !== id)
-        : [...prev.interests, id],
-    }));
-    if (errors.interests) {
-      setErrors((prev) => ({ ...prev, interests: '' }));
-    }
   };
 
   if (isSubmitted) {
@@ -212,15 +183,14 @@ export default function WaitlistPage() {
         <section className="bg-primary-800 py-16 md:py-20">
           <div className="container">
             <div className="mx-auto max-w-3xl text-center">
-              <span className="text-label uppercase tracking-widest text-accent-400">
-                Founding Member Program
+              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-400/20 text-accent-400 text-sm font-medium mb-4">
+                Founding Members
               </span>
               <h1 className="mt-4 font-serif text-h1 text-cream-50">
-                Join the Founding Community
+                Join the Future of Club Management
               </h1>
               <p className="mt-4 text-body-lg text-cream-100">
-                Help us build the club management platform you actually want.
-                Your input directly shapes what we build.
+                Be among the first to experience ClubVantage. Founding members get lifetime pricing + shape the product.
               </p>
             </div>
           </div>
@@ -245,25 +215,14 @@ export default function WaitlistPage() {
                 </p>
 
                 <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-                  {/* Basic Info */}
-                  <div className="grid gap-6 sm:grid-cols-2">
-                    <Input
-                      label="First Name"
-                      name="firstName"
-                      value={formData.firstName}
-                      onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                      error={errors.firstName}
-                      required
-                    />
-                    <Input
-                      label="Last Name"
-                      name="lastName"
-                      value={formData.lastName}
-                      onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                      error={errors.lastName}
-                      required
-                    />
-                  </div>
+                  <Input
+                    label="Your Name"
+                    name="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    error={errors.name}
+                    required
+                  />
 
                   <Input
                     label="Email"
@@ -276,7 +235,7 @@ export default function WaitlistPage() {
                   />
 
                   <Input
-                    label="Club/Organization Name"
+                    label="Club Name"
                     name="clubName"
                     value={formData.clubName}
                     onChange={(e) => setFormData({ ...formData, clubName: e.target.value })}
@@ -284,126 +243,52 @@ export default function WaitlistPage() {
                     required
                   />
 
-                  {/* Club Type Selection */}
                   <div>
-                    <label className="block text-sm font-medium text-charcoal-700 mb-3">
+                    <label className="block text-sm font-medium text-charcoal-700 mb-1.5">
+                      Country <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={formData.country}
+                      onChange={(e) => {
+                        setFormData({ ...formData, country: e.target.value });
+                        if (errors.country) setErrors({ ...errors, country: '' });
+                      }}
+                      className="flex h-12 w-full rounded-xl border border-cream-300 bg-white px-4 py-3 text-base
+                               text-charcoal-700 hover:border-cream-400 transition-colors
+                               focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    >
+                      <option value="">Select country...</option>
+                      {countries.map((c) => (
+                        <option key={c.id} value={c.id}>{c.label}</option>
+                      ))}
+                    </select>
+                    {errors.country && (
+                      <p className="mt-2 text-sm text-red-500">{errors.country}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-charcoal-700 mb-1.5">
                       Club Type <span className="text-red-500">*</span>
                     </label>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                      {clubTypes.map((type) => (
-                        <button
-                          key={type.id}
-                          type="button"
-                          onClick={() => {
-                            setFormData({ ...formData, clubType: type.id });
-                            if (errors.clubType) setErrors({ ...errors, clubType: '' });
-                          }}
-                          className={cn(
-                            'flex items-center gap-2 rounded-xl border-2 px-4 py-3 text-left transition-all duration-300',
-                            formData.clubType === type.id
-                              ? 'border-primary-500 bg-primary-50'
-                              : 'border-cream-300 hover:border-cream-400'
-                          )}
-                        >
-                          <FontAwesomeIcon icon={type.icon} className="h-5 w-5 text-primary-500" />
-                          <span className="text-sm font-medium text-charcoal-700">
-                            {type.label}
-                          </span>
-                        </button>
+                    <select
+                      value={formData.clubType}
+                      onChange={(e) => {
+                        setFormData({ ...formData, clubType: e.target.value });
+                        if (errors.clubType) setErrors({ ...errors, clubType: '' });
+                      }}
+                      className="flex h-12 w-full rounded-xl border border-cream-300 bg-white px-4 py-3 text-base
+                               text-charcoal-700 hover:border-cream-400 transition-colors
+                               focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    >
+                      <option value="">Select club type...</option>
+                      {clubTypes.map((c) => (
+                        <option key={c.id} value={c.id}>{c.label}</option>
                       ))}
-                    </div>
+                    </select>
                     {errors.clubType && (
                       <p className="mt-2 text-sm text-red-500">{errors.clubType}</p>
                     )}
-                  </div>
-
-                  {/* Member Count */}
-                  <div>
-                    <label className="block text-sm font-medium text-charcoal-700 mb-1.5">
-                      Approximate Member Count
-                    </label>
-                    <select
-                      value={formData.memberCount}
-                      onChange={(e) => setFormData({ ...formData, memberCount: e.target.value })}
-                      className="flex h-12 w-full rounded-xl border border-cream-300 bg-white px-4 py-3 text-base
-                               text-charcoal-700 hover:border-cream-400 transition-colors
-                               focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                    >
-                      <option value="">Select range...</option>
-                      <option value="<100">Less than 100</option>
-                      <option value="100-500">100 - 500</option>
-                      <option value="500-1000">500 - 1,000</option>
-                      <option value="1000-2000">1,000 - 2,000</option>
-                      <option value="2000+">2,000+</option>
-                    </select>
-                  </div>
-
-                  {/* Interest Areas */}
-                  <div>
-                    <label className="block text-sm font-medium text-charcoal-700 mb-3">
-                      What features interest you most? <span className="text-red-500">*</span>
-                    </label>
-                    <div className="flex flex-wrap gap-2">
-                      {interestAreas.map((area) => (
-                        <button
-                          key={area.id}
-                          type="button"
-                          onClick={() => toggleInterest(area.id)}
-                          className={cn(
-                            'rounded-full px-4 py-2 text-sm font-medium transition-all duration-300',
-                            formData.interests.includes(area.id)
-                              ? 'bg-primary-500 text-cream-50'
-                              : 'bg-cream-200 text-charcoal-600 hover:bg-cream-300'
-                          )}
-                        >
-                          {area.label}
-                        </button>
-                      ))}
-                    </div>
-                    {errors.interests && (
-                      <p className="mt-2 text-sm text-red-500">{errors.interests}</p>
-                    )}
-                  </div>
-
-                  {/* Biggest Challenge */}
-                  <div>
-                    <label className="block text-sm font-medium text-charcoal-700 mb-1.5">
-                      What&apos;s your biggest operational challenge?
-                    </label>
-                    <textarea
-                      value={formData.biggestChallenge}
-                      onChange={(e) => setFormData({ ...formData, biggestChallenge: e.target.value })}
-                      rows={3}
-                      placeholder="Tell us what keeps you up at night..."
-                      className="flex w-full rounded-xl border border-cream-300 bg-white px-4 py-3 text-base
-                               text-charcoal-700 placeholder:text-charcoal-400
-                               hover:border-cream-400 transition-colors
-                               focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                    />
-                    <p className="mt-1 text-xs text-charcoal-400">
-                      This helps us prioritize features that matter most
-                    </p>
-                  </div>
-
-                  {/* How Heard */}
-                  <div>
-                    <label className="block text-sm font-medium text-charcoal-700 mb-1.5">
-                      How did you hear about us?
-                    </label>
-                    <select
-                      value={formData.howHeard}
-                      onChange={(e) => setFormData({ ...formData, howHeard: e.target.value })}
-                      className="flex h-12 w-full rounded-xl border border-cream-300 bg-white px-4 py-3 text-base
-                               text-charcoal-700 hover:border-cream-400 transition-colors
-                               focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                    >
-                      <option value="">Select...</option>
-                      <option value="search">Search Engine</option>
-                      <option value="social">Social Media</option>
-                      <option value="referral">Friend/Colleague</option>
-                      <option value="event">Event/Conference</option>
-                      <option value="other">Other</option>
-                    </select>
                   </div>
 
                   <Button type="submit" fullWidth size="lg" isLoading={isSubmitting}>
