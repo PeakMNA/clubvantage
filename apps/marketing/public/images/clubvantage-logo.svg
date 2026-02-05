@@ -1,0 +1,11 @@
+<svg width="320" height="48" viewBox="0 0 320 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- ClubVantage Wordmark -->
+  <!-- "Club" in charcoal -->
+  <text x="0" y="36" font-family="SF Pro Display, -apple-system, BlinkMacSystemFont, Inter, sans-serif" font-size="36" font-weight="600" fill="#2D3436">Club</text>
+
+  <!-- "antage" in teal (after the V) -->
+  <text x="122" y="36" font-family="SF Pro Display, -apple-system, BlinkMacSystemFont, Inter, sans-serif" font-size="36" font-weight="600" fill="#1B4332">antage</text>
+
+  <!-- "V" as upward arrow in teal -->
+  <path d="M89 36 L100.5 8 L112 36 L106 36 L100.5 18 L95 36 Z" fill="#1B4332"/>
+</svg>
