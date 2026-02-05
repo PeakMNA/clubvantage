@@ -233,8 +233,8 @@ export function EarlyAccessHero() {
             {/* Dashboard image */}
             <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-cream-100/10 hover-lift-glow">
               <Image
-                src="/images/clubvantage-golf.png"
-                alt="ClubVantage Golf Tee Sheet - Visual drag-and-drop scheduling"
+                src="/images/hero-dashboard.png"
+                alt="ClubVantage Dashboard - Modern club management interface"
                 width={1200}
                 height={675}
                 className="w-full h-auto transition-transform duration-700 hover:scale-[1.02]"
