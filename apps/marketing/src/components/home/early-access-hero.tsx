@@ -9,7 +9,7 @@ import { ArrowRight, Play, Sparkles } from 'lucide-react';
 const stats = [
   { value: '50', label: 'Founding Spots', suffix: '' },
   { value: '12', label: 'Members Joined', suffix: '' },
-  { value: '100', label: 'Lifetime Discount', suffix: '%' },
+  { value: '50', label: 'Lifetime Discount', suffix: '%' },
 ];
 
 const benefits = [
