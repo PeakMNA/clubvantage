@@ -193,6 +193,13 @@ export function Footer() {
         </div>
       </div>
 
+      {/* Founding Members */}
+      <div className="text-center py-4 border-t border-primary-700/50">
+        <p className="text-sm text-cream-300">
+          Join <span className="font-semibold text-accent-400">12</span> founding members shaping the future of club management
+        </p>
+      </div>
+
       {/* Bottom Bar */}
       <div className="border-t border-primary-700/50">
         <div className="container py-6">
