@@ -35,7 +35,7 @@ export function VideoSection() {
             {!isPlaying ? (
               <>
                 <Image
-                  src="/screenshots/clubvantage-golf.png"
+                  src="/images/clubvantage-golf.png"
                   alt="ClubVantage Golf Tee Sheet"
                   fill
                   className="object-cover"
