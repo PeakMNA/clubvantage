@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Image from 'next/image';
 import { Play, Users, Calendar } from 'lucide-react';
 
 const stats = [
@@ -30,9 +31,16 @@ export function VideoSection() {
 
         {/* Video Player */}
         <div className="relative max-w-4xl mx-auto rounded-2xl overflow-hidden shadow-2xl group">
-          <div className="aspect-video bg-gradient-to-br from-primary-700 to-primary-900 relative">
+          <div className="aspect-video relative">
             {!isPlaying ? (
               <>
+                <Image
+                  src="/screenshots/clubvantage-golf.png"
+                  alt="ClubVantage Golf Tee Sheet"
+                  fill
+                  className="object-cover"
+                  priority
+                />
                 <div className="absolute inset-0 bg-charcoal-900/30" />
                 <button
                   onClick={() => setIsPlaying(true)}
@@ -54,7 +62,7 @@ export function VideoSection() {
                 </div>
               </>
             ) : (
-              <div className="absolute inset-0 flex items-center justify-center text-cream-100">
+              <div className="absolute inset-0 flex items-center justify-center bg-charcoal-900 text-cream-100">
                 <p>Video player placeholder - embed actual video here</p>
               </div>
             )}
