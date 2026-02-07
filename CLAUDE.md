@@ -85,28 +85,21 @@ ClubVantage is an AI-First Club Management ERP system for country clubs and golf
 ```
 clubvantage/
 ├── apps/
-│   └── application/          # Staff Admin (Next.js)
-│       └── src/
-│           ├── app/          # App router pages
-│           │   └── (dashboard)/
-│           │       ├── page.tsx           # Dashboard
-│           │       ├── members/           # Members module
-│           │       ├── billing/           # Billing module
-│           │       ├── facility/          # Facility bookings
-│           │       └── golf/              # Golf module
-│           └── components/   # React components
-│               ├── dashboard/
-│               ├── members/
-│               ├── billing/
-│               ├── facility/
-│               └── golf/
+│   ├── api/                  # NestJS GraphQL API
+│   ├── application/          # Staff Admin (Next.js)
+│   ├── member-portal/        # Member-facing portal (Next.js)
+│   ├── marketing/            # Marketing website (Next.js)
+│   ├── platform-manager/     # Platform admin (Next.js)
+│   └── tenant-admin/         # Tenant admin (Next.js)
 ├── packages/
-│   └── ui/                   # Shared UI library
-│       └── src/
-│           ├── primitives/   # Base components (button, input, etc.)
-│           ├── layouts/      # Layout components (sidebar, etc.)
-│           └── globals.css   # Design system CSS variables
-└── package.json
+│   ├── types/                # Shared TypeScript types & enums (SINGLE SOURCE OF TRUTH)
+│   ├── i18n/                 # Shared translations (en.json, th.json)
+│   ├── ui/                   # Shared UI library
+│   ├── api-client/           # Generated GraphQL client & hooks
+│   ├── utils/                # Shared utilities & validation schemas
+│   └── config/               # Shared config (tailwind presets, etc.)
+├── database/                 # Prisma schema & migrations
+└── docker/                   # Docker configs (Supabase, etc.)
 ```
 
 ## Implementation Status vs PRD
@@ -127,12 +120,103 @@ clubvantage/
 - Settings module
 - Global header search
 
+## Shared Types & Enums (CRITICAL)
+
+**All enums and status types MUST be defined in `packages/types` and imported from `@clubvantage/types`.** NEVER define local enums or status types in app code.
+
+### Enum Pattern
+Use const objects + type unions (NOT TypeScript enums):
+
+```typescript
+// ✅ CORRECT - in packages/types
+export const MemberStatus = {
+  PROSPECT: 'PROSPECT',
+  ACTIVE: 'ACTIVE',
+  SUSPENDED: 'SUSPENDED',
+} as const;
+export type MemberStatus = (typeof MemberStatus)[keyof typeof MemberStatus];
+
+// ✅ CORRECT - in app code
+import { MemberStatus } from '@clubvantage/types';
+
+// ❌ WRONG - never define local enums
+export type MemberStatus = 'active' | 'suspended'; // NO!
+export enum MemberStatus { ACTIVE = 'ACTIVE' }      // NO!
+```
+
+### Canonical Enums
+| Enum | Values |
+|------|--------|
+| MemberStatus | PROSPECT, LEAD, APPLICANT, ACTIVE, SUSPENDED, LAPSED, RESIGNED, TERMINATED, REACTIVATED |
+| BookingStatus | PENDING, CONFIRMED, CHECKED_IN, IN_PROGRESS, COMPLETED, CANCELLED, NO_SHOW |
+| TeeTimeStatus | AVAILABLE, BOOKED, CHECKED_IN, STARTED, COMPLETED, CANCELLED, NO_SHOW, BLOCKED |
+| InvoiceStatus | DRAFT, SENT, PAID, PARTIALLY_PAID, OVERDUE, VOID, CANCELLED |
+| PaymentStatus | PENDING, COMPLETED, FAILED, REFUNDED, PARTIALLY_REFUNDED |
+| PlayerType | MEMBER, GUEST, DEPENDENT, WALK_UP |
+| RentalStatus | NONE, REQUESTED, PAID, ASSIGNED, RETURNED |
+
+### Display Labels & i18n
+- Enum values are always UPPER_CASE (matching API/database)
+- Display text uses `next-intl` for multi-language support
+- Translation files live in `packages/i18n/src/locales/{en,th}.json`
+- Keys follow pattern: `{enumName}.{VALUE}` (e.g., `memberStatus.ACTIVE`)
+
+```tsx
+// ✅ CORRECT - use next-intl for display labels
+import { useTranslations } from 'next-intl';
+const t = useTranslations('memberStatus');
+<span>{t(member.status)}</span>  // "Active" in en, "ใช้งาน" in th
+
+// ❌ WRONG - never hardcode display labels
+<span>{status === 'ACTIVE' ? 'Active' : 'Suspended'}</span>  // NO!
+```
+
+### Rules
+1. **NEVER** define enums or status types locally in app code
+2. **ALWAYS** import from `@clubvantage/types`
+3. **ALWAYS** use UPPER_CASE for enum values
+4. **ALWAYS** use `next-intl` for display labels (not hardcoded strings)
+5. **API returns raw UPPER_CASE values** — translation is frontend-only
+
 ## Development Guidelines
 
+### Feature Specs (Living Documentation)
+
+Feature specs live at `clubvantage/docs/features/{section}/{feature}/{capability}/spec.md`. These are the source of truth for what each feature does, its dependencies, settings, data model, and implementation status.
+
+**Sections:** golf, bookings, pos, billing, members, marketing, platform
+
+**When creating or modifying a plan (`clubvantage/docs/plans/`):**
+1. Identify which feature specs are affected by the plan
+2. Update the affected spec files to reflect changes: new capabilities, modified settings, updated data models, new dependencies, changed business rules, status updates
+3. If the plan introduces a new capability that doesn't fit an existing spec, create a new spec at the appropriate path
+4. Always update the `## Status` section to reflect current implementation state
+
+**Spec template** (all sections required):
+```
+# {Section} / {Feature} / {Capability}
+
+## Overview
+## Status
+## Capabilities
+## Dependencies
+### Interface Dependencies
+### Settings Dependencies
+### Data Dependencies
+## Settings Requirements
+| Setting | Type | Default | Configured By | Description |
+## Data Model
+(TypeScript interfaces)
+## Business Rules
+## Edge Cases
+| Scenario | Handling |
+```
+
 ### Before Making Changes
-1. Check the relevant spec in `/docs/product/sections/`
-2. Follow existing component patterns in the codebase
-3. Use design system colors from this reference
+1. Check the relevant feature spec in `clubvantage/docs/features/`
+2. Check the section spec in `/docs/product/sections/`
+3. Follow existing component patterns in the codebase
+4. Use design system colors from this reference
 
 ### CSS/Styling
 - Import `@clubvantage/ui/globals.css` for design tokens
@@ -143,6 +227,43 @@ clubvantage/
 - Use `cn()` utility for className merging
 - Follow existing modal patterns (header, body, footer sections)
 - Status badges should use the color mappings above
+
+### Import Best Practices
+**CRITICAL: Use direct/subpath imports for packages with heavy generated or bundled code to avoid bundle bloat.**
+
+Barrel imports (`import { x } from 'package'`) can pull entire package bundles even when you only need one export. This significantly impacts page load performance.
+
+```typescript
+// ❌ BAD - barrel imports pull entire bundle
+import { something } from 'large-package';
+import { Icon } from 'lucide-react';
+import { format } from 'date-fns';
+
+// ✅ GOOD - direct imports load only what's needed
+import { something } from 'large-package/submodule';
+import Icon from 'lucide-react/dist/esm/icons/icon-name';
+import format from 'date-fns/format';
+```
+
+**Packages that require direct imports:**
+| Package | Direct Import Pattern |
+|---------|----------------------|
+| `@clubvantage/api-client` | `@clubvantage/api-client/client`, `/auth`, `/hooks` |
+| `lucide-react` | `lucide-react/dist/esm/icons/[icon-name]` |
+| `date-fns` | `date-fns/[function-name]` |
+| GraphQL codegen packages | Use subpath exports when available |
+| OpenAPI generated clients | Use subpath exports when available |
+
+**When barrel imports are OK:**
+- Small utility packages
+- When you need many exports from the same module
+- Wrapper/aggregation files that re-export for convenience
+
+**When to use direct imports:**
+- Root layouts and providers (loaded on every page)
+- Login/public pages (should load fast)
+- Components that only need 1-2 exports from a large package
+- Any package with generated code (GraphQL, OpenAPI, etc.)
 
 ## Database & Prisma Guidelines
 
