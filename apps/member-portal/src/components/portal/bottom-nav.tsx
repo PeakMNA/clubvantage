@@ -18,7 +18,6 @@ export function BottomNav() {
   const features = useFeatureFlags()
 
   const isInFlow = FLOW_PREFIXES.some((p) => pathname.startsWith(p))
-  if (isInFlow) return null
 
   const navItems = [
     { href: '/portal', icon: Home, label: 'Home', enabled: true },
@@ -31,7 +30,7 @@ export function BottomNav() {
   const visibleItems = navItems.filter((item) => item.enabled)
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-safe md:hidden">
+    <nav className={cn('fixed bottom-0 left-0 right-0 z-50 px-4 pb-safe md:hidden', isInFlow && 'hidden')}>
       <div className="mb-1 mx-auto max-w-md rounded-2xl bg-white/95 backdrop-blur-xl shadow-lg shadow-stone-900/8 border border-stone-100/80">
         <div className="flex items-center justify-around h-14">
           {visibleItems.map((item) => {
