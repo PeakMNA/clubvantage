@@ -167,7 +167,7 @@ export function PreferencesContent({ initial }: { initial: PreferencesData }) {
       </div>
 
       {/* Save Button */}
-      <div className="fixed bottom-24 left-0 right-0 z-40 px-5 py-4 bg-white border-t border-stone-200">
+      <div className="fixed bottom-[100px] left-0 right-0 z-40 px-5 py-3 bg-white/95 backdrop-blur-sm border-t border-stone-100">
         <button
           onClick={handleSave}
           disabled={saving}

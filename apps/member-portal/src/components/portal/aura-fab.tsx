@@ -4,19 +4,26 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Sparkles } from 'lucide-react'
 
-// Hide FAB on pages that have their own bottom CTA / confirmation sheet
-const HIDDEN_PREFIXES = [
-  '/portal/aura',
-  '/portal/book/',
-  '/portal/golf/book',
-  '/portal/golf/review',
+// Only show FAB on top-level portal pages (dashboard, golf hub, bookings list, etc.)
+// Hide on any sub-page that has a bottom action bar to avoid overlap
+const SHOW_PATHS = [
+  '/portal',
+  '/portal/golf',
+  '/portal/bookings',
+  '/portal/spending',
+  '/portal/member-id',
+  '/portal/profile',
 ]
 
 export function AuraFab() {
   const pathname = usePathname()
 
-  const hidden = HIDDEN_PREFIXES.some((p) => pathname.startsWith(p))
-  if (hidden) return null
+  // Hide on Aura page itself
+  if (pathname === '/portal/aura') return null
+
+  // Only show on whitelisted top-level pages
+  const show = SHOW_PATHS.includes(pathname)
+  if (!show) return null
 
   return (
     <Link
