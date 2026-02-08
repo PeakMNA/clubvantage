@@ -164,21 +164,13 @@ export default function ReviewBookingPage() {
         </div>
       </div>
 
-      {/* Bottom CTA - Airbnb style */}
-      <div className="fixed bottom-24 left-0 right-0 z-40 px-5 py-4 bg-white border-t border-stone-200">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-base font-semibold text-stone-900">
-              ฿{total.toLocaleString()}
-            </p>
-            <p className="text-xs text-stone-500 underline">3 players</p>
-          </div>
-          <button
-            className="px-8 py-3 rounded-xl font-semibold text-sm bg-stone-900 text-white"
-          >
-            Confirm Booking
-          </button>
-        </div>
+      {/* Bottom CTA */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 px-5 py-4 pb-safe bg-white border-t border-stone-200">
+        <button
+          className="w-full py-4 rounded-2xl font-semibold text-base bg-stone-900 text-white active:scale-[0.98] transition-all"
+        >
+          Confirm Booking · ฿{total.toLocaleString()}
+        </button>
       </div>
     </div>
   )

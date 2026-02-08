@@ -677,14 +677,14 @@ export default function BookTeeTimePage() {
       </div>
 
       {/* Bottom Actions */}
-      <div className="fixed bottom-24 left-0 right-0 z-40 p-4 bg-white dark:bg-stone-900 border-t border-border/60">
+      <div className="fixed bottom-0 left-0 right-0 z-40 p-4 pb-safe bg-white dark:bg-stone-900 border-t border-border/60">
         {currentStep === 'confirm' ? (
           <button
             onClick={handleSubmit}
             disabled={isSubmitting}
             className={cn(
-              'w-full py-4 rounded-xl font-semibold text-base transition-all',
-              'bg-amber-500 text-white hover:bg-amber-600',
+              'w-full py-4 rounded-2xl font-semibold text-base transition-all',
+              'bg-amber-500 text-white active:scale-[0.98]',
               'shadow-lg shadow-amber-500/25',
               isSubmitting && 'opacity-75 cursor-not-allowed'
             )}
@@ -695,7 +695,7 @@ export default function BookTeeTimePage() {
                 Booking...
               </span>
             ) : (
-              'Confirm Booking'
+              `Confirm · ฿${calculateTotal().toLocaleString()}`
             )}
           </button>
         ) : (
@@ -703,10 +703,10 @@ export default function BookTeeTimePage() {
             onClick={goNext}
             disabled={!canProceed()}
             className={cn(
-              'w-full py-4 rounded-xl font-semibold text-base transition-all',
+              'w-full py-4 rounded-2xl font-semibold text-base transition-all',
               'flex items-center justify-center gap-2',
               canProceed()
-                ? 'bg-stone-900 text-white hover:bg-stone-800 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-200'
+                ? 'bg-stone-900 text-white active:scale-[0.98]'
                 : 'bg-stone-200 text-stone-400 cursor-not-allowed dark:bg-stone-800 dark:text-stone-600'
             )}
           >

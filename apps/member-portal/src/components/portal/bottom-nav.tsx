@@ -6,9 +6,19 @@ import { cn } from '@clubvantage/ui'
 import { Home, QrCode, Flag, Calendar, User } from 'lucide-react'
 import { useFeatureFlags } from '@/lib/features'
 
+// Hide nav on focused booking/form flows where a bottom CTA owns the screen
+const FLOW_PREFIXES = [
+  '/portal/book/',
+  '/portal/golf/book',
+  '/portal/golf/review',
+]
+
 export function BottomNav() {
   const pathname = usePathname()
   const features = useFeatureFlags()
+
+  const isInFlow = FLOW_PREFIXES.some((p) => pathname.startsWith(p))
+  if (isInFlow) return null
 
   const navItems = [
     { href: '/portal', icon: Home, label: 'Home', enabled: true },

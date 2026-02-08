@@ -308,7 +308,7 @@ export function CalendarContent({ facility }: { facility: FacilityData }) {
           selectedTime ? 'translate-y-0' : 'translate-y-full'
         )}
       >
-        <div className="bg-white rounded-t-3xl shadow-2xl shadow-stone-900/20 px-5 pt-3 pb-safe">
+        <div className="bg-white rounded-t-3xl shadow-2xl shadow-stone-900/20 px-5 pt-3 pb-8">
           {/* Handle */}
           <div className="flex justify-center mb-4">
             <div className="w-10 h-1 rounded-full bg-stone-200" />
