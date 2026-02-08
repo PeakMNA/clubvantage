@@ -1,23 +1,11 @@
-const CACHE_NAME = 'clubvantage-v2'
-const STATIC_ASSETS = [
-  '/portal',
-  '/portal/golf',
-  '/portal/book',
-  '/portal/statements',
-  '/portal/profile',
-  '/portal/member-id',
-  '/manifest.json',
-]
+const CACHE_NAME = 'clubvantage-v3'
 
-// Install — pre-cache key pages
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
-  )
+// Install — activate immediately, no pre-caching
+self.addEventListener('install', () => {
   self.skipWaiting()
 })
 
-// Activate — clean old caches
+// Activate — clean ALL old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
@@ -27,7 +15,7 @@ self.addEventListener('activate', (event) => {
   self.clients.claim()
 })
 
-// Fetch — network-first for API/data, cache-first for static
+// Fetch — network-first for everything, cache as offline fallback only
 self.addEventListener('fetch', (event) => {
   const { request } = event
   const url = new URL(request.url)
@@ -35,22 +23,14 @@ self.addEventListener('fetch', (event) => {
   // Skip non-GET requests
   if (request.method !== 'GET') return
 
-  // Skip API auth routes
-  if (url.pathname.startsWith('/api/auth')) return
+  // Skip API/auth routes entirely
+  if (url.pathname.startsWith('/api')) return
 
   // Skip HMR and dev resources
   if (url.pathname.includes('_next/webpack') || url.pathname.includes('__nextjs')) return
 
-  // Static assets — cache-first
-  if (
-    url.pathname.startsWith('/_next/static') ||
-    url.pathname.startsWith('/icons') ||
-    url.pathname.endsWith('.js') ||
-    url.pathname.endsWith('.css') ||
-    url.pathname.endsWith('.png') ||
-    url.pathname.endsWith('.jpg') ||
-    url.pathname.endsWith('.svg')
-  ) {
+  // Cache-first ONLY for truly immutable assets (hashed filenames)
+  if (url.pathname.startsWith('/_next/static') || url.pathname.startsWith('/icons')) {
     event.respondWith(
       caches.match(request).then((cached) => cached || fetch(request).then((res) => {
         const clone = res.clone()
@@ -61,17 +41,14 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  // Page navigations — network-first with offline fallback
-  if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request)
-        .then((res) => {
-          const clone = res.clone()
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone))
-          return res
-        })
-        .catch(() => caches.match(request).then((cached) => cached || caches.match('/portal')))
-    )
-    return
-  }
+  // Everything else (pages, JS, CSS) — network-first with cache fallback
+  event.respondWith(
+    fetch(request)
+      .then((res) => {
+        const clone = res.clone()
+        caches.open(CACHE_NAME).then((cache) => cache.put(request, clone))
+        return res
+      })
+      .catch(() => caches.match(request))
+  )
 })
