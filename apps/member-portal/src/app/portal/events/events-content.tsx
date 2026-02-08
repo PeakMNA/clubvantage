@@ -94,7 +94,7 @@ export function EventsContent({ events }: { events: EventData[] }) {
                   </p>
                   {event.price && (
                     <p className="text-sm font-semibold text-stone-900 mt-1">
-                      \u0e3f{event.price.toLocaleString()}
+                      ฿{event.price.toLocaleString()}
                     </p>
                   )}
                 </div>
@@ -144,7 +144,7 @@ export function EventsContent({ events }: { events: EventData[] }) {
                 <div className="flex items-center gap-3 mt-1">
                   {event.price && (
                     <span className="text-xs font-semibold text-stone-900">
-                      \u0e3f{event.price.toLocaleString()}
+                      ฿{event.price.toLocaleString()}
                     </span>
                   )}
                   {event.spotsLeft !== null && (

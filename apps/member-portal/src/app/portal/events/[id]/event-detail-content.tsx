@@ -187,7 +187,7 @@ export function EventDetailContent({ event }: { event: EventData }) {
               {event.price ? (
                 <>
                   <p className="text-base font-semibold text-stone-900">
-                    \u0e3f{event.price.toLocaleString()}
+                    ฿{event.price.toLocaleString()}
                   </p>
                   <p className="text-xs text-stone-500">per person</p>
                 </>
