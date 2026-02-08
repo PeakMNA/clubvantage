@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { cn } from '@clubvantage/ui'
-import { ArrowLeft, ChevronLeft, ChevronRight, Minus, Plus, Check } from 'lucide-react'
+import { ArrowLeft, ChevronLeft, ChevronRight, Minus, Plus, Clock, X } from 'lucide-react'
 import { getAvailableSlots, createBookingAction } from './actions'
 
 interface FacilityData {
@@ -33,6 +33,11 @@ const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December',
 ]
+const SHORT_MONTHS = [
+  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+]
+const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
 function getCalendarDays(year: number, month: number) {
   const firstDay = new Date(year, month, 1).getDay()
@@ -42,7 +47,6 @@ function getCalendarDays(year: number, month: number) {
 
   const days: { day: number; isToday: boolean; isPast: boolean }[] = []
 
-  // Empty cells for days before the 1st
   for (let i = 0; i < firstDay; i++) {
     days.push({ day: 0, isToday: false, isPast: true })
   }
@@ -83,7 +87,6 @@ export function CalendarContent({ facility }: { facility: FacilityData }) {
 
   const calendarDays = getCalendarDays(currentYear, currentMonth)
 
-  // Limit to maxAdvanceDays from today
   const maxDate = new Date()
   maxDate.setDate(maxDate.getDate() + facility.maxAdvanceDays)
 
@@ -151,8 +154,15 @@ export function CalendarContent({ facility }: { facility: FacilityData }) {
     }
   }
 
-  // Check if prev month nav should be disabled
   const isPrevDisabled = currentYear === now.getFullYear() && currentMonth <= now.getMonth()
+
+  // Formatted date for the confirmation sheet
+  const selectedDateFormatted = selectedDay
+    ? (() => {
+        const d = new Date(currentYear, currentMonth, selectedDay)
+        return `${DAY_NAMES[d.getDay()]}, ${SHORT_MONTHS[currentMonth]} ${selectedDay}`
+      })()
+    : ''
 
   return (
     <div className="min-h-screen bg-white pb-36">
@@ -173,29 +183,6 @@ export function CalendarContent({ facility }: { facility: FacilityData }) {
       </div>
 
       <div className="px-5 py-5 space-y-6">
-        {/* Facility Mini Card */}
-        <div className="flex items-center gap-3">
-          <div className="h-14 w-14 rounded-xl overflow-hidden flex-shrink-0 bg-stone-100">
-            {facility.imageUrl ? (
-              <img src={facility.imageUrl} alt={facility.name} className="h-full w-full object-cover" />
-            ) : (
-              <div className="h-full w-full flex items-center justify-center text-stone-400 text-xs">
-                {facility.code}
-              </div>
-            )}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[15px] font-semibold text-stone-900">{facility.name}</p>
-            <p className="text-sm text-stone-500">
-              {facility.category}
-              {facility.resources.length > 1 && ` \u00b7 ${facility.resources.length} courts`}
-            </p>
-          </div>
-          <p className="text-[15px] font-semibold text-stone-900">
-            \u0e3f{pricePerHour.toLocaleString()}/hr
-          </p>
-        </div>
-
         {/* Calendar */}
         <div>
           <div className="flex items-center justify-between mb-4">
@@ -254,6 +241,11 @@ export function CalendarContent({ facility }: { facility: FacilityData }) {
         {/* Time Slots */}
         {!selectedDay && (
           <div className="text-center py-8">
+            <div className="flex justify-center mb-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-stone-50">
+                <Clock className="h-5 w-5 text-stone-300" />
+              </div>
+            </div>
             <p className="text-sm text-stone-400">Select a date to see available times</p>
           </div>
         )}
@@ -292,40 +284,6 @@ export function CalendarContent({ facility }: { facility: FacilityData }) {
           </div>
         )}
 
-        {/* Duration Selector */}
-        {selectedTime && (
-          <div>
-            <p className="text-base font-semibold text-stone-900 mb-3">Duration</p>
-            <div className="flex items-center justify-center gap-6">
-              <button
-                onClick={() => setDuration(Math.max(1, duration - 1))}
-                className={cn(
-                  'flex h-10 w-10 items-center justify-center rounded-full border transition-colors',
-                  duration > 1
-                    ? 'border-stone-900 text-stone-900 hover:bg-stone-50'
-                    : 'border-stone-200 text-stone-300'
-                )}
-              >
-                <Minus className="h-4 w-4" />
-              </button>
-              <span className="text-lg font-semibold text-stone-900 min-w-[80px] text-center">
-                {duration} hour{duration > 1 ? 's' : ''}
-              </span>
-              <button
-                onClick={() => setDuration(Math.min(maxDuration, duration + 1))}
-                className={cn(
-                  'flex h-10 w-10 items-center justify-center rounded-full border transition-colors',
-                  duration < maxDuration
-                    ? 'border-stone-900 text-stone-900 hover:bg-stone-50'
-                    : 'border-stone-200 text-stone-300'
-                )}
-              >
-                <Plus className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        )}
-
         {/* Booking Error */}
         {bookingResult && !bookingResult.success && (
           <div className="rounded-xl bg-red-50 border border-red-200 p-4 text-sm text-red-700">
@@ -334,33 +292,101 @@ export function CalendarContent({ facility }: { facility: FacilityData }) {
         )}
       </div>
 
-      {/* Sticky Bottom CTA — only visible after selecting a time */}
-      {selectedTime && (
-        <div className="fixed bottom-24 left-0 right-0 z-40 bg-white border-t border-stone-200 px-5 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-base font-semibold text-stone-900">
-                ฿{totalPrice.toLocaleString()}
-              </p>
-              <p className="text-xs text-stone-500">
-                {duration} hour{duration > 1 ? 's' : ''}
-              </p>
-            </div>
-            <button
-              disabled={booking}
-              onClick={handleBook}
-              className={cn(
-                'px-8 py-3 rounded-xl font-semibold text-sm transition-all',
-                !booking
-                  ? 'bg-stone-900 text-white active:scale-95'
-                  : 'bg-stone-300 text-white cursor-not-allowed'
-              )}
-            >
-              {booking ? 'Booking...' : 'Book Now'}
-            </button>
+      {/* Backdrop */}
+      <div
+        className={cn(
+          'fixed inset-0 z-[55] bg-black/30 transition-opacity duration-300',
+          selectedTime ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        )}
+        onClick={() => setSelectedTime(null)}
+      />
+
+      {/* Slide-up Confirmation Sheet */}
+      <div
+        className={cn(
+          'fixed inset-x-0 bottom-0 z-[60] transition-transform duration-300 ease-out',
+          selectedTime ? 'translate-y-0' : 'translate-y-full'
+        )}
+      >
+        <div className="bg-white rounded-t-3xl shadow-2xl shadow-stone-900/20 px-5 pt-3 pb-safe">
+          {/* Handle */}
+          <div className="flex justify-center mb-4">
+            <div className="w-10 h-1 rounded-full bg-stone-200" />
           </div>
+
+          {/* Close */}
+          <button
+            onClick={() => setSelectedTime(null)}
+            className="absolute top-4 right-5 flex h-8 w-8 items-center justify-center rounded-full bg-stone-100 text-stone-500"
+          >
+            <X className="h-4 w-4" />
+          </button>
+
+          {/* Booking Summary */}
+          <div className="mb-5">
+            <p className="text-lg font-semibold text-stone-900">{facility.name}</p>
+            <p className="text-sm text-stone-500 mt-0.5">
+              {selectedDateFormatted} · {selectedTime}
+            </p>
+          </div>
+
+          {/* Duration Picker */}
+          <div className="flex items-center justify-between py-4 border-t border-stone-100">
+            <span className="text-[15px] font-medium text-stone-700">Duration</span>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setDuration(Math.max(1, duration - 1))}
+                className={cn(
+                  'flex h-9 w-9 items-center justify-center rounded-full border transition-colors',
+                  duration > 1
+                    ? 'border-stone-300 text-stone-700 active:bg-stone-50'
+                    : 'border-stone-100 text-stone-200'
+                )}
+              >
+                <Minus className="h-3.5 w-3.5" />
+              </button>
+              <span className="text-base font-semibold text-stone-900 min-w-[60px] text-center">
+                {duration} hr{duration > 1 ? 's' : ''}
+              </span>
+              <button
+                onClick={() => setDuration(Math.min(maxDuration, duration + 1))}
+                className={cn(
+                  'flex h-9 w-9 items-center justify-center rounded-full border transition-colors',
+                  duration < maxDuration
+                    ? 'border-stone-300 text-stone-700 active:bg-stone-50'
+                    : 'border-stone-100 text-stone-200'
+                )}
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Price */}
+          <div className="flex items-center justify-between py-4 border-t border-stone-100">
+            <span className="text-[15px] text-stone-500">
+              ฿{pricePerHour.toLocaleString()} × {duration} hr{duration > 1 ? 's' : ''}
+            </span>
+            <span className="text-base font-semibold text-stone-900">
+              ฿{totalPrice.toLocaleString()}
+            </span>
+          </div>
+
+          {/* CTA Button */}
+          <button
+            disabled={booking}
+            onClick={handleBook}
+            className={cn(
+              'w-full py-4 rounded-2xl font-semibold text-base transition-all mt-2',
+              !booking
+                ? 'bg-stone-900 text-white active:scale-[0.98]'
+                : 'bg-stone-300 text-white cursor-not-allowed'
+            )}
+          >
+            {booking ? 'Booking...' : `Book Now · ฿${totalPrice.toLocaleString()}`}
+          </button>
         </div>
-      )}
+      </div>
     </div>
   )
 }
