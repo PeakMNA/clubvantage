@@ -252,6 +252,11 @@ export function CalendarContent({ facility }: { facility: FacilityData }) {
         </div>
 
         {/* Time Slots */}
+        {!selectedDay && (
+          <div className="text-center py-8">
+            <p className="text-sm text-stone-400">Select a date to see available times</p>
+          </div>
+        )}
         {selectedDay && (
           <div>
             <p className="text-base font-semibold text-stone-900 mb-3">Available Times</p>
@@ -329,31 +334,33 @@ export function CalendarContent({ facility }: { facility: FacilityData }) {
         )}
       </div>
 
-      {/* Sticky Bottom CTA */}
-      <div className="fixed bottom-24 left-0 right-0 z-40 bg-white border-t border-stone-200 px-5 py-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-base font-semibold text-stone-900">
-              \u0e3f{totalPrice.toLocaleString()}
-            </p>
-            <p className="text-xs text-stone-500 underline">
-              {duration} hour{duration > 1 ? 's' : ''}
-            </p>
+      {/* Sticky Bottom CTA — only visible after selecting a time */}
+      {selectedTime && (
+        <div className="fixed bottom-24 left-0 right-0 z-40 bg-white border-t border-stone-200 px-5 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-base font-semibold text-stone-900">
+                ฿{totalPrice.toLocaleString()}
+              </p>
+              <p className="text-xs text-stone-500">
+                {duration} hour{duration > 1 ? 's' : ''}
+              </p>
+            </div>
+            <button
+              disabled={booking}
+              onClick={handleBook}
+              className={cn(
+                'px-8 py-3 rounded-xl font-semibold text-sm transition-all',
+                !booking
+                  ? 'bg-stone-900 text-white active:scale-95'
+                  : 'bg-stone-300 text-white cursor-not-allowed'
+              )}
+            >
+              {booking ? 'Booking...' : 'Book Now'}
+            </button>
           </div>
-          <button
-            disabled={!selectedTime || booking}
-            onClick={handleBook}
-            className={cn(
-              'px-8 py-3 rounded-xl font-semibold text-sm transition-all',
-              selectedTime && !booking
-                ? 'bg-stone-900 text-white'
-                : 'bg-stone-100 text-stone-400 cursor-not-allowed'
-            )}
-          >
-            {booking ? 'Booking...' : 'Book Now'}
-          </button>
         </div>
-      </div>
+      )}
     </div>
   )
 }
