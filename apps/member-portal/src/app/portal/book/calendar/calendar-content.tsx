@@ -330,7 +330,7 @@ export function CalendarContent({ facility }: { facility: FacilityData }) {
       </div>
 
       {/* Sticky Bottom CTA */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-stone-200 px-5 py-4 pb-safe">
+      <div className="fixed bottom-24 left-0 right-0 z-40 bg-white border-t border-stone-200 px-5 py-4 mb-safe">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-base font-semibold text-stone-900">

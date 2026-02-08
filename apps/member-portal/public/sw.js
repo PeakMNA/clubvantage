@@ -1,4 +1,4 @@
-const CACHE_NAME = 'clubvantage-v1'
+const CACHE_NAME = 'clubvantage-v2'
 const STATIC_ASSETS = [
   '/portal',
   '/portal/golf',
@@ -37,6 +37,9 @@ self.addEventListener('fetch', (event) => {
 
   // Skip API auth routes
   if (url.pathname.startsWith('/api/auth')) return
+
+  // Skip HMR and dev resources
+  if (url.pathname.includes('_next/webpack') || url.pathname.includes('__nextjs')) return
 
   // Static assets — cache-first
   if (

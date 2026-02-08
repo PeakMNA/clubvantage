@@ -274,7 +274,7 @@ export function StatementDetailContent({ statement }: { statement: StatementData
 
       {/* Bottom Bar */}
       {!isPaid && (
-        <div className="fixed bottom-0 left-0 right-0 px-5 py-4 bg-white border-t border-stone-200 pb-safe">
+        <div className="fixed bottom-24 left-0 right-0 z-40 px-5 py-4 bg-white border-t border-stone-200 mb-safe">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-base font-semibold text-stone-900">

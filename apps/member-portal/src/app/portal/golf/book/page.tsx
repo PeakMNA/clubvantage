@@ -677,7 +677,7 @@ export default function BookTeeTimePage() {
       </div>
 
       {/* Bottom Actions */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white dark:bg-stone-900 border-t border-border/60 pb-safe">
+      <div className="fixed bottom-24 left-0 right-0 z-40 p-4 bg-white dark:bg-stone-900 border-t border-border/60 mb-safe">
         {currentStep === 'confirm' ? (
           <button
             onClick={handleSubmit}
