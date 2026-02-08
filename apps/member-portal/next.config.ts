@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
     '@clubvantage/ui',
     '@clubvantage/types',
     '@clubvantage/utils',
+    '@clubvantage/database',
   ],
   images: {
     remotePatterns: [
@@ -19,8 +20,9 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  devIndicators: false,
   experimental: {
-    optimizePackageImports: ['lucide-react', '@clubvantage/ui'],
+    optimizePackageImports: ['lucide-react', '@clubvantage/ui', 'date-fns', 'qrcode.react'],
   },
 };
 

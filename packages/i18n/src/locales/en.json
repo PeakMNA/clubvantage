@@ -1,0 +1,184 @@
+{
+  "memberStatus": {
+    "PROSPECT": "Prospect",
+    "LEAD": "Lead",
+    "APPLICANT": "Applicant",
+    "ACTIVE": "Active",
+    "SUSPENDED": "Suspended",
+    "LAPSED": "Lapsed",
+    "RESIGNED": "Resigned",
+    "TERMINATED": "Terminated",
+    "REACTIVATED": "Reactivated"
+  },
+  "membershipCategory": {
+    "REGULAR": "Regular",
+    "PREMIUM": "Premium",
+    "CORPORATE": "Corporate",
+    "SENIOR": "Senior",
+    "JUNIOR": "Junior",
+    "FAMILY": "Family"
+  },
+  "dependentRelationship": {
+    "SPOUSE": "Spouse",
+    "CHILD": "Child",
+    "PARENT": "Parent",
+    "SIBLING": "Sibling",
+    "OTHER": "Other"
+  },
+  "referralSource": {
+    "WEBSITE": "Website",
+    "MEMBER_REFERRAL": "Member Referral",
+    "WALK_IN": "Walk-in",
+    "GUEST_CONVERSION": "Guest Conversion",
+    "CORPORATE": "Corporate",
+    "EVENT": "Event",
+    "ADVERTISEMENT": "Advertisement",
+    "OTHER": "Other"
+  },
+  "leadStage": {
+    "NEW": "New",
+    "CONTACTED": "Contacted",
+    "QUALIFIED": "Qualified",
+    "CONVERTED": "Converted",
+    "LOST": "Lost"
+  },
+  "bookingStatus": {
+    "PENDING": "Pending",
+    "CONFIRMED": "Confirmed",
+    "CHECKED_IN": "Checked In",
+    "IN_PROGRESS": "In Progress",
+    "COMPLETED": "Completed",
+    "CANCELLED": "Cancelled",
+    "NO_SHOW": "No Show"
+  },
+  "bookingType": {
+    "RESOURCE": "Resource",
+    "SERVICE": "Service"
+  },
+  "facilityType": {
+    "TENNIS_COURT": "Tennis Court",
+    "SQUASH_COURT": "Squash Court",
+    "BADMINTON_COURT": "Badminton Court",
+    "SWIMMING_POOL": "Swimming Pool",
+    "GYM": "Gym",
+    "FUNCTION_ROOM": "Function Room",
+    "MEETING_ROOM": "Meeting Room",
+    "SPA": "Spa",
+    "RESTAURANT": "Restaurant",
+    "OTHER": "Other"
+  },
+  "teeTimeStatus": {
+    "AVAILABLE": "Available",
+    "BOOKED": "Booked",
+    "CHECKED_IN": "Checked In",
+    "STARTED": "Started",
+    "COMPLETED": "Completed",
+    "CANCELLED": "Cancelled",
+    "NO_SHOW": "No Show",
+    "BLOCKED": "Blocked"
+  },
+  "playerType": {
+    "MEMBER": "Member",
+    "GUEST": "Guest",
+    "DEPENDENT": "Dependent",
+    "WALK_UP": "Walk-up"
+  },
+  "cartType": {
+    "SINGLE": "Single",
+    "SHARED": "Shared",
+    "WALKING": "Walking"
+  },
+  "invoiceStatus": {
+    "DRAFT": "Draft",
+    "SENT": "Sent",
+    "PAID": "Paid",
+    "PARTIALLY_PAID": "Partially Paid",
+    "OVERDUE": "Overdue",
+    "VOID": "Void",
+    "CANCELLED": "Cancelled"
+  },
+  "paymentMethod": {
+    "CASH": "Cash",
+    "BANK_TRANSFER": "Bank Transfer",
+    "CREDIT_CARD": "Credit Card",
+    "QR_PROMPTPAY": "PromptPay QR",
+    "QR_PAYNOW": "PayNow QR",
+    "QR_DUITNOW": "DuitNow QR",
+    "CHECK": "Check",
+    "DIRECT_DEBIT": "Direct Debit",
+    "CREDIT": "Credit"
+  },
+  "paymentStatus": {
+    "PENDING": "Pending",
+    "COMPLETED": "Completed",
+    "FAILED": "Failed",
+    "REFUNDED": "Refunded",
+    "PARTIALLY_REFUNDED": "Partially Refunded"
+  },
+  "billingTaxType": {
+    "VAT": "VAT",
+    "GST": "GST",
+    "SST": "SST",
+    "EXEMPT": "Exempt"
+  },
+  "chargeCategory": {
+    "MEMBERSHIP_DUES": "Membership Dues",
+    "FACILITY_BOOKING": "Facility Booking",
+    "GOLF_GREEN_FEE": "Green Fee",
+    "GOLF_CADDY": "Caddy Fee",
+    "GOLF_CART": "Cart Fee",
+    "GUEST_FEE": "Guest Fee",
+    "F_AND_B": "F&B",
+    "PRO_SHOP": "Pro Shop",
+    "SERVICE": "Service",
+    "PENALTY": "Penalty",
+    "OTHER": "Other"
+  },
+  "rentalStatus": {
+    "NONE": "None",
+    "REQUESTED": "Requested",
+    "PAID": "Paid",
+    "ASSIGNED": "Assigned",
+    "RETURNED": "Returned"
+  },
+  "region": {
+    "TH": "Thailand",
+    "SG": "Singapore",
+    "MY": "Malaysia"
+  },
+  "userRole": {
+    "SUPER_ADMIN": "Super Admin",
+    "CLUB_MANAGER": "Club Manager",
+    "FINANCE_STAFF": "Finance Staff",
+    "FRONT_DESK": "Front Desk",
+    "GOLF_OPERATIONS": "Golf Operations",
+    "F_AND_B_STAFF": "F&B Staff"
+  },
+  "tenantStatus": {
+    "PENDING": "Pending",
+    "ACTIVE": "Active",
+    "SUSPENDED": "Suspended",
+    "ARCHIVED": "Archived"
+  },
+  "subscriptionTier": {
+    "STARTER": "Starter",
+    "PROFESSIONAL": "Professional",
+    "ENTERPRISE": "Enterprise"
+  },
+  "subscriptionStatus": {
+    "ACTIVE": "Active",
+    "PAST_DUE": "Past Due",
+    "CANCELLED": "Cancelled",
+    "TRIAL": "Trial"
+  },
+  "billingCycle": {
+    "MONTHLY": "Monthly",
+    "ANNUAL": "Annual"
+  },
+  "platformUserRole": {
+    "SUPER_ADMIN": "Super Admin",
+    "CSM": "Customer Success Manager",
+    "SUPPORT": "Support",
+    "FINANCE": "Finance"
+  }
+}

@@ -27,13 +27,35 @@ export function initializeClient(config: ApiClientConfig): void {
 
   // Initialize WebSocket client for subscriptions if wsEndpoint provided
   if (config.wsEndpoint && typeof window !== 'undefined') {
-    wsClient = createWSClient({
-      url: config.wsEndpoint,
-      connectionParams: async () => {
-        // Cookies are sent automatically with WebSocket upgrade request
-        return {};
-      },
-    });
+    try {
+      wsClient = createWSClient({
+        url: config.wsEndpoint,
+        connectionParams: async () => {
+          // Cookies are sent automatically with WebSocket upgrade request
+          return {};
+        },
+        // Handle connection errors gracefully
+        on: {
+          error: (error) => {
+            // Normalize Event objects to Error for better debugging
+            if (error instanceof Event) {
+              console.warn('WebSocket connection error - subscriptions unavailable');
+            } else {
+              console.warn('WebSocket error:', error);
+            }
+          },
+          closed: () => {
+            // Connection closed, subscriptions unavailable until reconnect
+          },
+        },
+        // Retry connection with exponential backoff
+        retryAttempts: 3,
+        shouldRetry: () => true,
+      });
+    } catch (error) {
+      console.warn('Failed to initialize WebSocket client:', error);
+      wsClient = null;
+    }
   }
 }
 

@@ -18,6 +18,8 @@ Internationalization (i18n) and Shared Types addresses the consolidation of all 
 
 **Not yet implemented:** Some app-level components still have locally defined status types (e.g., ApplicationStatus, DocumentStatus, ContractStatus in members/types.ts). next-intl is not yet configured in `apps/application` or `apps/member-portal`. Thai translations (th.json) are stub/empty for the application. GraphQL enums in apps/api are not yet re-exported from @clubvantage/types.
 
+Member portal language switching designed (see `docs/plans/2026-02-06-member-portal-pwa-design.md`).
+
 ## Capabilities
 
 - Single source of truth for all status enums in `packages/types` using const object + type union pattern
@@ -181,6 +183,17 @@ These types are currently defined locally in `apps/application/src/components/me
 8. NestJS `registerEnumType` can accept the const object values from `@clubvantage/types` directly.
 9. Frontend components that display status strings must never hardcode display labels (e.g., `status === 'ACTIVE' ? 'Active' : ...`). They must always use `useTranslations()`.
 10. The marketing site already fully uses next-intl. The application and member-portal apps need next-intl configuration added.
+
+## Member Portal Integration
+
+**Plan**: `docs/plans/2026-02-06-member-portal-pwa-design.md`
+
+- Portal supports EN/TH language toggle in member profile preferences
+- Language switcher controlled by `portal.languageSwitcher` feature flag
+- Language preference stored per member and persisted across sessions
+- All portal UI text uses `next-intl` with translations from `packages/i18n`
+- Push notification content respects member's preferred language
+- Single-language clubs can disable the switcher via feature flag
 
 ## Edge Cases
 

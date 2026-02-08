@@ -10,14 +10,20 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.74.0",
     "@clubvantage/api-client": "workspace:*",
+    "@clubvantage/database": "workspace:*",
     "@clubvantage/types": "workspace:*",
     "@clubvantage/ui": "workspace:*",
     "@clubvantage/utils": "workspace:*",
     "@hookform/resolvers": "^3.9.0",
+    "@prisma/adapter-pg": "^7.3.0",
+    "@react-pdf/renderer": "^4.3.2",
     "@tanstack/react-query": "^5.60.0",
+    "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.0",
     "date-fns": "^4.1.0",
+    "iron-session": "^8.0.4",
     "lucide-react": "^0.454.0",
     "next": "^15.1.0",
     "qrcode.react": "^4.0.1",
@@ -30,6 +36,7 @@
   },
   "devDependencies": {
     "@clubvantage/config": "workspace:*",
+    "@types/bcryptjs": "^3.0.0",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",

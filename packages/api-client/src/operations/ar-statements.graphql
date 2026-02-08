@@ -1,0 +1,532 @@
+# AR Statement Queries
+
+query GetARProfiles($filter: ARProfileFilterInput) {
+  arProfiles(filter: $filter) {
+    id
+    memberId
+    cityLedgerId
+    profileType
+    accountNumber
+    accountName
+    contactEmail
+    contactPhone
+    billingAddress
+    status
+    currentBalance
+    creditLimit
+    lastStatementDate
+    lastStatementBalance
+    lastPaymentDate
+    lastPaymentAmount
+    paymentTermsDays
+    statementDelivery
+    suspendedAt
+    suspendedReason
+    closedAt
+    closedReason
+    createdAt
+    updatedAt
+  }
+}
+
+query GetARProfile($id: ID!) {
+  arProfile(id: $id) {
+    id
+    memberId
+    cityLedgerId
+    profileType
+    accountNumber
+    accountName
+    contactEmail
+    contactPhone
+    billingAddress
+    status
+    currentBalance
+    creditLimit
+    lastStatementDate
+    lastStatementBalance
+    lastPaymentDate
+    lastPaymentAmount
+    paymentTermsDays
+    statementDelivery
+    suspendedAt
+    suspendedReason
+    closedAt
+    closedReason
+    createdAt
+    updatedAt
+  }
+}
+
+query GetARProfileByMember($memberId: ID!) {
+  arProfileByMember(memberId: $memberId) {
+    id
+    memberId
+    profileType
+    accountNumber
+    status
+    currentBalance
+    creditLimit
+    lastStatementDate
+    lastStatementBalance
+    paymentTermsDays
+    statementDelivery
+    createdAt
+    updatedAt
+  }
+}
+
+query GetStatementPeriods($filter: StatementPeriodFilterInput) {
+  statementPeriods(filter: $filter) {
+    id
+    periodYear
+    periodNumber
+    periodLabel
+    periodStart
+    periodEnd
+    cutoffDate
+    isCatchUp
+    status
+    closedAt
+    closedBy
+    reopenedAt
+    reopenedBy
+    reopenReason
+    reopenApprovedBy
+    totalProfiles
+    totalStatements
+    totalOpeningBalance
+    totalCredits
+    totalDebits
+    totalClosingBalance
+    createdAt
+    updatedAt
+  }
+}
+
+query GetStatementPeriod($id: ID!) {
+  statementPeriod(id: $id) {
+    id
+    periodYear
+    periodNumber
+    periodLabel
+    periodStart
+    periodEnd
+    cutoffDate
+    isCatchUp
+    status
+    closedAt
+    closedBy
+    reopenedAt
+    reopenedBy
+    reopenReason
+    reopenApprovedBy
+    totalProfiles
+    totalStatements
+    totalOpeningBalance
+    totalCredits
+    totalDebits
+    totalClosingBalance
+    createdAt
+    updatedAt
+  }
+}
+
+query GetCurrentStatementPeriod {
+  currentStatementPeriod {
+    id
+    periodYear
+    periodNumber
+    periodLabel
+    periodStart
+    periodEnd
+    cutoffDate
+    isCatchUp
+    status
+    totalProfiles
+    totalStatements
+    createdAt
+    updatedAt
+  }
+}
+
+query GetStatementRunsByPeriod($periodId: ID!) {
+  statementRunsByPeriod(periodId: $periodId) {
+    id
+    statementPeriodId
+    runType
+    runNumber
+    status
+    startedAt
+    completedAt
+    totalProfiles
+    processedCount
+    generatedCount
+    skippedCount
+    errorCount
+    errorLog
+    totalOpeningBalance
+    totalDebits
+    totalCredits
+    totalClosingBalance
+    createdBy
+    createdAt
+    updatedAt
+  }
+}
+
+query GetStatementRun($id: ID!) {
+  statementRun(id: $id) {
+    id
+    statementPeriodId
+    runType
+    runNumber
+    status
+    startedAt
+    completedAt
+    totalProfiles
+    processedCount
+    generatedCount
+    skippedCount
+    errorCount
+    errorLog
+    totalOpeningBalance
+    totalDebits
+    totalCredits
+    totalClosingBalance
+    createdBy
+    createdAt
+    updatedAt
+  }
+}
+
+query GetStatementsByRun($runId: ID!, $minBalance: Float, $maxBalance: Float) {
+  statements(runId: $runId, minBalance: $minBalance, maxBalance: $maxBalance) {
+    id
+    arProfileId
+    openingBalance
+    closingBalance
+    periodStart
+    periodEnd
+    dueDate
+    deliveryMethod
+    emailStatus
+    emailSentAt
+    emailDeliveredAt
+    emailError
+    smsStatus
+    smsSentAt
+    smsDeliveredAt
+    smsError
+    printStatus
+    printedAt
+    printBatchId
+    portalStatus
+    portalPublishedAt
+    portalViewedAt
+    pdfUrl
+    pdfGeneratedAt
+    agingCurrent
+    aging1to30
+    aging31to60
+    aging61to90
+    aging90Plus
+    profileSnapshot
+    transactionCount
+    transactions
+    createdAt
+    updatedAt
+  }
+}
+
+query GetStatement($id: ID!) {
+  statement(id: $id) {
+    id
+    arProfileId
+    openingBalance
+    closingBalance
+    periodStart
+    periodEnd
+    dueDate
+    deliveryMethod
+    emailStatus
+    emailSentAt
+    emailDeliveredAt
+    emailError
+    smsStatus
+    smsSentAt
+    smsDeliveredAt
+    smsError
+    printStatus
+    printedAt
+    printBatchId
+    portalStatus
+    portalPublishedAt
+    portalViewedAt
+    pdfUrl
+    pdfGeneratedAt
+    agingCurrent
+    aging1to30
+    aging31to60
+    aging61to90
+    aging90Plus
+    profileSnapshot
+    createdAt
+    updatedAt
+  }
+}
+
+query GetProfileStatements($arProfileId: ID!, $onlyFinal: Boolean! = true) {
+  profileStatements(arProfileId: $arProfileId, onlyFinal: $onlyFinal) {
+    id
+    arProfileId
+    openingBalance
+    closingBalance
+    periodStart
+    periodEnd
+    dueDate
+    deliveryMethod
+    emailStatus
+    printStatus
+    portalStatus
+    smsStatus
+    pdfUrl
+    createdAt
+  }
+}
+
+# AR Statement Mutations
+
+mutation CreateARProfile($input: CreateARProfileInput!) {
+  createARProfile(input: $input) {
+    id
+    memberId
+    cityLedgerId
+    profileType
+    accountNumber
+    accountName
+    contactEmail
+    contactPhone
+    billingAddress
+    status
+    currentBalance
+    creditLimit
+    statementDelivery
+    createdAt
+  }
+}
+
+mutation UpdateARProfile($id: ID!, $input: UpdateARProfileInput!) {
+  updateARProfile(id: $id, input: $input) {
+    id
+    memberId
+    cityLedgerId
+    profileType
+    accountNumber
+    accountName
+    contactEmail
+    contactPhone
+    billingAddress
+    status
+    currentBalance
+    creditLimit
+    statementDelivery
+    updatedAt
+  }
+}
+
+mutation SuspendARProfile($id: ID!, $input: SuspendARProfileInput!) {
+  suspendARProfile(id: $id, input: $input) {
+    id
+    status
+    suspendedAt
+    suspendedReason
+  }
+}
+
+mutation ReactivateARProfile($id: ID!) {
+  reactivateARProfile(id: $id) {
+    id
+    status
+    suspendedAt
+    suspendedReason
+  }
+}
+
+mutation CloseARProfile($id: ID!, $input: CloseARProfileInput!) {
+  closeARProfile(id: $id, input: $input) {
+    id
+    status
+    closedAt
+    closedReason
+  }
+}
+
+mutation CreateStatementPeriod($input: CreateStatementPeriodInput!) {
+  createStatementPeriod(input: $input) {
+    id
+    periodYear
+    periodNumber
+    periodLabel
+    periodStart
+    periodEnd
+    cutoffDate
+    isCatchUp
+    status
+    totalProfiles
+    createdAt
+  }
+}
+
+mutation UpdateStatementPeriod($id: ID!, $input: UpdateStatementPeriodInput!) {
+  updateStatementPeriod(id: $id, input: $input) {
+    id
+    periodYear
+    periodNumber
+    periodLabel
+    periodStart
+    periodEnd
+    cutoffDate
+    status
+    updatedAt
+  }
+}
+
+mutation CloseStatementPeriod($id: ID!) {
+  closeStatementPeriod(id: $id) {
+    id
+    status
+    closedAt
+    closedBy
+    totalStatements
+    totalClosingBalance
+  }
+}
+
+mutation ReopenStatementPeriod($id: ID!, $input: ReopenStatementPeriodInput!) {
+  reopenStatementPeriod(id: $id, input: $input) {
+    id
+    status
+    reopenedAt
+    reopenedBy
+    reopenReason
+    reopenApprovedBy
+  }
+}
+
+mutation DeleteStatementPeriod($id: ID!) {
+  deleteStatementPeriod(id: $id)
+}
+
+mutation StartStatementRun($input: CreateStatementRunInput!) {
+  startStatementRun(input: $input) {
+    id
+    statementPeriodId
+    runType
+    runNumber
+    status
+    totalProfiles
+    createdBy
+    createdAt
+  }
+}
+
+mutation CancelStatementRun($id: ID!) {
+  cancelStatementRun(id: $id) {
+    id
+    status
+    completedAt
+  }
+}
+
+mutation UpdateStatementDeliveryStatus(
+  $id: ID!
+  $channel: String!
+  $status: String!
+  $error: String
+) {
+  updateStatementDeliveryStatus(
+    id: $id
+    channel: $channel
+    status: $status
+    error: $error
+  ) {
+    id
+    emailStatus
+    emailSentAt
+    emailDeliveredAt
+    emailError
+    smsStatus
+    smsSentAt
+    smsDeliveredAt
+    smsError
+    printStatus
+    printedAt
+    portalStatus
+    portalPublishedAt
+    portalViewedAt
+  }
+}
+
+mutation MarkStatementPortalViewed($id: ID!) {
+  markStatementPortalViewed(id: $id) {
+    id
+    portalStatus
+    portalViewedAt
+  }
+}
+
+# AR Profile Sync Operations
+
+query GetMembersWithoutARProfilesCount {
+  membersWithoutARProfilesCount
+}
+
+query GetMembersWithoutARProfiles {
+  membersWithoutARProfiles {
+    id
+    memberId
+    firstName
+    lastName
+    email
+    membershipTypeName
+  }
+}
+
+mutation SyncMembersToARProfiles($input: SyncARProfilesInput) {
+  syncMembersToARProfiles(input: $input) {
+    created
+    skipped
+    errors
+  }
+}
+
+mutation SyncCityLedgersToARProfiles($input: SyncARProfilesInput) {
+  syncCityLedgersToARProfiles(input: $input) {
+    created
+    skipped
+    errors
+  }
+}
+
+# AR Period Settings
+
+query GetARPeriodSettings {
+  arPeriodSettings {
+    arCycleType
+    arCustomCycleStartDay
+    arCutoffDays
+    arCloseBehavior
+    arAutoGenerateNext
+  }
+}
+
+mutation UpdateARSettings($input: UpdateARSettingsInput!) {
+  updateARSettings(input: $input) {
+    arCycleType
+    arCustomCycleStartDay
+    arCutoffDays
+    arCloseBehavior
+    arAutoGenerateNext
+  }
+}

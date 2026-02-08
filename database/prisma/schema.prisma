@@ -74,6 +74,7 @@ model Club {
   dailySettlements       DailySettlement[]
   posTemplates           POSTemplate[]
   posOutlets             POSOutlet[]
+  posStations            POSStation[]
   creditNotes            CreditNote[]
   collectionActions      CollectionAction[]
   cityLedgers            CityLedger[]
@@ -87,6 +88,8 @@ model Club {
   statementPeriods       StatementPeriod[]
   statementRuns          StatementRun[]
   arStatements           Statement[]
+  events                 Event[]
+  announcements          Announcement[]
 
   @@index([slug])
   @@index([isActive])
@@ -158,6 +161,14 @@ model ClubBillingSettings {
   prorateNewMembers     Boolean          @default(true)
   prorateChanges        Boolean          @default(true)
   prorationMethod       ProrationMethod  @default(DAILY)
+
+  // AR Period Settings (system-wide configuration)
+  arCycleType           ARCycleType      @default(CALENDAR_MONTH)
+  arCustomCycleStartDay Int              @default(1) // Day of month for CUSTOM cycle (1-28)
+  arCutoffDays          Int              @default(5) // Days after period end to include transactions
+  arCloseBehavior       ARCloseBehavior  @default(MANUAL)
+  arAutoGenerateNext    Boolean          @default(true) // Create next period when current closes
+
   createdAt             DateTime         @default(now())
   updatedAt             DateTime         @updatedAt
   club                  Club             @relation(fields: [clubId], references: [id], onDelete: Cascade)
@@ -218,6 +229,18 @@ model ARProfile {
   memberId     String?       @unique @db.Uuid
   cityLedgerId String?       @unique @db.Uuid
 
+  // Standalone account info (for CITY_LEDGER without linked entity)
+  accountName    String? @db.VarChar(255)
+  contactEmail   String? @db.VarChar(255)
+  contactPhone   String? @db.VarChar(50)
+  billingAddress String?
+
+  // Business details (for CITY_LEDGER corporate accounts)
+  taxId                  String? @db.VarChar(20)  // Tax ID (e.g., Thai Tax ID is 13 digits)
+  businessRegistrationId String? @db.VarChar(50)  // Business registration number
+  branchName             String? @db.VarChar(100) // Branch name (e.g., "Head Office", "Bangkok Branch")
+  branchCode             String? @db.VarChar(10)  // Branch code (e.g., "00000" for head office)
+
   // Billing configuration
   statementDelivery StatementDelivery @default(EMAIL)
   paymentTermsDays  Int               @default(15)
@@ -272,6 +295,9 @@ model StatementPeriod {
   periodEnd   DateTime @db.Date
   cutoffDate  DateTime @db.Date
 
+  // Period type
+  isCatchUp Boolean @default(false) // Catch-up period consolidates historical data
+
   // Status & locking
   status           PeriodStatus @default(OPEN)
   closedAt         DateTime?
@@ -288,6 +314,13 @@ model StatementPeriod {
   totalDebits         Decimal? @db.Decimal(14, 2)
   totalCredits        Decimal? @db.Decimal(14, 2)
   totalClosingBalance Decimal? @db.Decimal(14, 2)
+
+  // Aging snapshot (populated at close for historical tracking)
+  agingCurrent  Decimal? @db.Decimal(14, 2) // Not yet due
+  aging1to30    Decimal? @db.Decimal(14, 2) // 1-30 days overdue
+  aging31to60   Decimal? @db.Decimal(14, 2) // 31-60 days overdue
+  aging61to90   Decimal? @db.Decimal(14, 2) // 61-90 days overdue
+  aging90Plus   Decimal? @db.Decimal(14, 2) // Over 90 days overdue
 
   // Audit
   createdAt DateTime @default(now())
@@ -575,6 +608,8 @@ model Member {
   addresses             MemberAddress[]
   documents             MemberDocument[]
   arProfile             ARProfile?
+  eventRegistrations    EventRegistration[]
+  scorecards            Scorecard[]
 
   @@unique([clubId, memberId])
   @@unique([clubId, email])
@@ -1182,6 +1217,7 @@ model GolfCourse {
   greenFeeRates     GreenFeeRate[]
   blocks            TeeTimeBlock[]
   teeTimes          TeeTime[]
+  scorecards        Scorecard[]
 
   @@unique([clubId, code])
   @@index([clubId])
@@ -2757,11 +2793,35 @@ model POSOutlet {
   staffUsage       StaffProductUsage[]
   suggestionConfig SmartSuggestionConfig?
   roleConfigs      POSOutletRoleConfig[]
+  stations         POSStation[]
 
   @@unique([clubId, name])
   @@index([clubId])
   @@index([clubId, isActive])
   @@map("pos_outlets")
+}
+
+/// POS station (terminal/register) within an outlet — identifies a physical device position
+model POSStation {
+  id          String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId      String  @db.Uuid
+  outletId    String  @db.Uuid
+  name        String  @db.VarChar(100)
+  code        String  @db.VarChar(50)
+  description String? @db.VarChar(500)
+  peripherals Json?
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  club   Club      @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  outlet POSOutlet @relation(fields: [outletId], references: [id], onDelete: Cascade)
+
+  @@unique([outletId, code])
+  @@index([clubId])
+  @@index([outletId, isActive])
+  @@map("pos_stations")
 }
 
 /// Product configuration per outlet (visibility, display settings, quick keys)
@@ -4205,6 +4265,20 @@ enum PeriodStatus {
   REOPENED // Closed period that was reopened (requires approval)
 }
 
+/// AR billing cycle type for system-wide period configuration
+enum ARCycleType {
+  CALENDAR_MONTH // 1st to last day of month
+  ROLLING_30 // 30 days from cycle start
+  CUSTOM // Custom day-of-month cycle (e.g., 25th to 24th)
+}
+
+/// AR period close behavior
+enum ARCloseBehavior {
+  MANUAL // Staff manually closes period
+  AUTO_AFTER_FINAL_RUN // Auto-close after final statement run completes
+  AUTO_ON_CUTOFF // Auto-close on cutoff date
+}
+
 /// Type of statement run
 enum StatementRunType {
   PREVIEW // Preview run for audit/review before AR close
@@ -4227,4 +4301,112 @@ enum DeliveryStatus {
   DELIVERED // Confirmed delivered (email opened, etc)
   FAILED // Delivery failed
   NOT_APPLICABLE // Delivery method doesn't apply (e.g., portal only)
+}
+
+// ============================================================================
+// EVENTS & ANNOUNCEMENTS
+// ============================================================================
+
+model Event {
+  id            String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId        String              @db.Uuid
+  title         String              @db.VarChar(255)
+  description   String?
+  imageUrl      String?             @db.VarChar(500)
+  category      String              @db.VarChar(50) // SOCIAL, GOLF, DINING, FITNESS, KIDS
+  location      String?             @db.VarChar(255)
+  startDate     DateTime
+  endDate       DateTime
+  capacity      Int?
+  price         Decimal?            @db.Decimal(12, 2)
+  isPublished   Boolean             @default(false)
+  isFeatured    Boolean             @default(false)
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  club          Club                @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  registrations EventRegistration[]
+
+  @@index([clubId])
+  @@index([clubId, startDate])
+  @@map("events")
+}
+
+model EventRegistration {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  eventId    String   @db.Uuid
+  memberId   String   @db.Uuid
+  guestCount Int      @default(0)
+  status     String   @default("REGISTERED") @db.VarChar(20) // REGISTERED, WAITLISTED, CANCELLED
+  notes      String?
+  createdAt  DateTime @default(now())
+
+  event  Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, memberId])
+  @@index([memberId])
+  @@map("event_registrations")
+}
+
+model Announcement {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId      String    @db.Uuid
+  title       String    @db.VarChar(255)
+  body        String
+  imageUrl    String?   @db.VarChar(500)
+  category    String    @db.VarChar(50) // GENERAL, GOLF, DINING, SOCIAL, MAINTENANCE
+  isPinned    Boolean   @default(false)
+  publishedAt DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  club Club @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  @@index([clubId])
+  @@index([clubId, publishedAt])
+  @@map("announcements")
+}
+
+/// Golf scorecard for a completed round
+model Scorecard {
+  id           String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  memberId     String      @db.Uuid
+  courseId      String      @db.Uuid
+  playedAt     DateTime    @db.Date
+  totalScore   Int
+  totalPutts   Int?
+  fairwaysHit  Int?
+  greensInReg  Int?
+  notes        String?
+  weather      String?     @db.VarChar(50)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  member Member     @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  course GolfCourse @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  holes  ScoreHole[]
+
+  @@index([memberId])
+  @@index([memberId, playedAt])
+  @@map("scorecards")
+}
+
+/// Individual hole score within a scorecard
+model ScoreHole {
+  id          String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  scorecardId String @db.Uuid
+  holeNumber  Int
+  par         Int
+  strokes     Int
+  putts       Int?
+  fairwayHit  Boolean?
+  greenInReg  Boolean?
+
+  scorecard Scorecard @relation(fields: [scorecardId], references: [id], onDelete: Cascade)
+
+  @@unique([scorecardId, holeNumber])
+  @@index([scorecardId])
+  @@map("score_holes")
 }

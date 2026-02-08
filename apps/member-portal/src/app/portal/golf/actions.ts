@@ -1,7 +1,8 @@
 'use server'
 
 import { GraphQLClient } from '@clubvantage/api-client/client'
-import { cookies } from 'next/headers'
+import { getSession } from '@/lib/auth/session'
+import { prisma } from '@/lib/db'
 
 import type {
   TeeTimeBooking,
@@ -319,9 +320,8 @@ function getServerClient(): GraphQLClient {
 }
 
 async function getCurrentMemberId(): Promise<string> {
-  const cookieStore = await cookies()
-  const memberId = cookieStore.get('member_id')?.value
-  return memberId || 'member-placeholder'
+  const session = await getSession()
+  return session.isLoggedIn ? session.memberId : 'member-placeholder'
 }
 
 // ============================================================================
@@ -372,7 +372,45 @@ function hasCart(players: TeeTimePlayerResponse[]): boolean {
   )
 }
 
-function transformTeeTimeToBooking(teeTime: TeeTimeResponse): TeeTimeBooking {
+interface GolfRates {
+  greenFeePerPlayer: number
+  cartFee: number
+  caddyFeeShared: number
+  caddyFeeIndividual: number
+}
+
+async function getGolfRates(courseId: string): Promise<GolfRates> {
+  const rateConfig = await prisma.golfRateConfig.findFirst({
+    where: {
+      courseId,
+      isActive: true,
+      effectiveFrom: { lte: new Date() },
+      OR: [{ effectiveTo: null }, { effectiveTo: { gte: new Date() } }],
+    },
+    orderBy: { effectiveFrom: 'desc' },
+    include: {
+      greenFeeRates: true,
+      cartRates: true,
+      caddyRates: true,
+    },
+  })
+
+  const greenFee = rateConfig?.greenFeeRates.find(
+    (r) => r.playerType === 'MEMBER' && r.holes === 18
+  )
+  const cartRate = rateConfig?.cartRates.find((r) => r.cartType === 'SHARED')
+  const caddyShared = rateConfig?.caddyRates.find((r) => r.caddyType === 'SHARED')
+  const caddyIndividual = rateConfig?.caddyRates.find((r) => r.caddyType === 'INDIVIDUAL')
+
+  return {
+    greenFeePerPlayer: greenFee ? Number(greenFee.amount) : 3500,
+    cartFee: cartRate ? Number(cartRate.amount) : 500,
+    caddyFeeShared: caddyShared ? Number(caddyShared.amount) : 1500,
+    caddyFeeIndividual: caddyIndividual ? Number(caddyIndividual.amount) : 2500,
+  }
+}
+
+function transformTeeTimeToBooking(teeTime: TeeTimeResponse, rates: GolfRates): TeeTimeBooking {
   const teeDate = new Date(teeTime.teeDate)
   const cancellationDeadline = new Date(teeDate)
   cancellationDeadline.setHours(cancellationDeadline.getHours() - 24)
@@ -395,11 +433,7 @@ function transformTeeTimeToBooking(teeTime: TeeTimeResponse): TeeTimeBooking {
     email: p.guestEmail,
   }))
 
-  // Calculate price breakdown (placeholder - should come from backend)
-  const greenFeePerPlayer = 3500
-  const cartFee = 500
-  const caddyFeeShared = 1500
-  const caddyFeeIndividual = 2500
+  const { greenFeePerPlayer, cartFee, caddyFeeShared, caddyFeeIndividual } = rates
 
   const caddyType = getCaddyType(teeTime.players)
   const cartIncluded = hasCart(teeTime.players)
@@ -536,8 +570,25 @@ export async function fetchMyGolfBookings(
       first: 50,
     })
 
-    const bookings = (result.teeTimes?.edges || [])
-      .map((edge) => transformTeeTimeToBooking(edge.node))
+    // Pre-fetch rates per unique course to avoid N+1 queries
+    const edges = result.teeTimes?.edges || []
+    const courseIds = [...new Set(edges.map((e) => e.node.course?.id).filter(Boolean) as string[])]
+    const ratesMap = new Map<string, GolfRates>()
+    await Promise.all(
+      courseIds.map(async (cid) => {
+        ratesMap.set(cid, await getGolfRates(cid))
+      })
+    )
+
+    const defaultRates: GolfRates = {
+      greenFeePerPlayer: 3500, cartFee: 500, caddyFeeShared: 1500, caddyFeeIndividual: 2500,
+    }
+
+    const bookings = edges
+      .map((edge) => {
+        const rates = ratesMap.get(edge.node.course?.id ?? '') ?? defaultRates
+        return transformTeeTimeToBooking(edge.node, rates)
+      })
       .sort((a, b) => {
         const dateA = new Date(`${a.date}T${a.time}`)
         const dateB = new Date(`${b.date}T${b.time}`)
@@ -568,7 +619,11 @@ export async function fetchGolfBookingById(
 
     if (!result.teeTime) return null
 
-    return transformTeeTimeToBooking(result.teeTime)
+    const rates = result.teeTime.course?.id
+      ? await getGolfRates(result.teeTime.course.id)
+      : { greenFeePerPlayer: 3500, cartFee: 500, caddyFeeShared: 1500, caddyFeeIndividual: 2500 }
+
+    return transformTeeTimeToBooking(result.teeTime, rates)
   } catch (error) {
     console.error('Error fetching golf booking:', error)
     return null

@@ -1,229 +1,305 @@
-'use client'
-
-import { BalanceCard } from '@/components/portal/balance-card'
-import { QuickActions } from '@/components/portal/quick-actions'
-import { TeeTimeCard } from '@/components/portal/tee-time-card'
-import { cn } from '@clubvantage/ui'
-import { ChevronRight, Receipt, CreditCard, Flag } from 'lucide-react'
+import type { Metadata } from 'next'
 import Link from 'next/link'
-import type { TeeTimeBooking } from '@/lib/types'
+import { format } from 'date-fns'
 
-// Default cancellation policy for mock data
-const defaultCancellationPolicy = {
-  fullRefundBefore: '',
-  partialRefundBefore: '',
-  noRefundAfter: '',
-  partialRefundPercent: 50,
+export const metadata: Metadata = {
+  title: 'Dashboard | Member Portal',
 }
+import {
+  ChevronRight,
+  Sun,
+  Flag,
+  Calendar,
+  QrCode,
+  Receipt,
+  Newspaper,
+  CalendarDays,
+  ArrowDownLeft,
+  ArrowUpRight,
+} from 'lucide-react'
+import { getMemberProfile, getAccountBalance, getUpcomingTeeTimes, getRecentTransactions } from '@/lib/data'
+import { getAnnouncements } from '@/lib/data/news'
+import { getUpcomingEvents } from '@/lib/data/events'
+import { SuspensionBanner } from '@/components/portal/suspension-banner'
+import { AuraSuggestion } from '@/components/portal/aura-suggestion'
 
-// Mock data - will be replaced with real data fetching
-const mockUpcomingBookings: TeeTimeBooking[] = [
-  {
-    id: '1',
-    date: '2026-01-25',
-    time: '07:30',
-    courseName: 'Championship Course',
-    courseId: 'course-1',
-    roundType: '18-hole',
-    status: 'confirmed',
-    players: [
-      { id: '1', name: 'John Smith', type: 'member' },
-      { id: '2', name: 'Sarah Smith', type: 'dependent' },
-      { id: '3', name: 'Mike Johnson', type: 'guest' },
-    ],
-    cart: true,
-    caddy: 'individual',
-    totalPrice: 18500,
-    priceBreakdown: [
-      { label: 'Green Fee (3 players)', amount: 10500 },
-      { label: 'Golf Cart', amount: 500 },
-      { label: 'Individual Caddies (3)', amount: 7500 },
-    ],
-    cancellationPolicy: defaultCancellationPolicy,
-    createdAt: '2026-01-20T10:00:00Z',
-  },
-  {
-    id: '2',
-    date: '2026-01-28',
-    time: '10:00',
-    courseName: 'Executive Course',
-    courseId: 'course-2',
-    roundType: '9-hole',
-    status: 'pending',
-    players: [
-      { id: '1', name: 'John Smith', type: 'member' },
-      { id: '4', name: 'Bob Wilson', type: 'guest' },
-    ],
-    cart: false,
-    caddy: 'none',
-    totalPrice: 7000,
-    priceBreakdown: [{ label: 'Green Fee (2 players)', amount: 7000 }],
-    cancellationPolicy: defaultCancellationPolicy,
-    createdAt: '2026-01-21T14:00:00Z',
-  },
+const quickActions = [
+  { href: '/portal/golf/book', icon: Flag, label: 'Book Tee Time', color: 'bg-stone-50 text-stone-700' },
+  { href: '/portal/book', icon: Calendar, label: 'Facilities', color: 'bg-stone-50 text-stone-700' },
+  { href: '/portal/member-id', icon: QrCode, label: 'Member ID', color: 'bg-stone-50 text-stone-700' },
+  { href: '/portal/statements', icon: Receipt, label: 'Statements', color: 'bg-stone-50 text-stone-700' },
 ]
 
-interface ActivityItem {
-  id: string
-  type: 'payment' | 'charge' | 'booking'
-  title: string
-  subtitle: string
-  timestamp: string
-  amount?: number
+function getGreeting() {
+  const hour = new Date().getHours()
+  if (hour < 12) return 'Good Morning'
+  if (hour < 17) return 'Good Afternoon'
+  return 'Good Evening'
 }
 
-const mockActivity: ActivityItem[] = [
-  {
-    id: '1',
-    type: 'payment',
-    title: 'Payment Received',
-    subtitle: 'Bank Transfer',
-    timestamp: '2 hours ago',
-    amount: -15000,
-  },
-  {
-    id: '2',
-    type: 'charge',
-    title: 'Monthly Dues',
-    subtitle: 'January 2026',
-    timestamp: 'Yesterday',
-    amount: 25000,
-  },
-  {
-    id: '3',
-    type: 'booking',
-    title: 'Golf Booking',
-    subtitle: 'Championship Course',
-    timestamp: '3 days ago',
-    amount: 3500,
-  },
-]
+export default async function DashboardPage() {
+  const [member, balance, upcomingTeeTimes, announcements, events, recentActivity] = await Promise.all([
+    getMemberProfile(),
+    getAccountBalance(),
+    getUpcomingTeeTimes(),
+    getAnnouncements(),
+    getUpcomingEvents(),
+    getRecentTransactions(),
+  ])
 
-const activityIcons = {
-  payment: CreditCard,
-  charge: Receipt,
-  booking: Flag,
-}
+  const initials = `${member.firstName[0]}${member.lastName[0]}`
+  const memberSinceYear = member.joinDate.getFullYear()
 
-const activityColors = {
-  payment: 'text-emerald-500 bg-emerald-50 dark:bg-emerald-950/30',
-  charge: 'text-amber-500 bg-amber-50 dark:bg-amber-950/30',
-  booking: 'text-blue-500 bg-blue-50 dark:bg-blue-950/30',
-}
+  // Calculate days overdue for suspension banner
+  const daysOverdue = balance.dueDate
+    ? Math.floor((Date.now() - new Date(balance.dueDate).getTime()) / (1000 * 60 * 60 * 24))
+    : 0
+  const showSuspensionBanner =
+    member.status === 'SUSPENDED' || (balance.balance > 0 && daysOverdue >= 91)
 
-export default function DashboardPage() {
   return (
-    <div className="px-4 py-6 space-y-6">
+    <div className="pb-36">
+      {showSuspensionBanner && <SuspensionBanner daysOverdue={Math.max(daysOverdue, 0)} />}
+
+      <div className="px-5 py-6 space-y-8">
+      {/* Greeting Header */}
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-[22px] font-semibold text-stone-900">
+            {getGreeting()}, {member.firstName}
+          </h1>
+          <p className="text-sm text-stone-500 mt-0.5">
+            Member since {memberSinceYear}
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-stone-50 rounded-full">
+            <Sun className="h-4 w-4 text-amber-500" />
+            <span className="text-xs font-medium text-stone-600">28°C</span>
+          </div>
+          <div className="h-10 w-10 rounded-full bg-stone-900 flex items-center justify-center">
+            <span className="text-sm font-bold text-white">{initials}</span>
+          </div>
+        </div>
+      </div>
+
       {/* Balance Card */}
-      <BalanceCard
-        balance={12500}
-        dueDate="January 31, 2026"
-        isOverdue={false}
-        isSuspended={false}
-        variant="full"
-        onPayClick={() => console.log('Pay clicked')}
+      <div className="rounded-2xl p-5 card-glass shadow-lg shadow-stone-200/30">
+        <p className="text-xs text-stone-500 font-medium">Current Balance</p>
+        <p className="text-3xl font-bold text-stone-900 mt-1 tracking-tight">
+          ฿{balance.balance.toLocaleString()}
+        </p>
+        {balance.dueDate && (
+          <p className="text-sm text-stone-500 mt-1">
+            Due by {format(balance.dueDate, 'MMM d')}
+          </p>
+        )}
+        {balance.balance > 0 && (
+          <button className="mt-4 px-5 py-2.5 rounded-xl text-sm font-semibold bg-amber-600 text-white hover:bg-amber-700 transition-colors cursor-pointer shadow-md shadow-amber-600/20">
+            Pay Now
+          </button>
+        )}
+      </div>
+
+      {/* Aura Suggestion */}
+      <AuraSuggestion
+        hasBalance={balance.balance > 0}
+        dueDate={balance.dueDate}
+        upcomingTeeTimes={upcomingTeeTimes.length}
+        nextTeeTime={upcomingTeeTimes[0] ?? null}
+        upcomingEvents={events.length}
+        firstName={member.firstName}
       />
 
       {/* Quick Actions */}
-      <QuickActions suspended={false} />
-
-      {/* Upcoming Tee Times */}
-      <section>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
-            Upcoming Tee Times
-          </h2>
-          <Link
-            href="/portal/golf"
-            className="flex items-center text-sm text-amber-600 hover:text-amber-700 font-medium"
-          >
-            View All
-            <ChevronRight className="h-4 w-4 ml-0.5" />
-          </Link>
-        </div>
-        <div className="space-y-3">
-          {mockUpcomingBookings.length > 0 ? (
-            mockUpcomingBookings.map((booking) => (
-              <TeeTimeCard key={booking.id} booking={booking} variant="full" />
-            ))
-          ) : (
-            <div className="rounded-2xl bg-card border border-border/60 p-6 text-center">
-              <Flag className="h-10 w-10 text-stone-300 dark:text-stone-600 mx-auto mb-3" />
-              <p className="text-sm text-stone-500 dark:text-stone-400">
-                No upcoming tee times
-              </p>
-              <Link
-                href="/portal/golf/book"
-                className="inline-block mt-3 text-sm font-medium text-amber-600 hover:text-amber-700"
-              >
-                Book a tee time →
-              </Link>
-            </div>
-          )}
-        </div>
-      </section>
+      <div className="grid grid-cols-4 gap-3">
+        {quickActions.map((action) => {
+          const Icon = action.icon
+          return (
+            <Link
+              key={action.label}
+              href={action.href}
+              className="flex flex-col items-center gap-2 group cursor-pointer"
+            >
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl transition-all duration-200 group-hover:shadow-md group-hover:shadow-stone-200/50 group-active:scale-95 bg-white/80 backdrop-blur-sm border border-stone-100 text-stone-700">
+                <Icon className="h-6 w-6 text-amber-600 group-hover:text-amber-700 transition-colors" />
+              </div>
+              <span className="text-[11px] font-medium text-stone-600 text-center leading-tight group-hover:text-stone-900 transition-colors">
+                {action.label}
+              </span>
+            </Link>
+          )
+        })}
+      </div>
 
       {/* Recent Activity */}
-      <section>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
-            Recent Activity
-          </h2>
-          <Link
-            href="/portal/statements"
-            className="flex items-center text-sm text-amber-600 hover:text-amber-700 font-medium"
-          >
-            View All
-            <ChevronRight className="h-4 w-4 ml-0.5" />
-          </Link>
-        </div>
-        <div className="rounded-2xl bg-card border border-border/60 overflow-hidden">
-          {mockActivity.map((item, idx) => {
-            const Icon = activityIcons[item.type]
-            return (
+      {recentActivity.length > 0 && (
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-base font-semibold text-stone-900">Recent Activity</h2>
+            <Link
+              href="/portal/spending"
+              className="flex items-center text-sm text-stone-500 font-medium"
+            >
+              See All
+              <ChevronRight className="h-4 w-4 ml-0.5" />
+            </Link>
+          </div>
+          <div className="space-y-2">
+            {recentActivity.slice(0, 5).map((item) => (
               <div
                 key={item.id}
-                className={cn(
-                  'flex items-center gap-3 p-4',
-                  idx !== mockActivity.length - 1 &&
-                    'border-b border-border/60'
-                )}
+                className="flex items-center gap-3 p-3 rounded-xl bg-white/80 backdrop-blur-sm border border-stone-100"
               >
-                <div
-                  className={cn(
-                    'flex h-10 w-10 items-center justify-center rounded-xl',
-                    activityColors[item.type]
+                <div className={`flex h-10 w-10 items-center justify-center rounded-xl flex-shrink-0 ${
+                  item.type === 'payment' ? 'bg-emerald-50' : 'bg-stone-50'
+                }`}>
+                  {item.type === 'payment' ? (
+                    <ArrowDownLeft className="h-5 w-5 text-emerald-600" />
+                  ) : (
+                    <ArrowUpRight className="h-5 w-5 text-stone-500" />
                   )}
-                >
-                  <Icon className="h-5 w-5" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-stone-900 dark:text-stone-100">
-                    {item.title}
+                  <p className="text-[15px] font-medium text-stone-900 truncate">
+                    {item.description}
                   </p>
-                  <p className="text-xs text-stone-500">{item.subtitle}</p>
+                  <p className="text-xs text-stone-500">
+                    {format(item.date, 'MMM d')}
+                  </p>
                 </div>
-                <div className="text-right">
-                  {item.amount && (
-                    <p
-                      className={cn(
-                        'text-sm font-semibold font-mono',
-                        item.amount < 0
-                          ? 'text-emerald-600 dark:text-emerald-400'
-                          : 'text-stone-900 dark:text-stone-100'
-                      )}
-                    >
-                      {item.amount < 0 ? '-' : '+'}฿
-                      {Math.abs(item.amount).toLocaleString()}
-                    </p>
-                  )}
-                  <p className="text-xs text-stone-400">{item.timestamp}</p>
-                </div>
+                <p className={`text-[15px] font-semibold flex-shrink-0 ${
+                  item.amount > 0 ? 'text-emerald-600' : 'text-stone-900'
+                }`}>
+                  {item.amount > 0 ? '+' : ''}฿{Math.abs(item.amount).toLocaleString()}
+                </p>
               </div>
-            )
-          })}
-        </div>
-      </section>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Upcoming Tee Times */}
+      {upcomingTeeTimes.length > 0 && (
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-base font-semibold text-stone-900">Upcoming</h2>
+            <Link
+              href="/portal/bookings"
+              className="flex items-center text-sm text-stone-500 font-medium"
+            >
+              See All
+              <ChevronRight className="h-4 w-4 ml-0.5" />
+            </Link>
+          </div>
+          <div className="space-y-2">
+            {upcomingTeeTimes.map((tt) => (
+              <Link
+                key={tt.id}
+                href={`/portal/golf/bookings/${tt.id}`}
+                className="flex items-center gap-3 p-3 rounded-xl card-elevated cursor-pointer bg-white/80 backdrop-blur-sm border border-stone-100"
+              >
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 flex-shrink-0">
+                  <Flag className="h-5 w-5 text-amber-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[15px] font-medium text-stone-900 tracking-tight">
+                    {format(tt.date, 'EEE, MMM d')} &middot; {tt.time}
+                  </p>
+                  <p className="text-sm text-stone-500 mt-0.5">
+                    {tt.courseName} &middot; {tt.playerCount} Players
+                  </p>
+                </div>
+                <ChevronRight className="h-5 w-5 text-stone-300 flex-shrink-0" />
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Upcoming Events */}
+      {events.length > 0 && (
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-base font-semibold text-stone-900">Upcoming Events</h2>
+            <Link
+              href="/portal/events"
+              className="flex items-center text-sm text-stone-500 font-medium"
+            >
+              See All
+              <ChevronRight className="h-4 w-4 ml-0.5" />
+            </Link>
+          </div>
+          <div className="overflow-x-auto -mx-5 px-5 pb-2">
+            <div className="flex gap-4" style={{ minWidth: 'max-content' }}>
+              {events.slice(0, 4).map((event) => (
+                <Link
+                  key={event.id}
+                  href={`/portal/events/${event.id}`}
+                  className="relative w-64 rounded-xl overflow-hidden flex-shrink-0 active:opacity-70 transition-opacity"
+                  style={{ aspectRatio: '16/10' }}
+                >
+                  {event.imageUrl ? (
+                    <img src={event.imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
+                  ) : (
+                    <div className="absolute inset-0 bg-stone-100 flex items-center justify-center">
+                      <CalendarDays className="h-10 w-10 text-stone-300" />
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-4">
+                    <p className="text-white font-semibold text-[15px] line-clamp-1">{event.title}</p>
+                    <p className="text-white/80 text-sm mt-0.5">
+                      {format(new Date(event.startDate), 'MMM d')} &middot; {event.location}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Club News */}
+      {announcements.length > 0 && (
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-base font-semibold text-stone-900">Club News</h2>
+            <Link
+              href="/portal/news"
+              className="flex items-center text-sm text-stone-500 font-medium"
+            >
+              See All
+              <ChevronRight className="h-4 w-4 ml-0.5" />
+            </Link>
+          </div>
+          <div className="space-y-2">
+            {announcements.slice(0, 3).map((item) => (
+              <Link
+                key={item.id}
+                href={`/portal/news/${item.id}`}
+                className="flex items-center gap-3 p-3 rounded-xl bg-white/80 backdrop-blur-sm border border-stone-100 active:opacity-70 transition-opacity"
+              >
+                {item.imageUrl ? (
+                  <div className="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden bg-stone-100">
+                    <img src={item.imageUrl} alt="" className="h-full w-full object-cover" />
+                  </div>
+                ) : (
+                  <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-stone-50 flex items-center justify-center">
+                    <Newspaper className="h-5 w-5 text-stone-400" />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-[15px] font-medium text-stone-900 line-clamp-1">{item.title}</p>
+                  <p className="text-sm text-stone-500 line-clamp-1 mt-0.5">{item.body}</p>
+                </div>
+                <ChevronRight className="h-5 w-5 text-stone-300 flex-shrink-0" />
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+      </div>
     </div>
   )
 }

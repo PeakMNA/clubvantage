@@ -10,6 +10,8 @@ Member Management covers the full lifecycle of a club member from prospect intak
 
 **Not yet implemented:** Membership tier configuration UI, tier benefit engine, status transition approval workflows, automated status transitions (e.g., AR aging triggers), corporate membership designee management, prospect pipeline kanban, and lead scoring.
 
+Member portal invitation and activation workflow designed (see `docs/plans/2026-02-06-member-portal-pwa-design.md`).
+
 ## Capabilities
 
 - Create, read, update, and soft-delete members with unique member IDs (M-XXXX format)
@@ -252,6 +254,19 @@ export type MemberStatus = (typeof MemberStatus)[keyof typeof MemberStatus];
 10. Tier price multiplier applies to the base monthlyDues of the membership type (e.g., Gold 1.25x of Family base dues).
 11. All enum values are UPPER_CASE, imported from `@clubvantage/types`. Display labels come from `packages/i18n`.
 12. Member ID sequences are scoped per club (each club starts from M-0001).
+
+## Member Portal Integration
+
+**Plan**: `docs/plans/2026-02-06-member-portal-pwa-design.md`
+
+- Bulk member import via CSV for initial portal provisioning
+- Invitation email flow: staff triggers → member receives branded email → clicks to set password → onboarding walkthrough
+- First-login onboarding: set notification preferences, add-to-home-screen prompt
+- Portal account statuses: Invited, Active, Suspended, Deactivated
+- Account suspension mirrors membership status changes automatically
+- Staff can resend invitations, reset passwords, suspend/deactivate portal access
+- Dependent accounts can be provisioned with limited access (no billing)
+- Portal activation metrics tracked in Platform Manager (sent, opened, activated)
 
 ## Edge Cases
 

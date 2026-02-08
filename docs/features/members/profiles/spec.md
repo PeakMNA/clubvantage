@@ -10,6 +10,8 @@ Member Profiles encompasses the personal information, contact details, address m
 
 **Not yet implemented:** Communication preferences UI, dietary/lifestyle preferences, guest pass management, handicap tracking, photo upload workflow (camera overlay exists in UI but not wired), emergency contact fields, preferred language selection, custom fields configuration, and the full member edit modal.
 
+Member portal self-service profile management designed (see `docs/plans/2026-02-06-member-portal-pwa-design.md`).
+
 ## Capabilities
 
 - View and edit personal information: name, preferred name, salutation, suffix, date of birth, nationality, gender, national ID, passport number
@@ -226,6 +228,19 @@ export type DependentRelationship = (typeof DependentRelationship)[keyof typeof 
 9. Custom fields are stored as JSON. The club admin defines the schema; the system validates values against the schema on save.
 10. Dependent privileges default to matching the parent member's access level but can be individually overridden.
 11. When a dependent's `chargesGoToParent` is true, all POS and facility charges are posted to the parent member's AR account.
+
+## Member Portal Integration
+
+**Plan**: `docs/plans/2026-02-06-member-portal-pwa-design.md`
+
+- Members can view and edit their personal information via the portal Profile tab
+- Photo upload from mobile device camera or gallery
+- Dependent management: view linked dependents, their access levels
+- Communication preferences: toggle push notifications, email, SMS
+- Language switcher: EN/TH toggle (controlled by `portal.languageSwitcher` flag)
+- Dark mode toggle (controlled by `portal.darkMode` flag)
+- Profile data cached via stale-while-revalidate service worker strategy
+- Dependent portal access controlled by `portal.dependentAccess` flag
 
 ## Edge Cases
 

@@ -3,15 +3,42 @@
  * Based on PRD-03
  */
 
-export type TenantStatus = 'PENDING' | 'ACTIVE' | 'SUSPENDED' | 'ARCHIVED';
+export const TenantStatus = {
+  PENDING: 'PENDING',
+  ACTIVE: 'ACTIVE',
+  SUSPENDED: 'SUSPENDED',
+  ARCHIVED: 'ARCHIVED',
+} as const;
+export type TenantStatus = (typeof TenantStatus)[keyof typeof TenantStatus];
 
-export type SubscriptionTier = 'STARTER' | 'PROFESSIONAL' | 'ENTERPRISE';
+export const SubscriptionTier = {
+  STARTER: 'STARTER',
+  PROFESSIONAL: 'PROFESSIONAL',
+  ENTERPRISE: 'ENTERPRISE',
+} as const;
+export type SubscriptionTier = (typeof SubscriptionTier)[keyof typeof SubscriptionTier];
 
-export type SubscriptionStatus = 'ACTIVE' | 'PAST_DUE' | 'CANCELLED' | 'TRIAL';
+export const SubscriptionStatus = {
+  ACTIVE: 'ACTIVE',
+  PAST_DUE: 'PAST_DUE',
+  CANCELLED: 'CANCELLED',
+  TRIAL: 'TRIAL',
+} as const;
+export type SubscriptionStatus = (typeof SubscriptionStatus)[keyof typeof SubscriptionStatus];
 
-export type BillingCycle = 'MONTHLY' | 'ANNUAL';
+export const BillingCycle = {
+  MONTHLY: 'MONTHLY',
+  ANNUAL: 'ANNUAL',
+} as const;
+export type BillingCycle = (typeof BillingCycle)[keyof typeof BillingCycle];
 
-export type PlatformUserRole = 'SUPER_ADMIN' | 'CSM' | 'SUPPORT' | 'FINANCE';
+export const PlatformUserRole = {
+  SUPER_ADMIN: 'SUPER_ADMIN',
+  CSM: 'CSM',
+  SUPPORT: 'SUPPORT',
+  FINANCE: 'FINANCE',
+} as const;
+export type PlatformUserRole = (typeof PlatformUserRole)[keyof typeof PlatformUserRole];
 
 export interface Tenant {
   id: string;

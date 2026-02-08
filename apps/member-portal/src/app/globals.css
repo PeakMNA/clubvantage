@@ -1,5 +1,3 @@
-@import '@clubvantage/ui/globals.css';
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -11,6 +9,10 @@
   --portal-primary-hover: 217 119 6;
   --portal-primary-light: 254 243 199;
 
+  /* Gold accent - Premium CTA */
+  --portal-gold: 202 138 4;
+  --portal-gold-hover: 161 98 7;
+
   /* Secondary - Emerald for success */
   --portal-secondary: 16 185 129;
   --portal-secondary-hover: 5 150 105;
@@ -20,6 +22,24 @@
 
   /* Safe area for mobile */
   --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Glass card effect */
+.card-glass {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+/* Card hover elevation */
+.card-elevated {
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.card-elevated:hover {
+  box-shadow: 0 10px 25px -5px rgba(28, 25, 23, 0.1), 0 4px 10px -5px rgba(28, 25, 23, 0.04);
+  transform: translateY(-1px);
 }
 
 /* Mobile-first bottom navigation safe area */

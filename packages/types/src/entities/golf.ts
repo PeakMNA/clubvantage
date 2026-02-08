@@ -3,19 +3,32 @@
  * Based on PRD-01 data model
  */
 
-export type TeeTimeStatus =
-  | 'AVAILABLE'
-  | 'BOOKED'
-  | 'CHECKED_IN'
-  | 'STARTED'
-  | 'COMPLETED'
-  | 'CANCELLED'
-  | 'NO_SHOW'
-  | 'BLOCKED';
+export const TeeTimeStatus = {
+  AVAILABLE: 'AVAILABLE',
+  BOOKED: 'BOOKED',
+  CHECKED_IN: 'CHECKED_IN',
+  STARTED: 'STARTED',
+  COMPLETED: 'COMPLETED',
+  CANCELLED: 'CANCELLED',
+  NO_SHOW: 'NO_SHOW',
+  BLOCKED: 'BLOCKED',
+} as const;
+export type TeeTimeStatus = (typeof TeeTimeStatus)[keyof typeof TeeTimeStatus];
 
-export type PlayerType = 'MEMBER' | 'GUEST';
+export const PlayerType = {
+  MEMBER: 'MEMBER',
+  GUEST: 'GUEST',
+  DEPENDENT: 'DEPENDENT',
+  WALK_UP: 'WALK_UP',
+} as const;
+export type PlayerType = (typeof PlayerType)[keyof typeof PlayerType];
 
-export type CartType = 'SINGLE' | 'SHARED' | 'WALKING';
+export const CartType = {
+  SINGLE: 'SINGLE',
+  SHARED: 'SHARED',
+  WALKING: 'WALKING',
+} as const;
+export type CartType = (typeof CartType)[keyof typeof CartType];
 
 export interface GolfCourse {
   id: string;

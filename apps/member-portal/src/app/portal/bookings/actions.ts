@@ -212,6 +212,7 @@ const JoinWaitlistDocument = /* GraphQL */ `
       entry {
         id
         status
+        position
         requestedDate
         requestedTime
       }
@@ -232,7 +233,36 @@ const RemoveFromWaitlistDocument = /* GraphQL */ `
     }
   }
 `
-import { cookies } from 'next/headers'
+
+const AcceptWaitlistOfferDocument = /* GraphQL */ `
+  mutation AcceptWaitlistOffer($input: WaitlistActionInput!) {
+    acceptWaitlistOffer(input: $input) {
+      success
+      entry {
+        id
+        status
+      }
+      message
+      error
+    }
+  }
+`
+
+const DeclineWaitlistOfferDocument = /* GraphQL */ `
+  mutation DeclineWaitlistOffer($input: WaitlistActionInput!) {
+    declineWaitlistOffer(input: $input) {
+      success
+      entry {
+        id
+        status
+      }
+      message
+      error
+    }
+  }
+`
+import { getSession } from '@/lib/auth/session'
+import { prisma } from '@/lib/db'
 
 import type {
   PortalFacility,
@@ -248,6 +278,7 @@ import type {
   FacilityType,
   ServiceCategory,
   PortalBookingStatus,
+  DayHours,
 } from '@/lib/types'
 
 // ==========================================================================
@@ -261,11 +292,8 @@ function getServerClient(): GraphQLClient {
 }
 
 async function getCurrentMemberId(): Promise<string> {
-  // Get member ID from session/cookies
-  const cookieStore = await cookies()
-  const memberId = cookieStore.get('member_id')?.value
-  // For now, return a placeholder if not found - in production this should throw
-  return memberId || 'member-placeholder'
+  const session = await getSession()
+  return session.isLoggedIn ? session.memberId : 'member-placeholder'
 }
 
 // ==========================================================================
@@ -401,28 +429,63 @@ export async function fetchFacilities(options?: {
       filter: { isActive: true },
     })
 
-    let facilities = (result.facilities || []).map((f): PortalFacility => ({
-      id: f.id,
-      name: f.name,
-      type: mapFacilityType(f.type),
-      location: f.location || '',
-      description: '',
-      features: [],
-      capacity: f.capacity || undefined,
-      operatingHours: [
-        { day: 'monday', isOpen: true, openTime: '06:00', closeTime: '22:00' },
-        { day: 'tuesday', isOpen: true, openTime: '06:00', closeTime: '22:00' },
-        { day: 'wednesday', isOpen: true, openTime: '06:00', closeTime: '22:00' },
-        { day: 'thursday', isOpen: true, openTime: '06:00', closeTime: '22:00' },
-        { day: 'friday', isOpen: true, openTime: '06:00', closeTime: '22:00' },
-        { day: 'saturday', isOpen: true, openTime: '07:00', closeTime: '21:00' },
-        { day: 'sunday', isOpen: true, openTime: '07:00', closeTime: '21:00' },
-      ],
-      advanceBookingDays: 14,
-      bookingDurationMinutes: [30, 60, 90, 120],
-      basePrice: 0,
-      memberPrice: 0,
-    }))
+    // Fetch real operating hours and pricing from Prisma for all facilities
+    const facilityIds = (result.facilities || []).map((f) => f.id)
+    const dbFacilities = facilityIds.length > 0
+      ? await prisma.facility.findMany({
+          where: { id: { in: facilityIds } },
+          select: {
+            id: true,
+            description: true,
+            amenities: true,
+            operatingHours: true,
+            bookingDuration: true,
+            maxAdvanceDays: true,
+            memberRate: true,
+            guestRate: true,
+          },
+        })
+      : []
+    const dbMap = new Map(dbFacilities.map((f) => [f.id, f]))
+
+    let facilities = (result.facilities || []).map((f): PortalFacility => {
+      const db = dbMap.get(f.id)
+      const hours = db?.operatingHours as Record<string, { open: string; close: string }> | null
+      const duration = db?.bookingDuration || 60
+
+      const weekDays: DayHours['day'][] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+      const operatingHours: DayHours[] = hours
+        ? weekDays.map((day) => {
+            const dh = hours[day]
+            return {
+              day,
+              isOpen: !!dh,
+              openTime: dh?.open ?? '06:00',
+              closeTime: dh?.close ?? '22:00',
+            }
+          })
+        : weekDays.map((day): DayHours => ({
+            day,
+            isOpen: true,
+            openTime: day === 'saturday' || day === 'sunday' ? '07:00' : '06:00',
+            closeTime: day === 'saturday' || day === 'sunday' ? '21:00' : '22:00',
+          }))
+
+      return {
+        id: f.id,
+        name: f.name,
+        type: mapFacilityType(f.type),
+        location: f.location || '',
+        description: db?.description ?? '',
+        features: (db?.amenities as string[]) ?? [],
+        capacity: f.capacity || undefined,
+        operatingHours,
+        advanceBookingDays: db?.maxAdvanceDays ?? 14,
+        bookingDurationMinutes: [duration, duration * 2, duration * 3].filter((d) => d <= 240),
+        basePrice: Number(db?.guestRate ?? 0),
+        memberPrice: Number(db?.memberRate ?? 0),
+      }
+    })
 
     // Apply filters
     if (options?.type) {
@@ -510,8 +573,8 @@ export async function fetchStaffForService(serviceId: string): Promise<PortalSta
       name: `${s.firstName} ${s.lastName}`,
       photoUrl: s.photoUrl || undefined,
       specialties: s.capabilities || [],
-      rating: 4.5 + Math.random() * 0.5, // Placeholder rating
-      services: [], // TODO: Map from capabilities or separate service-staff linkage
+      rating: 4.8, // Default rating until review system is implemented
+      services: s.capabilities || [], // Staff capabilities serve as service list until dedicated service-staff linkage is added
       nextAvailable: 'Today',
     }))
 
@@ -522,28 +585,84 @@ export async function fetchStaffForService(serviceId: string): Promise<PortalSta
   }
 }
 
+const DAY_NAMES = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const
+
 export async function fetchFacilityAvailability(
   facilityId: string,
   date: string
 ): Promise<TimeSlot[]> {
-  // TODO: Implement real availability query when backend supports it
-  // For now, generate mock time slots based on operating hours
-  const slots: TimeSlot[] = []
-  const startHour = 6
-  const endHour = 21
+  const facility = await prisma.facility.findUnique({
+    where: { id: facilityId },
+    include: {
+      resources: {
+        where: { isActive: true, isBookable: true },
+        select: { id: true },
+      },
+    },
+  })
 
-  for (let hour = startHour; hour < endHour; hour++) {
-    const isAvailable = Math.random() > 0.3
+  if (!facility) return []
+
+  const dateObj = new Date(date)
+  const dayName = DAY_NAMES[dateObj.getUTCDay()]!
+  const hours = facility.operatingHours as Record<string, { open: string; close: string }> | null
+  const dayHours = hours?.[dayName]
+
+  // Fallback to 6am-9pm if no operating hours configured
+  const openHour = dayHours ? parseInt(dayHours.open.split(':')[0]!, 10) : 6
+  const closeHour = dayHours ? parseInt(dayHours.close.split(':')[0]!, 10) : 21
+  const slotDuration = facility.bookingDuration || 60
+
+  const resourceIds = facility.resources.map((r) => r.id)
+  const totalResources = resourceIds.length
+
+  if (totalResources === 0) return []
+
+  const dayStart = new Date(date + 'T00:00:00Z')
+  const dayEnd = new Date(date + 'T23:59:59Z')
+
+  const existingBookings = await prisma.booking.findMany({
+    where: {
+      resourceId: { in: resourceIds },
+      status: { in: ['PENDING', 'CONFIRMED', 'CHECKED_IN'] },
+      startTime: { gte: dayStart },
+      endTime: { lte: dayEnd },
+    },
+    select: { resourceId: true, startTime: true, endTime: true },
+  })
+
+  const memberRate = Number(facility.memberRate ?? 0)
+  const guestRate = Number(facility.guestRate ?? 0)
+  const slots: TimeSlot[] = []
+
+  for (let hour = openHour; hour < closeHour; hour++) {
+    const slotEndHour = hour + slotDuration / 60
+    if (slotEndHour > closeHour) break
+
+    const slotStart = new Date(date + `T${String(hour).padStart(2, '0')}:00:00Z`)
+    const slotEnd = new Date(slotStart.getTime() + slotDuration * 60 * 1000)
+
+    const bookedCount = existingBookings.filter(
+      (b) => b.startTime < slotEnd && b.endTime > slotStart
+    ).length
+
+    const spotsAvailable = totalResources - bookedCount
+    let status: 'available' | 'limited' | 'booked' = 'available'
+    if (spotsAvailable === 0) status = 'booked'
+    else if (spotsAvailable <= Math.ceil(totalResources / 3)) status = 'limited'
+
     slots.push({
       id: `slot-${facilityId}-${date}-${hour}`,
       startTime: `${String(hour).padStart(2, '0')}:00`,
-      endTime: `${String(hour + 1).padStart(2, '0')}:00`,
-      status: isAvailable ? 'available' : Math.random() > 0.5 ? 'limited' : 'booked',
-      spotsAvailable: isAvailable ? Math.floor(Math.random() * 4) + 1 : 0,
-      price: 600,
-      basePrice: 800,
+      endTime: `${String(hour + Math.ceil(slotDuration / 60)).padStart(2, '0')}:00`,
+      status,
+      spotsAvailable,
+      maxCapacity: totalResources,
+      price: memberRate * (slotDuration / 60),
+      basePrice: guestRate * (slotDuration / 60),
     })
   }
+
   return slots
 }
 
@@ -552,22 +671,57 @@ export async function fetchServiceAvailability(
   date: string,
   staffId?: string
 ): Promise<TimeSlot[]> {
-  // TODO: Implement real availability query when backend supports it
-  const slots: TimeSlot[] = []
+  const service = await prisma.service.findUnique({
+    where: { id: serviceId },
+  })
+
+  if (!service) return []
+
+  const durationMinutes = service.durationMinutes || 60
+  // Service operating hours default to 9am-7pm
   const startHour = 9
   const endHour = 19
 
+  const dayStart = new Date(date + 'T00:00:00Z')
+  const dayEnd = new Date(date + 'T23:59:59Z')
+
+  // Query existing bookings for this service (and optionally staff) on the given date
+  const existingBookings = await prisma.booking.findMany({
+    where: {
+      serviceId,
+      ...(staffId ? { staffId } : {}),
+      status: { in: ['PENDING', 'CONFIRMED', 'CHECKED_IN'] },
+      startTime: { gte: dayStart },
+      endTime: { lte: dayEnd },
+    },
+    select: { startTime: true, endTime: true },
+  })
+
+  const basePrice = Number(service.basePrice ?? 0)
+  const memberPrice = Math.round(basePrice * 0.8) // Member discount applied
+  const slots: TimeSlot[] = []
+
   for (let hour = startHour; hour < endHour; hour++) {
-    const isAvailable = Math.random() > 0.4
+    const slotEndMinutes = hour * 60 + durationMinutes
+    if (slotEndMinutes > endHour * 60) break
+
+    const slotStart = new Date(date + `T${String(hour).padStart(2, '0')}:00:00Z`)
+    const slotEnd = new Date(slotStart.getTime() + durationMinutes * 60 * 1000)
+
+    const hasConflict = existingBookings.some(
+      (b) => b.startTime < slotEnd && b.endTime > slotStart
+    )
+
     slots.push({
       id: `slot-${serviceId}-${date}-${hour}`,
       startTime: `${String(hour).padStart(2, '0')}:00`,
-      endTime: `${String(hour + 1).padStart(2, '0')}:00`,
-      status: isAvailable ? 'available' : 'booked',
-      price: 1200,
-      basePrice: 1500,
+      endTime: `${String(Math.floor(slotEndMinutes / 60)).padStart(2, '0')}:${String(slotEndMinutes % 60).padStart(2, '0')}`,
+      status: hasConflict ? 'booked' : 'available',
+      price: memberPrice,
+      basePrice,
     })
   }
+
   return slots
 }
 
@@ -780,7 +934,7 @@ export async function cancelBooking(
     if (result.cancelBooking.success) {
       return {
         success: true,
-        refundAmount: 0, // TODO: Get refund amount from backend
+        refundAmount: 0, // Backend cancelBooking mutation does not return refund amount; billing handles refund separately
       }
     } else {
       return {
@@ -873,8 +1027,8 @@ export async function fetchMyWaitlist(): Promise<PortalWaitlistEntry[]> {
       const w = edge.node
       return {
         id: w.id,
-        bookingType: 'service' as const, // TODO: Determine from service/facility ID
-        serviceId: undefined, // TODO: Extract from waitlist entry
+        bookingType: (w.facilityName ? 'facility' : 'service') as 'facility' | 'service',
+        serviceId: undefined, // Waitlist GraphQL response does not include serviceId/facilityId; only names are available
         preferredDate: w.requestedDate,
         preferredTimeStart: w.requestedTime || '09:00',
         preferredTimeEnd: '18:00',
@@ -924,7 +1078,7 @@ export async function joinWaitlist(params: {
       return {
         success: true,
         entryId: result.joinWaitlist.entry?.id,
-        position: undefined, // TODO: Get position from backend
+        position: (result.joinWaitlist.entry as { position?: number } | undefined)?.position,
       }
     } else {
       return {
@@ -971,21 +1125,70 @@ export async function leaveWaitlist(
 export async function acceptWaitlistOffer(
   entryId: string
 ): Promise<{ success: boolean; bookingId?: string; error?: string }> {
-  // TODO: Implement when backend supports accepting waitlist offers
-  console.log('Accepting waitlist offer:', entryId)
-  return {
-    success: false,
-    error: 'Accepting waitlist offers not yet implemented',
+  try {
+    const client = getServerClient()
+
+    const result = await client.request<{
+      acceptWaitlistOffer: {
+        success: boolean
+        entry?: { id: string; status: string }
+        message?: string
+        error?: string
+      }
+    }>(AcceptWaitlistOfferDocument, {
+      input: { entryId },
+    })
+
+    if (result.acceptWaitlistOffer.success) {
+      return {
+        success: true,
+        bookingId: result.acceptWaitlistOffer.entry?.id,
+      }
+    } else {
+      return {
+        success: false,
+        error: result.acceptWaitlistOffer.error || 'Failed to accept waitlist offer',
+      }
+    }
+  } catch (error) {
+    console.error('Error accepting waitlist offer:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to accept waitlist offer',
+    }
   }
 }
 
 export async function declineWaitlistOffer(
   entryId: string
 ): Promise<{ success: boolean; error?: string }> {
-  // TODO: Implement when backend supports declining waitlist offers
-  console.log('Declining waitlist offer:', entryId)
-  return {
-    success: false,
-    error: 'Declining waitlist offers not yet implemented',
+  try {
+    const client = getServerClient()
+
+    const result = await client.request<{
+      declineWaitlistOffer: {
+        success: boolean
+        entry?: { id: string; status: string }
+        message?: string
+        error?: string
+      }
+    }>(DeclineWaitlistOfferDocument, {
+      input: { entryId },
+    })
+
+    if (result.declineWaitlistOffer.success) {
+      return { success: true }
+    } else {
+      return {
+        success: false,
+        error: result.declineWaitlistOffer.error || 'Failed to decline waitlist offer',
+      }
+    }
+  } catch (error) {
+    console.error('Error declining waitlist offer:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to decline waitlist offer',
+    }
   }
 }

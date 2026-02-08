@@ -14,6 +14,7 @@ Statement periods are configured once in Club Settings and auto-managed thereaft
 - **Frontend components**: Partially implemented (`member-statement.tsx`, `statement-modal.tsx`, `aging-dashboard-tab.tsx`, `aging-summary-card.tsx` exist)
 - **GraphQL API**: Not yet implemented (queries and mutations specified in design)
 - **AR Period Settings**: Designed (settings to be added to `club_billing_settings` table)
+- **Member Portal**: Member portal statement viewing and payment designed (see `docs/plans/2026-02-06-member-portal-pwa-design.md`).
 
 ## Capabilities
 
@@ -205,6 +206,19 @@ Unique constraint: (clubId, statementNumber).
 13. **Run Progress Tracking** -- StatementRun tracks progress (processedCount / totalProfiles) for UI progress indicators during batch generation.
 14. **PDF Generation Timing** -- PDFs are generated only for FINAL run statements, not for PREVIEW runs.
 15. **Concurrent Run Prevention** -- Only one run (PENDING or IN_PROGRESS) can exist per period at a time.
+
+## Member Portal Integration
+
+**Plan**: `docs/plans/2026-02-06-member-portal-pwa-design.md`
+
+- Members can view current balance on the dashboard (controlled by `billing.showBalance` flag)
+- Statements section shows recent transactions with category icons and amounts
+- Monthly statement list with PDF download capability (controlled by `billing.pdfDownload` flag)
+- Statement detail view shows all line items for a billing period
+- "Pay Now" flow enabled by `billing.onlinePayments` flag — requires payment gateway (Stripe/Omise)
+- Payment flow: select payment method → enter amount → review → confirm → receipt
+- Push notification on payment receipt and statement due date reminders
+- Balance and transactions cached via stale-while-revalidate for fast loading
 
 ## Edge Cases
 

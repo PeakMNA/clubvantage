@@ -6,7 +6,7 @@ Cart inventory management for the golf operation. Tracks cart fleet including st
 
 ## Status
 
-Partially implemented. Basic cart CRUD exists in UI with mock data. API cart model exists. Staging and maintenance views designed.
+Partially implemented. Basic cart CRUD exists in UI with mock data. API cart model exists. Staging and maintenance views designed. Member portal cart request flow designed (see `docs/plans/2026-02-06-member-portal-pwa-design.md`).
 
 ## Capabilities
 
@@ -79,6 +79,17 @@ interface Cart {
 - Staging position determines physical cart staging order for upcoming flights
 - Deleting a cart requires no active assignments
 - Charging carts automatically return to AVAILABLE after `chargingTimeHours`
+
+## Member Portal Integration
+
+**Plan**: `docs/plans/2026-02-06-member-portal-pwa-design.md`
+
+- Members can request a golf cart during the tee time booking flow in the portal
+- Cart request toggle shown on booking review screen
+- Controlled by `golf.cartRequest` feature flag — when disabled, cart assignment is staff-only
+- Cart request creates a rental record with status REQUESTED
+- Staff sees cart requests in the tee sheet and assigns specific carts
+- Pricing displayed during booking: shared cart vs. individual cart rate
 
 ## Edge Cases
 

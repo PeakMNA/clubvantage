@@ -54,17 +54,18 @@ export function QuickActions({
           <Link
             key={action.label}
             href={action.href}
-            className="flex flex-col items-center gap-1.5 group"
+            className="flex flex-col items-center gap-1.5 group cursor-pointer"
           >
             <div
               className={cn(
                 'flex h-12 w-12 md:h-14 md:w-14 items-center justify-center rounded-xl',
-                'bg-stone-50 dark:bg-stone-800',
-                'group-hover:bg-stone-100 dark:group-hover:bg-stone-700',
-                'transition-colors'
+                'bg-white/80 backdrop-blur-sm border border-stone-100',
+                'group-hover:shadow-md group-hover:shadow-stone-200/50',
+                'group-active:scale-95',
+                'transition-all duration-200'
               )}
             >
-              <Icon className="h-5 w-5 md:h-6 md:w-6 text-amber-600" />
+              <Icon className="h-5 w-5 md:h-6 md:w-6 text-amber-600 group-hover:text-amber-700 transition-colors" />
             </div>
             <span className="text-[11px] md:text-xs text-stone-600 dark:text-stone-400 text-center group-hover:text-stone-900 dark:group-hover:text-stone-200 transition-colors">
               {action.label}

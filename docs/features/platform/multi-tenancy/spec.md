@@ -10,6 +10,8 @@ Database-Per-Tier Routing is the multi-tenancy isolation layer that routes tenan
 
 **Pre-existing infrastructure:** Supabase is operational as the sole database. Prisma is the ORM. Redis is not yet provisioned. The `TENANT_ROUTING_ENABLED` feature flag does not exist yet.
 
+White-label PWA tenant configuration designed (see `docs/plans/2026-02-06-member-portal-pwa-design.md`).
+
 ## Capabilities
 
 - Route database queries to different Neon Postgres instances based on tenant subscription tier (Starter, Professional, Enterprise)
@@ -173,6 +175,20 @@ export class ConnectionManager {
 8. Schema migrations are run against all tenant databases using a loop over TenantDatabase records. Each database must be at the same schema version.
 9. Adding a new database does not require a Vercel redeploy; connection strings live in the TenantDatabase table.
 10. Local development always uses a single database regardless of the TENANT_ROUTING_ENABLED flag.
+
+## Member Portal Integration
+
+**Plan**: `docs/plans/2026-02-06-member-portal-pwa-design.md`
+
+- Member portal is a fully white-labeled PWA: custom domain, dynamic manifest, per-club branding
+- Tenant resolution via hostname in Next.js middleware (same pattern as API routing)
+- Tenant config cached in Redis (5min TTL): branding, theme colors, feature flags, database URL
+- Dynamic `/api/manifest.json` endpoint generates club-specific PWA manifest
+- CSS custom properties injected per-tenant for runtime theming (HSL-based color system)
+- Feature flags per tenant control which modules are visible (golf, bookings, billing, etc.)
+- Self-service branding: club staff can upload logo, set colors, edit welcome message
+- Advanced theming (fonts, custom CSS) available via Platform Manager for Enterprise tier
+- Single deployment serves all clubs — no per-tenant builds or deployments
 
 ## Edge Cases
 

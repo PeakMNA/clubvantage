@@ -23,9 +23,8 @@ export function TeeTimeCard({ booking, variant = 'full' }: TeeTimeCardProps) {
     <Link
       href={`/portal/golf/bookings/${booking.id}`}
       className={cn(
-        'block rounded-2xl bg-card border border-border/60 p-4',
-        'hover:shadow-lg hover:shadow-stone-200/50 dark:hover:shadow-black/20',
-        'transition-all duration-200',
+        'block rounded-2xl p-4 card-elevated cursor-pointer',
+        'bg-white/80 backdrop-blur-sm border border-stone-100',
         isPast && 'opacity-75',
         isCancelled && 'opacity-60'
       )}

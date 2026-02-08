@@ -97,10 +97,10 @@ export function BalanceCard({
           <button
             onClick={onPayClick}
             className={cn(
-              'w-full mt-4 py-3 rounded-xl font-semibold text-sm transition-all',
+              'w-full mt-4 py-3 rounded-xl font-semibold text-sm transition-all cursor-pointer',
               isSuspended
                 ? 'bg-white text-red-600 hover:bg-red-50'
-                : 'bg-amber-500 text-white hover:bg-amber-600 shadow-lg shadow-amber-500/25'
+                : 'bg-amber-600 text-white hover:bg-amber-700 shadow-lg shadow-amber-600/25'
             )}
           >
             Pay Now

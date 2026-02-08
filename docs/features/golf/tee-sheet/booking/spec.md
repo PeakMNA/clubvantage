@@ -6,7 +6,7 @@ Booking management covers the full lifecycle of tee time reservations: creating,
 
 ## Status
 
-Partially implemented. Core booking CRUD works. Unified booking modal designed but partially built. Move/copy placement mode designed. Party bookings designed.
+Partially implemented. Core booking CRUD works. Unified booking modal designed but partially built. Move/copy placement mode designed. Party bookings designed. Member portal tee time booking flow designed (see `docs/plans/2026-02-06-member-portal-pwa-design.md`).
 
 ## Capabilities
 
@@ -142,6 +142,20 @@ interface AuditEntry {
 - Each booking player has mutually exclusive identity: memberId OR dependentId OR guestName.
 - Audit trail records all modifications with before/after state.
 - Party bookings are visually linked on the tee sheet with a chain icon and connector.
+
+## Member Portal Integration
+
+**Plan**: `docs/plans/2026-02-06-member-portal-pwa-design.md`
+
+- Members can browse available tee times by date and course via the portal Golf tab
+- Booking flow: select slot → add players (members, dependents, guests) → request cart/caddy → review pricing → confirm
+- Guest booking controlled by `golf.guestBooking` feature flag
+- Cart requests controlled by `golf.cartRequest` feature flag
+- Caddy requests controlled by `golf.caddyRequest` feature flag
+- Offline: bookings queued in IndexedDB with "Pending Sync" badge, replayed via Background Sync
+- My Tee Times view shows upcoming and past bookings with status badges
+- Members can cancel or modify bookings from the portal (subject to cancellation policy)
+- Push notification sent on booking confirmation and 24h/2h reminders
 
 ## Edge Cases
 

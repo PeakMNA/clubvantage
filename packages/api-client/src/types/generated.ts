@@ -18,6 +18,95 @@ export type Scalars = {
   JSON: { input: any; output: any; }
 };
 
+/** How AR periods are closed */
+export type ArCloseBehavior =
+  | 'AUTO_AFTER_FINAL_RUN'
+  | 'AUTO_ON_CUTOFF'
+  | 'MANUAL';
+
+/** AR billing cycle type for period generation */
+export type ArCycleType =
+  | 'CALENDAR_MONTH'
+  | 'CUSTOM'
+  | 'ROLLING_30';
+
+export type ArPeriodSettingsType = {
+  __typename?: 'ARPeriodSettingsType';
+  arAutoGenerateNext: Scalars['Boolean']['output'];
+  arCloseBehavior: ArCloseBehavior;
+  arCustomCycleStartDay: Scalars['Int']['output'];
+  arCutoffDays: Scalars['Int']['output'];
+  arCycleType: ArCycleType;
+};
+
+export type ArProfileFilterInput = {
+  /** Maximum balance filter */
+  maxBalance?: InputMaybe<Scalars['Float']['input']>;
+  /** Minimum balance filter */
+  minBalance?: InputMaybe<Scalars['Float']['input']>;
+  profileType?: InputMaybe<ArProfileType>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  status?: InputMaybe<ArProfileStatus>;
+};
+
+export type ArProfileGqlType = {
+  __typename?: 'ARProfileGQLType';
+  /** Account name for standalone city ledger profiles */
+  accountName?: Maybe<Scalars['String']['output']>;
+  accountNumber: Scalars['String']['output'];
+  /** Billing address for standalone profiles */
+  billingAddress?: Maybe<Scalars['String']['output']>;
+  /** Branch code (e.g., 00000 for head office) */
+  branchCode?: Maybe<Scalars['String']['output']>;
+  /** Branch name (e.g., Head Office, Bangkok Branch) */
+  branchName?: Maybe<Scalars['String']['output']>;
+  /** Business registration number */
+  businessRegistrationId?: Maybe<Scalars['String']['output']>;
+  cityLedgerId?: Maybe<Scalars['ID']['output']>;
+  closedAt?: Maybe<Scalars['DateTime']['output']>;
+  closedReason?: Maybe<Scalars['String']['output']>;
+  /** Contact email for standalone profiles */
+  contactEmail?: Maybe<Scalars['String']['output']>;
+  /** Contact phone for standalone profiles */
+  contactPhone?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  creditLimit?: Maybe<Scalars['Float']['output']>;
+  currentBalance: Scalars['Float']['output'];
+  id: Scalars['ID']['output'];
+  lastPaymentAmount?: Maybe<Scalars['Float']['output']>;
+  lastPaymentDate?: Maybe<Scalars['DateTime']['output']>;
+  lastStatementBalance?: Maybe<Scalars['Float']['output']>;
+  lastStatementDate?: Maybe<Scalars['DateTime']['output']>;
+  memberId?: Maybe<Scalars['ID']['output']>;
+  paymentTermsDays: Scalars['Int']['output'];
+  profileType: ArProfileType;
+  statementDelivery: StatementDelivery;
+  status: ArProfileStatus;
+  suspendedAt?: Maybe<Scalars['DateTime']['output']>;
+  suspendedReason?: Maybe<Scalars['String']['output']>;
+  /** Tax ID for corporate accounts */
+  taxId?: Maybe<Scalars['String']['output']>;
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+/** Status of AR profile */
+export type ArProfileStatus =
+  | 'ACTIVE'
+  | 'CLOSED'
+  | 'SUSPENDED';
+
+export type ArProfileSyncResultType = {
+  __typename?: 'ARProfileSyncResultType';
+  created: Scalars['Int']['output'];
+  errors: Array<Scalars['String']['output']>;
+  skipped: Scalars['Int']['output'];
+};
+
+/** Type of AR profile - member or city ledger */
+export type ArProfileType =
+  | 'CITY_LEDGER'
+  | 'MEMBER';
+
 export type ActiveSeasonInfo = {
   __typename?: 'ActiveSeasonInfo';
   id: Scalars['ID']['output'];
@@ -997,7 +1086,7 @@ export type CheckLimitInput = {
 /** City ledger account type */
 export type CityLedgerAccountType =
   | 'CORPORATE'
-  | 'HOUSE_ACCOUNT'
+  | 'HOUSE'
   | 'OTHER'
   | 'VENDOR';
 
@@ -1040,6 +1129,10 @@ export type CloneTemplateMutationResponse = {
   message?: Maybe<Scalars['String']['output']>;
   success: Scalars['Boolean']['output'];
   template?: Maybe<PosTemplateGraphQlType>;
+};
+
+export type CloseArProfileInput = {
+  reason: Scalars['String']['input'];
 };
 
 export type ClosePeriodInput = {
@@ -1116,6 +1209,31 @@ export type CourseIntervalInput = {
   isPrimeTime?: Scalars['Boolean']['input'];
   timeEnd: Scalars['String']['input'];
   timeStart: Scalars['String']['input'];
+};
+
+export type CreateArProfileInput = {
+  /** Account name for standalone city ledger profiles */
+  accountName?: InputMaybe<Scalars['String']['input']>;
+  /** Billing address for standalone profiles */
+  billingAddress?: InputMaybe<Scalars['String']['input']>;
+  /** Branch code (e.g., 00000 for head office) */
+  branchCode?: InputMaybe<Scalars['String']['input']>;
+  /** Branch name (e.g., Head Office, Bangkok Branch) */
+  branchName?: InputMaybe<Scalars['String']['input']>;
+  /** Business registration number */
+  businessRegistrationId?: InputMaybe<Scalars['String']['input']>;
+  cityLedgerId?: InputMaybe<Scalars['ID']['input']>;
+  /** Contact email for standalone profiles */
+  contactEmail?: InputMaybe<Scalars['String']['input']>;
+  /** Contact phone for standalone profiles */
+  contactPhone?: InputMaybe<Scalars['String']['input']>;
+  creditLimit?: InputMaybe<Scalars['Float']['input']>;
+  memberId?: InputMaybe<Scalars['ID']['input']>;
+  paymentTermsDays?: InputMaybe<Scalars['Int']['input']>;
+  profileType: ArProfileType;
+  statementDelivery?: InputMaybe<StatementDelivery>;
+  /** Tax ID for corporate accounts */
+  taxId?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type CreateAddressInput = {
@@ -1607,6 +1725,24 @@ export type CreateStaffMemberInput = {
   workingHours?: InputMaybe<Array<DayHoursInput>>;
 };
 
+export type CreateStatementPeriodInput = {
+  cutoffDate: Scalars['String']['input'];
+  /** Mark as catch-up period to consolidate historical data */
+  isCatchUp?: InputMaybe<Scalars['Boolean']['input']>;
+  periodEnd: Scalars['String']['input'];
+  periodLabel: Scalars['String']['input'];
+  periodNumber: Scalars['Int']['input'];
+  periodStart: Scalars['String']['input'];
+  periodYear: Scalars['Int']['input'];
+};
+
+export type CreateStatementRunInput = {
+  /** Optional list of AR profile IDs to include. If empty, includes all active profiles. */
+  profileIds?: InputMaybe<Array<Scalars['ID']['input']>>;
+  runType: StatementRunType;
+  statementPeriodId: Scalars['ID']['input'];
+};
+
 export type CreateSubAccountInput = {
   dailyLimit?: InputMaybe<Scalars['Float']['input']>;
   email?: InputMaybe<Scalars['String']['input']>;
@@ -1937,6 +2073,14 @@ export type DeleteTemplateMutationResponse = {
   message?: Maybe<Scalars['String']['output']>;
   success: Scalars['Boolean']['output'];
 };
+
+/** Delivery status for statement channel */
+export type DeliveryStatus =
+  | 'DELIVERED'
+  | 'FAILED'
+  | 'NOT_APPLICABLE'
+  | 'PENDING'
+  | 'SENT';
 
 /** Single interest entry for a dependent */
 export type DependentInterestInput = {
@@ -3233,6 +3377,16 @@ export type MemberTypeEdge = {
   node: MemberType;
 };
 
+export type MemberWithoutArProfileType = {
+  __typename?: 'MemberWithoutARProfileType';
+  email?: Maybe<Scalars['String']['output']>;
+  firstName: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  lastName: Scalars['String']['output'];
+  memberId: Scalars['String']['output'];
+  membershipTypeName?: Maybe<Scalars['String']['output']>;
+};
+
 export type MembershipApplicationType = {
   __typename?: 'MembershipApplicationType';
   applicationNumber: Scalars['String']['output'];
@@ -3398,6 +3552,7 @@ export type Mutation = {
   cancelGroupBooking: GroupBookingMutationResponse;
   /** Cancel a lottery request */
   cancelLotteryRequest: LotteryRequestMutationResponse;
+  cancelStatementRun: StatementRunGqlType;
   /** Cancel a tee time */
   cancelTeeTime: CancelResponseType;
   /** Cancel a waitlist entry */
@@ -3422,6 +3577,7 @@ export type Mutation = {
   clearCartDraft: Scalars['Boolean']['output'];
   /** Clone a POS template with a new name */
   clonePOSTemplate: CloneTemplateMutationResponse;
+  closeARProfile: ArProfileGqlType;
   /** Close a lottery to new requests */
   closeLottery: LotteryMutationResponse;
   /** Close a minimum spend period and process shortfalls */
@@ -3430,10 +3586,12 @@ export type Mutation = {
   closeSettlement: DailySettlementGraphQlType;
   /** Close a shift */
   closeShift: CashDrawerShiftGraphQlType;
+  closeStatementPeriod: StatementPeriodGqlType;
   /** Confirm group booking and create tee times */
   confirmGroupBooking: GroupBookingMutationResponse;
   /** Convert a waitlist entry to a booking */
   convertWaitlistToBooking: WaitlistMutationResponse;
+  createARProfile: ArProfileGqlType;
   /** Create a new membership application */
   createApplication: MembershipApplicationType;
   /** Create a new booking */
@@ -3500,6 +3658,7 @@ export type Mutation = {
   createSpecialDay: SpecialDayMutationResponse;
   /** Create a new staff member */
   createStaffMember: StaffResponseType;
+  createStatementPeriod: StatementPeriodGqlType;
   /** Create a new sub-account */
   createSubAccount: SubAccount;
   /** Create a new tee time booking */
@@ -3564,6 +3723,7 @@ export type Mutation = {
   deleteSpecialDay: DeleteMutationResponse;
   /** Delete a staff member */
   deleteStaffMember: DeleteResponseType;
+  deleteStatementPeriod: Scalars['Boolean']['output'];
   /** Delete (revoke) a sub-account */
   deleteSubAccount: SubAccount;
   /** Delete a tee time block */
@@ -3586,6 +3746,7 @@ export type Mutation = {
   importPlayersFromCSV: GroupBookingMutationResponse;
   /** Join a waitlist */
   joinWaitlist: WaitlistResponseType;
+  markStatementPortalViewed: StatementGqlType;
   /** Move a tee time to a different slot */
   moveTeeTime: TeeTimeType;
   /** Notify waitlist when a tee time is cancelled */
@@ -3608,6 +3769,7 @@ export type Mutation = {
   processSettlement: SettlementResultType;
   /** Publish lottery results and create tee times */
   publishLotteryResults: LotteryMutationResponse;
+  reactivateARProfile: ArProfileGqlType;
   /** Recalculate member spend from transactions */
   recalculateMemberSpend: MemberMinimumSpend;
   /** Recalculate settlement totals from transactions */
@@ -3643,6 +3805,7 @@ export type Mutation = {
   removePaymentMethod: RemovePaymentMethodResult;
   /** Reopen a closed settlement */
   reopenSettlement: DailySettlementGraphQlType;
+  reopenStatementPeriod: StatementPeriodGqlType;
   /** Reorder payment methods by providing ordered IDs */
   reorderCheckInPaymentMethods: Array<CheckInPaymentMethodType>;
   /** Reorder pro shop categories by providing ordered IDs */
@@ -3680,12 +3843,18 @@ export type Mutation = {
   setPOSRoleOverrides: SetRoleOverridesMutationResponse;
   /** Settle all players in a flight at once */
   settleAllPlayers: SettlementResultType;
+  startStatementRun: StatementRunGqlType;
   /** Submit a lottery request (member) */
   submitLotteryRequest: LotteryRequestMutationResponse;
   /** Submit settlement for review */
   submitSettlementForReview: DailySettlementGraphQlType;
+  suspendARProfile: ArProfileGqlType;
   /** Suspend a shift temporarily */
   suspendShift: CashDrawerShiftGraphQlType;
+  /** Create AR profiles for all active city ledgers who do not have one */
+  syncCityLedgersToARProfiles: ArProfileSyncResultType;
+  /** Create AR profiles for all active members who do not have one */
+  syncMembersToARProfiles: ArProfileSyncResultType;
   /** Enable or disable a payment method */
   toggleCheckInPaymentMethod: CheckInPaymentMethodType;
   /** Toggle quick add status for a product */
@@ -3698,6 +3867,9 @@ export type Mutation = {
   undoTransfer: TransferResultType;
   /** Unlock a locked sub-account PIN */
   unlockSubAccountPin: SubAccount;
+  updateARProfile: ArProfileGqlType;
+  /** Update AR period settings for the club */
+  updateARSettings: ArPeriodSettingsType;
   /** Update an existing membership application */
   updateApplication: MembershipApplicationType;
   /** Update a caddy rate */
@@ -3784,6 +3956,9 @@ export type Mutation = {
   updateStaffMember: StaffResponseType;
   /** Update starter ticket configuration */
   updateStarterTicketConfig: CheckInSettingsType;
+  updateStatementDeliveryStatus: StatementGqlType;
+  /** Update statement period dates and label (only for OPEN or REOPENED periods) */
+  updateStatementPeriod: StatementPeriodGqlType;
   /** Update a sub-account */
   updateSubAccount: SubAccount;
   /** Update tax configuration including overrides */
@@ -3930,6 +4105,11 @@ export type MutationCancelLotteryRequestArgs = {
 };
 
 
+export type MutationCancelStatementRunArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationCancelTeeTimeArgs = {
   id: Scalars['ID']['input'];
   reason?: InputMaybe<Scalars['String']['input']>;
@@ -3994,6 +4174,12 @@ export type MutationClonePosTemplateArgs = {
 };
 
 
+export type MutationCloseArProfileArgs = {
+  id: Scalars['ID']['input'];
+  input: CloseArProfileInput;
+};
+
+
 export type MutationCloseLotteryArgs = {
   id: Scalars['ID']['input'];
 };
@@ -4014,6 +4200,11 @@ export type MutationCloseShiftArgs = {
 };
 
 
+export type MutationCloseStatementPeriodArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationConfirmGroupBookingArgs = {
   id: Scalars['ID']['input'];
 };
@@ -4022,6 +4213,11 @@ export type MutationConfirmGroupBookingArgs = {
 export type MutationConvertWaitlistToBookingArgs = {
   id: Scalars['ID']['input'];
   teeTimeId: Scalars['ID']['input'];
+};
+
+
+export type MutationCreateArProfileArgs = {
+  input: CreateArProfileInput;
 };
 
 
@@ -4207,6 +4403,11 @@ export type MutationCreateStaffMemberArgs = {
 };
 
 
+export type MutationCreateStatementPeriodArgs = {
+  input: CreateStatementPeriodInput;
+};
+
+
 export type MutationCreateSubAccountArgs = {
   input: CreateSubAccountInput;
 };
@@ -4385,6 +4586,11 @@ export type MutationDeleteStaffMemberArgs = {
 };
 
 
+export type MutationDeleteStatementPeriodArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteSubAccountArgs = {
   id: Scalars['ID']['input'];
 };
@@ -4433,6 +4639,11 @@ export type MutationImportPlayersFromCsvArgs = {
 
 export type MutationJoinWaitlistArgs = {
   input: JoinWaitlistInput;
+};
+
+
+export type MutationMarkStatementPortalViewedArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -4491,6 +4702,11 @@ export type MutationProcessSettlementArgs = {
 
 
 export type MutationPublishLotteryResultsArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationReactivateArProfileArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -4589,6 +4805,12 @@ export type MutationReopenSettlementArgs = {
 };
 
 
+export type MutationReopenStatementPeriodArgs = {
+  id: Scalars['ID']['input'];
+  input: ReopenStatementPeriodInput;
+};
+
+
 export type MutationReorderCheckInPaymentMethodsArgs = {
   orderedIds: Array<Scalars['ID']['input']>;
 };
@@ -4680,6 +4902,11 @@ export type MutationSettleAllPlayersArgs = {
 };
 
 
+export type MutationStartStatementRunArgs = {
+  input: CreateStatementRunInput;
+};
+
+
 export type MutationSubmitLotteryRequestArgs = {
   input: CreateLotteryRequestInput;
 };
@@ -4690,8 +4917,24 @@ export type MutationSubmitSettlementForReviewArgs = {
 };
 
 
+export type MutationSuspendArProfileArgs = {
+  id: Scalars['ID']['input'];
+  input: SuspendArProfileInput;
+};
+
+
 export type MutationSuspendShiftArgs = {
   shiftId: Scalars['ID']['input'];
+};
+
+
+export type MutationSyncCityLedgersToArProfilesArgs = {
+  input?: InputMaybe<SyncArProfilesInput>;
+};
+
+
+export type MutationSyncMembersToArProfilesArgs = {
+  input?: InputMaybe<SyncArProfilesInput>;
 };
 
 
@@ -4724,6 +4967,17 @@ export type MutationUndoTransferArgs = {
 
 export type MutationUnlockSubAccountPinArgs = {
   subAccountId: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdateArProfileArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateArProfileInput;
+};
+
+
+export type MutationUpdateArSettingsArgs = {
+  input: UpdateArSettingsInput;
 };
 
 
@@ -4993,6 +5247,20 @@ export type MutationUpdateStaffMemberArgs = {
 
 export type MutationUpdateStarterTicketConfigArgs = {
   input: StarterTicketConfigInput;
+};
+
+
+export type MutationUpdateStatementDeliveryStatusArgs = {
+  channel: Scalars['String']['input'];
+  error?: InputMaybe<Scalars['String']['input']>;
+  id: Scalars['ID']['input'];
+  status: Scalars['String']['input'];
+};
+
+
+export type MutationUpdateStatementPeriodArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateStatementPeriodInput;
 };
 
 
@@ -5346,6 +5614,12 @@ export type PaymentTypeEdge = {
   node: PaymentType;
 };
 
+/** Status of statement period */
+export type PeriodStatus =
+  | 'CLOSED'
+  | 'OPEN'
+  | 'REOPENED';
+
 export type PinVerificationResult = {
   __typename?: 'PinVerificationResult';
   message?: Maybe<Scalars['String']['output']>;
@@ -5660,6 +5934,12 @@ export type Query = {
   applications: ApplicationConnection;
   /** Get AR aging report with buckets and member details */
   arAgingReport: ArAgingReportType;
+  /** Get AR period settings for the club */
+  arPeriodSettings: ArPeriodSettingsType;
+  arProfile: ArProfileGqlType;
+  arProfileByCityLedger?: Maybe<ArProfileGqlType>;
+  arProfileByMember?: Maybe<ArProfileGqlType>;
+  arProfiles: Array<ArProfileGqlType>;
   /** Calculate totals for multiple players (for batch payment) */
   batchTotal: BatchTotalType;
   /** Get billing statistics for the current month */
@@ -5694,6 +5974,7 @@ export type Query = {
   checkMemberCredit: CreditCheckResultType;
   /** Check if a sub-account can make a transaction */
   checkSubAccountLimit: SubAccountLimitCheck;
+  cityLedgerStatements: Array<StatementGqlType>;
   /** Get club-wide billing configuration settings */
   clubBillingSettings: ClubBillingSettingsType;
   /** Get club golf settings including cart, rental, and caddy policies */
@@ -5710,6 +5991,7 @@ export type Query = {
   currentMemberSpend: MemberMinimumSpend;
   /** Get the current open shift for a drawer */
   currentShift?: Maybe<CashDrawerShiftGraphQlType>;
+  currentStatementPeriod?: Maybe<StatementPeriodGqlType>;
   /** Get daily check-in report for a course */
   dailyCheckInReport: DailyCheckInReportType;
   /** Get all interests for a dependent */
@@ -5807,6 +6089,7 @@ export type Query = {
   memberMinimumSpends: Array<MemberMinimumSpend>;
   /** Get all stored payment methods for a member */
   memberPaymentMethods: Array<StoredPaymentMethod>;
+  memberStatements: Array<StatementGqlType>;
   /** Get member statistics */
   memberStats: MemberStatsType;
   /** Get sub-accounts for a member */
@@ -5817,6 +6100,10 @@ export type Query = {
   members: MemberConnection;
   /** Get members approaching or exceeding their credit limits */
   membersAtCreditRisk: Array<MemberAtRiskType>;
+  /** List of active members without AR profiles */
+  membersWithoutARProfiles: Array<MemberWithoutArProfileType>;
+  /** Count of active members without AR profiles */
+  membersWithoutARProfilesCount: Scalars['Int']['output'];
   /** Get all membership types */
   membershipTypes: Array<MembershipTypeType>;
   /** Get a minimum spend requirement by ID */
@@ -5875,6 +6162,7 @@ export type Query = {
   productCategory?: Maybe<ProductCategory>;
   /** Get products with filtering and pagination */
   products: ProductConnection;
+  profileStatements: Array<StatementGqlType>;
   /** Get products marked as quick add for check-in */
   quickAddProducts: Array<ProShopProductType>;
   quickKeyProducts: Array<Product>;
@@ -5912,6 +6200,13 @@ export type Query = {
   starterTicket?: Maybe<StarterTicketResponseType>;
   /** Get starter ticket for a tee time */
   starterTicketByTeeTime?: Maybe<StarterTicketResponseType>;
+  statement: StatementGqlType;
+  statementPeriod: StatementPeriodGqlType;
+  statementPeriods: Array<StatementPeriodGqlType>;
+  statementRun: StatementRunGqlType;
+  statementRuns: Array<StatementRunGqlType>;
+  statementRunsByPeriod: Array<StatementRunGqlType>;
+  statements: Array<StatementGqlType>;
   /** Get a sub-account by ID */
   subAccount?: Maybe<SubAccount>;
   /** Get transactions for sub-accounts */
@@ -5981,6 +6276,26 @@ export type QueryArAgingReportArgs = {
   filter?: InputMaybe<Scalars['String']['input']>;
   limit?: InputMaybe<Scalars['Float']['input']>;
   page?: InputMaybe<Scalars['Float']['input']>;
+};
+
+
+export type QueryArProfileArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryArProfileByCityLedgerArgs = {
+  cityLedgerId: Scalars['ID']['input'];
+};
+
+
+export type QueryArProfileByMemberArgs = {
+  memberId: Scalars['ID']['input'];
+};
+
+
+export type QueryArProfilesArgs = {
+  filter?: InputMaybe<ArProfileFilterInput>;
 };
 
 
@@ -6059,6 +6374,11 @@ export type QueryCheckMemberCreditArgs = {
 
 export type QueryCheckSubAccountLimitArgs = {
   input: CheckLimitInput;
+};
+
+
+export type QueryCityLedgerStatementsArgs = {
+  cityLedgerId: Scalars['ID']['input'];
 };
 
 
@@ -6390,6 +6710,11 @@ export type QueryMemberPaymentMethodsArgs = {
 };
 
 
+export type QueryMemberStatementsArgs = {
+  memberId: Scalars['ID']['input'];
+};
+
+
 export type QueryMemberSubAccountsArgs = {
   activeOnly?: InputMaybe<Scalars['Boolean']['input']>;
   memberId: Scalars['ID']['input'];
@@ -6537,6 +6862,12 @@ export type QueryProductsArgs = {
 };
 
 
+export type QueryProfileStatementsArgs = {
+  arProfileId: Scalars['ID']['input'];
+  onlyFinal?: Scalars['Boolean']['input'];
+};
+
+
 export type QueryQuickKeyProductsArgs = {
   outletId: Scalars['ID']['input'];
 };
@@ -6636,6 +6967,43 @@ export type QueryStarterTicketArgs = {
 
 export type QueryStarterTicketByTeeTimeArgs = {
   teeTimeId: Scalars['ID']['input'];
+};
+
+
+export type QueryStatementArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryStatementPeriodArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryStatementPeriodsArgs = {
+  filter?: InputMaybe<StatementPeriodFilterInput>;
+};
+
+
+export type QueryStatementRunArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryStatementRunsArgs = {
+  filter?: InputMaybe<StatementRunFilterInput>;
+};
+
+
+export type QueryStatementRunsByPeriodArgs = {
+  periodId: Scalars['ID']['input'];
+};
+
+
+export type QueryStatementsArgs = {
+  maxBalance?: InputMaybe<Scalars['Float']['input']>;
+  minBalance?: InputMaybe<Scalars['Float']['input']>;
+  runId: Scalars['ID']['input'];
 };
 
 
@@ -6860,6 +7228,10 @@ export type RentalStatus =
 export type ReopenSettlementInput = {
   reason: Scalars['String']['input'];
   settlementId: Scalars['ID']['input'];
+};
+
+export type ReopenStatementPeriodInput = {
+  reason: Scalars['String']['input'];
 };
 
 export type RescheduleBookingInput = {
@@ -7258,6 +7630,133 @@ export type StarterTicketResponseType = {
   ticketNumber: Scalars['String']['output'];
 };
 
+/** Statement delivery method preference */
+export type StatementDelivery =
+  | 'ALL'
+  | 'EMAIL'
+  | 'EMAIL_AND_PRINT'
+  | 'PORTAL'
+  | 'PRINT'
+  | 'SMS';
+
+export type StatementGqlType = {
+  __typename?: 'StatementGQLType';
+  aging1to30: Scalars['Float']['output'];
+  aging31to60: Scalars['Float']['output'];
+  aging61to90: Scalars['Float']['output'];
+  aging90Plus: Scalars['Float']['output'];
+  agingCurrent: Scalars['Float']['output'];
+  arProfileId: Scalars['ID']['output'];
+  closingBalance: Scalars['Float']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  deliveryMethod: StatementDelivery;
+  dueDate: Scalars['DateTime']['output'];
+  emailDeliveredAt?: Maybe<Scalars['DateTime']['output']>;
+  emailError?: Maybe<Scalars['String']['output']>;
+  emailSentAt?: Maybe<Scalars['DateTime']['output']>;
+  emailStatus: DeliveryStatus;
+  id: Scalars['ID']['output'];
+  openingBalance: Scalars['Float']['output'];
+  pdfGeneratedAt?: Maybe<Scalars['DateTime']['output']>;
+  pdfUrl?: Maybe<Scalars['String']['output']>;
+  periodEnd: Scalars['DateTime']['output'];
+  periodStart: Scalars['DateTime']['output'];
+  portalPublishedAt?: Maybe<Scalars['DateTime']['output']>;
+  portalStatus: DeliveryStatus;
+  portalViewedAt?: Maybe<Scalars['DateTime']['output']>;
+  printBatchId?: Maybe<Scalars['ID']['output']>;
+  printStatus: DeliveryStatus;
+  printedAt?: Maybe<Scalars['DateTime']['output']>;
+  profileSnapshot: Scalars['JSON']['output'];
+  smsDeliveredAt?: Maybe<Scalars['DateTime']['output']>;
+  smsError?: Maybe<Scalars['String']['output']>;
+  smsSentAt?: Maybe<Scalars['DateTime']['output']>;
+  smsStatus: DeliveryStatus;
+  statementNumber?: Maybe<Scalars['String']['output']>;
+  statementRunId: Scalars['ID']['output'];
+  totalCredits: Scalars['Float']['output'];
+  totalDebits: Scalars['Float']['output'];
+  transactionCount: Scalars['Int']['output'];
+  transactions?: Maybe<Scalars['JSON']['output']>;
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+export type StatementPeriodFilterInput = {
+  periodYear?: InputMaybe<Scalars['Int']['input']>;
+  status?: InputMaybe<PeriodStatus>;
+};
+
+export type StatementPeriodGqlType = {
+  __typename?: 'StatementPeriodGQLType';
+  closedAt?: Maybe<Scalars['DateTime']['output']>;
+  closedBy?: Maybe<Scalars['ID']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  cutoffDate: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  /** Whether this is a catch-up period for historical data */
+  isCatchUp: Scalars['Boolean']['output'];
+  periodEnd: Scalars['DateTime']['output'];
+  periodLabel: Scalars['String']['output'];
+  periodNumber: Scalars['Int']['output'];
+  periodStart: Scalars['DateTime']['output'];
+  periodYear: Scalars['Int']['output'];
+  reopenApprovedBy?: Maybe<Scalars['ID']['output']>;
+  reopenReason?: Maybe<Scalars['String']['output']>;
+  reopenedAt?: Maybe<Scalars['DateTime']['output']>;
+  reopenedBy?: Maybe<Scalars['ID']['output']>;
+  status: PeriodStatus;
+  totalClosingBalance?: Maybe<Scalars['Float']['output']>;
+  totalCredits?: Maybe<Scalars['Float']['output']>;
+  totalDebits?: Maybe<Scalars['Float']['output']>;
+  totalOpeningBalance?: Maybe<Scalars['Float']['output']>;
+  totalProfiles?: Maybe<Scalars['Int']['output']>;
+  totalStatements?: Maybe<Scalars['Int']['output']>;
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+export type StatementRunFilterInput = {
+  runType?: InputMaybe<StatementRunType>;
+  statementPeriodId?: InputMaybe<Scalars['ID']['input']>;
+  status?: InputMaybe<StatementRunStatus>;
+};
+
+export type StatementRunGqlType = {
+  __typename?: 'StatementRunGQLType';
+  completedAt?: Maybe<Scalars['DateTime']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  createdBy?: Maybe<Scalars['ID']['output']>;
+  errorCount: Scalars['Int']['output'];
+  errorLog?: Maybe<Scalars['JSON']['output']>;
+  generatedCount: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  processedCount: Scalars['Int']['output'];
+  runNumber: Scalars['Int']['output'];
+  runType: StatementRunType;
+  skippedCount: Scalars['Int']['output'];
+  startedAt?: Maybe<Scalars['DateTime']['output']>;
+  statementPeriodId: Scalars['ID']['output'];
+  status: StatementRunStatus;
+  totalClosingBalance: Scalars['Float']['output'];
+  totalCredits: Scalars['Float']['output'];
+  totalDebits: Scalars['Float']['output'];
+  totalOpeningBalance: Scalars['Float']['output'];
+  totalProfiles: Scalars['Int']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+/** Status of statement generation run */
+export type StatementRunStatus =
+  | 'CANCELLED'
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'IN_PROGRESS'
+  | 'PENDING';
+
+/** Type of statement run - preview or final */
+export type StatementRunType =
+  | 'FINAL'
+  | 'PREVIEW';
+
 export type StatementType = {
   __typename?: 'StatementType';
   closingBalance: Scalars['String']['output'];
@@ -7410,6 +7909,17 @@ export type SuggestionPosition =
   | 'FLOATING'
   | 'SIDEBAR'
   | 'TOP_ROW';
+
+export type SuspendArProfileInput = {
+  reason: Scalars['String']['input'];
+};
+
+export type SyncArProfilesInput = {
+  /** Default payment terms in days */
+  paymentTermsDays?: InputMaybe<Scalars['Int']['input']>;
+  /** Default delivery method for new profiles */
+  statementDelivery?: InputMaybe<StatementDelivery>;
+};
 
 export type TaxConfigInput = {
   defaultRate?: InputMaybe<Scalars['Float']['input']>;
@@ -7730,6 +8240,37 @@ export type UndoCheckInInput = {
 
 export type UndoTransferInput = {
   lineItemId: Scalars['ID']['input'];
+};
+
+export type UpdateArProfileInput = {
+  /** Account name for standalone city ledger profiles */
+  accountName?: InputMaybe<Scalars['String']['input']>;
+  /** Billing address for standalone profiles */
+  billingAddress?: InputMaybe<Scalars['String']['input']>;
+  /** Branch code (e.g., 00000 for head office) */
+  branchCode?: InputMaybe<Scalars['String']['input']>;
+  /** Branch name (e.g., Head Office, Bangkok Branch) */
+  branchName?: InputMaybe<Scalars['String']['input']>;
+  /** Business registration number */
+  businessRegistrationId?: InputMaybe<Scalars['String']['input']>;
+  /** Contact email for standalone profiles */
+  contactEmail?: InputMaybe<Scalars['String']['input']>;
+  /** Contact phone for standalone profiles */
+  contactPhone?: InputMaybe<Scalars['String']['input']>;
+  creditLimit?: InputMaybe<Scalars['Float']['input']>;
+  paymentTermsDays?: InputMaybe<Scalars['Int']['input']>;
+  statementDelivery?: InputMaybe<StatementDelivery>;
+  status?: InputMaybe<ArProfileStatus>;
+  /** Tax ID for corporate accounts */
+  taxId?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateArSettingsInput = {
+  arAutoGenerateNext?: InputMaybe<Scalars['Boolean']['input']>;
+  arCloseBehavior?: InputMaybe<ArCloseBehavior>;
+  arCustomCycleStartDay?: InputMaybe<Scalars['Int']['input']>;
+  arCutoffDays?: InputMaybe<Scalars['Int']['input']>;
+  arCycleType?: InputMaybe<ArCycleType>;
 };
 
 export type UpdateAddressInput = {
@@ -8288,6 +8829,17 @@ export type UpdateStaffMemberInput = {
   workingHours?: InputMaybe<Array<DayHoursInput>>;
 };
 
+export type UpdateStatementPeriodInput = {
+  /** Cutoff date for including transactions (YYYY-MM-DD) */
+  cutoffDate?: InputMaybe<Scalars['String']['input']>;
+  /** End date of the period (YYYY-MM-DD) */
+  periodEnd?: InputMaybe<Scalars['String']['input']>;
+  /** Period label/name */
+  periodLabel?: InputMaybe<Scalars['String']['input']>;
+  /** Start date of the period (YYYY-MM-DD) */
+  periodStart?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type UpdateStoredPaymentInput = {
   id: Scalars['ID']['input'];
   isAutoPayEnabled?: InputMaybe<Scalars['Boolean']['input']>;
@@ -8549,6 +9101,226 @@ export type ChangeApplicationStatusMutationVariables = Exact<{
 
 
 export type ChangeApplicationStatusMutation = { __typename?: 'Mutation', changeApplicationStatus: { __typename?: 'MembershipApplicationType', id: string, applicationNumber: string, status: ApplicationStatus, reviewedAt?: string | null | undefined, reviewedBy?: string | null | undefined, approvedAt?: string | null | undefined, approvedBy?: string | null | undefined, rejectedAt?: string | null | undefined, rejectedBy?: string | null | undefined, withdrawnAt?: string | null | undefined, reviewNotes?: string | null | undefined, rejectionReason?: string | null | undefined, updatedAt: string } };
+
+export type GetArProfilesQueryVariables = Exact<{
+  filter?: InputMaybe<ArProfileFilterInput>;
+}>;
+
+
+export type GetArProfilesQuery = { __typename?: 'Query', arProfiles: Array<{ __typename?: 'ARProfileGQLType', id: string, memberId?: string | null | undefined, cityLedgerId?: string | null | undefined, profileType: ArProfileType, accountNumber: string, accountName?: string | null | undefined, contactEmail?: string | null | undefined, contactPhone?: string | null | undefined, billingAddress?: string | null | undefined, status: ArProfileStatus, currentBalance: number, creditLimit?: number | null | undefined, lastStatementDate?: string | null | undefined, lastStatementBalance?: number | null | undefined, lastPaymentDate?: string | null | undefined, lastPaymentAmount?: number | null | undefined, paymentTermsDays: number, statementDelivery: StatementDelivery, suspendedAt?: string | null | undefined, suspendedReason?: string | null | undefined, closedAt?: string | null | undefined, closedReason?: string | null | undefined, createdAt: string, updatedAt: string }> };
+
+export type GetArProfileQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetArProfileQuery = { __typename?: 'Query', arProfile: { __typename?: 'ARProfileGQLType', id: string, memberId?: string | null | undefined, cityLedgerId?: string | null | undefined, profileType: ArProfileType, accountNumber: string, accountName?: string | null | undefined, contactEmail?: string | null | undefined, contactPhone?: string | null | undefined, billingAddress?: string | null | undefined, status: ArProfileStatus, currentBalance: number, creditLimit?: number | null | undefined, lastStatementDate?: string | null | undefined, lastStatementBalance?: number | null | undefined, lastPaymentDate?: string | null | undefined, lastPaymentAmount?: number | null | undefined, paymentTermsDays: number, statementDelivery: StatementDelivery, suspendedAt?: string | null | undefined, suspendedReason?: string | null | undefined, closedAt?: string | null | undefined, closedReason?: string | null | undefined, createdAt: string, updatedAt: string } };
+
+export type GetArProfileByMemberQueryVariables = Exact<{
+  memberId: Scalars['ID']['input'];
+}>;
+
+
+export type GetArProfileByMemberQuery = { __typename?: 'Query', arProfileByMember?: { __typename?: 'ARProfileGQLType', id: string, memberId?: string | null | undefined, profileType: ArProfileType, accountNumber: string, status: ArProfileStatus, currentBalance: number, creditLimit?: number | null | undefined, lastStatementDate?: string | null | undefined, lastStatementBalance?: number | null | undefined, paymentTermsDays: number, statementDelivery: StatementDelivery, createdAt: string, updatedAt: string } | null | undefined };
+
+export type GetStatementPeriodsQueryVariables = Exact<{
+  filter?: InputMaybe<StatementPeriodFilterInput>;
+}>;
+
+
+export type GetStatementPeriodsQuery = { __typename?: 'Query', statementPeriods: Array<{ __typename?: 'StatementPeriodGQLType', id: string, periodYear: number, periodNumber: number, periodLabel: string, periodStart: string, periodEnd: string, cutoffDate: string, isCatchUp: boolean, status: PeriodStatus, closedAt?: string | null | undefined, closedBy?: string | null | undefined, reopenedAt?: string | null | undefined, reopenedBy?: string | null | undefined, reopenReason?: string | null | undefined, reopenApprovedBy?: string | null | undefined, totalProfiles?: number | null | undefined, totalStatements?: number | null | undefined, totalOpeningBalance?: number | null | undefined, totalCredits?: number | null | undefined, totalDebits?: number | null | undefined, totalClosingBalance?: number | null | undefined, createdAt: string, updatedAt: string }> };
+
+export type GetStatementPeriodQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetStatementPeriodQuery = { __typename?: 'Query', statementPeriod: { __typename?: 'StatementPeriodGQLType', id: string, periodYear: number, periodNumber: number, periodLabel: string, periodStart: string, periodEnd: string, cutoffDate: string, isCatchUp: boolean, status: PeriodStatus, closedAt?: string | null | undefined, closedBy?: string | null | undefined, reopenedAt?: string | null | undefined, reopenedBy?: string | null | undefined, reopenReason?: string | null | undefined, reopenApprovedBy?: string | null | undefined, totalProfiles?: number | null | undefined, totalStatements?: number | null | undefined, totalOpeningBalance?: number | null | undefined, totalCredits?: number | null | undefined, totalDebits?: number | null | undefined, totalClosingBalance?: number | null | undefined, createdAt: string, updatedAt: string } };
+
+export type GetCurrentStatementPeriodQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetCurrentStatementPeriodQuery = { __typename?: 'Query', currentStatementPeriod?: { __typename?: 'StatementPeriodGQLType', id: string, periodYear: number, periodNumber: number, periodLabel: string, periodStart: string, periodEnd: string, cutoffDate: string, isCatchUp: boolean, status: PeriodStatus, totalProfiles?: number | null | undefined, totalStatements?: number | null | undefined, createdAt: string, updatedAt: string } | null | undefined };
+
+export type GetStatementRunsByPeriodQueryVariables = Exact<{
+  periodId: Scalars['ID']['input'];
+}>;
+
+
+export type GetStatementRunsByPeriodQuery = { __typename?: 'Query', statementRunsByPeriod: Array<{ __typename?: 'StatementRunGQLType', id: string, statementPeriodId: string, runType: StatementRunType, runNumber: number, status: StatementRunStatus, startedAt?: string | null | undefined, completedAt?: string | null | undefined, totalProfiles: number, processedCount: number, generatedCount: number, skippedCount: number, errorCount: number, errorLog?: any | null | undefined, totalOpeningBalance: number, totalDebits: number, totalCredits: number, totalClosingBalance: number, createdBy?: string | null | undefined, createdAt: string, updatedAt: string }> };
+
+export type GetStatementRunQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetStatementRunQuery = { __typename?: 'Query', statementRun: { __typename?: 'StatementRunGQLType', id: string, statementPeriodId: string, runType: StatementRunType, runNumber: number, status: StatementRunStatus, startedAt?: string | null | undefined, completedAt?: string | null | undefined, totalProfiles: number, processedCount: number, generatedCount: number, skippedCount: number, errorCount: number, errorLog?: any | null | undefined, totalOpeningBalance: number, totalDebits: number, totalCredits: number, totalClosingBalance: number, createdBy?: string | null | undefined, createdAt: string, updatedAt: string } };
+
+export type GetStatementsByRunQueryVariables = Exact<{
+  runId: Scalars['ID']['input'];
+  minBalance?: InputMaybe<Scalars['Float']['input']>;
+  maxBalance?: InputMaybe<Scalars['Float']['input']>;
+}>;
+
+
+export type GetStatementsByRunQuery = { __typename?: 'Query', statements: Array<{ __typename?: 'StatementGQLType', id: string, arProfileId: string, openingBalance: number, closingBalance: number, periodStart: string, periodEnd: string, dueDate: string, deliveryMethod: StatementDelivery, emailStatus: DeliveryStatus, emailSentAt?: string | null | undefined, emailDeliveredAt?: string | null | undefined, emailError?: string | null | undefined, smsStatus: DeliveryStatus, smsSentAt?: string | null | undefined, smsDeliveredAt?: string | null | undefined, smsError?: string | null | undefined, printStatus: DeliveryStatus, printedAt?: string | null | undefined, printBatchId?: string | null | undefined, portalStatus: DeliveryStatus, portalPublishedAt?: string | null | undefined, portalViewedAt?: string | null | undefined, pdfUrl?: string | null | undefined, pdfGeneratedAt?: string | null | undefined, agingCurrent: number, aging1to30: number, aging31to60: number, aging61to90: number, aging90Plus: number, profileSnapshot: any, transactionCount: number, transactions?: any | null | undefined, createdAt: string, updatedAt: string }> };
+
+export type GetStatementQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetStatementQuery = { __typename?: 'Query', statement: { __typename?: 'StatementGQLType', id: string, arProfileId: string, openingBalance: number, closingBalance: number, periodStart: string, periodEnd: string, dueDate: string, deliveryMethod: StatementDelivery, emailStatus: DeliveryStatus, emailSentAt?: string | null | undefined, emailDeliveredAt?: string | null | undefined, emailError?: string | null | undefined, smsStatus: DeliveryStatus, smsSentAt?: string | null | undefined, smsDeliveredAt?: string | null | undefined, smsError?: string | null | undefined, printStatus: DeliveryStatus, printedAt?: string | null | undefined, printBatchId?: string | null | undefined, portalStatus: DeliveryStatus, portalPublishedAt?: string | null | undefined, portalViewedAt?: string | null | undefined, pdfUrl?: string | null | undefined, pdfGeneratedAt?: string | null | undefined, agingCurrent: number, aging1to30: number, aging31to60: number, aging61to90: number, aging90Plus: number, profileSnapshot: any, createdAt: string, updatedAt: string } };
+
+export type GetProfileStatementsQueryVariables = Exact<{
+  arProfileId: Scalars['ID']['input'];
+  onlyFinal?: Scalars['Boolean']['input'];
+}>;
+
+
+export type GetProfileStatementsQuery = { __typename?: 'Query', profileStatements: Array<{ __typename?: 'StatementGQLType', id: string, arProfileId: string, openingBalance: number, closingBalance: number, periodStart: string, periodEnd: string, dueDate: string, deliveryMethod: StatementDelivery, emailStatus: DeliveryStatus, printStatus: DeliveryStatus, portalStatus: DeliveryStatus, smsStatus: DeliveryStatus, pdfUrl?: string | null | undefined, createdAt: string }> };
+
+export type CreateArProfileMutationVariables = Exact<{
+  input: CreateArProfileInput;
+}>;
+
+
+export type CreateArProfileMutation = { __typename?: 'Mutation', createARProfile: { __typename?: 'ARProfileGQLType', id: string, memberId?: string | null | undefined, cityLedgerId?: string | null | undefined, profileType: ArProfileType, accountNumber: string, accountName?: string | null | undefined, contactEmail?: string | null | undefined, contactPhone?: string | null | undefined, billingAddress?: string | null | undefined, status: ArProfileStatus, currentBalance: number, creditLimit?: number | null | undefined, statementDelivery: StatementDelivery, createdAt: string } };
+
+export type UpdateArProfileMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  input: UpdateArProfileInput;
+}>;
+
+
+export type UpdateArProfileMutation = { __typename?: 'Mutation', updateARProfile: { __typename?: 'ARProfileGQLType', id: string, memberId?: string | null | undefined, cityLedgerId?: string | null | undefined, profileType: ArProfileType, accountNumber: string, accountName?: string | null | undefined, contactEmail?: string | null | undefined, contactPhone?: string | null | undefined, billingAddress?: string | null | undefined, status: ArProfileStatus, currentBalance: number, creditLimit?: number | null | undefined, statementDelivery: StatementDelivery, updatedAt: string } };
+
+export type SuspendArProfileMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  input: SuspendArProfileInput;
+}>;
+
+
+export type SuspendArProfileMutation = { __typename?: 'Mutation', suspendARProfile: { __typename?: 'ARProfileGQLType', id: string, status: ArProfileStatus, suspendedAt?: string | null | undefined, suspendedReason?: string | null | undefined } };
+
+export type ReactivateArProfileMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type ReactivateArProfileMutation = { __typename?: 'Mutation', reactivateARProfile: { __typename?: 'ARProfileGQLType', id: string, status: ArProfileStatus, suspendedAt?: string | null | undefined, suspendedReason?: string | null | undefined } };
+
+export type CloseArProfileMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  input: CloseArProfileInput;
+}>;
+
+
+export type CloseArProfileMutation = { __typename?: 'Mutation', closeARProfile: { __typename?: 'ARProfileGQLType', id: string, status: ArProfileStatus, closedAt?: string | null | undefined, closedReason?: string | null | undefined } };
+
+export type CreateStatementPeriodMutationVariables = Exact<{
+  input: CreateStatementPeriodInput;
+}>;
+
+
+export type CreateStatementPeriodMutation = { __typename?: 'Mutation', createStatementPeriod: { __typename?: 'StatementPeriodGQLType', id: string, periodYear: number, periodNumber: number, periodLabel: string, periodStart: string, periodEnd: string, cutoffDate: string, isCatchUp: boolean, status: PeriodStatus, totalProfiles?: number | null | undefined, createdAt: string } };
+
+export type UpdateStatementPeriodMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  input: UpdateStatementPeriodInput;
+}>;
+
+
+export type UpdateStatementPeriodMutation = { __typename?: 'Mutation', updateStatementPeriod: { __typename?: 'StatementPeriodGQLType', id: string, periodYear: number, periodNumber: number, periodLabel: string, periodStart: string, periodEnd: string, cutoffDate: string, status: PeriodStatus, updatedAt: string } };
+
+export type CloseStatementPeriodMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type CloseStatementPeriodMutation = { __typename?: 'Mutation', closeStatementPeriod: { __typename?: 'StatementPeriodGQLType', id: string, status: PeriodStatus, closedAt?: string | null | undefined, closedBy?: string | null | undefined, totalStatements?: number | null | undefined, totalClosingBalance?: number | null | undefined } };
+
+export type ReopenStatementPeriodMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  input: ReopenStatementPeriodInput;
+}>;
+
+
+export type ReopenStatementPeriodMutation = { __typename?: 'Mutation', reopenStatementPeriod: { __typename?: 'StatementPeriodGQLType', id: string, status: PeriodStatus, reopenedAt?: string | null | undefined, reopenedBy?: string | null | undefined, reopenReason?: string | null | undefined, reopenApprovedBy?: string | null | undefined } };
+
+export type DeleteStatementPeriodMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type DeleteStatementPeriodMutation = { __typename?: 'Mutation', deleteStatementPeriod: boolean };
+
+export type StartStatementRunMutationVariables = Exact<{
+  input: CreateStatementRunInput;
+}>;
+
+
+export type StartStatementRunMutation = { __typename?: 'Mutation', startStatementRun: { __typename?: 'StatementRunGQLType', id: string, statementPeriodId: string, runType: StatementRunType, runNumber: number, status: StatementRunStatus, totalProfiles: number, createdBy?: string | null | undefined, createdAt: string } };
+
+export type CancelStatementRunMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type CancelStatementRunMutation = { __typename?: 'Mutation', cancelStatementRun: { __typename?: 'StatementRunGQLType', id: string, status: StatementRunStatus, completedAt?: string | null | undefined } };
+
+export type UpdateStatementDeliveryStatusMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  channel: Scalars['String']['input'];
+  status: Scalars['String']['input'];
+  error?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type UpdateStatementDeliveryStatusMutation = { __typename?: 'Mutation', updateStatementDeliveryStatus: { __typename?: 'StatementGQLType', id: string, emailStatus: DeliveryStatus, emailSentAt?: string | null | undefined, emailDeliveredAt?: string | null | undefined, emailError?: string | null | undefined, smsStatus: DeliveryStatus, smsSentAt?: string | null | undefined, smsDeliveredAt?: string | null | undefined, smsError?: string | null | undefined, printStatus: DeliveryStatus, printedAt?: string | null | undefined, portalStatus: DeliveryStatus, portalPublishedAt?: string | null | undefined, portalViewedAt?: string | null | undefined } };
+
+export type MarkStatementPortalViewedMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type MarkStatementPortalViewedMutation = { __typename?: 'Mutation', markStatementPortalViewed: { __typename?: 'StatementGQLType', id: string, portalStatus: DeliveryStatus, portalViewedAt?: string | null | undefined } };
+
+export type GetMembersWithoutArProfilesCountQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetMembersWithoutArProfilesCountQuery = { __typename?: 'Query', membersWithoutARProfilesCount: number };
+
+export type GetMembersWithoutArProfilesQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetMembersWithoutArProfilesQuery = { __typename?: 'Query', membersWithoutARProfiles: Array<{ __typename?: 'MemberWithoutARProfileType', id: string, memberId: string, firstName: string, lastName: string, email?: string | null | undefined, membershipTypeName?: string | null | undefined }> };
+
+export type SyncMembersToArProfilesMutationVariables = Exact<{
+  input?: InputMaybe<SyncArProfilesInput>;
+}>;
+
+
+export type SyncMembersToArProfilesMutation = { __typename?: 'Mutation', syncMembersToARProfiles: { __typename?: 'ARProfileSyncResultType', created: number, skipped: number, errors: Array<string> } };
+
+export type SyncCityLedgersToArProfilesMutationVariables = Exact<{
+  input?: InputMaybe<SyncArProfilesInput>;
+}>;
+
+
+export type SyncCityLedgersToArProfilesMutation = { __typename?: 'Mutation', syncCityLedgersToARProfiles: { __typename?: 'ARProfileSyncResultType', created: number, skipped: number, errors: Array<string> } };
+
+export type GetArPeriodSettingsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetArPeriodSettingsQuery = { __typename?: 'Query', arPeriodSettings: { __typename?: 'ARPeriodSettingsType', arCycleType: ArCycleType, arCustomCycleStartDay: number, arCutoffDays: number, arCloseBehavior: ArCloseBehavior, arAutoGenerateNext: boolean } };
+
+export type UpdateArSettingsMutationVariables = Exact<{
+  input: UpdateArSettingsInput;
+}>;
+
+
+export type UpdateArSettingsMutation = { __typename?: 'Mutation', updateARSettings: { __typename?: 'ARPeriodSettingsType', arCycleType: ArCycleType, arCustomCycleStartDay: number, arCutoffDays: number, arCloseBehavior: ArCloseBehavior, arAutoGenerateNext: boolean } };
 
 export type GetBillingStatsQueryVariables = Exact<{ [key: string]: never; }>;
 

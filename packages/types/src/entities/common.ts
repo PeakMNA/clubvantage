@@ -48,7 +48,12 @@ export interface AuditFields {
 }
 
 // Region & Currency
-export type Region = 'TH' | 'SG' | 'MY';
+export const Region = {
+  TH: 'TH',
+  SG: 'SG',
+  MY: 'MY',
+} as const;
+export type Region = (typeof Region)[keyof typeof Region];
 
 export interface RegionConfig {
   region: Region;
@@ -91,13 +96,15 @@ export const REGION_CONFIGS: Record<Region, RegionConfig> = {
 };
 
 // User & Auth
-export type UserRole =
-  | 'SUPER_ADMIN'
-  | 'CLUB_MANAGER'
-  | 'FINANCE_STAFF'
-  | 'FRONT_DESK'
-  | 'GOLF_OPERATIONS'
-  | 'F_AND_B_STAFF';
+export const UserRole = {
+  SUPER_ADMIN: 'SUPER_ADMIN',
+  CLUB_MANAGER: 'CLUB_MANAGER',
+  FINANCE_STAFF: 'FINANCE_STAFF',
+  FRONT_DESK: 'FRONT_DESK',
+  GOLF_OPERATIONS: 'GOLF_OPERATIONS',
+  F_AND_B_STAFF: 'F_AND_B_STAFF',
+} as const;
+export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 
 export interface User {
   id: string;

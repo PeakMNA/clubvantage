@@ -22,6 +22,95 @@ export type Scalars = {
   JSON: { input: any; output: any; }
 };
 
+/** How AR periods are closed */
+export type ArCloseBehavior =
+  | 'AUTO_AFTER_FINAL_RUN'
+  | 'AUTO_ON_CUTOFF'
+  | 'MANUAL';
+
+/** AR billing cycle type for period generation */
+export type ArCycleType =
+  | 'CALENDAR_MONTH'
+  | 'CUSTOM'
+  | 'ROLLING_30';
+
+export type ArPeriodSettingsType = {
+  __typename?: 'ARPeriodSettingsType';
+  arAutoGenerateNext: Scalars['Boolean']['output'];
+  arCloseBehavior: ArCloseBehavior;
+  arCustomCycleStartDay: Scalars['Int']['output'];
+  arCutoffDays: Scalars['Int']['output'];
+  arCycleType: ArCycleType;
+};
+
+export type ArProfileFilterInput = {
+  /** Maximum balance filter */
+  maxBalance?: InputMaybe<Scalars['Float']['input']>;
+  /** Minimum balance filter */
+  minBalance?: InputMaybe<Scalars['Float']['input']>;
+  profileType?: InputMaybe<ArProfileType>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  status?: InputMaybe<ArProfileStatus>;
+};
+
+export type ArProfileGqlType = {
+  __typename?: 'ARProfileGQLType';
+  /** Account name for standalone city ledger profiles */
+  accountName?: Maybe<Scalars['String']['output']>;
+  accountNumber: Scalars['String']['output'];
+  /** Billing address for standalone profiles */
+  billingAddress?: Maybe<Scalars['String']['output']>;
+  /** Branch code (e.g., 00000 for head office) */
+  branchCode?: Maybe<Scalars['String']['output']>;
+  /** Branch name (e.g., Head Office, Bangkok Branch) */
+  branchName?: Maybe<Scalars['String']['output']>;
+  /** Business registration number */
+  businessRegistrationId?: Maybe<Scalars['String']['output']>;
+  cityLedgerId?: Maybe<Scalars['ID']['output']>;
+  closedAt?: Maybe<Scalars['DateTime']['output']>;
+  closedReason?: Maybe<Scalars['String']['output']>;
+  /** Contact email for standalone profiles */
+  contactEmail?: Maybe<Scalars['String']['output']>;
+  /** Contact phone for standalone profiles */
+  contactPhone?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  creditLimit?: Maybe<Scalars['Float']['output']>;
+  currentBalance: Scalars['Float']['output'];
+  id: Scalars['ID']['output'];
+  lastPaymentAmount?: Maybe<Scalars['Float']['output']>;
+  lastPaymentDate?: Maybe<Scalars['DateTime']['output']>;
+  lastStatementBalance?: Maybe<Scalars['Float']['output']>;
+  lastStatementDate?: Maybe<Scalars['DateTime']['output']>;
+  memberId?: Maybe<Scalars['ID']['output']>;
+  paymentTermsDays: Scalars['Int']['output'];
+  profileType: ArProfileType;
+  statementDelivery: StatementDelivery;
+  status: ArProfileStatus;
+  suspendedAt?: Maybe<Scalars['DateTime']['output']>;
+  suspendedReason?: Maybe<Scalars['String']['output']>;
+  /** Tax ID for corporate accounts */
+  taxId?: Maybe<Scalars['String']['output']>;
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+/** Status of AR profile */
+export type ArProfileStatus =
+  | 'ACTIVE'
+  | 'CLOSED'
+  | 'SUSPENDED';
+
+export type ArProfileSyncResultType = {
+  __typename?: 'ARProfileSyncResultType';
+  created: Scalars['Int']['output'];
+  errors: Array<Scalars['String']['output']>;
+  skipped: Scalars['Int']['output'];
+};
+
+/** Type of AR profile - member or city ledger */
+export type ArProfileType =
+  | 'CITY_LEDGER'
+  | 'MEMBER';
+
 export type ActiveSeasonInfo = {
   __typename?: 'ActiveSeasonInfo';
   id: Scalars['ID']['output'];
@@ -1001,7 +1090,7 @@ export type CheckLimitInput = {
 /** City ledger account type */
 export type CityLedgerAccountType =
   | 'CORPORATE'
-  | 'HOUSE_ACCOUNT'
+  | 'HOUSE'
   | 'OTHER'
   | 'VENDOR';
 
@@ -1044,6 +1133,10 @@ export type CloneTemplateMutationResponse = {
   message?: Maybe<Scalars['String']['output']>;
   success: Scalars['Boolean']['output'];
   template?: Maybe<PosTemplateGraphQlType>;
+};
+
+export type CloseArProfileInput = {
+  reason: Scalars['String']['input'];
 };
 
 export type ClosePeriodInput = {
@@ -1120,6 +1213,31 @@ export type CourseIntervalInput = {
   isPrimeTime?: Scalars['Boolean']['input'];
   timeEnd: Scalars['String']['input'];
   timeStart: Scalars['String']['input'];
+};
+
+export type CreateArProfileInput = {
+  /** Account name for standalone city ledger profiles */
+  accountName?: InputMaybe<Scalars['String']['input']>;
+  /** Billing address for standalone profiles */
+  billingAddress?: InputMaybe<Scalars['String']['input']>;
+  /** Branch code (e.g., 00000 for head office) */
+  branchCode?: InputMaybe<Scalars['String']['input']>;
+  /** Branch name (e.g., Head Office, Bangkok Branch) */
+  branchName?: InputMaybe<Scalars['String']['input']>;
+  /** Business registration number */
+  businessRegistrationId?: InputMaybe<Scalars['String']['input']>;
+  cityLedgerId?: InputMaybe<Scalars['ID']['input']>;
+  /** Contact email for standalone profiles */
+  contactEmail?: InputMaybe<Scalars['String']['input']>;
+  /** Contact phone for standalone profiles */
+  contactPhone?: InputMaybe<Scalars['String']['input']>;
+  creditLimit?: InputMaybe<Scalars['Float']['input']>;
+  memberId?: InputMaybe<Scalars['ID']['input']>;
+  paymentTermsDays?: InputMaybe<Scalars['Int']['input']>;
+  profileType: ArProfileType;
+  statementDelivery?: InputMaybe<StatementDelivery>;
+  /** Tax ID for corporate accounts */
+  taxId?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type CreateAddressInput = {
@@ -1611,6 +1729,24 @@ export type CreateStaffMemberInput = {
   workingHours?: InputMaybe<Array<DayHoursInput>>;
 };
 
+export type CreateStatementPeriodInput = {
+  cutoffDate: Scalars['String']['input'];
+  /** Mark as catch-up period to consolidate historical data */
+  isCatchUp?: InputMaybe<Scalars['Boolean']['input']>;
+  periodEnd: Scalars['String']['input'];
+  periodLabel: Scalars['String']['input'];
+  periodNumber: Scalars['Int']['input'];
+  periodStart: Scalars['String']['input'];
+  periodYear: Scalars['Int']['input'];
+};
+
+export type CreateStatementRunInput = {
+  /** Optional list of AR profile IDs to include. If empty, includes all active profiles. */
+  profileIds?: InputMaybe<Array<Scalars['ID']['input']>>;
+  runType: StatementRunType;
+  statementPeriodId: Scalars['ID']['input'];
+};
+
 export type CreateSubAccountInput = {
   dailyLimit?: InputMaybe<Scalars['Float']['input']>;
   email?: InputMaybe<Scalars['String']['input']>;
@@ -1941,6 +2077,14 @@ export type DeleteTemplateMutationResponse = {
   message?: Maybe<Scalars['String']['output']>;
   success: Scalars['Boolean']['output'];
 };
+
+/** Delivery status for statement channel */
+export type DeliveryStatus =
+  | 'DELIVERED'
+  | 'FAILED'
+  | 'NOT_APPLICABLE'
+  | 'PENDING'
+  | 'SENT';
 
 /** Single interest entry for a dependent */
 export type DependentInterestInput = {
@@ -3237,6 +3381,16 @@ export type MemberTypeEdge = {
   node: MemberType;
 };
 
+export type MemberWithoutArProfileType = {
+  __typename?: 'MemberWithoutARProfileType';
+  email?: Maybe<Scalars['String']['output']>;
+  firstName: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  lastName: Scalars['String']['output'];
+  memberId: Scalars['String']['output'];
+  membershipTypeName?: Maybe<Scalars['String']['output']>;
+};
+
 export type MembershipApplicationType = {
   __typename?: 'MembershipApplicationType';
   applicationNumber: Scalars['String']['output'];
@@ -3402,6 +3556,7 @@ export type Mutation = {
   cancelGroupBooking: GroupBookingMutationResponse;
   /** Cancel a lottery request */
   cancelLotteryRequest: LotteryRequestMutationResponse;
+  cancelStatementRun: StatementRunGqlType;
   /** Cancel a tee time */
   cancelTeeTime: CancelResponseType;
   /** Cancel a waitlist entry */
@@ -3426,6 +3581,7 @@ export type Mutation = {
   clearCartDraft: Scalars['Boolean']['output'];
   /** Clone a POS template with a new name */
   clonePOSTemplate: CloneTemplateMutationResponse;
+  closeARProfile: ArProfileGqlType;
   /** Close a lottery to new requests */
   closeLottery: LotteryMutationResponse;
   /** Close a minimum spend period and process shortfalls */
@@ -3434,10 +3590,12 @@ export type Mutation = {
   closeSettlement: DailySettlementGraphQlType;
   /** Close a shift */
   closeShift: CashDrawerShiftGraphQlType;
+  closeStatementPeriod: StatementPeriodGqlType;
   /** Confirm group booking and create tee times */
   confirmGroupBooking: GroupBookingMutationResponse;
   /** Convert a waitlist entry to a booking */
   convertWaitlistToBooking: WaitlistMutationResponse;
+  createARProfile: ArProfileGqlType;
   /** Create a new membership application */
   createApplication: MembershipApplicationType;
   /** Create a new booking */
@@ -3504,6 +3662,7 @@ export type Mutation = {
   createSpecialDay: SpecialDayMutationResponse;
   /** Create a new staff member */
   createStaffMember: StaffResponseType;
+  createStatementPeriod: StatementPeriodGqlType;
   /** Create a new sub-account */
   createSubAccount: SubAccount;
   /** Create a new tee time booking */
@@ -3568,6 +3727,7 @@ export type Mutation = {
   deleteSpecialDay: DeleteMutationResponse;
   /** Delete a staff member */
   deleteStaffMember: DeleteResponseType;
+  deleteStatementPeriod: Scalars['Boolean']['output'];
   /** Delete (revoke) a sub-account */
   deleteSubAccount: SubAccount;
   /** Delete a tee time block */
@@ -3590,6 +3750,7 @@ export type Mutation = {
   importPlayersFromCSV: GroupBookingMutationResponse;
   /** Join a waitlist */
   joinWaitlist: WaitlistResponseType;
+  markStatementPortalViewed: StatementGqlType;
   /** Move a tee time to a different slot */
   moveTeeTime: TeeTimeType;
   /** Notify waitlist when a tee time is cancelled */
@@ -3612,6 +3773,7 @@ export type Mutation = {
   processSettlement: SettlementResultType;
   /** Publish lottery results and create tee times */
   publishLotteryResults: LotteryMutationResponse;
+  reactivateARProfile: ArProfileGqlType;
   /** Recalculate member spend from transactions */
   recalculateMemberSpend: MemberMinimumSpend;
   /** Recalculate settlement totals from transactions */
@@ -3647,6 +3809,7 @@ export type Mutation = {
   removePaymentMethod: RemovePaymentMethodResult;
   /** Reopen a closed settlement */
   reopenSettlement: DailySettlementGraphQlType;
+  reopenStatementPeriod: StatementPeriodGqlType;
   /** Reorder payment methods by providing ordered IDs */
   reorderCheckInPaymentMethods: Array<CheckInPaymentMethodType>;
   /** Reorder pro shop categories by providing ordered IDs */
@@ -3684,12 +3847,18 @@ export type Mutation = {
   setPOSRoleOverrides: SetRoleOverridesMutationResponse;
   /** Settle all players in a flight at once */
   settleAllPlayers: SettlementResultType;
+  startStatementRun: StatementRunGqlType;
   /** Submit a lottery request (member) */
   submitLotteryRequest: LotteryRequestMutationResponse;
   /** Submit settlement for review */
   submitSettlementForReview: DailySettlementGraphQlType;
+  suspendARProfile: ArProfileGqlType;
   /** Suspend a shift temporarily */
   suspendShift: CashDrawerShiftGraphQlType;
+  /** Create AR profiles for all active city ledgers who do not have one */
+  syncCityLedgersToARProfiles: ArProfileSyncResultType;
+  /** Create AR profiles for all active members who do not have one */
+  syncMembersToARProfiles: ArProfileSyncResultType;
   /** Enable or disable a payment method */
   toggleCheckInPaymentMethod: CheckInPaymentMethodType;
   /** Toggle quick add status for a product */
@@ -3702,6 +3871,9 @@ export type Mutation = {
   undoTransfer: TransferResultType;
   /** Unlock a locked sub-account PIN */
   unlockSubAccountPin: SubAccount;
+  updateARProfile: ArProfileGqlType;
+  /** Update AR period settings for the club */
+  updateARSettings: ArPeriodSettingsType;
   /** Update an existing membership application */
   updateApplication: MembershipApplicationType;
   /** Update a caddy rate */
@@ -3788,6 +3960,9 @@ export type Mutation = {
   updateStaffMember: StaffResponseType;
   /** Update starter ticket configuration */
   updateStarterTicketConfig: CheckInSettingsType;
+  updateStatementDeliveryStatus: StatementGqlType;
+  /** Update statement period dates and label (only for OPEN or REOPENED periods) */
+  updateStatementPeriod: StatementPeriodGqlType;
   /** Update a sub-account */
   updateSubAccount: SubAccount;
   /** Update tax configuration including overrides */
@@ -3934,6 +4109,11 @@ export type MutationCancelLotteryRequestArgs = {
 };
 
 
+export type MutationCancelStatementRunArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationCancelTeeTimeArgs = {
   id: Scalars['ID']['input'];
   reason?: InputMaybe<Scalars['String']['input']>;
@@ -3998,6 +4178,12 @@ export type MutationClonePosTemplateArgs = {
 };
 
 
+export type MutationCloseArProfileArgs = {
+  id: Scalars['ID']['input'];
+  input: CloseArProfileInput;
+};
+
+
 export type MutationCloseLotteryArgs = {
   id: Scalars['ID']['input'];
 };
@@ -4018,6 +4204,11 @@ export type MutationCloseShiftArgs = {
 };
 
 
+export type MutationCloseStatementPeriodArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationConfirmGroupBookingArgs = {
   id: Scalars['ID']['input'];
 };
@@ -4026,6 +4217,11 @@ export type MutationConfirmGroupBookingArgs = {
 export type MutationConvertWaitlistToBookingArgs = {
   id: Scalars['ID']['input'];
   teeTimeId: Scalars['ID']['input'];
+};
+
+
+export type MutationCreateArProfileArgs = {
+  input: CreateArProfileInput;
 };
 
 
@@ -4211,6 +4407,11 @@ export type MutationCreateStaffMemberArgs = {
 };
 
 
+export type MutationCreateStatementPeriodArgs = {
+  input: CreateStatementPeriodInput;
+};
+
+
 export type MutationCreateSubAccountArgs = {
   input: CreateSubAccountInput;
 };
@@ -4389,6 +4590,11 @@ export type MutationDeleteStaffMemberArgs = {
 };
 
 
+export type MutationDeleteStatementPeriodArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteSubAccountArgs = {
   id: Scalars['ID']['input'];
 };
@@ -4437,6 +4643,11 @@ export type MutationImportPlayersFromCsvArgs = {
 
 export type MutationJoinWaitlistArgs = {
   input: JoinWaitlistInput;
+};
+
+
+export type MutationMarkStatementPortalViewedArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -4495,6 +4706,11 @@ export type MutationProcessSettlementArgs = {
 
 
 export type MutationPublishLotteryResultsArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationReactivateArProfileArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -4593,6 +4809,12 @@ export type MutationReopenSettlementArgs = {
 };
 
 
+export type MutationReopenStatementPeriodArgs = {
+  id: Scalars['ID']['input'];
+  input: ReopenStatementPeriodInput;
+};
+
+
 export type MutationReorderCheckInPaymentMethodsArgs = {
   orderedIds: Array<Scalars['ID']['input']>;
 };
@@ -4684,6 +4906,11 @@ export type MutationSettleAllPlayersArgs = {
 };
 
 
+export type MutationStartStatementRunArgs = {
+  input: CreateStatementRunInput;
+};
+
+
 export type MutationSubmitLotteryRequestArgs = {
   input: CreateLotteryRequestInput;
 };
@@ -4694,8 +4921,24 @@ export type MutationSubmitSettlementForReviewArgs = {
 };
 
 
+export type MutationSuspendArProfileArgs = {
+  id: Scalars['ID']['input'];
+  input: SuspendArProfileInput;
+};
+
+
 export type MutationSuspendShiftArgs = {
   shiftId: Scalars['ID']['input'];
+};
+
+
+export type MutationSyncCityLedgersToArProfilesArgs = {
+  input?: InputMaybe<SyncArProfilesInput>;
+};
+
+
+export type MutationSyncMembersToArProfilesArgs = {
+  input?: InputMaybe<SyncArProfilesInput>;
 };
 
 
@@ -4728,6 +4971,17 @@ export type MutationUndoTransferArgs = {
 
 export type MutationUnlockSubAccountPinArgs = {
   subAccountId: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdateArProfileArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateArProfileInput;
+};
+
+
+export type MutationUpdateArSettingsArgs = {
+  input: UpdateArSettingsInput;
 };
 
 
@@ -4997,6 +5251,20 @@ export type MutationUpdateStaffMemberArgs = {
 
 export type MutationUpdateStarterTicketConfigArgs = {
   input: StarterTicketConfigInput;
+};
+
+
+export type MutationUpdateStatementDeliveryStatusArgs = {
+  channel: Scalars['String']['input'];
+  error?: InputMaybe<Scalars['String']['input']>;
+  id: Scalars['ID']['input'];
+  status: Scalars['String']['input'];
+};
+
+
+export type MutationUpdateStatementPeriodArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateStatementPeriodInput;
 };
 
 
@@ -5350,6 +5618,12 @@ export type PaymentTypeEdge = {
   node: PaymentType;
 };
 
+/** Status of statement period */
+export type PeriodStatus =
+  | 'CLOSED'
+  | 'OPEN'
+  | 'REOPENED';
+
 export type PinVerificationResult = {
   __typename?: 'PinVerificationResult';
   message?: Maybe<Scalars['String']['output']>;
@@ -5664,6 +5938,12 @@ export type Query = {
   applications: ApplicationConnection;
   /** Get AR aging report with buckets and member details */
   arAgingReport: ArAgingReportType;
+  /** Get AR period settings for the club */
+  arPeriodSettings: ArPeriodSettingsType;
+  arProfile: ArProfileGqlType;
+  arProfileByCityLedger?: Maybe<ArProfileGqlType>;
+  arProfileByMember?: Maybe<ArProfileGqlType>;
+  arProfiles: Array<ArProfileGqlType>;
   /** Calculate totals for multiple players (for batch payment) */
   batchTotal: BatchTotalType;
   /** Get billing statistics for the current month */
@@ -5698,6 +5978,7 @@ export type Query = {
   checkMemberCredit: CreditCheckResultType;
   /** Check if a sub-account can make a transaction */
   checkSubAccountLimit: SubAccountLimitCheck;
+  cityLedgerStatements: Array<StatementGqlType>;
   /** Get club-wide billing configuration settings */
   clubBillingSettings: ClubBillingSettingsType;
   /** Get club golf settings including cart, rental, and caddy policies */
@@ -5714,6 +5995,7 @@ export type Query = {
   currentMemberSpend: MemberMinimumSpend;
   /** Get the current open shift for a drawer */
   currentShift?: Maybe<CashDrawerShiftGraphQlType>;
+  currentStatementPeriod?: Maybe<StatementPeriodGqlType>;
   /** Get daily check-in report for a course */
   dailyCheckInReport: DailyCheckInReportType;
   /** Get all interests for a dependent */
@@ -5811,6 +6093,7 @@ export type Query = {
   memberMinimumSpends: Array<MemberMinimumSpend>;
   /** Get all stored payment methods for a member */
   memberPaymentMethods: Array<StoredPaymentMethod>;
+  memberStatements: Array<StatementGqlType>;
   /** Get member statistics */
   memberStats: MemberStatsType;
   /** Get sub-accounts for a member */
@@ -5821,6 +6104,10 @@ export type Query = {
   members: MemberConnection;
   /** Get members approaching or exceeding their credit limits */
   membersAtCreditRisk: Array<MemberAtRiskType>;
+  /** List of active members without AR profiles */
+  membersWithoutARProfiles: Array<MemberWithoutArProfileType>;
+  /** Count of active members without AR profiles */
+  membersWithoutARProfilesCount: Scalars['Int']['output'];
   /** Get all membership types */
   membershipTypes: Array<MembershipTypeType>;
   /** Get a minimum spend requirement by ID */
@@ -5879,6 +6166,7 @@ export type Query = {
   productCategory?: Maybe<ProductCategory>;
   /** Get products with filtering and pagination */
   products: ProductConnection;
+  profileStatements: Array<StatementGqlType>;
   /** Get products marked as quick add for check-in */
   quickAddProducts: Array<ProShopProductType>;
   quickKeyProducts: Array<Product>;
@@ -5916,6 +6204,13 @@ export type Query = {
   starterTicket?: Maybe<StarterTicketResponseType>;
   /** Get starter ticket for a tee time */
   starterTicketByTeeTime?: Maybe<StarterTicketResponseType>;
+  statement: StatementGqlType;
+  statementPeriod: StatementPeriodGqlType;
+  statementPeriods: Array<StatementPeriodGqlType>;
+  statementRun: StatementRunGqlType;
+  statementRuns: Array<StatementRunGqlType>;
+  statementRunsByPeriod: Array<StatementRunGqlType>;
+  statements: Array<StatementGqlType>;
   /** Get a sub-account by ID */
   subAccount?: Maybe<SubAccount>;
   /** Get transactions for sub-accounts */
@@ -5985,6 +6280,26 @@ export type QueryArAgingReportArgs = {
   filter?: InputMaybe<Scalars['String']['input']>;
   limit?: InputMaybe<Scalars['Float']['input']>;
   page?: InputMaybe<Scalars['Float']['input']>;
+};
+
+
+export type QueryArProfileArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryArProfileByCityLedgerArgs = {
+  cityLedgerId: Scalars['ID']['input'];
+};
+
+
+export type QueryArProfileByMemberArgs = {
+  memberId: Scalars['ID']['input'];
+};
+
+
+export type QueryArProfilesArgs = {
+  filter?: InputMaybe<ArProfileFilterInput>;
 };
 
 
@@ -6063,6 +6378,11 @@ export type QueryCheckMemberCreditArgs = {
 
 export type QueryCheckSubAccountLimitArgs = {
   input: CheckLimitInput;
+};
+
+
+export type QueryCityLedgerStatementsArgs = {
+  cityLedgerId: Scalars['ID']['input'];
 };
 
 
@@ -6394,6 +6714,11 @@ export type QueryMemberPaymentMethodsArgs = {
 };
 
 
+export type QueryMemberStatementsArgs = {
+  memberId: Scalars['ID']['input'];
+};
+
+
 export type QueryMemberSubAccountsArgs = {
   activeOnly?: InputMaybe<Scalars['Boolean']['input']>;
   memberId: Scalars['ID']['input'];
@@ -6541,6 +6866,12 @@ export type QueryProductsArgs = {
 };
 
 
+export type QueryProfileStatementsArgs = {
+  arProfileId: Scalars['ID']['input'];
+  onlyFinal?: Scalars['Boolean']['input'];
+};
+
+
 export type QueryQuickKeyProductsArgs = {
   outletId: Scalars['ID']['input'];
 };
@@ -6640,6 +6971,43 @@ export type QueryStarterTicketArgs = {
 
 export type QueryStarterTicketByTeeTimeArgs = {
   teeTimeId: Scalars['ID']['input'];
+};
+
+
+export type QueryStatementArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryStatementPeriodArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryStatementPeriodsArgs = {
+  filter?: InputMaybe<StatementPeriodFilterInput>;
+};
+
+
+export type QueryStatementRunArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryStatementRunsArgs = {
+  filter?: InputMaybe<StatementRunFilterInput>;
+};
+
+
+export type QueryStatementRunsByPeriodArgs = {
+  periodId: Scalars['ID']['input'];
+};
+
+
+export type QueryStatementsArgs = {
+  maxBalance?: InputMaybe<Scalars['Float']['input']>;
+  minBalance?: InputMaybe<Scalars['Float']['input']>;
+  runId: Scalars['ID']['input'];
 };
 
 
@@ -6864,6 +7232,10 @@ export type RentalStatus =
 export type ReopenSettlementInput = {
   reason: Scalars['String']['input'];
   settlementId: Scalars['ID']['input'];
+};
+
+export type ReopenStatementPeriodInput = {
+  reason: Scalars['String']['input'];
 };
 
 export type RescheduleBookingInput = {
@@ -7262,6 +7634,133 @@ export type StarterTicketResponseType = {
   ticketNumber: Scalars['String']['output'];
 };
 
+/** Statement delivery method preference */
+export type StatementDelivery =
+  | 'ALL'
+  | 'EMAIL'
+  | 'EMAIL_AND_PRINT'
+  | 'PORTAL'
+  | 'PRINT'
+  | 'SMS';
+
+export type StatementGqlType = {
+  __typename?: 'StatementGQLType';
+  aging1to30: Scalars['Float']['output'];
+  aging31to60: Scalars['Float']['output'];
+  aging61to90: Scalars['Float']['output'];
+  aging90Plus: Scalars['Float']['output'];
+  agingCurrent: Scalars['Float']['output'];
+  arProfileId: Scalars['ID']['output'];
+  closingBalance: Scalars['Float']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  deliveryMethod: StatementDelivery;
+  dueDate: Scalars['DateTime']['output'];
+  emailDeliveredAt?: Maybe<Scalars['DateTime']['output']>;
+  emailError?: Maybe<Scalars['String']['output']>;
+  emailSentAt?: Maybe<Scalars['DateTime']['output']>;
+  emailStatus: DeliveryStatus;
+  id: Scalars['ID']['output'];
+  openingBalance: Scalars['Float']['output'];
+  pdfGeneratedAt?: Maybe<Scalars['DateTime']['output']>;
+  pdfUrl?: Maybe<Scalars['String']['output']>;
+  periodEnd: Scalars['DateTime']['output'];
+  periodStart: Scalars['DateTime']['output'];
+  portalPublishedAt?: Maybe<Scalars['DateTime']['output']>;
+  portalStatus: DeliveryStatus;
+  portalViewedAt?: Maybe<Scalars['DateTime']['output']>;
+  printBatchId?: Maybe<Scalars['ID']['output']>;
+  printStatus: DeliveryStatus;
+  printedAt?: Maybe<Scalars['DateTime']['output']>;
+  profileSnapshot: Scalars['JSON']['output'];
+  smsDeliveredAt?: Maybe<Scalars['DateTime']['output']>;
+  smsError?: Maybe<Scalars['String']['output']>;
+  smsSentAt?: Maybe<Scalars['DateTime']['output']>;
+  smsStatus: DeliveryStatus;
+  statementNumber?: Maybe<Scalars['String']['output']>;
+  statementRunId: Scalars['ID']['output'];
+  totalCredits: Scalars['Float']['output'];
+  totalDebits: Scalars['Float']['output'];
+  transactionCount: Scalars['Int']['output'];
+  transactions?: Maybe<Scalars['JSON']['output']>;
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+export type StatementPeriodFilterInput = {
+  periodYear?: InputMaybe<Scalars['Int']['input']>;
+  status?: InputMaybe<PeriodStatus>;
+};
+
+export type StatementPeriodGqlType = {
+  __typename?: 'StatementPeriodGQLType';
+  closedAt?: Maybe<Scalars['DateTime']['output']>;
+  closedBy?: Maybe<Scalars['ID']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  cutoffDate: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  /** Whether this is a catch-up period for historical data */
+  isCatchUp: Scalars['Boolean']['output'];
+  periodEnd: Scalars['DateTime']['output'];
+  periodLabel: Scalars['String']['output'];
+  periodNumber: Scalars['Int']['output'];
+  periodStart: Scalars['DateTime']['output'];
+  periodYear: Scalars['Int']['output'];
+  reopenApprovedBy?: Maybe<Scalars['ID']['output']>;
+  reopenReason?: Maybe<Scalars['String']['output']>;
+  reopenedAt?: Maybe<Scalars['DateTime']['output']>;
+  reopenedBy?: Maybe<Scalars['ID']['output']>;
+  status: PeriodStatus;
+  totalClosingBalance?: Maybe<Scalars['Float']['output']>;
+  totalCredits?: Maybe<Scalars['Float']['output']>;
+  totalDebits?: Maybe<Scalars['Float']['output']>;
+  totalOpeningBalance?: Maybe<Scalars['Float']['output']>;
+  totalProfiles?: Maybe<Scalars['Int']['output']>;
+  totalStatements?: Maybe<Scalars['Int']['output']>;
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+export type StatementRunFilterInput = {
+  runType?: InputMaybe<StatementRunType>;
+  statementPeriodId?: InputMaybe<Scalars['ID']['input']>;
+  status?: InputMaybe<StatementRunStatus>;
+};
+
+export type StatementRunGqlType = {
+  __typename?: 'StatementRunGQLType';
+  completedAt?: Maybe<Scalars['DateTime']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  createdBy?: Maybe<Scalars['ID']['output']>;
+  errorCount: Scalars['Int']['output'];
+  errorLog?: Maybe<Scalars['JSON']['output']>;
+  generatedCount: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  processedCount: Scalars['Int']['output'];
+  runNumber: Scalars['Int']['output'];
+  runType: StatementRunType;
+  skippedCount: Scalars['Int']['output'];
+  startedAt?: Maybe<Scalars['DateTime']['output']>;
+  statementPeriodId: Scalars['ID']['output'];
+  status: StatementRunStatus;
+  totalClosingBalance: Scalars['Float']['output'];
+  totalCredits: Scalars['Float']['output'];
+  totalDebits: Scalars['Float']['output'];
+  totalOpeningBalance: Scalars['Float']['output'];
+  totalProfiles: Scalars['Int']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+/** Status of statement generation run */
+export type StatementRunStatus =
+  | 'CANCELLED'
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'IN_PROGRESS'
+  | 'PENDING';
+
+/** Type of statement run - preview or final */
+export type StatementRunType =
+  | 'FINAL'
+  | 'PREVIEW';
+
 export type StatementType = {
   __typename?: 'StatementType';
   closingBalance: Scalars['String']['output'];
@@ -7414,6 +7913,17 @@ export type SuggestionPosition =
   | 'FLOATING'
   | 'SIDEBAR'
   | 'TOP_ROW';
+
+export type SuspendArProfileInput = {
+  reason: Scalars['String']['input'];
+};
+
+export type SyncArProfilesInput = {
+  /** Default payment terms in days */
+  paymentTermsDays?: InputMaybe<Scalars['Int']['input']>;
+  /** Default delivery method for new profiles */
+  statementDelivery?: InputMaybe<StatementDelivery>;
+};
 
 export type TaxConfigInput = {
   defaultRate?: InputMaybe<Scalars['Float']['input']>;
@@ -7734,6 +8244,37 @@ export type UndoCheckInInput = {
 
 export type UndoTransferInput = {
   lineItemId: Scalars['ID']['input'];
+};
+
+export type UpdateArProfileInput = {
+  /** Account name for standalone city ledger profiles */
+  accountName?: InputMaybe<Scalars['String']['input']>;
+  /** Billing address for standalone profiles */
+  billingAddress?: InputMaybe<Scalars['String']['input']>;
+  /** Branch code (e.g., 00000 for head office) */
+  branchCode?: InputMaybe<Scalars['String']['input']>;
+  /** Branch name (e.g., Head Office, Bangkok Branch) */
+  branchName?: InputMaybe<Scalars['String']['input']>;
+  /** Business registration number */
+  businessRegistrationId?: InputMaybe<Scalars['String']['input']>;
+  /** Contact email for standalone profiles */
+  contactEmail?: InputMaybe<Scalars['String']['input']>;
+  /** Contact phone for standalone profiles */
+  contactPhone?: InputMaybe<Scalars['String']['input']>;
+  creditLimit?: InputMaybe<Scalars['Float']['input']>;
+  paymentTermsDays?: InputMaybe<Scalars['Int']['input']>;
+  statementDelivery?: InputMaybe<StatementDelivery>;
+  status?: InputMaybe<ArProfileStatus>;
+  /** Tax ID for corporate accounts */
+  taxId?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateArSettingsInput = {
+  arAutoGenerateNext?: InputMaybe<Scalars['Boolean']['input']>;
+  arCloseBehavior?: InputMaybe<ArCloseBehavior>;
+  arCustomCycleStartDay?: InputMaybe<Scalars['Int']['input']>;
+  arCutoffDays?: InputMaybe<Scalars['Int']['input']>;
+  arCycleType?: InputMaybe<ArCycleType>;
 };
 
 export type UpdateAddressInput = {
@@ -8292,6 +8833,17 @@ export type UpdateStaffMemberInput = {
   workingHours?: InputMaybe<Array<DayHoursInput>>;
 };
 
+export type UpdateStatementPeriodInput = {
+  /** Cutoff date for including transactions (YYYY-MM-DD) */
+  cutoffDate?: InputMaybe<Scalars['String']['input']>;
+  /** End date of the period (YYYY-MM-DD) */
+  periodEnd?: InputMaybe<Scalars['String']['input']>;
+  /** Period label/name */
+  periodLabel?: InputMaybe<Scalars['String']['input']>;
+  /** Start date of the period (YYYY-MM-DD) */
+  periodStart?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type UpdateStoredPaymentInput = {
   id: Scalars['ID']['input'];
   isAutoPayEnabled?: InputMaybe<Scalars['Boolean']['input']>;
@@ -8553,6 +9105,226 @@ export type ChangeApplicationStatusMutationVariables = Exact<{
 
 
 export type ChangeApplicationStatusMutation = { __typename?: 'Mutation', changeApplicationStatus: { __typename?: 'MembershipApplicationType', id: string, applicationNumber: string, status: ApplicationStatus, reviewedAt?: string | null | undefined, reviewedBy?: string | null | undefined, approvedAt?: string | null | undefined, approvedBy?: string | null | undefined, rejectedAt?: string | null | undefined, rejectedBy?: string | null | undefined, withdrawnAt?: string | null | undefined, reviewNotes?: string | null | undefined, rejectionReason?: string | null | undefined, updatedAt: string } };
+
+export type GetArProfilesQueryVariables = Exact<{
+  filter?: InputMaybe<ArProfileFilterInput>;
+}>;
+
+
+export type GetArProfilesQuery = { __typename?: 'Query', arProfiles: Array<{ __typename?: 'ARProfileGQLType', id: string, memberId?: string | null | undefined, cityLedgerId?: string | null | undefined, profileType: ArProfileType, accountNumber: string, accountName?: string | null | undefined, contactEmail?: string | null | undefined, contactPhone?: string | null | undefined, billingAddress?: string | null | undefined, status: ArProfileStatus, currentBalance: number, creditLimit?: number | null | undefined, lastStatementDate?: string | null | undefined, lastStatementBalance?: number | null | undefined, lastPaymentDate?: string | null | undefined, lastPaymentAmount?: number | null | undefined, paymentTermsDays: number, statementDelivery: StatementDelivery, suspendedAt?: string | null | undefined, suspendedReason?: string | null | undefined, closedAt?: string | null | undefined, closedReason?: string | null | undefined, createdAt: string, updatedAt: string }> };
+
+export type GetArProfileQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetArProfileQuery = { __typename?: 'Query', arProfile: { __typename?: 'ARProfileGQLType', id: string, memberId?: string | null | undefined, cityLedgerId?: string | null | undefined, profileType: ArProfileType, accountNumber: string, accountName?: string | null | undefined, contactEmail?: string | null | undefined, contactPhone?: string | null | undefined, billingAddress?: string | null | undefined, status: ArProfileStatus, currentBalance: number, creditLimit?: number | null | undefined, lastStatementDate?: string | null | undefined, lastStatementBalance?: number | null | undefined, lastPaymentDate?: string | null | undefined, lastPaymentAmount?: number | null | undefined, paymentTermsDays: number, statementDelivery: StatementDelivery, suspendedAt?: string | null | undefined, suspendedReason?: string | null | undefined, closedAt?: string | null | undefined, closedReason?: string | null | undefined, createdAt: string, updatedAt: string } };
+
+export type GetArProfileByMemberQueryVariables = Exact<{
+  memberId: Scalars['ID']['input'];
+}>;
+
+
+export type GetArProfileByMemberQuery = { __typename?: 'Query', arProfileByMember?: { __typename?: 'ARProfileGQLType', id: string, memberId?: string | null | undefined, profileType: ArProfileType, accountNumber: string, status: ArProfileStatus, currentBalance: number, creditLimit?: number | null | undefined, lastStatementDate?: string | null | undefined, lastStatementBalance?: number | null | undefined, paymentTermsDays: number, statementDelivery: StatementDelivery, createdAt: string, updatedAt: string } | null | undefined };
+
+export type GetStatementPeriodsQueryVariables = Exact<{
+  filter?: InputMaybe<StatementPeriodFilterInput>;
+}>;
+
+
+export type GetStatementPeriodsQuery = { __typename?: 'Query', statementPeriods: Array<{ __typename?: 'StatementPeriodGQLType', id: string, periodYear: number, periodNumber: number, periodLabel: string, periodStart: string, periodEnd: string, cutoffDate: string, isCatchUp: boolean, status: PeriodStatus, closedAt?: string | null | undefined, closedBy?: string | null | undefined, reopenedAt?: string | null | undefined, reopenedBy?: string | null | undefined, reopenReason?: string | null | undefined, reopenApprovedBy?: string | null | undefined, totalProfiles?: number | null | undefined, totalStatements?: number | null | undefined, totalOpeningBalance?: number | null | undefined, totalCredits?: number | null | undefined, totalDebits?: number | null | undefined, totalClosingBalance?: number | null | undefined, createdAt: string, updatedAt: string }> };
+
+export type GetStatementPeriodQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetStatementPeriodQuery = { __typename?: 'Query', statementPeriod: { __typename?: 'StatementPeriodGQLType', id: string, periodYear: number, periodNumber: number, periodLabel: string, periodStart: string, periodEnd: string, cutoffDate: string, isCatchUp: boolean, status: PeriodStatus, closedAt?: string | null | undefined, closedBy?: string | null | undefined, reopenedAt?: string | null | undefined, reopenedBy?: string | null | undefined, reopenReason?: string | null | undefined, reopenApprovedBy?: string | null | undefined, totalProfiles?: number | null | undefined, totalStatements?: number | null | undefined, totalOpeningBalance?: number | null | undefined, totalCredits?: number | null | undefined, totalDebits?: number | null | undefined, totalClosingBalance?: number | null | undefined, createdAt: string, updatedAt: string } };
+
+export type GetCurrentStatementPeriodQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetCurrentStatementPeriodQuery = { __typename?: 'Query', currentStatementPeriod?: { __typename?: 'StatementPeriodGQLType', id: string, periodYear: number, periodNumber: number, periodLabel: string, periodStart: string, periodEnd: string, cutoffDate: string, isCatchUp: boolean, status: PeriodStatus, totalProfiles?: number | null | undefined, totalStatements?: number | null | undefined, createdAt: string, updatedAt: string } | null | undefined };
+
+export type GetStatementRunsByPeriodQueryVariables = Exact<{
+  periodId: Scalars['ID']['input'];
+}>;
+
+
+export type GetStatementRunsByPeriodQuery = { __typename?: 'Query', statementRunsByPeriod: Array<{ __typename?: 'StatementRunGQLType', id: string, statementPeriodId: string, runType: StatementRunType, runNumber: number, status: StatementRunStatus, startedAt?: string | null | undefined, completedAt?: string | null | undefined, totalProfiles: number, processedCount: number, generatedCount: number, skippedCount: number, errorCount: number, errorLog?: any | null | undefined, totalOpeningBalance: number, totalDebits: number, totalCredits: number, totalClosingBalance: number, createdBy?: string | null | undefined, createdAt: string, updatedAt: string }> };
+
+export type GetStatementRunQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetStatementRunQuery = { __typename?: 'Query', statementRun: { __typename?: 'StatementRunGQLType', id: string, statementPeriodId: string, runType: StatementRunType, runNumber: number, status: StatementRunStatus, startedAt?: string | null | undefined, completedAt?: string | null | undefined, totalProfiles: number, processedCount: number, generatedCount: number, skippedCount: number, errorCount: number, errorLog?: any | null | undefined, totalOpeningBalance: number, totalDebits: number, totalCredits: number, totalClosingBalance: number, createdBy?: string | null | undefined, createdAt: string, updatedAt: string } };
+
+export type GetStatementsByRunQueryVariables = Exact<{
+  runId: Scalars['ID']['input'];
+  minBalance?: InputMaybe<Scalars['Float']['input']>;
+  maxBalance?: InputMaybe<Scalars['Float']['input']>;
+}>;
+
+
+export type GetStatementsByRunQuery = { __typename?: 'Query', statements: Array<{ __typename?: 'StatementGQLType', id: string, arProfileId: string, openingBalance: number, closingBalance: number, periodStart: string, periodEnd: string, dueDate: string, deliveryMethod: StatementDelivery, emailStatus: DeliveryStatus, emailSentAt?: string | null | undefined, emailDeliveredAt?: string | null | undefined, emailError?: string | null | undefined, smsStatus: DeliveryStatus, smsSentAt?: string | null | undefined, smsDeliveredAt?: string | null | undefined, smsError?: string | null | undefined, printStatus: DeliveryStatus, printedAt?: string | null | undefined, printBatchId?: string | null | undefined, portalStatus: DeliveryStatus, portalPublishedAt?: string | null | undefined, portalViewedAt?: string | null | undefined, pdfUrl?: string | null | undefined, pdfGeneratedAt?: string | null | undefined, agingCurrent: number, aging1to30: number, aging31to60: number, aging61to90: number, aging90Plus: number, profileSnapshot: any, transactionCount: number, transactions?: any | null | undefined, createdAt: string, updatedAt: string }> };
+
+export type GetStatementQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetStatementQuery = { __typename?: 'Query', statement: { __typename?: 'StatementGQLType', id: string, arProfileId: string, openingBalance: number, closingBalance: number, periodStart: string, periodEnd: string, dueDate: string, deliveryMethod: StatementDelivery, emailStatus: DeliveryStatus, emailSentAt?: string | null | undefined, emailDeliveredAt?: string | null | undefined, emailError?: string | null | undefined, smsStatus: DeliveryStatus, smsSentAt?: string | null | undefined, smsDeliveredAt?: string | null | undefined, smsError?: string | null | undefined, printStatus: DeliveryStatus, printedAt?: string | null | undefined, printBatchId?: string | null | undefined, portalStatus: DeliveryStatus, portalPublishedAt?: string | null | undefined, portalViewedAt?: string | null | undefined, pdfUrl?: string | null | undefined, pdfGeneratedAt?: string | null | undefined, agingCurrent: number, aging1to30: number, aging31to60: number, aging61to90: number, aging90Plus: number, profileSnapshot: any, createdAt: string, updatedAt: string } };
+
+export type GetProfileStatementsQueryVariables = Exact<{
+  arProfileId: Scalars['ID']['input'];
+  onlyFinal?: Scalars['Boolean']['input'];
+}>;
+
+
+export type GetProfileStatementsQuery = { __typename?: 'Query', profileStatements: Array<{ __typename?: 'StatementGQLType', id: string, arProfileId: string, openingBalance: number, closingBalance: number, periodStart: string, periodEnd: string, dueDate: string, deliveryMethod: StatementDelivery, emailStatus: DeliveryStatus, printStatus: DeliveryStatus, portalStatus: DeliveryStatus, smsStatus: DeliveryStatus, pdfUrl?: string | null | undefined, createdAt: string }> };
+
+export type CreateArProfileMutationVariables = Exact<{
+  input: CreateArProfileInput;
+}>;
+
+
+export type CreateArProfileMutation = { __typename?: 'Mutation', createARProfile: { __typename?: 'ARProfileGQLType', id: string, memberId?: string | null | undefined, cityLedgerId?: string | null | undefined, profileType: ArProfileType, accountNumber: string, accountName?: string | null | undefined, contactEmail?: string | null | undefined, contactPhone?: string | null | undefined, billingAddress?: string | null | undefined, status: ArProfileStatus, currentBalance: number, creditLimit?: number | null | undefined, statementDelivery: StatementDelivery, createdAt: string } };
+
+export type UpdateArProfileMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  input: UpdateArProfileInput;
+}>;
+
+
+export type UpdateArProfileMutation = { __typename?: 'Mutation', updateARProfile: { __typename?: 'ARProfileGQLType', id: string, memberId?: string | null | undefined, cityLedgerId?: string | null | undefined, profileType: ArProfileType, accountNumber: string, accountName?: string | null | undefined, contactEmail?: string | null | undefined, contactPhone?: string | null | undefined, billingAddress?: string | null | undefined, status: ArProfileStatus, currentBalance: number, creditLimit?: number | null | undefined, statementDelivery: StatementDelivery, updatedAt: string } };
+
+export type SuspendArProfileMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  input: SuspendArProfileInput;
+}>;
+
+
+export type SuspendArProfileMutation = { __typename?: 'Mutation', suspendARProfile: { __typename?: 'ARProfileGQLType', id: string, status: ArProfileStatus, suspendedAt?: string | null | undefined, suspendedReason?: string | null | undefined } };
+
+export type ReactivateArProfileMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type ReactivateArProfileMutation = { __typename?: 'Mutation', reactivateARProfile: { __typename?: 'ARProfileGQLType', id: string, status: ArProfileStatus, suspendedAt?: string | null | undefined, suspendedReason?: string | null | undefined } };
+
+export type CloseArProfileMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  input: CloseArProfileInput;
+}>;
+
+
+export type CloseArProfileMutation = { __typename?: 'Mutation', closeARProfile: { __typename?: 'ARProfileGQLType', id: string, status: ArProfileStatus, closedAt?: string | null | undefined, closedReason?: string | null | undefined } };
+
+export type CreateStatementPeriodMutationVariables = Exact<{
+  input: CreateStatementPeriodInput;
+}>;
+
+
+export type CreateStatementPeriodMutation = { __typename?: 'Mutation', createStatementPeriod: { __typename?: 'StatementPeriodGQLType', id: string, periodYear: number, periodNumber: number, periodLabel: string, periodStart: string, periodEnd: string, cutoffDate: string, isCatchUp: boolean, status: PeriodStatus, totalProfiles?: number | null | undefined, createdAt: string } };
+
+export type UpdateStatementPeriodMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  input: UpdateStatementPeriodInput;
+}>;
+
+
+export type UpdateStatementPeriodMutation = { __typename?: 'Mutation', updateStatementPeriod: { __typename?: 'StatementPeriodGQLType', id: string, periodYear: number, periodNumber: number, periodLabel: string, periodStart: string, periodEnd: string, cutoffDate: string, status: PeriodStatus, updatedAt: string } };
+
+export type CloseStatementPeriodMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type CloseStatementPeriodMutation = { __typename?: 'Mutation', closeStatementPeriod: { __typename?: 'StatementPeriodGQLType', id: string, status: PeriodStatus, closedAt?: string | null | undefined, closedBy?: string | null | undefined, totalStatements?: number | null | undefined, totalClosingBalance?: number | null | undefined } };
+
+export type ReopenStatementPeriodMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  input: ReopenStatementPeriodInput;
+}>;
+
+
+export type ReopenStatementPeriodMutation = { __typename?: 'Mutation', reopenStatementPeriod: { __typename?: 'StatementPeriodGQLType', id: string, status: PeriodStatus, reopenedAt?: string | null | undefined, reopenedBy?: string | null | undefined, reopenReason?: string | null | undefined, reopenApprovedBy?: string | null | undefined } };
+
+export type DeleteStatementPeriodMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type DeleteStatementPeriodMutation = { __typename?: 'Mutation', deleteStatementPeriod: boolean };
+
+export type StartStatementRunMutationVariables = Exact<{
+  input: CreateStatementRunInput;
+}>;
+
+
+export type StartStatementRunMutation = { __typename?: 'Mutation', startStatementRun: { __typename?: 'StatementRunGQLType', id: string, statementPeriodId: string, runType: StatementRunType, runNumber: number, status: StatementRunStatus, totalProfiles: number, createdBy?: string | null | undefined, createdAt: string } };
+
+export type CancelStatementRunMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type CancelStatementRunMutation = { __typename?: 'Mutation', cancelStatementRun: { __typename?: 'StatementRunGQLType', id: string, status: StatementRunStatus, completedAt?: string | null | undefined } };
+
+export type UpdateStatementDeliveryStatusMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  channel: Scalars['String']['input'];
+  status: Scalars['String']['input'];
+  error?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type UpdateStatementDeliveryStatusMutation = { __typename?: 'Mutation', updateStatementDeliveryStatus: { __typename?: 'StatementGQLType', id: string, emailStatus: DeliveryStatus, emailSentAt?: string | null | undefined, emailDeliveredAt?: string | null | undefined, emailError?: string | null | undefined, smsStatus: DeliveryStatus, smsSentAt?: string | null | undefined, smsDeliveredAt?: string | null | undefined, smsError?: string | null | undefined, printStatus: DeliveryStatus, printedAt?: string | null | undefined, portalStatus: DeliveryStatus, portalPublishedAt?: string | null | undefined, portalViewedAt?: string | null | undefined } };
+
+export type MarkStatementPortalViewedMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type MarkStatementPortalViewedMutation = { __typename?: 'Mutation', markStatementPortalViewed: { __typename?: 'StatementGQLType', id: string, portalStatus: DeliveryStatus, portalViewedAt?: string | null | undefined } };
+
+export type GetMembersWithoutArProfilesCountQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetMembersWithoutArProfilesCountQuery = { __typename?: 'Query', membersWithoutARProfilesCount: number };
+
+export type GetMembersWithoutArProfilesQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetMembersWithoutArProfilesQuery = { __typename?: 'Query', membersWithoutARProfiles: Array<{ __typename?: 'MemberWithoutARProfileType', id: string, memberId: string, firstName: string, lastName: string, email?: string | null | undefined, membershipTypeName?: string | null | undefined }> };
+
+export type SyncMembersToArProfilesMutationVariables = Exact<{
+  input?: InputMaybe<SyncArProfilesInput>;
+}>;
+
+
+export type SyncMembersToArProfilesMutation = { __typename?: 'Mutation', syncMembersToARProfiles: { __typename?: 'ARProfileSyncResultType', created: number, skipped: number, errors: Array<string> } };
+
+export type SyncCityLedgersToArProfilesMutationVariables = Exact<{
+  input?: InputMaybe<SyncArProfilesInput>;
+}>;
+
+
+export type SyncCityLedgersToArProfilesMutation = { __typename?: 'Mutation', syncCityLedgersToARProfiles: { __typename?: 'ARProfileSyncResultType', created: number, skipped: number, errors: Array<string> } };
+
+export type GetArPeriodSettingsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetArPeriodSettingsQuery = { __typename?: 'Query', arPeriodSettings: { __typename?: 'ARPeriodSettingsType', arCycleType: ArCycleType, arCustomCycleStartDay: number, arCutoffDays: number, arCloseBehavior: ArCloseBehavior, arAutoGenerateNext: boolean } };
+
+export type UpdateArSettingsMutationVariables = Exact<{
+  input: UpdateArSettingsInput;
+}>;
+
+
+export type UpdateArSettingsMutation = { __typename?: 'Mutation', updateARSettings: { __typename?: 'ARPeriodSettingsType', arCycleType: ArCycleType, arCustomCycleStartDay: number, arCutoffDays: number, arCloseBehavior: ArCloseBehavior, arAutoGenerateNext: boolean } };
 
 export type GetBillingStatsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -10964,6 +11736,1448 @@ export const useChangeApplicationStatusMutation = <
 
 
 useChangeApplicationStatusMutation.fetcher = (variables: ChangeApplicationStatusMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<ChangeApplicationStatusMutation, ChangeApplicationStatusMutationVariables>(ChangeApplicationStatusDocument, variables, options);
+
+export const GetArProfilesDocument = `
+    query GetARProfiles($filter: ARProfileFilterInput) {
+  arProfiles(filter: $filter) {
+    id
+    memberId
+    cityLedgerId
+    profileType
+    accountNumber
+    accountName
+    contactEmail
+    contactPhone
+    billingAddress
+    status
+    currentBalance
+    creditLimit
+    lastStatementDate
+    lastStatementBalance
+    lastPaymentDate
+    lastPaymentAmount
+    paymentTermsDays
+    statementDelivery
+    suspendedAt
+    suspendedReason
+    closedAt
+    closedReason
+    createdAt
+    updatedAt
+  }
+}
+    `;
+
+export const useGetArProfilesQuery = <
+      TData = GetArProfilesQuery,
+      TError = unknown
+    >(
+      variables?: GetArProfilesQueryVariables,
+      options?: Omit<UseQueryOptions<GetArProfilesQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetArProfilesQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetArProfilesQuery, TError, TData>(
+      {
+    queryKey: variables === undefined ? ['GetARProfiles'] : ['GetARProfiles', variables],
+    queryFn: graphqlFetcher<GetArProfilesQuery, GetArProfilesQueryVariables>(GetArProfilesDocument, variables),
+    ...options
+  }
+    )};
+
+useGetArProfilesQuery.getKey = (variables?: GetArProfilesQueryVariables) => variables === undefined ? ['GetARProfiles'] : ['GetARProfiles', variables];
+
+export const useInfiniteGetArProfilesQuery = <
+      TData = InfiniteData<GetArProfilesQuery>,
+      TError = unknown
+    >(
+      variables: GetArProfilesQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetArProfilesQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetArProfilesQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetArProfilesQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? variables === undefined ? ['GetARProfiles.infinite'] : ['GetARProfiles.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetArProfilesQuery, GetArProfilesQueryVariables>(GetArProfilesDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetArProfilesQuery.getKey = (variables?: GetArProfilesQueryVariables) => variables === undefined ? ['GetARProfiles.infinite'] : ['GetARProfiles.infinite', variables];
+
+
+useGetArProfilesQuery.fetcher = (variables?: GetArProfilesQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetArProfilesQuery, GetArProfilesQueryVariables>(GetArProfilesDocument, variables, options);
+
+export const GetArProfileDocument = `
+    query GetARProfile($id: ID!) {
+  arProfile(id: $id) {
+    id
+    memberId
+    cityLedgerId
+    profileType
+    accountNumber
+    accountName
+    contactEmail
+    contactPhone
+    billingAddress
+    status
+    currentBalance
+    creditLimit
+    lastStatementDate
+    lastStatementBalance
+    lastPaymentDate
+    lastPaymentAmount
+    paymentTermsDays
+    statementDelivery
+    suspendedAt
+    suspendedReason
+    closedAt
+    closedReason
+    createdAt
+    updatedAt
+  }
+}
+    `;
+
+export const useGetArProfileQuery = <
+      TData = GetArProfileQuery,
+      TError = unknown
+    >(
+      variables: GetArProfileQueryVariables,
+      options?: Omit<UseQueryOptions<GetArProfileQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetArProfileQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetArProfileQuery, TError, TData>(
+      {
+    queryKey: ['GetARProfile', variables],
+    queryFn: graphqlFetcher<GetArProfileQuery, GetArProfileQueryVariables>(GetArProfileDocument, variables),
+    ...options
+  }
+    )};
+
+useGetArProfileQuery.getKey = (variables: GetArProfileQueryVariables) => ['GetARProfile', variables];
+
+export const useInfiniteGetArProfileQuery = <
+      TData = InfiniteData<GetArProfileQuery>,
+      TError = unknown
+    >(
+      variables: GetArProfileQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetArProfileQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetArProfileQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetArProfileQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetARProfile.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetArProfileQuery, GetArProfileQueryVariables>(GetArProfileDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetArProfileQuery.getKey = (variables: GetArProfileQueryVariables) => ['GetARProfile.infinite', variables];
+
+
+useGetArProfileQuery.fetcher = (variables: GetArProfileQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetArProfileQuery, GetArProfileQueryVariables>(GetArProfileDocument, variables, options);
+
+export const GetArProfileByMemberDocument = `
+    query GetARProfileByMember($memberId: ID!) {
+  arProfileByMember(memberId: $memberId) {
+    id
+    memberId
+    profileType
+    accountNumber
+    status
+    currentBalance
+    creditLimit
+    lastStatementDate
+    lastStatementBalance
+    paymentTermsDays
+    statementDelivery
+    createdAt
+    updatedAt
+  }
+}
+    `;
+
+export const useGetArProfileByMemberQuery = <
+      TData = GetArProfileByMemberQuery,
+      TError = unknown
+    >(
+      variables: GetArProfileByMemberQueryVariables,
+      options?: Omit<UseQueryOptions<GetArProfileByMemberQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetArProfileByMemberQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetArProfileByMemberQuery, TError, TData>(
+      {
+    queryKey: ['GetARProfileByMember', variables],
+    queryFn: graphqlFetcher<GetArProfileByMemberQuery, GetArProfileByMemberQueryVariables>(GetArProfileByMemberDocument, variables),
+    ...options
+  }
+    )};
+
+useGetArProfileByMemberQuery.getKey = (variables: GetArProfileByMemberQueryVariables) => ['GetARProfileByMember', variables];
+
+export const useInfiniteGetArProfileByMemberQuery = <
+      TData = InfiniteData<GetArProfileByMemberQuery>,
+      TError = unknown
+    >(
+      variables: GetArProfileByMemberQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetArProfileByMemberQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetArProfileByMemberQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetArProfileByMemberQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetARProfileByMember.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetArProfileByMemberQuery, GetArProfileByMemberQueryVariables>(GetArProfileByMemberDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetArProfileByMemberQuery.getKey = (variables: GetArProfileByMemberQueryVariables) => ['GetARProfileByMember.infinite', variables];
+
+
+useGetArProfileByMemberQuery.fetcher = (variables: GetArProfileByMemberQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetArProfileByMemberQuery, GetArProfileByMemberQueryVariables>(GetArProfileByMemberDocument, variables, options);
+
+export const GetStatementPeriodsDocument = `
+    query GetStatementPeriods($filter: StatementPeriodFilterInput) {
+  statementPeriods(filter: $filter) {
+    id
+    periodYear
+    periodNumber
+    periodLabel
+    periodStart
+    periodEnd
+    cutoffDate
+    isCatchUp
+    status
+    closedAt
+    closedBy
+    reopenedAt
+    reopenedBy
+    reopenReason
+    reopenApprovedBy
+    totalProfiles
+    totalStatements
+    totalOpeningBalance
+    totalCredits
+    totalDebits
+    totalClosingBalance
+    createdAt
+    updatedAt
+  }
+}
+    `;
+
+export const useGetStatementPeriodsQuery = <
+      TData = GetStatementPeriodsQuery,
+      TError = unknown
+    >(
+      variables?: GetStatementPeriodsQueryVariables,
+      options?: Omit<UseQueryOptions<GetStatementPeriodsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetStatementPeriodsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetStatementPeriodsQuery, TError, TData>(
+      {
+    queryKey: variables === undefined ? ['GetStatementPeriods'] : ['GetStatementPeriods', variables],
+    queryFn: graphqlFetcher<GetStatementPeriodsQuery, GetStatementPeriodsQueryVariables>(GetStatementPeriodsDocument, variables),
+    ...options
+  }
+    )};
+
+useGetStatementPeriodsQuery.getKey = (variables?: GetStatementPeriodsQueryVariables) => variables === undefined ? ['GetStatementPeriods'] : ['GetStatementPeriods', variables];
+
+export const useInfiniteGetStatementPeriodsQuery = <
+      TData = InfiniteData<GetStatementPeriodsQuery>,
+      TError = unknown
+    >(
+      variables: GetStatementPeriodsQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetStatementPeriodsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetStatementPeriodsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetStatementPeriodsQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? variables === undefined ? ['GetStatementPeriods.infinite'] : ['GetStatementPeriods.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetStatementPeriodsQuery, GetStatementPeriodsQueryVariables>(GetStatementPeriodsDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetStatementPeriodsQuery.getKey = (variables?: GetStatementPeriodsQueryVariables) => variables === undefined ? ['GetStatementPeriods.infinite'] : ['GetStatementPeriods.infinite', variables];
+
+
+useGetStatementPeriodsQuery.fetcher = (variables?: GetStatementPeriodsQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetStatementPeriodsQuery, GetStatementPeriodsQueryVariables>(GetStatementPeriodsDocument, variables, options);
+
+export const GetStatementPeriodDocument = `
+    query GetStatementPeriod($id: ID!) {
+  statementPeriod(id: $id) {
+    id
+    periodYear
+    periodNumber
+    periodLabel
+    periodStart
+    periodEnd
+    cutoffDate
+    isCatchUp
+    status
+    closedAt
+    closedBy
+    reopenedAt
+    reopenedBy
+    reopenReason
+    reopenApprovedBy
+    totalProfiles
+    totalStatements
+    totalOpeningBalance
+    totalCredits
+    totalDebits
+    totalClosingBalance
+    createdAt
+    updatedAt
+  }
+}
+    `;
+
+export const useGetStatementPeriodQuery = <
+      TData = GetStatementPeriodQuery,
+      TError = unknown
+    >(
+      variables: GetStatementPeriodQueryVariables,
+      options?: Omit<UseQueryOptions<GetStatementPeriodQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetStatementPeriodQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetStatementPeriodQuery, TError, TData>(
+      {
+    queryKey: ['GetStatementPeriod', variables],
+    queryFn: graphqlFetcher<GetStatementPeriodQuery, GetStatementPeriodQueryVariables>(GetStatementPeriodDocument, variables),
+    ...options
+  }
+    )};
+
+useGetStatementPeriodQuery.getKey = (variables: GetStatementPeriodQueryVariables) => ['GetStatementPeriod', variables];
+
+export const useInfiniteGetStatementPeriodQuery = <
+      TData = InfiniteData<GetStatementPeriodQuery>,
+      TError = unknown
+    >(
+      variables: GetStatementPeriodQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetStatementPeriodQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetStatementPeriodQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetStatementPeriodQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetStatementPeriod.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetStatementPeriodQuery, GetStatementPeriodQueryVariables>(GetStatementPeriodDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetStatementPeriodQuery.getKey = (variables: GetStatementPeriodQueryVariables) => ['GetStatementPeriod.infinite', variables];
+
+
+useGetStatementPeriodQuery.fetcher = (variables: GetStatementPeriodQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetStatementPeriodQuery, GetStatementPeriodQueryVariables>(GetStatementPeriodDocument, variables, options);
+
+export const GetCurrentStatementPeriodDocument = `
+    query GetCurrentStatementPeriod {
+  currentStatementPeriod {
+    id
+    periodYear
+    periodNumber
+    periodLabel
+    periodStart
+    periodEnd
+    cutoffDate
+    isCatchUp
+    status
+    totalProfiles
+    totalStatements
+    createdAt
+    updatedAt
+  }
+}
+    `;
+
+export const useGetCurrentStatementPeriodQuery = <
+      TData = GetCurrentStatementPeriodQuery,
+      TError = unknown
+    >(
+      variables?: GetCurrentStatementPeriodQueryVariables,
+      options?: Omit<UseQueryOptions<GetCurrentStatementPeriodQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetCurrentStatementPeriodQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetCurrentStatementPeriodQuery, TError, TData>(
+      {
+    queryKey: variables === undefined ? ['GetCurrentStatementPeriod'] : ['GetCurrentStatementPeriod', variables],
+    queryFn: graphqlFetcher<GetCurrentStatementPeriodQuery, GetCurrentStatementPeriodQueryVariables>(GetCurrentStatementPeriodDocument, variables),
+    ...options
+  }
+    )};
+
+useGetCurrentStatementPeriodQuery.getKey = (variables?: GetCurrentStatementPeriodQueryVariables) => variables === undefined ? ['GetCurrentStatementPeriod'] : ['GetCurrentStatementPeriod', variables];
+
+export const useInfiniteGetCurrentStatementPeriodQuery = <
+      TData = InfiniteData<GetCurrentStatementPeriodQuery>,
+      TError = unknown
+    >(
+      variables: GetCurrentStatementPeriodQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetCurrentStatementPeriodQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetCurrentStatementPeriodQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetCurrentStatementPeriodQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? variables === undefined ? ['GetCurrentStatementPeriod.infinite'] : ['GetCurrentStatementPeriod.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetCurrentStatementPeriodQuery, GetCurrentStatementPeriodQueryVariables>(GetCurrentStatementPeriodDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetCurrentStatementPeriodQuery.getKey = (variables?: GetCurrentStatementPeriodQueryVariables) => variables === undefined ? ['GetCurrentStatementPeriod.infinite'] : ['GetCurrentStatementPeriod.infinite', variables];
+
+
+useGetCurrentStatementPeriodQuery.fetcher = (variables?: GetCurrentStatementPeriodQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetCurrentStatementPeriodQuery, GetCurrentStatementPeriodQueryVariables>(GetCurrentStatementPeriodDocument, variables, options);
+
+export const GetStatementRunsByPeriodDocument = `
+    query GetStatementRunsByPeriod($periodId: ID!) {
+  statementRunsByPeriod(periodId: $periodId) {
+    id
+    statementPeriodId
+    runType
+    runNumber
+    status
+    startedAt
+    completedAt
+    totalProfiles
+    processedCount
+    generatedCount
+    skippedCount
+    errorCount
+    errorLog
+    totalOpeningBalance
+    totalDebits
+    totalCredits
+    totalClosingBalance
+    createdBy
+    createdAt
+    updatedAt
+  }
+}
+    `;
+
+export const useGetStatementRunsByPeriodQuery = <
+      TData = GetStatementRunsByPeriodQuery,
+      TError = unknown
+    >(
+      variables: GetStatementRunsByPeriodQueryVariables,
+      options?: Omit<UseQueryOptions<GetStatementRunsByPeriodQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetStatementRunsByPeriodQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetStatementRunsByPeriodQuery, TError, TData>(
+      {
+    queryKey: ['GetStatementRunsByPeriod', variables],
+    queryFn: graphqlFetcher<GetStatementRunsByPeriodQuery, GetStatementRunsByPeriodQueryVariables>(GetStatementRunsByPeriodDocument, variables),
+    ...options
+  }
+    )};
+
+useGetStatementRunsByPeriodQuery.getKey = (variables: GetStatementRunsByPeriodQueryVariables) => ['GetStatementRunsByPeriod', variables];
+
+export const useInfiniteGetStatementRunsByPeriodQuery = <
+      TData = InfiniteData<GetStatementRunsByPeriodQuery>,
+      TError = unknown
+    >(
+      variables: GetStatementRunsByPeriodQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetStatementRunsByPeriodQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetStatementRunsByPeriodQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetStatementRunsByPeriodQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetStatementRunsByPeriod.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetStatementRunsByPeriodQuery, GetStatementRunsByPeriodQueryVariables>(GetStatementRunsByPeriodDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetStatementRunsByPeriodQuery.getKey = (variables: GetStatementRunsByPeriodQueryVariables) => ['GetStatementRunsByPeriod.infinite', variables];
+
+
+useGetStatementRunsByPeriodQuery.fetcher = (variables: GetStatementRunsByPeriodQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetStatementRunsByPeriodQuery, GetStatementRunsByPeriodQueryVariables>(GetStatementRunsByPeriodDocument, variables, options);
+
+export const GetStatementRunDocument = `
+    query GetStatementRun($id: ID!) {
+  statementRun(id: $id) {
+    id
+    statementPeriodId
+    runType
+    runNumber
+    status
+    startedAt
+    completedAt
+    totalProfiles
+    processedCount
+    generatedCount
+    skippedCount
+    errorCount
+    errorLog
+    totalOpeningBalance
+    totalDebits
+    totalCredits
+    totalClosingBalance
+    createdBy
+    createdAt
+    updatedAt
+  }
+}
+    `;
+
+export const useGetStatementRunQuery = <
+      TData = GetStatementRunQuery,
+      TError = unknown
+    >(
+      variables: GetStatementRunQueryVariables,
+      options?: Omit<UseQueryOptions<GetStatementRunQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetStatementRunQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetStatementRunQuery, TError, TData>(
+      {
+    queryKey: ['GetStatementRun', variables],
+    queryFn: graphqlFetcher<GetStatementRunQuery, GetStatementRunQueryVariables>(GetStatementRunDocument, variables),
+    ...options
+  }
+    )};
+
+useGetStatementRunQuery.getKey = (variables: GetStatementRunQueryVariables) => ['GetStatementRun', variables];
+
+export const useInfiniteGetStatementRunQuery = <
+      TData = InfiniteData<GetStatementRunQuery>,
+      TError = unknown
+    >(
+      variables: GetStatementRunQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetStatementRunQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetStatementRunQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetStatementRunQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetStatementRun.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetStatementRunQuery, GetStatementRunQueryVariables>(GetStatementRunDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetStatementRunQuery.getKey = (variables: GetStatementRunQueryVariables) => ['GetStatementRun.infinite', variables];
+
+
+useGetStatementRunQuery.fetcher = (variables: GetStatementRunQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetStatementRunQuery, GetStatementRunQueryVariables>(GetStatementRunDocument, variables, options);
+
+export const GetStatementsByRunDocument = `
+    query GetStatementsByRun($runId: ID!, $minBalance: Float, $maxBalance: Float) {
+  statements(runId: $runId, minBalance: $minBalance, maxBalance: $maxBalance) {
+    id
+    arProfileId
+    openingBalance
+    closingBalance
+    periodStart
+    periodEnd
+    dueDate
+    deliveryMethod
+    emailStatus
+    emailSentAt
+    emailDeliveredAt
+    emailError
+    smsStatus
+    smsSentAt
+    smsDeliveredAt
+    smsError
+    printStatus
+    printedAt
+    printBatchId
+    portalStatus
+    portalPublishedAt
+    portalViewedAt
+    pdfUrl
+    pdfGeneratedAt
+    agingCurrent
+    aging1to30
+    aging31to60
+    aging61to90
+    aging90Plus
+    profileSnapshot
+    transactionCount
+    transactions
+    createdAt
+    updatedAt
+  }
+}
+    `;
+
+export const useGetStatementsByRunQuery = <
+      TData = GetStatementsByRunQuery,
+      TError = unknown
+    >(
+      variables: GetStatementsByRunQueryVariables,
+      options?: Omit<UseQueryOptions<GetStatementsByRunQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetStatementsByRunQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetStatementsByRunQuery, TError, TData>(
+      {
+    queryKey: ['GetStatementsByRun', variables],
+    queryFn: graphqlFetcher<GetStatementsByRunQuery, GetStatementsByRunQueryVariables>(GetStatementsByRunDocument, variables),
+    ...options
+  }
+    )};
+
+useGetStatementsByRunQuery.getKey = (variables: GetStatementsByRunQueryVariables) => ['GetStatementsByRun', variables];
+
+export const useInfiniteGetStatementsByRunQuery = <
+      TData = InfiniteData<GetStatementsByRunQuery>,
+      TError = unknown
+    >(
+      variables: GetStatementsByRunQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetStatementsByRunQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetStatementsByRunQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetStatementsByRunQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetStatementsByRun.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetStatementsByRunQuery, GetStatementsByRunQueryVariables>(GetStatementsByRunDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetStatementsByRunQuery.getKey = (variables: GetStatementsByRunQueryVariables) => ['GetStatementsByRun.infinite', variables];
+
+
+useGetStatementsByRunQuery.fetcher = (variables: GetStatementsByRunQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetStatementsByRunQuery, GetStatementsByRunQueryVariables>(GetStatementsByRunDocument, variables, options);
+
+export const GetStatementDocument = `
+    query GetStatement($id: ID!) {
+  statement(id: $id) {
+    id
+    arProfileId
+    openingBalance
+    closingBalance
+    periodStart
+    periodEnd
+    dueDate
+    deliveryMethod
+    emailStatus
+    emailSentAt
+    emailDeliveredAt
+    emailError
+    smsStatus
+    smsSentAt
+    smsDeliveredAt
+    smsError
+    printStatus
+    printedAt
+    printBatchId
+    portalStatus
+    portalPublishedAt
+    portalViewedAt
+    pdfUrl
+    pdfGeneratedAt
+    agingCurrent
+    aging1to30
+    aging31to60
+    aging61to90
+    aging90Plus
+    profileSnapshot
+    createdAt
+    updatedAt
+  }
+}
+    `;
+
+export const useGetStatementQuery = <
+      TData = GetStatementQuery,
+      TError = unknown
+    >(
+      variables: GetStatementQueryVariables,
+      options?: Omit<UseQueryOptions<GetStatementQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetStatementQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetStatementQuery, TError, TData>(
+      {
+    queryKey: ['GetStatement', variables],
+    queryFn: graphqlFetcher<GetStatementQuery, GetStatementQueryVariables>(GetStatementDocument, variables),
+    ...options
+  }
+    )};
+
+useGetStatementQuery.getKey = (variables: GetStatementQueryVariables) => ['GetStatement', variables];
+
+export const useInfiniteGetStatementQuery = <
+      TData = InfiniteData<GetStatementQuery>,
+      TError = unknown
+    >(
+      variables: GetStatementQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetStatementQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetStatementQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetStatementQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetStatement.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetStatementQuery, GetStatementQueryVariables>(GetStatementDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetStatementQuery.getKey = (variables: GetStatementQueryVariables) => ['GetStatement.infinite', variables];
+
+
+useGetStatementQuery.fetcher = (variables: GetStatementQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetStatementQuery, GetStatementQueryVariables>(GetStatementDocument, variables, options);
+
+export const GetProfileStatementsDocument = `
+    query GetProfileStatements($arProfileId: ID!, $onlyFinal: Boolean! = true) {
+  profileStatements(arProfileId: $arProfileId, onlyFinal: $onlyFinal) {
+    id
+    arProfileId
+    openingBalance
+    closingBalance
+    periodStart
+    periodEnd
+    dueDate
+    deliveryMethod
+    emailStatus
+    printStatus
+    portalStatus
+    smsStatus
+    pdfUrl
+    createdAt
+  }
+}
+    `;
+
+export const useGetProfileStatementsQuery = <
+      TData = GetProfileStatementsQuery,
+      TError = unknown
+    >(
+      variables: GetProfileStatementsQueryVariables,
+      options?: Omit<UseQueryOptions<GetProfileStatementsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetProfileStatementsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetProfileStatementsQuery, TError, TData>(
+      {
+    queryKey: ['GetProfileStatements', variables],
+    queryFn: graphqlFetcher<GetProfileStatementsQuery, GetProfileStatementsQueryVariables>(GetProfileStatementsDocument, variables),
+    ...options
+  }
+    )};
+
+useGetProfileStatementsQuery.getKey = (variables: GetProfileStatementsQueryVariables) => ['GetProfileStatements', variables];
+
+export const useInfiniteGetProfileStatementsQuery = <
+      TData = InfiniteData<GetProfileStatementsQuery>,
+      TError = unknown
+    >(
+      variables: GetProfileStatementsQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetProfileStatementsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetProfileStatementsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetProfileStatementsQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetProfileStatements.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetProfileStatementsQuery, GetProfileStatementsQueryVariables>(GetProfileStatementsDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetProfileStatementsQuery.getKey = (variables: GetProfileStatementsQueryVariables) => ['GetProfileStatements.infinite', variables];
+
+
+useGetProfileStatementsQuery.fetcher = (variables: GetProfileStatementsQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetProfileStatementsQuery, GetProfileStatementsQueryVariables>(GetProfileStatementsDocument, variables, options);
+
+export const CreateArProfileDocument = `
+    mutation CreateARProfile($input: CreateARProfileInput!) {
+  createARProfile(input: $input) {
+    id
+    memberId
+    cityLedgerId
+    profileType
+    accountNumber
+    accountName
+    contactEmail
+    contactPhone
+    billingAddress
+    status
+    currentBalance
+    creditLimit
+    statementDelivery
+    createdAt
+  }
+}
+    `;
+
+export const useCreateArProfileMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<CreateArProfileMutation, TError, CreateArProfileMutationVariables, TContext>) => {
+    
+    return useMutation<CreateArProfileMutation, TError, CreateArProfileMutationVariables, TContext>(
+      {
+    mutationKey: ['CreateARProfile'],
+    mutationFn: (variables?: CreateArProfileMutationVariables) => graphqlFetcher<CreateArProfileMutation, CreateArProfileMutationVariables>(CreateArProfileDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useCreateArProfileMutation.fetcher = (variables: CreateArProfileMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<CreateArProfileMutation, CreateArProfileMutationVariables>(CreateArProfileDocument, variables, options);
+
+export const UpdateArProfileDocument = `
+    mutation UpdateARProfile($id: ID!, $input: UpdateARProfileInput!) {
+  updateARProfile(id: $id, input: $input) {
+    id
+    memberId
+    cityLedgerId
+    profileType
+    accountNumber
+    accountName
+    contactEmail
+    contactPhone
+    billingAddress
+    status
+    currentBalance
+    creditLimit
+    statementDelivery
+    updatedAt
+  }
+}
+    `;
+
+export const useUpdateArProfileMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<UpdateArProfileMutation, TError, UpdateArProfileMutationVariables, TContext>) => {
+    
+    return useMutation<UpdateArProfileMutation, TError, UpdateArProfileMutationVariables, TContext>(
+      {
+    mutationKey: ['UpdateARProfile'],
+    mutationFn: (variables?: UpdateArProfileMutationVariables) => graphqlFetcher<UpdateArProfileMutation, UpdateArProfileMutationVariables>(UpdateArProfileDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useUpdateArProfileMutation.fetcher = (variables: UpdateArProfileMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<UpdateArProfileMutation, UpdateArProfileMutationVariables>(UpdateArProfileDocument, variables, options);
+
+export const SuspendArProfileDocument = `
+    mutation SuspendARProfile($id: ID!, $input: SuspendARProfileInput!) {
+  suspendARProfile(id: $id, input: $input) {
+    id
+    status
+    suspendedAt
+    suspendedReason
+  }
+}
+    `;
+
+export const useSuspendArProfileMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<SuspendArProfileMutation, TError, SuspendArProfileMutationVariables, TContext>) => {
+    
+    return useMutation<SuspendArProfileMutation, TError, SuspendArProfileMutationVariables, TContext>(
+      {
+    mutationKey: ['SuspendARProfile'],
+    mutationFn: (variables?: SuspendArProfileMutationVariables) => graphqlFetcher<SuspendArProfileMutation, SuspendArProfileMutationVariables>(SuspendArProfileDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useSuspendArProfileMutation.fetcher = (variables: SuspendArProfileMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<SuspendArProfileMutation, SuspendArProfileMutationVariables>(SuspendArProfileDocument, variables, options);
+
+export const ReactivateArProfileDocument = `
+    mutation ReactivateARProfile($id: ID!) {
+  reactivateARProfile(id: $id) {
+    id
+    status
+    suspendedAt
+    suspendedReason
+  }
+}
+    `;
+
+export const useReactivateArProfileMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<ReactivateArProfileMutation, TError, ReactivateArProfileMutationVariables, TContext>) => {
+    
+    return useMutation<ReactivateArProfileMutation, TError, ReactivateArProfileMutationVariables, TContext>(
+      {
+    mutationKey: ['ReactivateARProfile'],
+    mutationFn: (variables?: ReactivateArProfileMutationVariables) => graphqlFetcher<ReactivateArProfileMutation, ReactivateArProfileMutationVariables>(ReactivateArProfileDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useReactivateArProfileMutation.fetcher = (variables: ReactivateArProfileMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<ReactivateArProfileMutation, ReactivateArProfileMutationVariables>(ReactivateArProfileDocument, variables, options);
+
+export const CloseArProfileDocument = `
+    mutation CloseARProfile($id: ID!, $input: CloseARProfileInput!) {
+  closeARProfile(id: $id, input: $input) {
+    id
+    status
+    closedAt
+    closedReason
+  }
+}
+    `;
+
+export const useCloseArProfileMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<CloseArProfileMutation, TError, CloseArProfileMutationVariables, TContext>) => {
+    
+    return useMutation<CloseArProfileMutation, TError, CloseArProfileMutationVariables, TContext>(
+      {
+    mutationKey: ['CloseARProfile'],
+    mutationFn: (variables?: CloseArProfileMutationVariables) => graphqlFetcher<CloseArProfileMutation, CloseArProfileMutationVariables>(CloseArProfileDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useCloseArProfileMutation.fetcher = (variables: CloseArProfileMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<CloseArProfileMutation, CloseArProfileMutationVariables>(CloseArProfileDocument, variables, options);
+
+export const CreateStatementPeriodDocument = `
+    mutation CreateStatementPeriod($input: CreateStatementPeriodInput!) {
+  createStatementPeriod(input: $input) {
+    id
+    periodYear
+    periodNumber
+    periodLabel
+    periodStart
+    periodEnd
+    cutoffDate
+    isCatchUp
+    status
+    totalProfiles
+    createdAt
+  }
+}
+    `;
+
+export const useCreateStatementPeriodMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<CreateStatementPeriodMutation, TError, CreateStatementPeriodMutationVariables, TContext>) => {
+    
+    return useMutation<CreateStatementPeriodMutation, TError, CreateStatementPeriodMutationVariables, TContext>(
+      {
+    mutationKey: ['CreateStatementPeriod'],
+    mutationFn: (variables?: CreateStatementPeriodMutationVariables) => graphqlFetcher<CreateStatementPeriodMutation, CreateStatementPeriodMutationVariables>(CreateStatementPeriodDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useCreateStatementPeriodMutation.fetcher = (variables: CreateStatementPeriodMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<CreateStatementPeriodMutation, CreateStatementPeriodMutationVariables>(CreateStatementPeriodDocument, variables, options);
+
+export const UpdateStatementPeriodDocument = `
+    mutation UpdateStatementPeriod($id: ID!, $input: UpdateStatementPeriodInput!) {
+  updateStatementPeriod(id: $id, input: $input) {
+    id
+    periodYear
+    periodNumber
+    periodLabel
+    periodStart
+    periodEnd
+    cutoffDate
+    status
+    updatedAt
+  }
+}
+    `;
+
+export const useUpdateStatementPeriodMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<UpdateStatementPeriodMutation, TError, UpdateStatementPeriodMutationVariables, TContext>) => {
+    
+    return useMutation<UpdateStatementPeriodMutation, TError, UpdateStatementPeriodMutationVariables, TContext>(
+      {
+    mutationKey: ['UpdateStatementPeriod'],
+    mutationFn: (variables?: UpdateStatementPeriodMutationVariables) => graphqlFetcher<UpdateStatementPeriodMutation, UpdateStatementPeriodMutationVariables>(UpdateStatementPeriodDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useUpdateStatementPeriodMutation.fetcher = (variables: UpdateStatementPeriodMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<UpdateStatementPeriodMutation, UpdateStatementPeriodMutationVariables>(UpdateStatementPeriodDocument, variables, options);
+
+export const CloseStatementPeriodDocument = `
+    mutation CloseStatementPeriod($id: ID!) {
+  closeStatementPeriod(id: $id) {
+    id
+    status
+    closedAt
+    closedBy
+    totalStatements
+    totalClosingBalance
+  }
+}
+    `;
+
+export const useCloseStatementPeriodMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<CloseStatementPeriodMutation, TError, CloseStatementPeriodMutationVariables, TContext>) => {
+    
+    return useMutation<CloseStatementPeriodMutation, TError, CloseStatementPeriodMutationVariables, TContext>(
+      {
+    mutationKey: ['CloseStatementPeriod'],
+    mutationFn: (variables?: CloseStatementPeriodMutationVariables) => graphqlFetcher<CloseStatementPeriodMutation, CloseStatementPeriodMutationVariables>(CloseStatementPeriodDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useCloseStatementPeriodMutation.fetcher = (variables: CloseStatementPeriodMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<CloseStatementPeriodMutation, CloseStatementPeriodMutationVariables>(CloseStatementPeriodDocument, variables, options);
+
+export const ReopenStatementPeriodDocument = `
+    mutation ReopenStatementPeriod($id: ID!, $input: ReopenStatementPeriodInput!) {
+  reopenStatementPeriod(id: $id, input: $input) {
+    id
+    status
+    reopenedAt
+    reopenedBy
+    reopenReason
+    reopenApprovedBy
+  }
+}
+    `;
+
+export const useReopenStatementPeriodMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<ReopenStatementPeriodMutation, TError, ReopenStatementPeriodMutationVariables, TContext>) => {
+    
+    return useMutation<ReopenStatementPeriodMutation, TError, ReopenStatementPeriodMutationVariables, TContext>(
+      {
+    mutationKey: ['ReopenStatementPeriod'],
+    mutationFn: (variables?: ReopenStatementPeriodMutationVariables) => graphqlFetcher<ReopenStatementPeriodMutation, ReopenStatementPeriodMutationVariables>(ReopenStatementPeriodDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useReopenStatementPeriodMutation.fetcher = (variables: ReopenStatementPeriodMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<ReopenStatementPeriodMutation, ReopenStatementPeriodMutationVariables>(ReopenStatementPeriodDocument, variables, options);
+
+export const DeleteStatementPeriodDocument = `
+    mutation DeleteStatementPeriod($id: ID!) {
+  deleteStatementPeriod(id: $id)
+}
+    `;
+
+export const useDeleteStatementPeriodMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<DeleteStatementPeriodMutation, TError, DeleteStatementPeriodMutationVariables, TContext>) => {
+    
+    return useMutation<DeleteStatementPeriodMutation, TError, DeleteStatementPeriodMutationVariables, TContext>(
+      {
+    mutationKey: ['DeleteStatementPeriod'],
+    mutationFn: (variables?: DeleteStatementPeriodMutationVariables) => graphqlFetcher<DeleteStatementPeriodMutation, DeleteStatementPeriodMutationVariables>(DeleteStatementPeriodDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useDeleteStatementPeriodMutation.fetcher = (variables: DeleteStatementPeriodMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<DeleteStatementPeriodMutation, DeleteStatementPeriodMutationVariables>(DeleteStatementPeriodDocument, variables, options);
+
+export const StartStatementRunDocument = `
+    mutation StartStatementRun($input: CreateStatementRunInput!) {
+  startStatementRun(input: $input) {
+    id
+    statementPeriodId
+    runType
+    runNumber
+    status
+    totalProfiles
+    createdBy
+    createdAt
+  }
+}
+    `;
+
+export const useStartStatementRunMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<StartStatementRunMutation, TError, StartStatementRunMutationVariables, TContext>) => {
+    
+    return useMutation<StartStatementRunMutation, TError, StartStatementRunMutationVariables, TContext>(
+      {
+    mutationKey: ['StartStatementRun'],
+    mutationFn: (variables?: StartStatementRunMutationVariables) => graphqlFetcher<StartStatementRunMutation, StartStatementRunMutationVariables>(StartStatementRunDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useStartStatementRunMutation.fetcher = (variables: StartStatementRunMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<StartStatementRunMutation, StartStatementRunMutationVariables>(StartStatementRunDocument, variables, options);
+
+export const CancelStatementRunDocument = `
+    mutation CancelStatementRun($id: ID!) {
+  cancelStatementRun(id: $id) {
+    id
+    status
+    completedAt
+  }
+}
+    `;
+
+export const useCancelStatementRunMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<CancelStatementRunMutation, TError, CancelStatementRunMutationVariables, TContext>) => {
+    
+    return useMutation<CancelStatementRunMutation, TError, CancelStatementRunMutationVariables, TContext>(
+      {
+    mutationKey: ['CancelStatementRun'],
+    mutationFn: (variables?: CancelStatementRunMutationVariables) => graphqlFetcher<CancelStatementRunMutation, CancelStatementRunMutationVariables>(CancelStatementRunDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useCancelStatementRunMutation.fetcher = (variables: CancelStatementRunMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<CancelStatementRunMutation, CancelStatementRunMutationVariables>(CancelStatementRunDocument, variables, options);
+
+export const UpdateStatementDeliveryStatusDocument = `
+    mutation UpdateStatementDeliveryStatus($id: ID!, $channel: String!, $status: String!, $error: String) {
+  updateStatementDeliveryStatus(
+    id: $id
+    channel: $channel
+    status: $status
+    error: $error
+  ) {
+    id
+    emailStatus
+    emailSentAt
+    emailDeliveredAt
+    emailError
+    smsStatus
+    smsSentAt
+    smsDeliveredAt
+    smsError
+    printStatus
+    printedAt
+    portalStatus
+    portalPublishedAt
+    portalViewedAt
+  }
+}
+    `;
+
+export const useUpdateStatementDeliveryStatusMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<UpdateStatementDeliveryStatusMutation, TError, UpdateStatementDeliveryStatusMutationVariables, TContext>) => {
+    
+    return useMutation<UpdateStatementDeliveryStatusMutation, TError, UpdateStatementDeliveryStatusMutationVariables, TContext>(
+      {
+    mutationKey: ['UpdateStatementDeliveryStatus'],
+    mutationFn: (variables?: UpdateStatementDeliveryStatusMutationVariables) => graphqlFetcher<UpdateStatementDeliveryStatusMutation, UpdateStatementDeliveryStatusMutationVariables>(UpdateStatementDeliveryStatusDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useUpdateStatementDeliveryStatusMutation.fetcher = (variables: UpdateStatementDeliveryStatusMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<UpdateStatementDeliveryStatusMutation, UpdateStatementDeliveryStatusMutationVariables>(UpdateStatementDeliveryStatusDocument, variables, options);
+
+export const MarkStatementPortalViewedDocument = `
+    mutation MarkStatementPortalViewed($id: ID!) {
+  markStatementPortalViewed(id: $id) {
+    id
+    portalStatus
+    portalViewedAt
+  }
+}
+    `;
+
+export const useMarkStatementPortalViewedMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<MarkStatementPortalViewedMutation, TError, MarkStatementPortalViewedMutationVariables, TContext>) => {
+    
+    return useMutation<MarkStatementPortalViewedMutation, TError, MarkStatementPortalViewedMutationVariables, TContext>(
+      {
+    mutationKey: ['MarkStatementPortalViewed'],
+    mutationFn: (variables?: MarkStatementPortalViewedMutationVariables) => graphqlFetcher<MarkStatementPortalViewedMutation, MarkStatementPortalViewedMutationVariables>(MarkStatementPortalViewedDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useMarkStatementPortalViewedMutation.fetcher = (variables: MarkStatementPortalViewedMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<MarkStatementPortalViewedMutation, MarkStatementPortalViewedMutationVariables>(MarkStatementPortalViewedDocument, variables, options);
+
+export const GetMembersWithoutArProfilesCountDocument = `
+    query GetMembersWithoutARProfilesCount {
+  membersWithoutARProfilesCount
+}
+    `;
+
+export const useGetMembersWithoutArProfilesCountQuery = <
+      TData = GetMembersWithoutArProfilesCountQuery,
+      TError = unknown
+    >(
+      variables?: GetMembersWithoutArProfilesCountQueryVariables,
+      options?: Omit<UseQueryOptions<GetMembersWithoutArProfilesCountQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetMembersWithoutArProfilesCountQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetMembersWithoutArProfilesCountQuery, TError, TData>(
+      {
+    queryKey: variables === undefined ? ['GetMembersWithoutARProfilesCount'] : ['GetMembersWithoutARProfilesCount', variables],
+    queryFn: graphqlFetcher<GetMembersWithoutArProfilesCountQuery, GetMembersWithoutArProfilesCountQueryVariables>(GetMembersWithoutArProfilesCountDocument, variables),
+    ...options
+  }
+    )};
+
+useGetMembersWithoutArProfilesCountQuery.getKey = (variables?: GetMembersWithoutArProfilesCountQueryVariables) => variables === undefined ? ['GetMembersWithoutARProfilesCount'] : ['GetMembersWithoutARProfilesCount', variables];
+
+export const useInfiniteGetMembersWithoutArProfilesCountQuery = <
+      TData = InfiniteData<GetMembersWithoutArProfilesCountQuery>,
+      TError = unknown
+    >(
+      variables: GetMembersWithoutArProfilesCountQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetMembersWithoutArProfilesCountQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetMembersWithoutArProfilesCountQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetMembersWithoutArProfilesCountQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? variables === undefined ? ['GetMembersWithoutARProfilesCount.infinite'] : ['GetMembersWithoutARProfilesCount.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetMembersWithoutArProfilesCountQuery, GetMembersWithoutArProfilesCountQueryVariables>(GetMembersWithoutArProfilesCountDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetMembersWithoutArProfilesCountQuery.getKey = (variables?: GetMembersWithoutArProfilesCountQueryVariables) => variables === undefined ? ['GetMembersWithoutARProfilesCount.infinite'] : ['GetMembersWithoutARProfilesCount.infinite', variables];
+
+
+useGetMembersWithoutArProfilesCountQuery.fetcher = (variables?: GetMembersWithoutArProfilesCountQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetMembersWithoutArProfilesCountQuery, GetMembersWithoutArProfilesCountQueryVariables>(GetMembersWithoutArProfilesCountDocument, variables, options);
+
+export const GetMembersWithoutArProfilesDocument = `
+    query GetMembersWithoutARProfiles {
+  membersWithoutARProfiles {
+    id
+    memberId
+    firstName
+    lastName
+    email
+    membershipTypeName
+  }
+}
+    `;
+
+export const useGetMembersWithoutArProfilesQuery = <
+      TData = GetMembersWithoutArProfilesQuery,
+      TError = unknown
+    >(
+      variables?: GetMembersWithoutArProfilesQueryVariables,
+      options?: Omit<UseQueryOptions<GetMembersWithoutArProfilesQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetMembersWithoutArProfilesQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetMembersWithoutArProfilesQuery, TError, TData>(
+      {
+    queryKey: variables === undefined ? ['GetMembersWithoutARProfiles'] : ['GetMembersWithoutARProfiles', variables],
+    queryFn: graphqlFetcher<GetMembersWithoutArProfilesQuery, GetMembersWithoutArProfilesQueryVariables>(GetMembersWithoutArProfilesDocument, variables),
+    ...options
+  }
+    )};
+
+useGetMembersWithoutArProfilesQuery.getKey = (variables?: GetMembersWithoutArProfilesQueryVariables) => variables === undefined ? ['GetMembersWithoutARProfiles'] : ['GetMembersWithoutARProfiles', variables];
+
+export const useInfiniteGetMembersWithoutArProfilesQuery = <
+      TData = InfiniteData<GetMembersWithoutArProfilesQuery>,
+      TError = unknown
+    >(
+      variables: GetMembersWithoutArProfilesQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetMembersWithoutArProfilesQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetMembersWithoutArProfilesQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetMembersWithoutArProfilesQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? variables === undefined ? ['GetMembersWithoutARProfiles.infinite'] : ['GetMembersWithoutARProfiles.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetMembersWithoutArProfilesQuery, GetMembersWithoutArProfilesQueryVariables>(GetMembersWithoutArProfilesDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetMembersWithoutArProfilesQuery.getKey = (variables?: GetMembersWithoutArProfilesQueryVariables) => variables === undefined ? ['GetMembersWithoutARProfiles.infinite'] : ['GetMembersWithoutARProfiles.infinite', variables];
+
+
+useGetMembersWithoutArProfilesQuery.fetcher = (variables?: GetMembersWithoutArProfilesQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetMembersWithoutArProfilesQuery, GetMembersWithoutArProfilesQueryVariables>(GetMembersWithoutArProfilesDocument, variables, options);
+
+export const SyncMembersToArProfilesDocument = `
+    mutation SyncMembersToARProfiles($input: SyncARProfilesInput) {
+  syncMembersToARProfiles(input: $input) {
+    created
+    skipped
+    errors
+  }
+}
+    `;
+
+export const useSyncMembersToArProfilesMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<SyncMembersToArProfilesMutation, TError, SyncMembersToArProfilesMutationVariables, TContext>) => {
+    
+    return useMutation<SyncMembersToArProfilesMutation, TError, SyncMembersToArProfilesMutationVariables, TContext>(
+      {
+    mutationKey: ['SyncMembersToARProfiles'],
+    mutationFn: (variables?: SyncMembersToArProfilesMutationVariables) => graphqlFetcher<SyncMembersToArProfilesMutation, SyncMembersToArProfilesMutationVariables>(SyncMembersToArProfilesDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useSyncMembersToArProfilesMutation.fetcher = (variables?: SyncMembersToArProfilesMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<SyncMembersToArProfilesMutation, SyncMembersToArProfilesMutationVariables>(SyncMembersToArProfilesDocument, variables, options);
+
+export const SyncCityLedgersToArProfilesDocument = `
+    mutation SyncCityLedgersToARProfiles($input: SyncARProfilesInput) {
+  syncCityLedgersToARProfiles(input: $input) {
+    created
+    skipped
+    errors
+  }
+}
+    `;
+
+export const useSyncCityLedgersToArProfilesMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<SyncCityLedgersToArProfilesMutation, TError, SyncCityLedgersToArProfilesMutationVariables, TContext>) => {
+    
+    return useMutation<SyncCityLedgersToArProfilesMutation, TError, SyncCityLedgersToArProfilesMutationVariables, TContext>(
+      {
+    mutationKey: ['SyncCityLedgersToARProfiles'],
+    mutationFn: (variables?: SyncCityLedgersToArProfilesMutationVariables) => graphqlFetcher<SyncCityLedgersToArProfilesMutation, SyncCityLedgersToArProfilesMutationVariables>(SyncCityLedgersToArProfilesDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useSyncCityLedgersToArProfilesMutation.fetcher = (variables?: SyncCityLedgersToArProfilesMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<SyncCityLedgersToArProfilesMutation, SyncCityLedgersToArProfilesMutationVariables>(SyncCityLedgersToArProfilesDocument, variables, options);
+
+export const GetArPeriodSettingsDocument = `
+    query GetARPeriodSettings {
+  arPeriodSettings {
+    arCycleType
+    arCustomCycleStartDay
+    arCutoffDays
+    arCloseBehavior
+    arAutoGenerateNext
+  }
+}
+    `;
+
+export const useGetArPeriodSettingsQuery = <
+      TData = GetArPeriodSettingsQuery,
+      TError = unknown
+    >(
+      variables?: GetArPeriodSettingsQueryVariables,
+      options?: Omit<UseQueryOptions<GetArPeriodSettingsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetArPeriodSettingsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetArPeriodSettingsQuery, TError, TData>(
+      {
+    queryKey: variables === undefined ? ['GetARPeriodSettings'] : ['GetARPeriodSettings', variables],
+    queryFn: graphqlFetcher<GetArPeriodSettingsQuery, GetArPeriodSettingsQueryVariables>(GetArPeriodSettingsDocument, variables),
+    ...options
+  }
+    )};
+
+useGetArPeriodSettingsQuery.getKey = (variables?: GetArPeriodSettingsQueryVariables) => variables === undefined ? ['GetARPeriodSettings'] : ['GetARPeriodSettings', variables];
+
+export const useInfiniteGetArPeriodSettingsQuery = <
+      TData = InfiniteData<GetArPeriodSettingsQuery>,
+      TError = unknown
+    >(
+      variables: GetArPeriodSettingsQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetArPeriodSettingsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetArPeriodSettingsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetArPeriodSettingsQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? variables === undefined ? ['GetARPeriodSettings.infinite'] : ['GetARPeriodSettings.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetArPeriodSettingsQuery, GetArPeriodSettingsQueryVariables>(GetArPeriodSettingsDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetArPeriodSettingsQuery.getKey = (variables?: GetArPeriodSettingsQueryVariables) => variables === undefined ? ['GetARPeriodSettings.infinite'] : ['GetARPeriodSettings.infinite', variables];
+
+
+useGetArPeriodSettingsQuery.fetcher = (variables?: GetArPeriodSettingsQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetArPeriodSettingsQuery, GetArPeriodSettingsQueryVariables>(GetArPeriodSettingsDocument, variables, options);
+
+export const UpdateArSettingsDocument = `
+    mutation UpdateARSettings($input: UpdateARSettingsInput!) {
+  updateARSettings(input: $input) {
+    arCycleType
+    arCustomCycleStartDay
+    arCutoffDays
+    arCloseBehavior
+    arAutoGenerateNext
+  }
+}
+    `;
+
+export const useUpdateArSettingsMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<UpdateArSettingsMutation, TError, UpdateArSettingsMutationVariables, TContext>) => {
+    
+    return useMutation<UpdateArSettingsMutation, TError, UpdateArSettingsMutationVariables, TContext>(
+      {
+    mutationKey: ['UpdateARSettings'],
+    mutationFn: (variables?: UpdateArSettingsMutationVariables) => graphqlFetcher<UpdateArSettingsMutation, UpdateArSettingsMutationVariables>(UpdateArSettingsDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useUpdateArSettingsMutation.fetcher = (variables: UpdateArSettingsMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<UpdateArSettingsMutation, UpdateArSettingsMutationVariables>(UpdateArSettingsDocument, variables, options);
 
 export const GetBillingStatsDocument = `
     query GetBillingStats {

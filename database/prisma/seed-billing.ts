@@ -15,6 +15,9 @@ import {
   UserRole,
   CityLedgerType,
   CityLedgerStatus,
+  ARProfileType,
+  ARProfileStatus,
+  StatementDelivery,
 } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import 'dotenv/config';
@@ -727,6 +730,152 @@ async function main() {
   console.log(`✅ Created City Ledger invoices with ฿${totalCLOutstanding.toLocaleString()} outstanding`);
 
   // ============================================================================
+  // CREATE AR PROFILES
+  // ============================================================================
+  console.log('👤 Creating AR profiles...');
+
+  const deliveryMethods = [
+    StatementDelivery.EMAIL,
+    StatementDelivery.EMAIL_AND_PRINT,
+    StatementDelivery.PORTAL,
+    StatementDelivery.EMAIL,
+    StatementDelivery.ALL,
+  ];
+
+  const createdARProfiles: any[] = [];
+  let arProfileCounter = 0;
+
+  // Create AR profiles for members
+  for (let i = 0; i < Math.min(members.length, 12); i++) {
+    const member = members[i];
+    arProfileCounter++;
+
+    const accountNumber = `AR-M-${String(arProfileCounter).padStart(5, '0')}`;
+
+    // Check if profile already exists for this member
+    const existingProfile = await prisma.aRProfile.findUnique({
+      where: { memberId: member.id },
+    });
+
+    if (existingProfile) {
+      createdARProfiles.push(existingProfile);
+      continue;
+    }
+
+    // Calculate current balance from unpaid invoices
+    const memberInvoices = await prisma.invoice.aggregate({
+      where: {
+        memberId: member.id,
+        status: { in: [InvoiceStatus.SENT, InvoiceStatus.PARTIALLY_PAID, InvoiceStatus.OVERDUE] },
+      },
+      _sum: { balanceDue: true },
+    });
+
+    const currentBalance = memberInvoices._sum.balanceDue || 0;
+
+    // Get last payment
+    const lastPayment = await prisma.payment.findFirst({
+      where: { memberId: member.id },
+      orderBy: { paymentDate: 'desc' },
+    });
+
+    // Determine status: mostly active, some suspended
+    let status: ARProfileStatus = ARProfileStatus.ACTIVE;
+    let suspendedAt: Date | null = null;
+    let suspendedReason: string | null = null;
+
+    // Suspend members 10 and 11 (the ones with overdue invoices)
+    if (i === 10) {
+      status = ARProfileStatus.SUSPENDED;
+      suspendedAt = new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000);
+      suspendedReason = 'Overdue balance exceeds 30 days';
+    } else if (i === 11) {
+      status = ARProfileStatus.SUSPENDED;
+      suspendedAt = new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000);
+      suspendedReason = 'Payment arrangement pending';
+    }
+
+    const arProfile = await prisma.aRProfile.create({
+      data: {
+        clubId: club.id,
+        accountNumber,
+        profileType: ARProfileType.MEMBER,
+        memberId: member.id,
+        statementDelivery: deliveryMethods[i % deliveryMethods.length],
+        paymentTermsDays: 15 + (i % 3) * 15, // 15, 30, or 45 days
+        creditLimit: i < 5 ? null : 50000 + i * 10000, // Some have limits, some don't
+        currentBalance,
+        lastStatementDate: i < 8 ? new Date(now.getFullYear(), now.getMonth() - 1, 1) : null,
+        lastStatementBalance: i < 8 ? currentBalance : null,
+        lastPaymentDate: lastPayment?.paymentDate || null,
+        lastPaymentAmount: lastPayment?.amount || null,
+        status,
+        suspendedAt,
+        suspendedReason,
+      },
+    });
+
+    createdARProfiles.push(arProfile);
+  }
+
+  // Create AR profiles for City Ledger accounts (first 4)
+  for (let i = 0; i < Math.min(createdCityLedgers.length, 4); i++) {
+    const cityLedger = createdCityLedgers[i];
+    arProfileCounter++;
+
+    const accountNumber = `AR-CL-${String(arProfileCounter).padStart(5, '0')}`;
+
+    // Check if profile already exists for this city ledger
+    const existingProfile = await prisma.aRProfile.findUnique({
+      where: { cityLedgerId: cityLedger.id },
+    });
+
+    if (existingProfile) {
+      createdARProfiles.push(existingProfile);
+      continue;
+    }
+
+    // Get outstanding balance from city ledger
+    const currentBalance = cityLedger.outstandingBalance || 0;
+
+    // Get last payment for city ledger
+    const lastPayment = await prisma.payment.findFirst({
+      where: { cityLedgerId: cityLedger.id },
+      orderBy: { paymentDate: 'desc' },
+    });
+
+    const arProfile = await prisma.aRProfile.create({
+      data: {
+        clubId: club.id,
+        accountNumber,
+        profileType: ARProfileType.CITY_LEDGER,
+        cityLedgerId: cityLedger.id,
+        statementDelivery: i === 0 ? StatementDelivery.EMAIL_AND_PRINT : StatementDelivery.EMAIL,
+        paymentTermsDays: cityLedger.paymentTerms || 30,
+        creditLimit: cityLedger.creditLimit,
+        currentBalance,
+        lastStatementDate: new Date(now.getFullYear(), now.getMonth() - 1, 1),
+        lastStatementBalance: currentBalance,
+        lastPaymentDate: lastPayment?.paymentDate || null,
+        lastPaymentAmount: lastPayment?.amount || null,
+        status: ARProfileStatus.ACTIVE,
+      },
+    });
+
+    createdARProfiles.push(arProfile);
+  }
+
+  // Count profiles by type
+  const memberProfiles = createdARProfiles.filter(p => p.profileType === ARProfileType.MEMBER).length;
+  const cityLedgerProfiles = createdARProfiles.filter(p => p.profileType === ARProfileType.CITY_LEDGER).length;
+  const suspendedProfiles = createdARProfiles.filter(p => p.status === ARProfileStatus.SUSPENDED).length;
+
+  console.log(`✅ Created ${createdARProfiles.length} AR profiles:`);
+  console.log(`   - ${memberProfiles} Member profiles`);
+  console.log(`   - ${cityLedgerProfiles} City Ledger profiles`);
+  console.log(`   - ${suspendedProfiles} Suspended profiles`);
+
+  // ============================================================================
   // CLUB BILLING SETTINGS
   // ============================================================================
   console.log('\n⚙️  Creating club billing settings...');
@@ -769,6 +918,7 @@ async function main() {
   const totalPayments = await prisma.payment.count({ where: { clubId: club.id } });
   const totalCreditNotes = await prisma.creditNote.count({ where: { clubId: club.id } });
   const totalCityLedgers = await prisma.cityLedger.count({ where: { clubId: club.id } });
+  const totalARProfiles = await prisma.aRProfile.count({ where: { clubId: club.id } });
   const totalLineItems = await prisma.invoiceLineItem.count({
     where: { invoice: { clubId: club.id } },
   });
@@ -789,6 +939,7 @@ async function main() {
   console.log(`   Total Payments: ${totalPayments}`);
   console.log(`   Total Credit Notes: ${totalCreditNotes}`);
   console.log(`   Total City Ledger Accounts: ${totalCityLedgers}`);
+  console.log(`   Total AR Profiles: ${totalARProfiles}`);
 
   // Calculate AR summary
   const arSummary = await prisma.invoice.aggregate({

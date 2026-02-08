@@ -8,25 +8,76 @@
 // ============================================
 
 /** Tax calculation type */
-export type TaxType = 'add' | 'include' | 'none';
+export const CheckInTaxType = {
+  ADD: 'ADD',
+  INCLUDE: 'INCLUDE',
+  NONE: 'NONE',
+} as const;
+export type CheckInTaxType = (typeof CheckInTaxType)[keyof typeof CheckInTaxType];
 
 /** Payment method category */
-export type PaymentMethodType = 'cash' | 'card' | 'transfer' | 'account' | 'custom';
+export const PaymentMethodType = {
+  CASH: 'CASH',
+  CARD: 'CARD',
+  TRANSFER: 'TRANSFER',
+  ACCOUNT: 'ACCOUNT',
+  CUSTOM: 'CUSTOM',
+} as const;
+export type PaymentMethodType = (typeof PaymentMethodType)[keyof typeof PaymentMethodType];
 
 /** Line item category */
-export type LineItemType = 'green_fee' | 'cart' | 'caddy' | 'rental' | 'proshop';
+export const LineItemType = {
+  GREEN_FEE: 'GREEN_FEE',
+  CART: 'CART',
+  CADDY: 'CADDY',
+  RENTAL: 'RENTAL',
+  PROSHOP: 'PROSHOP',
+} as const;
+export type LineItemType = (typeof LineItemType)[keyof typeof LineItemType];
 
 /** When to generate starter ticket */
-export type TicketGenerateOn = 'check_in' | 'settlement' | 'manual';
+export const TicketGenerateOn = {
+  CHECK_IN: 'CHECK_IN',
+  SETTLEMENT: 'SETTLEMENT',
+  MANUAL: 'MANUAL',
+} as const;
+export type TicketGenerateOn = (typeof TicketGenerateOn)[keyof typeof TicketGenerateOn];
 
 /** Print output options */
-export type PrintOption = 'ticket' | 'receipt' | 'combined' | 'none';
+export const PrintOption = {
+  TICKET: 'TICKET',
+  RECEIPT: 'RECEIPT',
+  COMBINED: 'COMBINED',
+  NONE: 'NONE',
+} as const;
+export type PrintOption = (typeof PrintOption)[keyof typeof PrintOption];
 
 /** Extended player type for check-in (more granular than golf.ts PlayerType) */
-export type CheckInPlayerType = 'member' | 'guest' | 'dependent' | 'walkup';
+export const CheckInPlayerType = {
+  MEMBER: 'MEMBER',
+  GUEST: 'GUEST',
+  DEPENDENT: 'DEPENDENT',
+  WALKUP: 'WALKUP',
+} as const;
+export type CheckInPlayerType = (typeof CheckInPlayerType)[keyof typeof CheckInPlayerType];
 
 /** Payment status for a player */
-export type PaymentStatus = 'prepaid' | 'partial' | 'unpaid';
+export const CheckInPaymentStatus = {
+  PREPAID: 'PREPAID',
+  PARTIAL: 'PARTIAL',
+  UNPAID: 'UNPAID',
+} as const;
+export type CheckInPaymentStatus = (typeof CheckInPaymentStatus)[keyof typeof CheckInPaymentStatus];
+
+/** Rental status for cart/caddy */
+export const RentalStatus = {
+  NONE: 'NONE',
+  REQUESTED: 'REQUESTED',
+  PAID: 'PAID',
+  ASSIGNED: 'ASSIGNED',
+  RETURNED: 'RETURNED',
+} as const;
+export type RentalStatus = (typeof RentalStatus)[keyof typeof RentalStatus];
 
 // ============================================
 // PAYMENT METHOD
@@ -62,13 +113,13 @@ export interface PaymentMethodFormData {
 export interface TaxOverride {
   itemType: LineItemType;
   rate: number;
-  taxType: TaxType;
+  taxType: CheckInTaxType;
 }
 
 /** Complete tax configuration */
 export interface TaxConfig {
   defaultRate: number;
-  defaultType: TaxType;
+  defaultType: CheckInTaxType;
   taxLabel: string;
   showBreakdown: boolean;
   showTypeIndicator: boolean;
@@ -79,7 +130,7 @@ export interface TaxConfig {
 export interface TaxOverrideFormData {
   itemType: LineItemType;
   rate: number;
-  taxType: TaxType;
+  taxType: CheckInTaxType;
 }
 
 /** Tax calculation result */
@@ -171,7 +222,7 @@ export interface ProShopCategory {
   name: string;
   description?: string;
   defaultTaxRate: number;
-  defaultTaxType: TaxType;
+  defaultTaxType: CheckInTaxType;
   sortOrder: number;
   isActive: boolean;
   productCount?: number;
@@ -184,7 +235,7 @@ export interface ProShopCategoryFormData {
   name: string;
   description?: string;
   defaultTaxRate: number;
-  defaultTaxType: TaxType;
+  defaultTaxType: CheckInTaxType;
   isActive?: boolean;
 }
 
@@ -223,12 +274,12 @@ export interface ProShopProduct {
   sku?: string;
   price: number;
   taxRate: number;
-  taxType: TaxType;
+  taxType: CheckInTaxType;
   useCategoryDefaults: boolean;
   /** Calculated: actual tax rate (from product or category) */
   effectiveTaxRate?: number;
   /** Calculated: actual tax type (from product or category) */
-  effectiveTaxType?: TaxType;
+  effectiveTaxType?: CheckInTaxType;
   variants: ProShopVariant[];
   isActive: boolean;
   isQuickAdd: boolean;
@@ -244,7 +295,7 @@ export interface ProShopProductFormData {
   sku?: string;
   price: number;
   taxRate?: number;
-  taxType?: TaxType;
+  taxType?: CheckInTaxType;
   useCategoryDefaults?: boolean;
   variants?: ProShopVariantFormData[];
   isActive?: boolean;
@@ -281,7 +332,7 @@ export interface BookingLineItem {
   type: LineItemType;
   description: string;
   baseAmount: number;
-  taxType: TaxType;
+  taxType: CheckInTaxType;
   taxRate: number;
   taxAmount: number;
   totalAmount: number;
@@ -340,7 +391,7 @@ export interface CheckInPlayer {
   checkedInAt?: Date;
   isSuspended: boolean;
   suspensionReason?: string;
-  paymentStatus: PaymentStatus;
+  paymentStatus: CheckInPaymentStatus;
   totalDue: number;
   totalPaid: number;
   balanceDue: number;

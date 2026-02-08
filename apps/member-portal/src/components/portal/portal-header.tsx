@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Settings, Bell, LogOut, User, ChevronDown } from 'lucide-react'
 import { cn } from '@clubvantage/ui'
+import { Logo, LogoIcon } from '@/components/brand'
 
 interface PortalHeaderProps {
   memberName?: string
@@ -31,9 +32,7 @@ export function PortalHeader({
       <div className="flex items-center justify-between h-14 px-4">
         {/* Logo */}
         <Link href="/portal" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500 to-amber-600 shadow-sm">
-            <span className="text-white font-bold text-sm">CV</span>
-          </div>
+          <LogoIcon size={36} />
           <span className="font-semibold text-foreground hidden sm:block">
             ClubVantage
           </span>

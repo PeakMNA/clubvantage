@@ -3,18 +3,28 @@
  * Based on PRD-01 data model
  */
 
-export type MemberStatus =
-  | 'PROSPECT'
-  | 'LEAD'
-  | 'APPLICANT'
-  | 'ACTIVE'
-  | 'SUSPENDED'
-  | 'LAPSED'
-  | 'RESIGNED'
-  | 'TERMINATED'
-  | 'REACTIVATED';
+export const MemberStatus = {
+  PROSPECT: 'PROSPECT',
+  LEAD: 'LEAD',
+  APPLICANT: 'APPLICANT',
+  ACTIVE: 'ACTIVE',
+  SUSPENDED: 'SUSPENDED',
+  LAPSED: 'LAPSED',
+  RESIGNED: 'RESIGNED',
+  TERMINATED: 'TERMINATED',
+  REACTIVATED: 'REACTIVATED',
+} as const;
+export type MemberStatus = (typeof MemberStatus)[keyof typeof MemberStatus];
 
-export type MembershipCategory = 'REGULAR' | 'PREMIUM' | 'CORPORATE' | 'SENIOR' | 'JUNIOR' | 'FAMILY';
+export const MembershipCategory = {
+  REGULAR: 'REGULAR',
+  PREMIUM: 'PREMIUM',
+  CORPORATE: 'CORPORATE',
+  SENIOR: 'SENIOR',
+  JUNIOR: 'JUNIOR',
+  FAMILY: 'FAMILY',
+} as const;
+export type MembershipCategory = (typeof MembershipCategory)[keyof typeof MembershipCategory];
 
 export interface Member {
   id: string;
@@ -106,17 +116,26 @@ export interface Dependent {
   updatedAt: Date;
 }
 
-export type DependentRelationship = 'SPOUSE' | 'CHILD' | 'PARENT' | 'SIBLING' | 'OTHER';
+export const DependentRelationship = {
+  SPOUSE: 'SPOUSE',
+  CHILD: 'CHILD',
+  PARENT: 'PARENT',
+  SIBLING: 'SIBLING',
+  OTHER: 'OTHER',
+} as const;
+export type DependentRelationship = (typeof DependentRelationship)[keyof typeof DependentRelationship];
 
-export type ReferralSource =
-  | 'WEBSITE'
-  | 'MEMBER_REFERRAL'
-  | 'WALK_IN'
-  | 'GUEST_CONVERSION'
-  | 'CORPORATE'
-  | 'EVENT'
-  | 'ADVERTISEMENT'
-  | 'OTHER';
+export const ReferralSource = {
+  WEBSITE: 'WEBSITE',
+  MEMBER_REFERRAL: 'MEMBER_REFERRAL',
+  WALK_IN: 'WALK_IN',
+  GUEST_CONVERSION: 'GUEST_CONVERSION',
+  CORPORATE: 'CORPORATE',
+  EVENT: 'EVENT',
+  ADVERTISEMENT: 'ADVERTISEMENT',
+  OTHER: 'OTHER',
+} as const;
+export type ReferralSource = (typeof ReferralSource)[keyof typeof ReferralSource];
 
 export interface Address {
   id: string;
@@ -153,4 +172,11 @@ export interface Lead {
   updatedAt: Date;
 }
 
-export type LeadStage = 'NEW' | 'CONTACTED' | 'QUALIFIED' | 'CONVERTED' | 'LOST';
+export const LeadStage = {
+  NEW: 'NEW',
+  CONTACTED: 'CONTACTED',
+  QUALIFIED: 'QUALIFIED',
+  CONVERTED: 'CONVERTED',
+  LOST: 'LOST',
+} as const;
+export type LeadStage = (typeof LeadStage)[keyof typeof LeadStage];

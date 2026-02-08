@@ -6,7 +6,7 @@ Caddy roster management and assignment. Tracks caddy availability, assigns caddi
 
 ## Status
 
-Partially implemented. Caddy CRUD exists in API. Caddy search query works. Caddy master view and schedule modal built in UI.
+Partially implemented. Caddy CRUD exists in API. Caddy search query works. Caddy master view and schedule modal built in UI. Member portal caddy request flow designed (see `docs/plans/2026-02-06-member-portal-pwa-design.md`).
 
 ## Capabilities
 
@@ -92,6 +92,17 @@ interface CaddyAssignment {
 - Deactivating a caddy with future assignments is blocked; must reassign first
 - Caddy search matches on firstName, lastName, or caddy number
 - Assignment status transitions: ASSIGNED -> ON_COURSE -> FINISHED
+
+## Member Portal Integration
+
+**Plan**: `docs/plans/2026-02-06-member-portal-pwa-design.md`
+
+- Members can request a caddy during the tee time booking flow in the portal
+- Caddy request toggle shown on booking review screen
+- Controlled by `golf.caddyRequest` feature flag — default OFF (not all clubs offer caddy service)
+- Caddy request creates a rental record with status REQUESTED
+- Staff sees caddy requests in the tee sheet and assigns specific caddies
+- Pricing displayed during booking based on caddy fee configuration
 
 ## Edge Cases
 

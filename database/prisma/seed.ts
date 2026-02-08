@@ -235,13 +235,14 @@ async function main() {
   const facilities = await Promise.all([
     prisma.facility.upsert({
       where: { clubId_code: { clubId: demoClub.id, code: 'TENNIS' } },
-      update: {},
+      update: { imageUrl: 'https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=800&q=80' },
       create: {
         clubId: demoClub.id,
         name: 'Tennis Courts',
         code: 'TENNIS',
         category: 'COURT',
         description: 'Professional tennis courts with floodlighting',
+        imageUrl: 'https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=800&q=80',
         capacity: 4,
         bookingDuration: 60,
         maxAdvanceDays: 7,
@@ -261,13 +262,14 @@ async function main() {
     }),
     prisma.facility.upsert({
       where: { clubId_code: { clubId: demoClub.id, code: 'GYM' } },
-      update: {},
+      update: { imageUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=80' },
       create: {
         clubId: demoClub.id,
         name: 'Fitness Center',
         code: 'GYM',
         category: 'STUDIO',
         description: 'State-of-the-art fitness equipment',
+        imageUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=80',
         capacity: 50,
         bookingDuration: 120,
         maxAdvanceDays: 1,
@@ -290,13 +292,14 @@ async function main() {
     }),
     prisma.facility.upsert({
       where: { clubId_code: { clubId: demoClub.id, code: 'POOL' } },
-      update: {},
+      update: { imageUrl: 'https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?w=800&q=80' },
       create: {
         clubId: demoClub.id,
         name: 'Swimming Pool',
         code: 'POOL',
         category: 'POOL',
         description: 'Olympic-size swimming pool',
+        imageUrl: 'https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?w=800&q=80',
         capacity: 30,
         bookingDuration: 60,
         maxAdvanceDays: 1,
@@ -314,6 +317,64 @@ async function main() {
         amenities: ['lap_lanes', 'kids_pool', 'jacuzzi'],
       },
     }),
+    prisma.facility.upsert({
+      where: { clubId_code: { clubId: demoClub.id, code: 'CLUBHOUSE_DINING' } },
+      update: { imageUrl: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80' },
+      create: {
+        clubId: demoClub.id,
+        name: 'The Verandah',
+        code: 'CLUBHOUSE_DINING',
+        category: 'DINING',
+        description: 'Fine dining restaurant overlooking the 18th green. Thai and international cuisine.',
+        imageUrl: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80',
+        capacity: 80,
+        bookingDuration: 90,
+        minAdvanceHours: 2,
+        maxAdvanceDays: 30,
+        cancellationHours: 4,
+        memberRate: 0,
+        guestRate: 0,
+        operatingHours: {
+          monday: { open: '11:00', close: '22:00' },
+          tuesday: { open: '11:00', close: '22:00' },
+          wednesday: { open: '11:00', close: '22:00' },
+          thursday: { open: '11:00', close: '22:00' },
+          friday: { open: '11:00', close: '23:00' },
+          saturday: { open: '10:00', close: '23:00' },
+          sunday: { open: '10:00', close: '21:00' },
+        },
+        amenities: ['outdoor_terrace', 'private_dining', 'wine_bar'],
+      },
+    }),
+    prisma.facility.upsert({
+      where: { clubId_code: { clubId: demoClub.id, code: 'POOLSIDE_BAR' } },
+      update: { imageUrl: 'https://images.unsplash.com/photo-1600891964092-4316c288032e?w=800&q=80' },
+      create: {
+        clubId: demoClub.id,
+        name: 'Poolside Bar & Grill',
+        code: 'POOLSIDE_BAR',
+        category: 'DINING',
+        description: 'Casual dining by the pool. Light bites, grilled specialties, and refreshing cocktails.',
+        imageUrl: 'https://images.unsplash.com/photo-1600891964092-4316c288032e?w=800&q=80',
+        capacity: 40,
+        bookingDuration: 60,
+        minAdvanceHours: 1,
+        maxAdvanceDays: 14,
+        cancellationHours: 2,
+        memberRate: 0,
+        guestRate: 0,
+        operatingHours: {
+          monday: { open: '10:00', close: '20:00' },
+          tuesday: { open: '10:00', close: '20:00' },
+          wednesday: { open: '10:00', close: '20:00' },
+          thursday: { open: '10:00', close: '20:00' },
+          friday: { open: '10:00', close: '21:00' },
+          saturday: { open: '09:00', close: '21:00' },
+          sunday: { open: '09:00', close: '20:00' },
+        },
+        amenities: ['poolside_seating', 'live_music_fri', 'kids_menu'],
+      },
+    }),
   ]);
 
   console.log(`✅ Created ${facilities.length} facilities`);
@@ -326,6 +387,8 @@ async function main() {
   const tennisCourtFacilityForRes = facilities.find(f => f.code === 'TENNIS')!;
   const gymFacilityForRes = facilities.find(f => f.code === 'GYM')!;
   const poolFacilityForRes = facilities.find(f => f.code === 'POOL')!;
+  const verandahFacilityForRes = facilities.find(f => f.code === 'CLUBHOUSE_DINING')!;
+  const poolsideBarFacilityForRes = facilities.find(f => f.code === 'POOLSIDE_BAR')!;
 
   const resourceData = [
     // Tennis Courts
@@ -341,6 +404,15 @@ async function main() {
     { facilityId: poolFacilityForRes.id, name: 'Olympic Pool', code: 'POOL1', capacity: 30 },
     { facilityId: poolFacilityForRes.id, name: 'Kids Pool', code: 'POOL2', capacity: 15 },
     { facilityId: poolFacilityForRes.id, name: 'Lap Pool', code: 'LAP1', capacity: 10 },
+    // Dining - The Verandah
+    { facilityId: verandahFacilityForRes.id, name: 'Table 1 (Window)', code: 'VRD1', capacity: 4 },
+    { facilityId: verandahFacilityForRes.id, name: 'Table 2 (Window)', code: 'VRD2', capacity: 4 },
+    { facilityId: verandahFacilityForRes.id, name: 'Table 3 (Terrace)', code: 'VRD3', capacity: 6 },
+    { facilityId: verandahFacilityForRes.id, name: 'Private Dining Room', code: 'VRD-PDR', capacity: 12 },
+    // Dining - Poolside Bar
+    { facilityId: poolsideBarFacilityForRes.id, name: 'Poolside Table 1', code: 'PSB1', capacity: 4 },
+    { facilityId: poolsideBarFacilityForRes.id, name: 'Poolside Table 2', code: 'PSB2', capacity: 4 },
+    { facilityId: poolsideBarFacilityForRes.id, name: 'Bar Counter', code: 'PSB-BAR', capacity: 6 },
   ];
 
   const resources = await Promise.all(
@@ -373,12 +445,13 @@ async function main() {
 
   const golfCourse = await prisma.golfCourse.upsert({
     where: { clubId_code: { clubId: demoClub.id, code: 'MAIN' } },
-    update: {},
+    update: { imageUrl: 'https://images.unsplash.com/photo-1587174486073-ae5e5cff23aa?w=800&q=80' },
     create: {
       clubId: demoClub.id,
       name: 'Championship Course',
       code: 'MAIN',
       description: 'Par 72 championship golf course',
+      imageUrl: 'https://images.unsplash.com/photo-1587174486073-ae5e5cff23aa?w=800&q=80',
       holes: 18,
       par: 72,
       yardage: 7200,
@@ -476,6 +549,15 @@ async function main() {
   // ============================================================================
   console.log('Creating golf schedule configuration...');
 
+  // Delete existing schedule config and related data to ensure clean state
+  const existingConfig = await prisma.golfScheduleConfig.findUnique({ where: { courseId: golfCourse.id } });
+  if (existingConfig) {
+    await prisma.golfScheduleSpecialDay.deleteMany({ where: { scheduleId: existingConfig.id } });
+    await prisma.golfScheduleSeason.deleteMany({ where: { scheduleId: existingConfig.id } });
+    await prisma.golfScheduleTimePeriod.deleteMany({ where: { scheduleId: existingConfig.id } });
+    await prisma.golfScheduleConfig.delete({ where: { id: existingConfig.id } });
+  }
+
   const scheduleConfig = await prisma.golfScheduleConfig.upsert({
     where: { courseId: golfCourse.id },
     update: {},
@@ -493,7 +575,7 @@ async function main() {
         create: [
           {
             name: 'Early Bird',
-            startTime: '05:30',
+            startTime: '06:00',
             endTime: '07:00',
             intervalMinutes: 8,
             isPrimeTime: false,
@@ -504,7 +586,7 @@ async function main() {
             name: 'Prime Morning',
             startTime: '07:00',
             endTime: '10:00',
-            intervalMinutes: 10,
+            intervalMinutes: 8,
             isPrimeTime: true,
             applicableDays: 'ALL',
             sortOrder: 1,
@@ -522,9 +604,9 @@ async function main() {
             name: 'Prime Afternoon',
             startTime: '14:00',
             endTime: '16:00',
-            intervalMinutes: 10,
+            intervalMinutes: 8,
             isPrimeTime: true,
-            applicableDays: 'WEEKEND',
+            applicableDays: 'ALL',
             sortOrder: 3,
           },
           {
@@ -548,7 +630,7 @@ async function main() {
             endDay: 28,
             isRecurring: true,
             priority: 2,
-            overrideFirstTee: '05:30',
+            overrideFirstTee: '06:00',
             overrideLastTee: '18:00',
             overrideTimePeriods: false,
           },
@@ -2193,28 +2275,28 @@ async function main() {
     // Monday Jan 20, 2026 - Normal weekday
     // ===========================================
     // Early morning bookings
-    { date: [2026, 1, 20], time: '07:08', status: BookingStatus.COMPLETED, players: [
+    { date: [2026, 1, 20], time: '07:12', status: BookingStatus.COMPLETED, players: [
       { type: PlayerType.MEMBER, memberIdx: 0, pos: 1, checkedIn: true },
       { type: PlayerType.MEMBER, memberIdx: 1, pos: 2, checkedIn: true },
       { type: PlayerType.GUEST, guestName: 'David Wilson', pos: 3, checkedIn: true },
       { type: PlayerType.GUEST, guestName: 'Tom Anderson', pos: 4, checkedIn: true },
     ]},
-    { date: [2026, 1, 20], time: '07:16', status: BookingStatus.COMPLETED, players: [
+    { date: [2026, 1, 20], time: '07:20', status: BookingStatus.COMPLETED, players: [
       { type: PlayerType.MEMBER, memberIdx: 2, pos: 1, checkedIn: true },
       { type: PlayerType.MEMBER, memberIdx: 3, pos: 2, checkedIn: true },
     ]},
-    { date: [2026, 1, 20], time: '07:24', status: BookingStatus.CHECKED_IN, players: [
+    { date: [2026, 1, 20], time: '07:28', status: BookingStatus.CHECKED_IN, players: [
       { type: PlayerType.MEMBER, memberIdx: 4, pos: 1, checkedIn: true },
       { type: PlayerType.GUEST, guestName: 'Michael Brown', pos: 2, checkedIn: true },
       { type: PlayerType.GUEST, guestName: 'Robert Davis', pos: 3, checkedIn: true },
     ]},
-    { date: [2026, 1, 20], time: '07:32', status: BookingStatus.CONFIRMED, players: [
+    { date: [2026, 1, 20], time: '07:44', status: BookingStatus.CONFIRMED, players: [
       { type: PlayerType.MEMBER, memberIdx: 5, pos: 1 },
       { type: PlayerType.MEMBER, memberIdx: 6, pos: 2 },
       { type: PlayerType.MEMBER, memberIdx: 7, pos: 3 },
       { type: PlayerType.MEMBER, memberIdx: 8, pos: 4 },
     ]},
-    { date: [2026, 1, 20], time: '09:00', status: BookingStatus.CONFIRMED, players: [
+    { date: [2026, 1, 20], time: '09:04', status: BookingStatus.CONFIRMED, players: [
       { type: PlayerType.MEMBER, memberIdx: 9, pos: 1 },
       { type: PlayerType.DEPENDENT, guestName: 'Junior Player', pos: 2 },
     ]},
@@ -2243,7 +2325,7 @@ async function main() {
       { type: PlayerType.MEMBER, memberIdx: 7, pos: 2 },
       { type: PlayerType.GUEST, guestName: 'Chris Taylor', pos: 3 },
     ]},
-    { date: [2026, 1, 21], time: '15:00', status: BookingStatus.CONFIRMED, players: [
+    { date: [2026, 1, 21], time: '14:56', status: BookingStatus.CONFIRMED, players: [
       { type: PlayerType.WALK_UP, guestName: 'Evening Walker', pos: 1 },
       { type: PlayerType.WALK_UP, guestName: 'Twilight Player', pos: 2 },
     ]},
@@ -2284,7 +2366,7 @@ async function main() {
     { date: [2026, 1, 23], time: '06:24', status: BookingStatus.CHECKED_IN, players: [
       { type: PlayerType.MEMBER, memberIdx: 7, pos: 1, checkedIn: true },
     ]},
-    { date: [2026, 1, 23], time: '07:00', status: BookingStatus.CONFIRMED, players: [
+    { date: [2026, 1, 23], time: '07:04', status: BookingStatus.CONFIRMED, players: [
       { type: PlayerType.MEMBER, memberIdx: 8, pos: 1 },
       { type: PlayerType.MEMBER, memberIdx: 9, pos: 2 },
     ]},
@@ -2292,7 +2374,7 @@ async function main() {
       { type: PlayerType.MEMBER, memberIdx: 10, pos: 1 },
       { type: PlayerType.GUEST, guestName: 'No Show Guest', pos: 2 },
     ]},
-    { date: [2026, 1, 23], time: '09:00', status: BookingStatus.CONFIRMED, players: [
+    { date: [2026, 1, 23], time: '09:04', status: BookingStatus.CONFIRMED, players: [
       { type: PlayerType.MEMBER, memberIdx: 11, pos: 1 },
       { type: PlayerType.MEMBER, memberIdx: 12, pos: 2 },
       { type: PlayerType.GUEST, guestName: 'Business Partner', pos: 3 },
@@ -2317,7 +2399,7 @@ async function main() {
       { type: PlayerType.MEMBER, memberIdx: 0, pos: 1 },
       { type: PlayerType.MEMBER, memberIdx: 1, pos: 2 },
     ]},
-    { date: [2026, 1, 24], time: '07:00', status: BookingStatus.CONFIRMED, players: [
+    { date: [2026, 1, 24], time: '07:04', status: BookingStatus.CONFIRMED, players: [
       { type: PlayerType.MEMBER, memberIdx: 2, pos: 1 },
       { type: PlayerType.MEMBER, memberIdx: 3, pos: 2 },
       { type: PlayerType.MEMBER, memberIdx: 4, pos: 3 },
@@ -2326,7 +2408,7 @@ async function main() {
       { type: PlayerType.MEMBER, memberIdx: 5, pos: 1 },
       { type: PlayerType.GUEST, guestName: 'VIP Guest', pos: 2 },
     ]},
-    { date: [2026, 1, 24], time: '15:00', status: BookingStatus.CONFIRMED, players: [
+    { date: [2026, 1, 24], time: '14:56', status: BookingStatus.CONFIRMED, players: [
       { type: PlayerType.MEMBER, memberIdx: 6, pos: 1 },
     ]},
 
@@ -2363,7 +2445,7 @@ async function main() {
       { type: PlayerType.MEMBER, memberIdx: 2, pos: 3 },
       { type: PlayerType.MEMBER, memberIdx: 3, pos: 4 },
     ]},
-    { date: [2026, 1, 26], time: '07:00', status: BookingStatus.CONFIRMED, players: [
+    { date: [2026, 1, 26], time: '07:04', status: BookingStatus.CONFIRMED, players: [
       { type: PlayerType.MEMBER, memberIdx: 4, pos: 1 },
       { type: PlayerType.GUEST, guestName: 'Sunday Guest', pos: 2 },
     ]},
@@ -2409,7 +2491,7 @@ async function main() {
       { type: PlayerType.MEMBER, memberIdx: 8, pos: 3 },
       { type: PlayerType.MEMBER, memberIdx: 9, pos: 4 },
     ]},
-    { date: [2026, 1, 29], time: '07:00', status: BookingStatus.CONFIRMED, players: [
+    { date: [2026, 1, 29], time: '07:04', status: BookingStatus.CONFIRMED, players: [
       { type: PlayerType.MEMBER, memberIdx: 10, pos: 1 },
       { type: PlayerType.DEPENDENT, guestName: 'Junior Player Wed', pos: 2 },
     ]},
@@ -2421,7 +2503,7 @@ async function main() {
       { type: PlayerType.MEMBER, memberIdx: 0, pos: 1 },
       { type: PlayerType.GUEST, guestName: 'Thursday AM Guest', pos: 2 },
     ]},
-    { date: [2026, 1, 30], time: '09:00', status: BookingStatus.CONFIRMED, players: [
+    { date: [2026, 1, 30], time: '09:04', status: BookingStatus.CONFIRMED, players: [
       { type: PlayerType.MEMBER, memberIdx: 1, pos: 1 },
       { type: PlayerType.MEMBER, memberIdx: 2, pos: 2 },
       { type: PlayerType.MEMBER, memberIdx: 3, pos: 3 },
@@ -2448,7 +2530,7 @@ async function main() {
     // Saturday Feb 1, 2026 (Chinese NY Tournament morning)
     // ===========================================
     // After tournament at 10am
-    { date: [2026, 2, 1], time: '11:00', status: BookingStatus.CONFIRMED, players: [
+    { date: [2026, 2, 1], time: '10:56', status: BookingStatus.CONFIRMED, players: [
       { type: PlayerType.MEMBER, memberIdx: 7, pos: 1 },
       { type: PlayerType.MEMBER, memberIdx: 8, pos: 2 },
       { type: PlayerType.GUEST, guestName: 'Feb Saturday Guest', pos: 3 },
@@ -2493,7 +2575,7 @@ async function main() {
       { type: PlayerType.MEMBER, memberIdx: 8, pos: 1 },
       { type: PlayerType.MEMBER, memberIdx: 9, pos: 2 },
     ]},
-    { date: [2026, 2, 4], time: '07:00', status: BookingStatus.CONFIRMED, players: [
+    { date: [2026, 2, 4], time: '07:04', status: BookingStatus.CONFIRMED, players: [
       { type: PlayerType.MEMBER, memberIdx: 10, pos: 1 },
       { type: PlayerType.GUEST, guestName: 'Tuesday Morning Guest', pos: 2 },
       { type: PlayerType.GUEST, guestName: 'Tuesday Morning Guest 2', pos: 3 },
@@ -2525,7 +2607,7 @@ async function main() {
       { type: PlayerType.MEMBER, memberIdx: 5, pos: 1 },
       { type: PlayerType.MEMBER, memberIdx: 6, pos: 2 },
     ]},
-    { date: [2026, 2, 6], time: '07:00', status: BookingStatus.CONFIRMED, players: [
+    { date: [2026, 2, 6], time: '07:04', status: BookingStatus.CONFIRMED, players: [
       { type: PlayerType.MEMBER, memberIdx: 7, pos: 1 },
       { type: PlayerType.MEMBER, memberIdx: 8, pos: 2 },
       { type: PlayerType.MEMBER, memberIdx: 9, pos: 3 },
@@ -2580,23 +2662,23 @@ async function main() {
     // ===========================================
 
     // Jan 29, 2026 - Two separate 2-player bookings at 09:00
-    { date: [2026, 1, 29], time: '09:00', status: BookingStatus.CONFIRMED, allowDuplicate: true, players: [
+    { date: [2026, 1, 29], time: '09:04', status: BookingStatus.CONFIRMED, allowDuplicate: true, players: [
       { type: PlayerType.MEMBER, memberIdx: 0, pos: 1 },
       { type: PlayerType.MEMBER, memberIdx: 1, pos: 2 },
     ]},
-    { date: [2026, 1, 29], time: '09:00', status: BookingStatus.CONFIRMED, allowDuplicate: true, players: [
+    { date: [2026, 1, 29], time: '09:04', status: BookingStatus.CONFIRMED, allowDuplicate: true, players: [
       { type: PlayerType.GUEST, guestName: 'Walk-in Guest A', pos: 3 },
       { type: PlayerType.GUEST, guestName: 'Walk-in Guest B', pos: 4 },
     ]},
 
     // Jan 29, 2026 - Three separate bookings at 11:00 (1+1+2)
-    { date: [2026, 1, 29], time: '11:00', status: BookingStatus.CONFIRMED, allowDuplicate: true, players: [
+    { date: [2026, 1, 29], time: '10:56', status: BookingStatus.CONFIRMED, allowDuplicate: true, players: [
       { type: PlayerType.MEMBER, memberIdx: 2, pos: 1 },
     ]},
-    { date: [2026, 1, 29], time: '11:00', status: BookingStatus.CONFIRMED, allowDuplicate: true, players: [
+    { date: [2026, 1, 29], time: '10:56', status: BookingStatus.CONFIRMED, allowDuplicate: true, players: [
       { type: PlayerType.MEMBER, memberIdx: 3, pos: 2 },
     ]},
-    { date: [2026, 1, 29], time: '11:00', status: BookingStatus.PENDING, allowDuplicate: true, players: [
+    { date: [2026, 1, 29], time: '10:56', status: BookingStatus.PENDING, allowDuplicate: true, players: [
       { type: PlayerType.GUEST, guestName: 'Paired Guest 1', pos: 3 },
       { type: PlayerType.GUEST, guestName: 'Paired Guest 2', pos: 4 },
     ]},
@@ -2622,11 +2704,11 @@ async function main() {
     ]},
 
     // Feb 1, 2026 - Weekend multi-booking at 07:00 (2+2)
-    { date: [2026, 2, 1], time: '07:00', status: BookingStatus.CONFIRMED, allowDuplicate: true, players: [
+    { date: [2026, 2, 1], time: '07:04', status: BookingStatus.CONFIRMED, allowDuplicate: true, players: [
       { type: PlayerType.MEMBER, memberIdx: 8, pos: 1 },
       { type: PlayerType.MEMBER, memberIdx: 9, pos: 2 },
     ]},
-    { date: [2026, 2, 1], time: '07:00', status: BookingStatus.CONFIRMED, allowDuplicate: true, players: [
+    { date: [2026, 2, 1], time: '07:04', status: BookingStatus.CONFIRMED, allowDuplicate: true, players: [
       { type: PlayerType.MEMBER, memberIdx: 10, pos: 3 },
       { type: PlayerType.GUEST, guestName: 'Weekend Guest', pos: 4 },
     ]},
@@ -3566,7 +3648,7 @@ async function main() {
       clubId: demoClub.id,
       courseId: golfCourse.id,
       teeDate: fourballTeeDate,
-      teeTime: '07:00',
+      teeTime: '07:04',
     },
   });
 
@@ -3577,7 +3659,7 @@ async function main() {
         courseId: golfCourse.id,
         teeTimeNumber: getNextTeeTimeNumber(),
         teeDate: fourballTeeDate,
-        teeTime: '07:00',
+        teeTime: '07:04',
         holes: 18,
         status: BookingStatus.CONFIRMED,
         confirmedAt: new Date(),
@@ -3653,6 +3735,198 @@ async function main() {
   // ============================================================================
   console.log('');
   await seedLookups(prisma);
+
+  // ============================================================================
+  // EVENTS & ANNOUNCEMENTS
+  // ============================================================================
+  console.log('');
+  console.log('Creating events and announcements...');
+
+  const now = new Date();
+  const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+  const nextMonth = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+  const in2Weeks = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+  const in3Weeks = new Date(now.getTime() + 21 * 24 * 60 * 60 * 1000);
+
+  await prisma.event.createMany({
+    data: [
+      {
+        clubId: demoClub.id,
+        title: 'Monthly Medal Tournament',
+        description: 'Our flagship monthly stableford competition open to all members. Prizes for gross and nett winners. Followed by dinner and awards ceremony at the Terrace Restaurant.',
+        category: 'GOLF',
+        location: 'Championship Course',
+        startDate: new Date(nextWeek.getFullYear(), nextWeek.getMonth(), nextWeek.getDate(), 7, 0),
+        endDate: new Date(nextWeek.getFullYear(), nextWeek.getMonth(), nextWeek.getDate(), 18, 0),
+        capacity: 120,
+        price: 2500,
+        isPublished: true,
+        isFeatured: true,
+      },
+      {
+        clubId: demoClub.id,
+        title: 'Wine & Cheese Evening',
+        description: 'An exclusive tasting event featuring premium wines from Burgundy paired with artisanal cheeses. Limited to 40 guests.',
+        category: 'SOCIAL',
+        location: 'The Cellar Lounge',
+        startDate: new Date(in2Weeks.getFullYear(), in2Weeks.getMonth(), in2Weeks.getDate(), 19, 0),
+        endDate: new Date(in2Weeks.getFullYear(), in2Weeks.getMonth(), in2Weeks.getDate(), 22, 0),
+        capacity: 40,
+        price: 3500,
+        isPublished: true,
+        isFeatured: true,
+      },
+      {
+        clubId: demoClub.id,
+        title: 'Kids Swimming Clinic',
+        description: 'Professional swimming lessons for children aged 5-12. All skill levels welcome. Equipment provided.',
+        category: 'KIDS',
+        location: 'Olympic Pool',
+        startDate: new Date(in2Weeks.getFullYear(), in2Weeks.getMonth(), in2Weeks.getDate() + 1, 9, 0),
+        endDate: new Date(in2Weeks.getFullYear(), in2Weeks.getMonth(), in2Weeks.getDate() + 1, 12, 0),
+        capacity: 20,
+        price: 800,
+        isPublished: true,
+      },
+      {
+        clubId: demoClub.id,
+        title: 'Yoga & Wellness Retreat',
+        description: 'A full-day wellness experience with morning yoga, guided meditation, spa treatments, and a healthy lunch. Led by our resident wellness expert.',
+        category: 'FITNESS',
+        location: 'Wellness Center & Spa',
+        startDate: new Date(in3Weeks.getFullYear(), in3Weeks.getMonth(), in3Weeks.getDate(), 8, 0),
+        endDate: new Date(in3Weeks.getFullYear(), in3Weeks.getMonth(), in3Weeks.getDate(), 16, 0),
+        capacity: 25,
+        price: 4500,
+        isPublished: true,
+      },
+      {
+        clubId: demoClub.id,
+        title: 'Sunday Brunch Buffet',
+        description: 'Our legendary Sunday brunch featuring live cooking stations, seafood, and a dessert bar. Complimentary welcome drink for members.',
+        category: 'DINING',
+        location: 'Grand Ballroom',
+        startDate: new Date(nextWeek.getFullYear(), nextWeek.getMonth(), nextWeek.getDate() + 2, 11, 0),
+        endDate: new Date(nextWeek.getFullYear(), nextWeek.getMonth(), nextWeek.getDate() + 2, 15, 0),
+        capacity: 150,
+        price: 1800,
+        isPublished: true,
+      },
+      {
+        clubId: demoClub.id,
+        title: 'Inter-Club Golf Championship',
+        description: 'Annual competition against Royal Hua Hin Golf Club. Team selection based on handicap. Represent our club!',
+        category: 'GOLF',
+        location: 'Championship Course',
+        startDate: new Date(nextMonth.getFullYear(), nextMonth.getMonth(), nextMonth.getDate(), 6, 30),
+        endDate: new Date(nextMonth.getFullYear(), nextMonth.getMonth(), nextMonth.getDate(), 19, 0),
+        capacity: 60,
+        isPublished: true,
+        isFeatured: true,
+      },
+    ],
+    skipDuplicates: true,
+  });
+
+  await prisma.announcement.createMany({
+    data: [
+      {
+        clubId: demoClub.id,
+        title: 'Course Maintenance Schedule Update',
+        body: 'The Championship Course will undergo aeration on holes 10-18 from February 15-17. The front nine will remain open for play. Please book tee times accordingly. We apologize for any inconvenience.',
+        category: 'MAINTENANCE',
+        isPinned: true,
+        publishedAt: new Date(),
+      },
+      {
+        clubId: demoClub.id,
+        title: 'New Pool Hours Starting March',
+        body: 'Starting March 1st, the Olympic Pool will open 30 minutes earlier at 5:30 AM on weekdays to accommodate early morning lap swimmers. Weekend hours remain unchanged (6:00 AM - 9:00 PM).',
+        category: 'GENERAL',
+        publishedAt: new Date(),
+      },
+      {
+        clubId: demoClub.id,
+        title: 'Introducing Chef Tanaka\'s Omakase Night',
+        body: 'Every Thursday evening, Chef Tanaka presents a 7-course Japanese omakase dinner at Sakura Restaurant. Limited to 12 seats per evening. Member price: ฿4,500 per person. Reservations required 48 hours in advance.',
+        category: 'DINING',
+        publishedAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000),
+      },
+      {
+        clubId: demoClub.id,
+        title: 'Junior Golf Academy Registration Open',
+        body: 'Registration is now open for the 2026 Junior Golf Academy season (March-June). Our PGA-certified coaches will provide structured training for ages 6-16. Early bird discount of 15% for registrations before February 28.',
+        category: 'GOLF',
+        isPinned: true,
+        publishedAt: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000),
+      },
+      {
+        clubId: demoClub.id,
+        title: 'Valentine\'s Day Special Dinner',
+        body: 'Celebrate Valentine\'s Day at The Terrace with a special 5-course dinner paired with champagne. ฿6,800 per couple. Live music by the Jazz Quartet. Book before February 10 to secure your table.',
+        category: 'SOCIAL',
+        publishedAt: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000),
+        expiresAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
+      },
+    ],
+    skipDuplicates: true,
+  });
+
+  console.log('✅ Created events and announcements');
+
+  // ============================================================================
+  // SCORECARDS
+  // ============================================================================
+  console.log('Creating scorecards...');
+
+  const scorecardData = [
+    { daysAgo: 3, totalScore: 78, totalPutts: 32, fairwaysHit: 9, greensInReg: 11, weather: 'Sunny', holes: [
+      4,4,3,5,4,3,4,5,4, 4,5,3,4,4,3,5,4,4
+    ]},
+    { daysAgo: 10, totalScore: 82, totalPutts: 34, fairwaysHit: 8, greensInReg: 9, weather: 'Cloudy', holes: [
+      5,4,4,5,4,3,5,5,4, 4,5,4,4,5,3,5,4,4
+    ]},
+    { daysAgo: 18, totalScore: 75, totalPutts: 29, fairwaysHit: 11, greensInReg: 13, weather: 'Sunny', holes: [
+      4,4,3,4,4,3,4,5,4, 4,4,3,4,4,3,5,4,4
+    ]},
+    { daysAgo: 25, totalScore: 80, totalPutts: 33, fairwaysHit: 10, greensInReg: 10, weather: 'Overcast', holes: [
+      4,5,3,5,4,3,4,5,5, 4,5,3,4,4,4,5,4,4
+    ]},
+    { daysAgo: 35, totalScore: 84, totalPutts: 36, fairwaysHit: 7, greensInReg: 8, weather: 'Hot', holes: [
+      5,5,4,5,4,4,5,5,4, 5,5,3,4,5,3,5,4,4
+    ]},
+  ];
+
+  // Standard par for championship course (par 72)
+  const parByHole = [4,4,3,5,4,3,4,5,4, 4,5,3,4,4,3,5,4,4];
+
+  for (const sc of scorecardData) {
+    const playedAt = new Date(now.getTime() - sc.daysAgo * 24 * 60 * 60 * 1000);
+    const scorecard = await prisma.scorecard.create({
+      data: {
+        memberId: memberForPortal.id,
+        courseId: golfCourse.id,
+        playedAt,
+        totalScore: sc.totalScore,
+        totalPutts: sc.totalPutts,
+        fairwaysHit: sc.fairwaysHit,
+        greensInReg: sc.greensInReg,
+        weather: sc.weather,
+        holes: {
+          create: sc.holes.map((strokes, i) => ({
+            holeNumber: i + 1,
+            par: parByHole[i]!,
+            strokes,
+            putts: Math.floor(Math.random() * 2) + 1,
+            fairwayHit: Math.random() > 0.4,
+            greenInReg: strokes <= parByHole[i]!,
+          })),
+        },
+      },
+    });
+  }
+
+  console.log('✅ Created scorecards');
 
   console.log('');
   console.log('🎉 Database seed completed successfully!');

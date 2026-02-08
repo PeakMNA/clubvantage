@@ -3,22 +3,46 @@
  * Based on PRD-01 data model
  */
 
-export type InvoiceStatus = 'DRAFT' | 'SENT' | 'PAID' | 'PARTIALLY_PAID' | 'OVERDUE' | 'VOID' | 'CANCELLED';
+export const InvoiceStatus = {
+  DRAFT: 'DRAFT',
+  SENT: 'SENT',
+  PAID: 'PAID',
+  PARTIALLY_PAID: 'PARTIALLY_PAID',
+  OVERDUE: 'OVERDUE',
+  VOID: 'VOID',
+  CANCELLED: 'CANCELLED',
+} as const;
+export type InvoiceStatus = (typeof InvoiceStatus)[keyof typeof InvoiceStatus];
 
-export type PaymentMethod =
-  | 'CASH'
-  | 'BANK_TRANSFER'
-  | 'CREDIT_CARD'
-  | 'QR_PROMPTPAY'  // Thailand
-  | 'QR_PAYNOW'     // Singapore
-  | 'QR_DUITNOW'    // Malaysia
-  | 'CHECK'
-  | 'DIRECT_DEBIT'
-  | 'CREDIT';
+export const PaymentMethod = {
+  CASH: 'CASH',
+  BANK_TRANSFER: 'BANK_TRANSFER',
+  CREDIT_CARD: 'CREDIT_CARD',
+  QR_PROMPTPAY: 'QR_PROMPTPAY',
+  QR_PAYNOW: 'QR_PAYNOW',
+  QR_DUITNOW: 'QR_DUITNOW',
+  CHECK: 'CHECK',
+  DIRECT_DEBIT: 'DIRECT_DEBIT',
+  CREDIT: 'CREDIT',
+} as const;
+export type PaymentMethod = (typeof PaymentMethod)[keyof typeof PaymentMethod];
 
-export type PaymentStatus = 'PENDING' | 'COMPLETED' | 'FAILED' | 'REFUNDED';
+export const PaymentStatus = {
+  PENDING: 'PENDING',
+  COMPLETED: 'COMPLETED',
+  FAILED: 'FAILED',
+  REFUNDED: 'REFUNDED',
+  PARTIALLY_REFUNDED: 'PARTIALLY_REFUNDED',
+} as const;
+export type PaymentStatus = (typeof PaymentStatus)[keyof typeof PaymentStatus];
 
-export type TaxType = 'VAT' | 'GST' | 'SST' | 'EXEMPT';
+export const BillingTaxType = {
+  VAT: 'VAT',
+  GST: 'GST',
+  SST: 'SST',
+  EXEMPT: 'EXEMPT',
+} as const;
+export type BillingTaxType = (typeof BillingTaxType)[keyof typeof BillingTaxType];
 
 export interface Invoice {
   id: string;
@@ -44,7 +68,7 @@ export interface Invoice {
   balance: number;
 
   // Tax Details
-  taxType: TaxType;
+  taxType: BillingTaxType;
   taxRate: number;
   taxId?: string;
   branchId?: string;
@@ -72,7 +96,7 @@ export interface InvoiceLineItem {
   chargeTypeId?: string;
   quantity: number;
   unitPrice: number;
-  taxType: TaxType;
+  taxType: BillingTaxType;
   taxRate: number;
   taxAmount: number;
   amount: number;
@@ -87,7 +111,7 @@ export interface ChargeType {
   name: string;
   description?: string;
   defaultPrice: number;
-  taxType: TaxType;
+  taxType: BillingTaxType;
   category: ChargeCategory;
   isActive: boolean;
   glAccountId?: string;
@@ -95,18 +119,20 @@ export interface ChargeType {
   updatedAt: Date;
 }
 
-export type ChargeCategory =
-  | 'MEMBERSHIP_DUES'
-  | 'FACILITY_BOOKING'
-  | 'GOLF_GREEN_FEE'
-  | 'GOLF_CADDY'
-  | 'GOLF_CART'
-  | 'GUEST_FEE'
-  | 'F_AND_B'
-  | 'PRO_SHOP'
-  | 'SERVICE'
-  | 'PENALTY'
-  | 'OTHER';
+export const ChargeCategory = {
+  MEMBERSHIP_DUES: 'MEMBERSHIP_DUES',
+  FACILITY_BOOKING: 'FACILITY_BOOKING',
+  GOLF_GREEN_FEE: 'GOLF_GREEN_FEE',
+  GOLF_CADDY: 'GOLF_CADDY',
+  GOLF_CART: 'GOLF_CART',
+  GUEST_FEE: 'GUEST_FEE',
+  F_AND_B: 'F_AND_B',
+  PRO_SHOP: 'PRO_SHOP',
+  SERVICE: 'SERVICE',
+  PENALTY: 'PENALTY',
+  OTHER: 'OTHER',
+} as const;
+export type ChargeCategory = (typeof ChargeCategory)[keyof typeof ChargeCategory];
 
 export interface Payment {
   id: string;

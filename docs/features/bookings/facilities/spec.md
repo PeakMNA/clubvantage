@@ -29,6 +29,8 @@ The Facilities tab provides management of bookable physical spaces at the club, 
 | Facility scheduling rules | Not Implemented | No per-facility booking rules (min duration, advance booking) |
 | Facility images/photos | Not Implemented | No image upload for facilities |
 
+Member portal facility browsing designed (see `docs/plans/2026-02-06-member-portal-pwa-design.md`).
+
 ## Capabilities
 
 - Display all facilities in responsive grid or list layout with type-specific icons
@@ -228,6 +230,17 @@ interface FacilityEquipmentOption {
 9. **Revenue Center**: If `requireRevenueCentre` is enabled, facilities must have a revenue center assigned before bookings can be created. Revenue center determines how booking charges are categorized in billing.
 
 10. **Permission Model**: Facility CRUD operations require specific permissions: `facility:create`, `facility:update`, `facility:delete`. These are enforced via `requirePermission()` in server actions.
+
+## Member Portal Integration
+
+**Plan**: `docs/plans/2026-02-06-member-portal-pwa-design.md`
+
+- Facilities are displayed in the portal Bookings tab with image, name, price, availability indicator
+- Category filter (Tennis, Swimming, Dining, Fitness, Events) for easy browsing
+- Facility visibility in portal controlled per-facility in staff admin settings
+- Amenity pills displayed on facility cards (e.g., "Lights", "Equipment", "Catering")
+- "Available today" / "Next available: [date]" real-time availability indicator
+- Controlled by `bookings.enabled` feature flag at tenant level
 
 ## Edge Cases
 

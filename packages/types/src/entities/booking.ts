@@ -3,27 +3,36 @@
  * Based on PRD-01 data model
  */
 
-export type BookingStatus =
-  | 'PENDING'
-  | 'CONFIRMED'
-  | 'CHECKED_IN'
-  | 'COMPLETED'
-  | 'CANCELLED'
-  | 'NO_SHOW';
+export const BookingStatus = {
+  PENDING: 'PENDING',
+  CONFIRMED: 'CONFIRMED',
+  CHECKED_IN: 'CHECKED_IN',
+  IN_PROGRESS: 'IN_PROGRESS',
+  COMPLETED: 'COMPLETED',
+  CANCELLED: 'CANCELLED',
+  NO_SHOW: 'NO_SHOW',
+} as const;
+export type BookingStatus = (typeof BookingStatus)[keyof typeof BookingStatus];
 
-export type BookingType = 'RESOURCE' | 'SERVICE';
+export const BookingType = {
+  RESOURCE: 'RESOURCE',
+  SERVICE: 'SERVICE',
+} as const;
+export type BookingType = (typeof BookingType)[keyof typeof BookingType];
 
-export type FacilityType =
-  | 'TENNIS_COURT'
-  | 'SQUASH_COURT'
-  | 'BADMINTON_COURT'
-  | 'SWIMMING_POOL'
-  | 'GYM'
-  | 'FUNCTION_ROOM'
-  | 'MEETING_ROOM'
-  | 'SPA'
-  | 'RESTAURANT'
-  | 'OTHER';
+export const FacilityType = {
+  TENNIS_COURT: 'TENNIS_COURT',
+  SQUASH_COURT: 'SQUASH_COURT',
+  BADMINTON_COURT: 'BADMINTON_COURT',
+  SWIMMING_POOL: 'SWIMMING_POOL',
+  GYM: 'GYM',
+  FUNCTION_ROOM: 'FUNCTION_ROOM',
+  MEETING_ROOM: 'MEETING_ROOM',
+  SPA: 'SPA',
+  RESTAURANT: 'RESTAURANT',
+  OTHER: 'OTHER',
+} as const;
+export type FacilityType = (typeof FacilityType)[keyof typeof FacilityType];
 
 export interface Facility {
   id: string;

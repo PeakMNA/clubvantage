@@ -30,6 +30,8 @@ The Calendar view is the primary interface for staff to visualize and manage boo
 | Reschedule mutation | Implemented | `useRescheduleBookingMutation` in calendar page |
 | Server actions (validation) | Partially Implemented | `actions.ts` uses mock data for members, services, staff |
 
+Member portal facility booking flow designed (see `docs/plans/2026-02-06-member-portal-pwa-design.md`).
+
 ## Capabilities
 
 - Render a resource-by-time grid for a single day with configurable operating hours
@@ -250,6 +252,18 @@ type BookingType = 'facility' | 'service' | 'staff';
 9. **No-Show Handling**: Bookings not checked in within `noShowGraceMinutes` after the start time can be marked as NO_SHOW. This increments the member's no-show counter.
 
 10. **Booking Number Generation**: Each booking receives a unique booking number with the prefix `BK` followed by a sequential identifier, generated server-side.
+
+## Member Portal Integration
+
+**Plan**: `docs/plans/2026-02-06-member-portal-pwa-design.md`
+
+- Members can browse facilities by category and view calendar availability in the portal Bookings tab
+- Booking flow: select facility → pick date on calendar → select time slot → set duration → add services/equipment → review → confirm
+- Auto-approve controlled by `bookings.autoApprove` feature flag (per facility)
+- When auto-approve is off, booking goes to Pending status — staff must approve in admin panel
+- Push notification sent when staff approves/rejects a pending booking
+- My Bookings view shows upcoming and past facility bookings
+- Offline: bookings queued in IndexedDB with "Pending Sync" badge
 
 ## Edge Cases
 

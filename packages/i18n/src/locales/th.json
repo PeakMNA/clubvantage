@@ -1,0 +1,184 @@
+{
+  "memberStatus": {
+    "PROSPECT": "ผู้สนใจ",
+    "LEAD": "ลูกค้าเป้าหมาย",
+    "APPLICANT": "ผู้สมัคร",
+    "ACTIVE": "ใช้งาน",
+    "SUSPENDED": "ระงับ",
+    "LAPSED": "หมดอายุ",
+    "RESIGNED": "ลาออก",
+    "TERMINATED": "ยกเลิก",
+    "REACTIVATED": "เปิดใช้งานอีกครั้ง"
+  },
+  "membershipCategory": {
+    "REGULAR": "ปกติ",
+    "PREMIUM": "พรีเมียม",
+    "CORPORATE": "องค์กร",
+    "SENIOR": "อาวุโส",
+    "JUNIOR": "จูเนียร์",
+    "FAMILY": "ครอบครัว"
+  },
+  "dependentRelationship": {
+    "SPOUSE": "คู่สมรส",
+    "CHILD": "บุตร",
+    "PARENT": "บิดา/มารดา",
+    "SIBLING": "พี่น้อง",
+    "OTHER": "อื่นๆ"
+  },
+  "referralSource": {
+    "WEBSITE": "เว็บไซต์",
+    "MEMBER_REFERRAL": "สมาชิกแนะนำ",
+    "WALK_IN": "เดินเข้ามา",
+    "GUEST_CONVERSION": "แขกเปลี่ยนสถานะ",
+    "CORPORATE": "องค์กร",
+    "EVENT": "กิจกรรม",
+    "ADVERTISEMENT": "โฆษณา",
+    "OTHER": "อื่นๆ"
+  },
+  "leadStage": {
+    "NEW": "ใหม่",
+    "CONTACTED": "ติดต่อแล้ว",
+    "QUALIFIED": "ผ่านเกณฑ์",
+    "CONVERTED": "แปลงแล้ว",
+    "LOST": "สูญเสีย"
+  },
+  "bookingStatus": {
+    "PENDING": "รอดำเนินการ",
+    "CONFIRMED": "ยืนยันแล้ว",
+    "CHECKED_IN": "เช็คอินแล้ว",
+    "IN_PROGRESS": "กำลังดำเนินการ",
+    "COMPLETED": "เสร็จสิ้น",
+    "CANCELLED": "ยกเลิก",
+    "NO_SHOW": "ไม่มาตามนัด"
+  },
+  "bookingType": {
+    "RESOURCE": "สถานที่",
+    "SERVICE": "บริการ"
+  },
+  "facilityType": {
+    "TENNIS_COURT": "สนามเทนนิส",
+    "SQUASH_COURT": "สนามสควอช",
+    "BADMINTON_COURT": "สนามแบดมินตัน",
+    "SWIMMING_POOL": "สระว่ายน้ำ",
+    "GYM": "ฟิตเนส",
+    "FUNCTION_ROOM": "ห้องจัดเลี้ยง",
+    "MEETING_ROOM": "ห้องประชุม",
+    "SPA": "สปา",
+    "RESTAURANT": "ร้านอาหาร",
+    "OTHER": "อื่นๆ"
+  },
+  "teeTimeStatus": {
+    "AVAILABLE": "ว่าง",
+    "BOOKED": "จองแล้ว",
+    "CHECKED_IN": "เช็คอินแล้ว",
+    "STARTED": "เริ่มแล้ว",
+    "COMPLETED": "เสร็จสิ้น",
+    "CANCELLED": "ยกเลิก",
+    "NO_SHOW": "ไม่มาตามนัด",
+    "BLOCKED": "บล็อค"
+  },
+  "playerType": {
+    "MEMBER": "สมาชิก",
+    "GUEST": "แขก",
+    "DEPENDENT": "ผู้ติดตาม",
+    "WALK_UP": "วอล์คอัพ"
+  },
+  "cartType": {
+    "SINGLE": "คันเดียว",
+    "SHARED": "ร่วมกัน",
+    "WALKING": "เดิน"
+  },
+  "invoiceStatus": {
+    "DRAFT": "ร่าง",
+    "SENT": "ส่งแล้ว",
+    "PAID": "ชำระแล้ว",
+    "PARTIALLY_PAID": "ชำระบางส่วน",
+    "OVERDUE": "เกินกำหนด",
+    "VOID": "เป็นโมฆะ",
+    "CANCELLED": "ยกเลิก"
+  },
+  "paymentMethod": {
+    "CASH": "เงินสด",
+    "BANK_TRANSFER": "โอนเงิน",
+    "CREDIT_CARD": "บัตรเครดิต",
+    "QR_PROMPTPAY": "พร้อมเพย์ QR",
+    "QR_PAYNOW": "PayNow QR",
+    "QR_DUITNOW": "DuitNow QR",
+    "CHECK": "เช็ค",
+    "DIRECT_DEBIT": "หักบัญชีอัตโนมัติ",
+    "CREDIT": "เครดิต"
+  },
+  "paymentStatus": {
+    "PENDING": "รอดำเนินการ",
+    "COMPLETED": "สำเร็จ",
+    "FAILED": "ล้มเหลว",
+    "REFUNDED": "คืนเงินแล้ว",
+    "PARTIALLY_REFUNDED": "คืนเงินบางส่วน"
+  },
+  "billingTaxType": {
+    "VAT": "ภาษีมูลค่าเพิ่ม",
+    "GST": "GST",
+    "SST": "SST",
+    "EXEMPT": "ยกเว้น"
+  },
+  "chargeCategory": {
+    "MEMBERSHIP_DUES": "ค่าสมาชิก",
+    "FACILITY_BOOKING": "ค่าจองสถานที่",
+    "GOLF_GREEN_FEE": "ค่ากรีนฟี",
+    "GOLF_CADDY": "ค่าแคดดี้",
+    "GOLF_CART": "ค่ารถกอล์ฟ",
+    "GUEST_FEE": "ค่าแขก",
+    "F_AND_B": "อาหารและเครื่องดื่ม",
+    "PRO_SHOP": "โปรช็อป",
+    "SERVICE": "บริการ",
+    "PENALTY": "ค่าปรับ",
+    "OTHER": "อื่นๆ"
+  },
+  "rentalStatus": {
+    "NONE": "ไม่มี",
+    "REQUESTED": "ร้องขอ",
+    "PAID": "ชำระแล้ว",
+    "ASSIGNED": "มอบหมายแล้ว",
+    "RETURNED": "คืนแล้ว"
+  },
+  "region": {
+    "TH": "ไทย",
+    "SG": "สิงคโปร์",
+    "MY": "มาเลเซีย"
+  },
+  "userRole": {
+    "SUPER_ADMIN": "ผู้ดูแลระบบ",
+    "CLUB_MANAGER": "ผู้จัดการสโมสร",
+    "FINANCE_STAFF": "เจ้าหน้าที่การเงิน",
+    "FRONT_DESK": "เจ้าหน้าที่ต้อนรับ",
+    "GOLF_OPERATIONS": "เจ้าหน้าที่กอล์ฟ",
+    "F_AND_B_STAFF": "เจ้าหน้าที่อาหารและเครื่องดื่ม"
+  },
+  "tenantStatus": {
+    "PENDING": "รอดำเนินการ",
+    "ACTIVE": "ใช้งาน",
+    "SUSPENDED": "ระงับ",
+    "ARCHIVED": "เก็บถาวร"
+  },
+  "subscriptionTier": {
+    "STARTER": "เริ่มต้น",
+    "PROFESSIONAL": "มืออาชีพ",
+    "ENTERPRISE": "องค์กร"
+  },
+  "subscriptionStatus": {
+    "ACTIVE": "ใช้งาน",
+    "PAST_DUE": "เกินกำหนด",
+    "CANCELLED": "ยกเลิก",
+    "TRIAL": "ทดลองใช้"
+  },
+  "billingCycle": {
+    "MONTHLY": "รายเดือน",
+    "ANNUAL": "รายปี"
+  },
+  "platformUserRole": {
+    "SUPER_ADMIN": "ผู้ดูแลระบบ",
+    "CSM": "ผู้จัดการความสำเร็จลูกค้า",
+    "SUPPORT": "ฝ่ายสนับสนุน",
+    "FINANCE": "ฝ่ายการเงิน"
+  }
+}

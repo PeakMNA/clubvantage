@@ -12,7 +12,7 @@ Station context flows through the POSConfigProvider to all POS components, enabl
 
 | Aspect | State |
 |--------|-------|
-| POSStation Prisma model | Not started -- design specified in plan documents |
+| POSStation Prisma model | **Done** -- added to schema.prisma with club/outlet relations |
 | Station CRUD API (GraphQL) | Not started |
 | POSConfigProvider station support | Not started -- provider accepts outlet prop but not station |
 | POSStationGuard component | Not started -- design specified |
