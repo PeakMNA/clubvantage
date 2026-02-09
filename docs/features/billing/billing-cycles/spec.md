@@ -16,6 +16,7 @@ The system supports Monthly, Quarterly, Semi-Annual, and Annual billing frequenc
 - **Frontend hook**: Implemented (`use-billing-settings.ts`)
 - **Frontend components**: Planned (`billing-cycle-section.tsx` for settings, `member-billing-profile-modal.tsx` for overrides, `billing-preview-card.tsx` for inline preview)
 - **Settings page integration**: Not yet integrated into `/settings` page
+- **AR Cycle Mode**: Redesigned — two modes: Club Cycle (shared AR period with configurable closing day) and Member Cycle (per-member cycle from join date, close checklist on financial period). See `docs/plans/2026-02-09-ar-period-close-redesign.md`.
 
 ## Capabilities
 
@@ -42,7 +43,7 @@ The system supports Monthly, Quarterly, Semi-Annual, and Annual billing frequenc
 | Invoices | Invoice generation | Writes | Creates invoices when billing cycle triggers; writes line items for recurring dues |
 | Payments | Payment status | Reads | Checks payment status to determine if late fees should be applied |
 | AR Profiles | Balance data | Reads | Reads current balance for late fee percentage calculations |
-| AR Statements | Period alignment | Reads | Statement periods should align with billing cycle periods |
+| AR Statements | Period alignment | Reads | Statement periods should align with billing cycle periods. In Club Cycle mode, AR period uses the configured closing day. In Member Cycle mode, per-member AR cycles are anchored to join date; close checklist aligns with financial period. |
 | Settings | Club settings | Reads/Writes | Reads and writes ClubBillingSettings for club-level defaults |
 | Golf | Recurring charges | Reads | Reads recurring golf-related charges (locker fees, bag storage) to include in billing cycle |
 | Bookings | Facility charges | Reads | Reads recurring facility booking charges |

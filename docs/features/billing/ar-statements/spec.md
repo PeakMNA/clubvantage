@@ -10,24 +10,30 @@ Statement periods are configured once in Club Settings and auto-managed thereaft
 
 - **Backend schema**: Designed (StatementPeriod, StatementRun, Statement models specified in Prisma)
 - **Backend services**: Not yet implemented (ARProfileService, StatementPeriodService, StatementRunService, StatementService, StatementDeliveryService planned)
-- **Frontend pages**: Partially implemented (`/billing/statements/page.tsx` exists with period management UI; `CreatePeriodModal`, `EditPeriodModal`, `PeriodInitWizard` components exist)
-- **Frontend components**: Partially implemented (`member-statement.tsx`, `statement-modal.tsx`, `aging-dashboard-tab.tsx`, `aging-summary-card.tsx` exist)
+- **Frontend pages**: Partially implemented (`/billing/statements/page.tsx` exists with period management UI; `CreatePeriodModal`, `EditPeriodModal`, `PeriodInitWizard` components exist; `statement-register.tsx` implemented for Billing Statements tab)
+- **Frontend components**: Partially implemented (`member-statement.tsx`, `statement-modal.tsx`, `aging-dashboard-tab.tsx`, `aging-summary-card.tsx`, `statement-register.tsx` exist)
 - **GraphQL API**: Not yet implemented (queries and mutations specified in design)
 - **AR Period Settings**: Designed (settings to be added to `club_billing_settings` table)
-- **Member Portal**: Member portal statement viewing and payment designed (see `docs/plans/2026-02-06-member-portal-pwa-design.md`).
+- **Billing Cycle Mode**: Redesigned — supports Club Cycle (shared AR period) and Member Cycle (per-member cycle based on join date, checklist on financial period). See `docs/plans/2026-02-09-ar-period-close-redesign.md`.
+- **AR Close Checklist**: Designed — multi-phase checklist with configurable enforcement (required/optional per step), auto-verification where possible, manual sign-off for the rest. See `docs/plans/2026-02-09-ar-period-close-redesign.md`.
+- **Member Portal**: Member portal statement viewing and payment designed (see `docs/plans/2026-02-06-member-portal-pwa-design.md`). Portal shows last closed statement, unbilled activity summary (grouped by category with expand), 3-month rolling history, and pay online.
 
 ## Capabilities
 
-1. **Period Configuration** -- Define billing cycle type (Calendar Month, Rolling 30, Custom), cutoff days, close behavior, and auto-generation of next period via Club Settings.
-2. **Period Lifecycle** -- Open, close, and re-open statement periods with audit trail. Only one OPEN period at a time.
-3. **Preview Runs** -- Generate preview statements for audit/review without assigning statement numbers. Multiple preview runs can be created within a single period.
-4. **Final Runs** -- Generate final statements that assign sequential statement numbers (STMT-YY-PP-NNNNNN format), lock the period, generate PDFs, and update AR profile balances.
-5. **Statement Generation** -- Calculate opening balance, total debits, total credits, closing balance, and aging breakdown (current, 1-30, 31-60, 61-90, 90+) per AR profile.
-6. **Profile Snapshot** -- Capture member/city ledger billing info at generation time (name, account number, address, payment terms) for historical accuracy.
-7. **Multi-Channel Delivery** -- Deliver statements via email (PDF attachment), print (batch), member portal (publish), and SMS (notification with link).
-8. **Aging Dashboard** -- Display five aging bucket cards at the top of the Statements page showing total amounts and account counts per bucket with trend indicators.
-9. **Period Re-Open** -- Controlled re-open of closed periods requiring approval, reason, and audit trail. Status changes to REOPENED.
-10. **Aging Import Wizard** -- First-time setup flow for clubs migrating with existing outstanding balances via CSV upload.
+1. **Period Configuration** -- Define billing cycle mode (Club Cycle or Member Cycle), cutoff days, close behavior, and auto-generation of next period via Club Settings. Club Cycle uses a shared configurable closing day. Member Cycle uses per-member cycles anchored to membership start date.
+2. **Period Lifecycle** -- Open, close, and re-open statement periods with audit trail. Only one OPEN period at a time. Closing requires completion of the AR Close Checklist.
+3. **AR Close Checklist** -- Multi-phase checklist (Pre-Close, Cut-Off, Reconciliation, Tax Compliance, Reporting, Close, Statements) with configurable enforcement per step. Steps are auto-verified where possible (e.g., all receipts settled, no tax sequence gaps, AR/GL reconciled) and manual sign-off otherwise. Club admin configures which steps are required vs optional.
+4. **Receipt-Invoice Settlement** -- FIFO auto-application of payments to oldest invoices. Remaining unallocated amounts posted as member credit balances. Settlement must be complete before period close.
+5. **Preview Runs** -- Generate preview statements for audit/review without assigning statement numbers. Multiple preview runs can be created within a single period.
+6. **Final Runs** -- Generate final statements that assign sequential statement numbers (STMT-YY-PP-NNNNNN format), lock the period, generate PDFs, and update AR profile balances.
+7. **Statement Generation** -- Calculate opening balance, total debits, total credits, closing balance, and aging breakdown (current, 1-30, 31-60, 61-90, 90+) per AR profile. In Member Cycle mode, per-member date ranges are computed from join date (first statement) then rolling monthly.
+8. **Profile Snapshot** -- Capture member/city ledger billing info at generation time (name, account number, address, payment terms) for historical accuracy.
+9. **Multi-Channel Delivery** -- Deliver statements via email (PDF attachment), print (batch), member portal (publish), and SMS (notification with link).
+10. **Aging Dashboard** -- Display five aging bucket cards at the top of the Statements page showing total amounts and account counts per bucket with trend indicators.
+11. **Period Re-Open** -- Controlled re-open of closed periods requiring approval, reason, and audit trail. Status changes to REOPENED.
+12. **Aging Import Wizard** -- First-time setup flow for clubs migrating with existing outstanding balances via CSV upload.
+13. **Member Portal Statement View** -- Members see their last closed statement, unbilled activity summary (grouped by category with expandable line items), and 3-month rolling statement history. Members can pay online from the statement view.
+14. **Statement Register** -- Staff-facing register on the Billing Statements tab showing all individual statements from completed FINAL runs, filterable by period, with summary metrics and delivery status.
 
 ## Dependencies
 
@@ -70,8 +76,9 @@ Statement periods are configured once in Club Settings and auto-managed thereaft
 
 | Setting | Type | Default | Configured By | Description |
 |---------|------|---------|---------------|-------------|
-| ar_cycle_type | enum | CALENDAR_MONTH | Club Admin | Period cycle type: CALENDAR_MONTH, ROLLING_30, CUSTOM |
-| ar_custom_cycle_start_day | int | 1 | Club Admin | Start day for CUSTOM cycle (1-28) |
+| billing_cycle_mode | enum | CLUB_CYCLE | Club Admin | Billing cycle mode: CLUB_CYCLE (shared AR period with configurable closing day) or MEMBER_CYCLE (per-member cycle based on join date, checklist on financial period) |
+| club_cycle_closing_day | int | 1 | Club Admin | Day of month for Club Cycle period end (1-28) |
+| financial_period_type | enum | CALENDAR_MONTH | Club Admin | Financial period type for Member Cycle checklist: CALENDAR_MONTH or CUSTOM |
 | ar_cutoff_days | int | 5 | Club Admin | Days after period end before cutoff date |
 | ar_close_behavior | enum | MANUAL | Club Admin | How periods close: MANUAL, AUTO_AFTER_FINAL_RUN, AUTO_ON_CUTOFF |
 | ar_auto_generate_next | boolean | true | Club Admin | Auto-create next period when current period closes |
@@ -189,13 +196,48 @@ Unique constraint: (clubId, periodYear, periodNumber).
 
 Unique constraint: (clubId, statementNumber).
 
+### CloseChecklist
+
+| Field | Type | Description |
+|-------|------|-------------|
+| id | UUID | Primary key |
+| clubId | UUID | FK to Club |
+| statementPeriodId | UUID | FK to StatementPeriod |
+| status | enum | NOT_STARTED, IN_PROGRESS, COMPLETED |
+| startedAt | datetime | When checklist was started |
+| completedAt | datetime | When all required steps completed |
+| completedBy | UUID | FK to User who completed final step |
+
+### CloseChecklistStep
+
+| Field | Type | Description |
+|-------|------|-------------|
+| id | UUID | Primary key |
+| checklistId | UUID | FK to CloseChecklist |
+| stepDefinitionId | string | Reference to configured step template |
+| phase | enum | PRE_CLOSE, CUT_OFF, RECONCILIATION, TAX, REPORTING, CLOSE, STATEMENTS |
+| name | string | Step display name |
+| description | string | Step description |
+| enforcement | enum | REQUIRED, OPTIONAL |
+| verification | enum | AUTO, MANUAL |
+| status | enum | PENDING, PASSED, FAILED, SKIPPED, SIGNED_OFF |
+| autoCheckResult | JSON | For auto-verified steps: what was checked, pass/fail details |
+| signedOffBy | UUID | FK to User (for manual steps) |
+| signedOffAt | datetime | When manually signed off |
+| notes | string | Optional staff notes |
+
 ## Business Rules
 
 1. **Single Open Period** -- Only one StatementPeriod can have status OPEN per club at any time. System enforces this on creation and status change.
 2. **Statement Numbers at Close Only** -- Statement numbers (STMT-YY-PP-NNNNNN) are assigned only during FINAL runs, never during PREVIEW runs.
 3. **Preview Runs Are Disposable** -- Preview run statements carry no statement numbers and are replaced by subsequent preview or final runs.
-4. **Final Run Locks Period** -- When a FINAL run completes, the period status changes to CLOSED and aging snapshots are stored on both the period and individual statements.
-5. **Re-Open Requires Approval** -- Reopening a closed period requires a different user to approve, with a mandatory reason. Status changes to REOPENED.
+4. **Checklist Gates Close** -- Period cannot be closed until all required checklist steps across all phases are complete (auto-verified or manually signed off). Optional steps can be skipped.
+5. **Final Run Locks Period** -- When a FINAL run completes, the period status changes to CLOSED and aging snapshots are stored on both the period and individual statements.
+6. **Re-Open Requires Approval** -- Reopening a closed period requires a different user to approve, with a mandatory reason. Status changes to REOPENED.
+7. **Club Cycle Date Ranges** -- In Club Cycle mode, all member statements share the same periodStart/periodEnd based on the configured closing day. First statement for a new member covers join date to period end (partial catch-up), then regular cycle.
+8. **Member Cycle Date Ranges** -- In Member Cycle mode, each member's statement covers one month from their join date anniversary. First statement: join date to one month later. Subsequent: rolling monthly from join date.
+9. **Member Cycle Checklist Timing** -- In Member Cycle mode, the close checklist runs on the club's financial period (not the AR period). The financial period captures all member cycles whose closing date fell within it.
+10. **FIFO Receipt Settlement** -- Payments are auto-applied to invoices oldest first. Remaining unallocated amounts become member credit balances. All receipts must be settled before period close.
 6. **Cutoff Date Enforcement** -- Transactions posted after the cutoff date are excluded from the current period and roll into the next period.
 7. **Profile Snapshot Immutability** -- The profileSnapshot JSON captures billing info at generation time. Even if the member's address or name changes later, the statement retains the original data.
 8. **Delivery Method Inheritance** -- Statement delivery method defaults from the ARProfile's statementDelivery preference. Can be overridden per statement or per run.
@@ -209,12 +251,20 @@ Unique constraint: (clubId, statementNumber).
 
 ## Member Portal Integration
 
-**Plan**: `docs/plans/2026-02-06-member-portal-pwa-design.md`
+**Plan**: `docs/plans/2026-02-06-member-portal-pwa-design.md`, `docs/plans/2026-02-09-ar-period-close-redesign.md`
 
-- Members can view current balance on the dashboard (controlled by `billing.showBalance` flag)
-- Statements section shows recent transactions with category icons and amounts
-- Monthly statement list with PDF download capability (controlled by `billing.pdfDownload` flag)
-- Statement detail view shows all line items for a billing period
+### Closed Statement View
+- Last closed statement shown in full detail: period dates, opening/closing balance, aging breakdown, transaction detail, tax summary
+- Rolling 3-month history browsable (older statements archived, not visible in portal)
+
+### Unbilled Activity Summary
+- Live view of all charges and payments since last close
+- Grouped by category with subtotals: F&B, Golf, Dues, Other, Payments Received
+- Subtotals shown by default, expandable to see individual line items per category
+- Running total of net unbilled amount
+
+### Actions
+- **Pay online** — members can make a payment directly from the statement view
 - "Pay Now" flow enabled by `billing.onlinePayments` flag — requires payment gateway (Stripe/Omise)
 - Payment flow: select payment method → enter amount → review → confirm → receipt
 - Push notification on payment receipt and statement due date reminders

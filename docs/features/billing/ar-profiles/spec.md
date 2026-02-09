@@ -15,6 +15,7 @@ Each AR profile maintains a running current balance, tracks last statement and p
 - **GraphQL API**: Designed (queries and mutations specified in AR Statement System Design)
 - **CityLedger integration**: Partially implemented (`city-ledger.service.ts` exists in API; HOUSE type addition to CityLedgerType enum planned)
 - **MemberBillingProfile AR fields**: Designed (arEnabled, arStatementDelivery, arPaymentTermsDays, arCreditLimit, arAutoChargeToMember, arSeparateStatement, arBillingContact planned)
+- **Member Cycle support**: In Member Cycle mode, the member's join date (from Member record) determines their individual AR cycle start date. First statement covers join date to one month later, then rolling monthly. See `docs/plans/2026-02-09-ar-period-close-redesign.md`.
 
 ## Capabilities
 
