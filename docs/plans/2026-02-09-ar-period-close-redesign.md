@@ -248,21 +248,76 @@ ARSettings (existing, add fields):
   financialPeriodType: CALENDAR_MONTH | CUSTOM — for Member Cycle checklist timing
 ```
 
+## Impact on Statement Generation
+
+### Generation Logic Changes
+
+Currently, all statements in a run share the same `periodStart`/`periodEnd` from the `StatementPeriod`. This changes per mode:
+
+**Club Cycle mode:**
+- Existing members: same as current — all statements share the period's fixed date range
+- New members (first statement only): `periodStart` = member join date, `periodEnd` = period end date (partial catch-up)
+- Subsequent statements: regular period dates
+
+**Member Cycle mode:**
+- Each member gets **different** `periodStart`/`periodEnd` computed from their join date anniversary
+- First statement: join date → join date + 1 month
+- Subsequent: rolling monthly from join date (e.g., joined 15th → always 15th to 14th)
+- A single run produces statements with varying date ranges
+- The `StatementPeriod` represents the financial period umbrella, not the individual statement dates
+
+### Generation Process Changes
+
+1. Before computing statement dates, check `billingCycleMode` setting
+2. For each AR profile in the run:
+   - **Club Cycle**: use period's `periodStart`/`periodEnd`, except for first statement (use join date as start)
+   - **Member Cycle**: compute member-specific `periodStart`/`periodEnd` from join date and cycle count
+3. Opening balance, transaction queries, aging — all use the per-member date range (not the period dates)
+4. Statement number assignment, PDF generation, delivery — unchanged
+
+## Impact on Statement Presentation
+
+### Statement Register (Staff — Billing Tab)
+
+Current implementation assumes all statements share the same period dates (period selected in dropdown). Changes needed:
+
+**Club Cycle mode:**
+- Works as-is for existing members
+- New members' first statements will show a different date range — add a "Statement Period" column showing per-statement dates
+
+**Member Cycle mode:**
+- Period dropdown selects the financial period (umbrella)
+- Each row has a different date range — "Statement Period" column is essential
+- Sort by member name or account number (not by period date, since they vary)
+
+### Statement Content
+
+No changes — the statement itself (aging breakdown, balances, transactions, tax summary, delivery) renders the same regardless of mode. Only the date range on the statement header changes per member.
+
+### Member Portal
+
+Entirely new presentation:
+- **Closed statement**: shows the member's own most recent closed statement with their individual date range
+- **Unbilled activity**: live charges since the member's last close date (not the club period end)
+- **History**: 3-month rolling based on the member's cycle dates
+
 ## Implementation Impact
 
 ### What Changes
 
 1. **Period creation** — In Club Cycle mode, dates computed from `clubCycleClosingDay`. In Member Cycle mode, period represents financial period.
-2. **Statement generation** — Must compute per-member date ranges in Member Cycle mode (join date for first, then rolling monthly).
+2. **Statement generation** — Must compute per-member date ranges in both modes (join date for first statement in Club Cycle; always per-member in Member Cycle).
 3. **Close workflow** — New checklist UI and backend. Phases gate progress. Auto-verification hooks into existing reconciliation/tax systems.
-4. **Statement Register** — Already built (the component we just created). Needs period dropdown to work with new model.
-5. **Member Portal** — New: unbilled activity summary, 3-month history, pay online.
+4. **Statement Register** — Already built (`statement-register.tsx`). Needs: per-member date range column, mode-aware sorting, financial period dropdown for Member Cycle mode.
+5. **Member Portal** — New: closed statement view with individual dates, unbilled activity summary, 3-month history, pay online.
+6. **Run detail page** — Currently shows uniform period dates in header. Needs to show per-member dates in table rows.
 
 ### What Stays
 
 - Statement content and delivery system
-- Aging calculations
+- Aging calculations (use per-member date range)
 - PDF generation
 - Delivery tracking (email/print/portal/SMS)
 - Run concept (PREVIEW/FINAL)
 - AR profile management
+- Close checklist gating (works the same regardless of mode)

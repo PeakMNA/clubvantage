@@ -238,15 +238,17 @@ Unique constraint: (clubId, statementNumber).
 8. **Member Cycle Date Ranges** -- In Member Cycle mode, each member's statement covers one month from their join date anniversary. First statement: join date to one month later. Subsequent: rolling monthly from join date.
 9. **Member Cycle Checklist Timing** -- In Member Cycle mode, the close checklist runs on the club's financial period (not the AR period). The financial period captures all member cycles whose closing date fell within it.
 10. **FIFO Receipt Settlement** -- Payments are auto-applied to invoices oldest first. Remaining unallocated amounts become member credit balances. All receipts must be settled before period close.
-6. **Cutoff Date Enforcement** -- Transactions posted after the cutoff date are excluded from the current period and roll into the next period.
-7. **Profile Snapshot Immutability** -- The profileSnapshot JSON captures billing info at generation time. Even if the member's address or name changes later, the statement retains the original data.
-8. **Delivery Method Inheritance** -- Statement delivery method defaults from the ARProfile's statementDelivery preference. Can be overridden per statement or per run.
-9. **Zero Activity Handling** -- Profiles with zero opening balance and no transactions within the period can be skipped (configurable via skip_zero_activity_profiles setting).
-10. **Aging Calculation** -- Aging buckets are calculated based on invoice due dates, not invoice dates. Payments reduce the oldest outstanding amounts first.
-11. **Auto-Generate Next Period** -- When autoGenerateNext is true, closing a period automatically creates the next period with dates calculated from the cycle type.
-12. **Period Date Validation** -- Period start must be the day after the previous period's end. No gaps or overlaps between consecutive periods.
-13. **Run Progress Tracking** -- StatementRun tracks progress (processedCount / totalProfiles) for UI progress indicators during batch generation.
-14. **PDF Generation Timing** -- PDFs are generated only for FINAL run statements, not for PREVIEW runs.
+11. **Cutoff Date Enforcement** -- Transactions posted after the cutoff date are excluded from the current period and roll into the next period.
+12. **Profile Snapshot Immutability** -- The profileSnapshot JSON captures billing info at generation time. Even if the member's address or name changes later, the statement retains the original data.
+13. **Delivery Method Inheritance** -- Statement delivery method defaults from the ARProfile's statementDelivery preference. Can be overridden per statement or per run.
+14. **Zero Activity Handling** -- Profiles with zero opening balance and no transactions within the period can be skipped (configurable via skip_zero_activity_profiles setting).
+15. **Aging Calculation** -- Aging buckets are calculated based on invoice due dates, not invoice dates. Payments reduce the oldest outstanding amounts first.
+16. **Auto-Generate Next Period** -- When autoGenerateNext is true, closing a period automatically creates the next period with dates calculated from the cycle type.
+17. **Period Date Validation** -- Period start must be the day after the previous period's end. No gaps or overlaps between consecutive periods (Club Cycle mode). In Member Cycle mode, the financial period defines the umbrella only.
+18. **Run Progress Tracking** -- StatementRun tracks progress (processedCount / totalProfiles) for UI progress indicators during batch generation.
+19. **PDF Generation Timing** -- PDFs are generated only for FINAL run statements, not for PREVIEW runs.
+20. **Per-Member Date Range Generation** -- Statement generation computes per-member `periodStart`/`periodEnd`: In Club Cycle, use period dates (except first statement uses join date). In Member Cycle, compute from join date anniversary. Opening balance, transactions, and aging all use the per-member date range.
+21. **Statement Register Presentation** -- In Member Cycle mode, the Statement Register shows per-member date ranges in each row (statements have varying periods). In Club Cycle mode, dates are uniform. The period dropdown selects the financial period in Member Cycle mode.
 15. **Concurrent Run Prevention** -- Only one run (PENDING or IN_PROGRESS) can exist per period at a time.
 
 ## Member Portal Integration
