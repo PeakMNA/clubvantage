@@ -24,6 +24,7 @@ import {
   TrendingUp,
   Plus,
   Wallet,
+  Loader2,
 } from 'lucide-react';
 import { ServiceModal, type ServiceFormData } from './service-modal';
 import { DeleteConfirmDialog } from './delete-confirm-dialog';
@@ -56,6 +57,7 @@ interface Service {
 
 export interface ServicesTabProps {
   services?: Service[];
+  isLoading?: boolean;
   onViewDetails?: (serviceId: string) => void;
   onToggleStatus?: (serviceId: string) => void;
   onEditService?: (serviceId: string) => void;
@@ -471,6 +473,7 @@ function ServiceCard({
  */
 export function ServicesTab({
   services = mockServices,
+  isLoading,
   onViewDetails,
   onToggleStatus,
   onEditService,
@@ -479,6 +482,14 @@ export function ServicesTab({
   onDeleteService,
   className,
 }: ServicesTabProps) {
+  if (isLoading) {
+    return (
+      <div className="flex h-full items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [categoryFilter, setCategoryFilter] = useState<FilterCategory>('all');

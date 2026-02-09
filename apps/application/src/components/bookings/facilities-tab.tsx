@@ -27,6 +27,7 @@ import {
   Plus,
   Edit2,
   Wallet,
+  Loader2,
 } from 'lucide-react';
 import { FacilityModal, type FacilityFormData } from './facility-modal';
 import { DeleteConfirmDialog } from './delete-confirm-dialog';
@@ -57,6 +58,7 @@ interface Facility {
 
 export interface FacilitiesTabProps {
   facilities?: Facility[];
+  isLoading?: boolean;
   onViewSchedule?: (facilityId: string) => void;
   onToggleStatus?: (facilityId: string) => void;
   onSetMaintenance?: (facilityId: string) => void;
@@ -458,6 +460,7 @@ function FacilityCard({
  */
 export function FacilitiesTab({
   facilities = mockFacilities,
+  isLoading,
   onViewSchedule,
   onToggleStatus,
   onSetMaintenance,
@@ -466,6 +469,14 @@ export function FacilitiesTab({
   onDeleteFacility,
   className,
 }: FacilitiesTabProps) {
+  if (isLoading) {
+    return (
+      <div className="flex h-full items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [typeFilter, setTypeFilter] = useState<FilterType>('all');

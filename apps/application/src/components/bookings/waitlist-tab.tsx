@@ -19,6 +19,7 @@ import {
   Users,
   ArrowUpRight,
   MoreHorizontal,
+  Loader2,
 } from 'lucide-react';
 
 // Types
@@ -50,6 +51,7 @@ interface WaitlistEntry {
 
 export interface WaitlistTabProps {
   entries?: WaitlistEntry[];
+  isLoading?: boolean;
   onNotify?: (entryId: string) => Promise<void>;
   onConvert?: (entryId: string) => void;
   onRemove?: (entryId: string) => Promise<void>;
@@ -411,11 +413,20 @@ type FilterStatus = 'all' | WaitlistStatus;
  */
 export function WaitlistTab({
   entries = mockEntries,
+  isLoading,
   onNotify,
   onConvert,
   onRemove,
   className,
 }: WaitlistTabProps) {
+  if (isLoading) {
+    return (
+      <div className="flex h-full items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<FilterStatus>('all');
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);

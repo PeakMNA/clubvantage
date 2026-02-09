@@ -24,6 +24,7 @@ import {
   Mail,
   Plus,
   Edit2,
+  Loader2,
 } from 'lucide-react';
 import { StaffModal, type StaffFormData } from './staff-modal';
 import { DeleteConfirmDialog } from './delete-confirm-dialog';
@@ -56,6 +57,7 @@ interface StaffMember {
 
 export interface StaffTabProps {
   staff?: StaffMember[];
+  isLoading?: boolean;
   onViewSchedule?: (staffId: string) => void;
   onSetAvailability?: (staffId: string) => void;
   onCreateStaff?: (data: StaffFormData) => Promise<void>;
@@ -440,6 +442,7 @@ function StaffCard({ staff, viewMode, onViewSchedule, onSetAvailability, onEdit,
  */
 export function StaffTab({
   staff = mockStaff,
+  isLoading,
   onViewSchedule,
   onSetAvailability,
   onCreateStaff,
@@ -447,6 +450,14 @@ export function StaffTab({
   onDeleteStaff,
   className,
 }: StaffTabProps) {
+  if (isLoading) {
+    return (
+      <div className="flex h-full items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [roleFilter, setRoleFilter] = useState<FilterRole>('all');

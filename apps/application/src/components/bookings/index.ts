@@ -1,5 +1,5 @@
 // Types
-export type { BookingStatus, BookingStatusConfig } from './types';
+export type { BookingStatus, CalendarSlotStatus, CoreBookingStatus, BookingStatusConfig } from './types';
 export type { BookingsTab } from './bookings-tabs-layout';
 
 // Hooks

@@ -190,6 +190,111 @@ const DeleteStaffMemberDocument = /* GraphQL */ `
   }
 `;
 
+const GetMemberDocument = /* GraphQL */ `
+  query GetMember($id: ID!) {
+    member(id: $id) {
+      id
+      memberId
+      firstName
+      lastName
+      status
+      membershipType {
+        id
+        name
+      }
+    }
+  }
+`;
+
+const SearchMembersDocument = /* GraphQL */ `
+  query SearchMembers($search: String, $first: Int) {
+    members(search: $search, first: $first) {
+      edges {
+        node {
+          id
+          memberId
+          firstName
+          lastName
+          status
+          photoUrl
+          membershipType {
+            id
+            name
+          }
+        }
+      }
+    }
+  }
+`;
+
+const GetServiceByIdDocument = /* GraphQL */ `
+  query GetServices {
+    services {
+      id
+      name
+      category
+      durationMinutes
+      bufferMinutes
+      basePrice
+      isActive
+    }
+  }
+`;
+
+const GetStaffByIdDocument = /* GraphQL */ `
+  query GetBookingStaff {
+    bookingStaff {
+      id
+      firstName
+      lastName
+      capabilities
+      isActive
+      workingHours {
+        dayOfWeek
+        isOpen
+        openTime
+        closeTime
+      }
+    }
+  }
+`;
+
+const GetFacilitiesByIdDocument = /* GraphQL */ `
+  query GetFacilities {
+    facilities {
+      id
+      name
+      type
+      location
+      capacity
+      isActive
+      operatingHours {
+        dayOfWeek
+        isOpen
+        openTime
+        closeTime
+      }
+    }
+  }
+`;
+
+const GetBookingsForDateDocument = /* GraphQL */ `
+  query GetBookings($staffId: ID, $facilityId: ID, $startDate: DateTime, $endDate: DateTime, $first: Int) {
+    bookings(staffId: $staffId, facilityId: $facilityId, startDate: $startDate, endDate: $endDate, first: $first) {
+      edges {
+        node {
+          id
+          startTime
+          endTime
+          status
+          staffId
+          facilityId
+        }
+      }
+    }
+  }
+`;
+
 // ============================================================================
 // SERVER-SIDE GRAPHQL CLIENT
 // ============================================================================
@@ -253,7 +358,7 @@ export interface GetAvailabilityInput {
 }
 
 // ============================================================================
-// CACHED DATA FETCHERS (Replace with actual database queries)
+// CACHED DATA FETCHERS
 // React.cache() deduplicates calls within a single request lifecycle
 // ============================================================================
 
@@ -262,15 +367,25 @@ export interface GetAvailabilityInput {
  * Cached to avoid duplicate database queries within the same request
  */
 const getMemberContext = cache(async (memberId: string): Promise<MemberContext> => {
-  // TODO: Replace with actual database query
-  return {
-    id: memberId,
-    status: 'ACTIVE',
-    membershipType: 'Gold',
-    balance: 0,
-    credits: 5000,
-    noShowCount: 0,
-  };
+  try {
+    const client = getServerClient();
+    const data = await client.request<any>(GetMemberDocument, { id: memberId });
+    const m = data?.member;
+    if (!m) {
+      return { id: memberId, status: 'ACTIVE', membershipType: 'Standard', balance: 0, credits: 0, noShowCount: 0 };
+    }
+    return {
+      id: m.id,
+      status: m.status || 'ACTIVE',
+      membershipType: m.membershipType?.name || 'Standard',
+      balance: 0,
+      credits: 0,
+      noShowCount: 0,
+    };
+  } catch (error) {
+    console.error('Failed to fetch member context:', error);
+    return { id: memberId, status: 'ACTIVE', membershipType: 'Standard', balance: 0, credits: 0, noShowCount: 0 };
+  }
 });
 
 /**
@@ -278,16 +393,22 @@ const getMemberContext = cache(async (memberId: string): Promise<MemberContext> 
  * Cached to avoid duplicate database queries within the same request
  */
 const getServiceContext = cache(async (serviceId: string): Promise<ServiceContext | undefined> => {
-  // TODO: Replace with actual database query
-  const services: Record<string, ServiceContext> = {
-    s1: { id: 's1', name: 'Thai Massage', basePrice: 2000, durationMinutes: 90, bufferMinutes: 15 },
-    s2: { id: 's2', name: 'Swedish Massage', basePrice: 1500, durationMinutes: 60, bufferMinutes: 15 },
-    s3: { id: 's3', name: 'Hot Stone Therapy', basePrice: 2500, durationMinutes: 75, bufferMinutes: 15 },
-    s5: { id: 's5', name: 'Tennis Lesson (Private)', basePrice: 1800, durationMinutes: 60, bufferMinutes: 0 },
-    s7: { id: 's7', name: 'Yoga Class', basePrice: 500, durationMinutes: 60, bufferMinutes: 0 },
-    s8: { id: 's8', name: 'Personal Training', basePrice: 1500, durationMinutes: 60, bufferMinutes: 0 },
-  };
-  return services[serviceId];
+  try {
+    const client = getServerClient();
+    const data = await client.request<any>(GetServiceByIdDocument);
+    const service = data?.services?.find((s: any) => s.id === serviceId);
+    if (!service) return undefined;
+    return {
+      id: service.id,
+      name: service.name,
+      basePrice: service.basePrice,
+      durationMinutes: service.durationMinutes,
+      bufferMinutes: service.bufferMinutes || 0,
+    };
+  } catch (error) {
+    console.error('Failed to fetch service context:', error);
+    return undefined;
+  }
 });
 
 /**
@@ -295,54 +416,36 @@ const getServiceContext = cache(async (serviceId: string): Promise<ServiceContex
  * Cached to avoid duplicate database queries within the same request
  */
 const getStaffContext = cache(async (staffId: string): Promise<StaffContext | undefined> => {
-  // TODO: Replace with actual database query
-  const staff: Record<string, StaffContext> = {
-    st1: {
-      id: 'st1',
-      firstName: 'Nattaya',
-      lastName: 'Wongchai',
-      capabilities: ['Thai Massage', 'Swedish Massage', 'Hot Stone Therapy'],
-      workingSchedule: {
-        monday: { start: '09:00', end: '18:00' },
-        tuesday: { start: '09:00', end: '18:00' },
-        wednesday: { start: '09:00', end: '18:00' },
-        thursday: { start: '09:00', end: '18:00' },
-        friday: { start: '09:00', end: '18:00' },
-        saturday: { start: '10:00', end: '16:00' },
-      },
-      defaultFacilityId: 'f5',
-    },
-    st4: {
-      id: 'st4',
-      firstName: 'Wichai',
-      lastName: 'Thongkam',
-      capabilities: ['Personal Training', 'Strength Training', 'HIIT'],
-      workingSchedule: {
-        monday: { start: '06:00', end: '14:00' },
-        tuesday: { start: '06:00', end: '14:00' },
-        wednesday: { start: '06:00', end: '14:00' },
-        thursday: { start: '06:00', end: '14:00' },
-        friday: { start: '06:00', end: '14:00' },
-      },
-    },
-    st6: {
-      id: 'st6',
-      firstName: 'Preecha',
-      lastName: 'Kamol',
-      capabilities: ['Tennis Lesson (Private)', 'Tennis Lesson (Group)'],
-      workingSchedule: {
-        monday: { start: '08:00', end: '18:00' },
-        tuesday: { start: '08:00', end: '18:00' },
-        wednesday: { start: '08:00', end: '18:00' },
-        thursday: { start: '08:00', end: '18:00' },
-        friday: { start: '08:00', end: '18:00' },
-        saturday: { start: '08:00', end: '16:00' },
-        sunday: { start: '08:00', end: '14:00' },
-      },
-      defaultFacilityId: 'f1',
-    },
-  };
-  return staff[staffId];
+  try {
+    const client = getServerClient();
+    const data = await client.request<any>(GetStaffByIdDocument);
+    const staff = data?.bookingStaff?.find((s: any) => s.id === staffId);
+    if (!staff) return undefined;
+
+    // Convert workingHours array to weekly schedule
+    const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const;
+    const workingSchedule: Record<string, { start: string; end: string }> = {};
+    for (const wh of (staff.workingHours || [])) {
+      if (wh.isOpen && wh.openTime && wh.closeTime) {
+        const dayIndex = wh.dayOfWeek;
+        const dayName = dayNames[dayIndex];
+        if (dayName) {
+          workingSchedule[dayName] = { start: wh.openTime, end: wh.closeTime };
+        }
+      }
+    }
+
+    return {
+      id: staff.id,
+      firstName: staff.firstName,
+      lastName: staff.lastName,
+      capabilities: staff.capabilities || [],
+      workingSchedule,
+    };
+  } catch (error) {
+    console.error('Failed to fetch staff context:', error);
+    return undefined;
+  }
 });
 
 /**
@@ -350,15 +453,26 @@ const getStaffContext = cache(async (staffId: string): Promise<StaffContext | un
  * Cached to avoid duplicate database queries within the same request
  */
 const getFacilityContext = cache(async (facilityId: string): Promise<FacilityContext | undefined> => {
-  // TODO: Replace with actual database query
-  const facilities: Record<string, FacilityContext> = {
-    f1: { id: 'f1', name: 'Tennis Court 1', operatingHours: { start: '06:00', end: '22:00' }, capacity: 4 },
-    f2: { id: 'f2', name: 'Tennis Court 2', operatingHours: { start: '06:00', end: '22:00' }, capacity: 4 },
-    f5: { id: 'f5', name: 'Spa Room 1', operatingHours: { start: '09:00', end: '21:00' }, capacity: 1 },
-    f6: { id: 'f6', name: 'Spa Room 2', operatingHours: { start: '09:00', end: '21:00' }, capacity: 1 },
-    f7: { id: 'f7', name: 'Yoga Studio', operatingHours: { start: '06:00', end: '22:00' }, capacity: 20 },
-  };
-  return facilities[facilityId];
+  try {
+    const client = getServerClient();
+    const data = await client.request<any>(GetFacilitiesByIdDocument);
+    const facility = data?.facilities?.find((f: any) => f.id === facilityId);
+    if (!facility) return undefined;
+
+    // Find first open day's hours as default operating hours
+    const openDay = (facility.operatingHours || []).find((h: any) => h.isOpen);
+    return {
+      id: facility.id,
+      name: facility.name,
+      operatingHours: openDay
+        ? { start: openDay.openTime || '06:00', end: openDay.closeTime || '22:00' }
+        : { start: '06:00', end: '22:00' },
+      capacity: facility.capacity || 1,
+    };
+  } catch (error) {
+    console.error('Failed to fetch facility context:', error);
+    return undefined;
+  }
 });
 
 type ExistingBooking = { startTime: Date; endTime: Date; staffId?: string; facilityId?: string };
@@ -397,32 +511,34 @@ async function getExistingBookingsForDate(
 
 /**
  * Actual database fetch for existing bookings
- * TODO: Replace with actual database query
  */
 async function fetchExistingBookings(
   dateStr: string,
   staffId?: string,
   facilityId?: string
 ): Promise<ExistingBooking[]> {
-  // Simulate some existing bookings
-  if (staffId === 'st1') {
-    return [
-      {
-        startTime: new Date(`${dateStr}T10:00:00`),
-        endTime: new Date(`${dateStr}T11:30:00`),
-        staffId: 'st1',
-        facilityId: 'f5',
-      },
-      {
-        startTime: new Date(`${dateStr}T14:00:00`),
-        endTime: new Date(`${dateStr}T15:30:00`),
-        staffId: 'st1',
-        facilityId: 'f5',
-      },
-    ];
-  }
+  try {
+    const client = getServerClient();
+    const startDate = `${dateStr}T00:00:00.000Z`;
+    const endDate = `${dateStr}T23:59:59.999Z`;
+    const data = await client.request<any>(GetBookingsForDateDocument, {
+      staffId: staffId || undefined,
+      facilityId: facilityId || undefined,
+      startDate,
+      endDate,
+      first: 100,
+    });
 
-  return [];
+    return (data?.bookings?.edges || []).map((e: any) => ({
+      startTime: new Date(e.node.startTime),
+      endTime: new Date(e.node.endTime),
+      staffId: e.node.staffId,
+      facilityId: e.node.facilityId,
+    }));
+  } catch (error) {
+    console.error('Failed to fetch existing bookings:', error);
+    return [];
+  }
 }
 
 // ============================================================================
@@ -679,28 +795,31 @@ export async function searchMembers(
   membershipType?: string;
   status: 'active' | 'suspended' | 'lapsed';
 }>> {
-  // TODO: Replace with actual database query
-  const mockMembers = [
-    { id: 'm1', name: 'John Smith', memberNumber: 'M-001', membershipType: 'Gold', status: 'active' as const },
-    { id: 'm2', name: 'Sarah Johnson', memberNumber: 'M-002', membershipType: 'Platinum', status: 'active' as const },
-    { id: 'm3', name: 'Michael Chen', memberNumber: 'M-003', membershipType: 'Silver', status: 'active' as const },
-    { id: 'm4', name: 'Emily Davis', memberNumber: 'M-004', membershipType: 'Gold', status: 'suspended' as const },
-    { id: 'm5', name: 'Robert Wilson', memberNumber: 'M-005', membershipType: 'Diamond', status: 'active' as const },
-    { id: 'm6', name: 'Lisa Anderson', memberNumber: 'M-006', membershipType: 'Gold', status: 'active' as const },
-    { id: 'm7', name: 'David Brown', memberNumber: 'M-007', membershipType: 'Silver', status: 'lapsed' as const },
-    { id: 'm8', name: 'Jennifer Taylor', memberNumber: 'M-008', membershipType: 'Platinum', status: 'active' as const },
-  ];
-
-  if (!query.trim()) {
+  if (!query.trim() || query.length < 2) {
     return [];
   }
 
-  const lowerQuery = query.toLowerCase();
-  return mockMembers.filter(
-    (m) =>
-      m.name.toLowerCase().includes(lowerQuery) ||
-      m.memberNumber.toLowerCase().includes(lowerQuery)
-  );
+  try {
+    const client = getServerClient();
+    const data = await client.request<any>(SearchMembersDocument, { search: query, first: 10 });
+
+    const statusMap: Record<string, 'active' | 'suspended' | 'lapsed'> = {
+      ACTIVE: 'active',
+      SUSPENDED: 'suspended',
+      LAPSED: 'lapsed',
+    };
+
+    return (data?.members?.edges || []).map((e: any) => ({
+      id: e.node.id,
+      name: `${e.node.firstName} ${e.node.lastName}`,
+      memberNumber: e.node.memberId || '',
+      membershipType: e.node.membershipType?.name,
+      status: statusMap[e.node.status] || 'active',
+    }));
+  } catch (error) {
+    console.error('Failed to search members:', error);
+    return [];
+  }
 }
 
 /**
@@ -715,26 +834,29 @@ export async function getServicesForStaff(
   price: number;
   category?: string;
 }>> {
-  const staff = await getStaffContext(staffId);
-  if (!staff) {
+  try {
+    const staff = await getStaffContext(staffId);
+    if (!staff) {
+      return [];
+    }
+
+    const client = getServerClient();
+    const data = await client.request<any>(GetServiceByIdDocument);
+
+    // Filter services by staff capabilities
+    return (data?.services || [])
+      .filter((s: any) => s.isActive && staff.capabilities?.some((cap: string) => s.name.includes(cap) || cap.includes(s.name)))
+      .map((s: any) => ({
+        id: s.id,
+        name: s.name,
+        duration: s.durationMinutes,
+        price: s.basePrice,
+        category: s.category,
+      }));
+  } catch (error) {
+    console.error('Failed to fetch services for staff:', error);
     return [];
   }
-
-  // TODO: Replace with actual database query
-  const allServices = [
-    { id: 's1', name: 'Thai Massage', duration: 90, price: 2000, category: 'Spa', capability: 'Thai Massage' },
-    { id: 's2', name: 'Swedish Massage', duration: 60, price: 1500, category: 'Spa', capability: 'Swedish Massage' },
-    { id: 's3', name: 'Hot Stone Therapy', duration: 75, price: 2500, category: 'Spa', capability: 'Hot Stone Therapy' },
-    { id: 's5', name: 'Tennis Lesson (Private)', duration: 60, price: 1800, category: 'Sports', capability: 'Tennis Lesson (Private)' },
-    { id: 's6', name: 'Tennis Lesson (Group)', duration: 90, price: 800, category: 'Sports', capability: 'Tennis Lesson (Group)' },
-    { id: 's7', name: 'Yoga Class', duration: 60, price: 500, category: 'Fitness', capability: 'Yoga Class' },
-    { id: 's8', name: 'Personal Training', duration: 60, price: 1500, category: 'Fitness', capability: 'Personal Training' },
-  ];
-
-  // Filter services based on staff capabilities
-  return allServices
-    .filter((s) => staff.capabilities?.includes(s.capability))
-    .map(({ capability, ...service }) => service);
 }
 
 // ============================================================================

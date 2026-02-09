@@ -51,7 +51,7 @@ interface MemberRecentBooking {
   id: string;
   serviceName: string;
   date: Date;
-  status: 'completed' | 'cancelled' | 'no_show';
+  status: 'COMPLETED' | 'CANCELLED' | 'NO_SHOW';
 }
 
 interface BookingMember {
@@ -234,7 +234,7 @@ export function BookingDetailPanel({
 
   const isMemberSuspended = booking.member.status === 'SUSPENDED';
   const canCheckIn =
-    booking.status === 'confirmed' && !isMemberSuspended;
+    booking.status === 'CONFIRMED' && !isMemberSuspended;
 
   return (
     <>
@@ -605,12 +605,12 @@ function PanelContent({
                       <span
                         className={cn(
                           'capitalize',
-                          recent.status === 'completed' && 'text-emerald-600 dark:text-emerald-400',
-                          recent.status === 'cancelled' && 'text-muted-foreground',
-                          recent.status === 'no_show' && 'text-red-600 dark:text-red-400'
+                          recent.status === 'COMPLETED' && 'text-emerald-600 dark:text-emerald-400',
+                          recent.status === 'CANCELLED' && 'text-muted-foreground',
+                          recent.status === 'NO_SHOW' && 'text-red-600 dark:text-red-400'
                         )}
                       >
-                        {recent.status === 'no_show' ? 'No-show' : recent.status}
+                        {recent.status === 'NO_SHOW' ? 'No-show' : recent.status === 'COMPLETED' ? 'Completed' : recent.status === 'CANCELLED' ? 'Cancelled' : recent.status}
                       </span>
                     </div>
                   </div>

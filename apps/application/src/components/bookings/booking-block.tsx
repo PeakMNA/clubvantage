@@ -28,15 +28,16 @@ export interface BookingBlockProps {
  * Status-specific left border colors
  */
 const statusBorderColors: Record<BookingStatus, string> = {
-  available: 'border-l-border',
-  confirmed: 'border-l-blue-500',
-  checked_in: 'border-l-emerald-500',
-  in_progress: 'border-l-emerald-500',
-  completed: 'border-l-muted-foreground/50',
-  no_show: 'border-l-red-500',
-  cancelled: 'border-l-muted-foreground/30',
-  maintenance: 'border-l-amber-500',
-  outside_hours: 'border-l-muted-foreground/20',
+  AVAILABLE: 'border-l-border',
+  PENDING: 'border-l-amber-500',
+  CONFIRMED: 'border-l-blue-500',
+  CHECKED_IN: 'border-l-emerald-500',
+  IN_PROGRESS: 'border-l-emerald-500',
+  COMPLETED: 'border-l-muted-foreground/50',
+  NO_SHOW: 'border-l-red-500',
+  CANCELLED: 'border-l-muted-foreground/30',
+  MAINTENANCE: 'border-l-amber-500',
+  OUTSIDE_HOURS: 'border-l-muted-foreground/20',
 };
 
 /**
@@ -67,9 +68,9 @@ export const BookingBlock = forwardRef<HTMLDivElement, BookingBlockProps>(
     ref
   ) => {
     const styles = getBookingStatusStyles(status);
-    const isCancelled = status === 'cancelled';
-    const isCompleted = status === 'completed';
-    const isPulsing = status === 'in_progress';
+    const isCancelled = status === 'CANCELLED';
+    const isCompleted = status === 'COMPLETED';
+    const isPulsing = status === 'IN_PROGRESS';
 
     // Calculate minimum height based on slots (44px per 15-min slot)
     const minHeight = slotHeight * 44;

@@ -7,28 +7,35 @@ import type { BookingStatus, BookingStatusConfig } from './types';
  * Uses CSS variables from the design system for semantic colors.
  */
 export const bookingStatusConfig: Record<BookingStatus, BookingStatusConfig> = {
-  available: {
+  AVAILABLE: {
     label: 'Available',
     bgColor: 'bg-card',
     borderColor: 'border-border',
     textColor: 'text-foreground',
     dotColor: 'bg-muted-foreground',
   },
-  confirmed: {
+  PENDING: {
+    label: 'Pending',
+    bgColor: 'bg-amber-50 dark:bg-amber-500/10',
+    borderColor: 'border-amber-200 dark:border-amber-500/30',
+    textColor: 'text-amber-700 dark:text-amber-400',
+    dotColor: 'bg-amber-500 dark:bg-amber-400',
+  },
+  CONFIRMED: {
     label: 'Confirmed',
     bgColor: 'bg-blue-100 dark:bg-blue-500/20',
     borderColor: 'border-blue-200 dark:border-blue-500/30',
     textColor: 'text-blue-700 dark:text-blue-400',
     dotColor: 'bg-blue-500 dark:bg-blue-400',
   },
-  checked_in: {
+  CHECKED_IN: {
     label: 'Checked In',
     bgColor: 'bg-emerald-100 dark:bg-emerald-500/20',
     borderColor: 'border-emerald-200 dark:border-emerald-500/30',
     textColor: 'text-emerald-700 dark:text-emerald-400',
     dotColor: 'bg-emerald-500 dark:bg-emerald-400',
   },
-  in_progress: {
+  IN_PROGRESS: {
     label: 'In Progress',
     bgColor: 'bg-emerald-100 dark:bg-emerald-500/20',
     borderColor: 'border-emerald-200 dark:border-emerald-500/30',
@@ -36,21 +43,21 @@ export const bookingStatusConfig: Record<BookingStatus, BookingStatusConfig> = {
     dotColor: 'bg-emerald-500 dark:bg-emerald-400',
     pulse: true,
   },
-  completed: {
+  COMPLETED: {
     label: 'Completed',
     bgColor: 'bg-muted',
     borderColor: 'border-border',
     textColor: 'text-muted-foreground',
     dotColor: 'bg-muted-foreground',
   },
-  no_show: {
+  NO_SHOW: {
     label: 'No Show',
     bgColor: 'bg-red-100 dark:bg-red-500/20',
     borderColor: 'border-red-200 dark:border-red-500/30',
     textColor: 'text-red-700 dark:text-red-400',
     dotColor: 'bg-red-500 dark:bg-red-400',
   },
-  cancelled: {
+  CANCELLED: {
     label: 'Cancelled',
     bgColor: 'bg-muted',
     borderColor: 'border-border',
@@ -58,7 +65,7 @@ export const bookingStatusConfig: Record<BookingStatus, BookingStatusConfig> = {
     dotColor: 'bg-muted-foreground',
     strikethrough: true,
   },
-  maintenance: {
+  MAINTENANCE: {
     label: 'Maintenance',
     bgColor: 'bg-amber-50 dark:bg-amber-500/10',
     borderColor: 'border-amber-200 dark:border-amber-500/30',
@@ -66,7 +73,7 @@ export const bookingStatusConfig: Record<BookingStatus, BookingStatusConfig> = {
     dotColor: 'bg-amber-500 dark:bg-amber-400',
     stripes: true,
   },
-  outside_hours: {
+  OUTSIDE_HOURS: {
     label: 'Outside Hours',
     bgColor: 'bg-muted/50',
     borderColor: '',
@@ -88,7 +95,7 @@ export function getBookingStatusStyles(status: BookingStatus): {
   label: string;
   config: BookingStatusConfig;
 } {
-  const config = bookingStatusConfig[status];
+  const config = bookingStatusConfig[status] ?? bookingStatusConfig.AVAILABLE;
 
   const containerClasses = [
     config.bgColor,
@@ -122,19 +129,19 @@ export function getBookingStatusStyles(status: BookingStatus): {
  * Get just the label for a booking status
  */
 export function getBookingStatusLabel(status: BookingStatus): string {
-  return bookingStatusConfig[status].label;
+  return (bookingStatusConfig[status] ?? bookingStatusConfig.AVAILABLE).label;
 }
 
 /**
  * Check if a booking status indicates an active/ongoing booking
  */
 export function isActiveBookingStatus(status: BookingStatus): boolean {
-  return ['confirmed', 'checked_in', 'in_progress'].includes(status);
+  return (['CONFIRMED', 'CHECKED_IN', 'IN_PROGRESS'] as BookingStatus[]).includes(status);
 }
 
 /**
  * Check if a booking status indicates a terminal state
  */
 export function isTerminalBookingStatus(status: BookingStatus): boolean {
-  return ['completed', 'no_show', 'cancelled'].includes(status);
+  return (['COMPLETED', 'NO_SHOW', 'CANCELLED'] as BookingStatus[]).includes(status);
 }

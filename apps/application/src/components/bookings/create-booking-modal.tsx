@@ -12,6 +12,11 @@ import { BookingFacilityStep, type FacilityForBooking } from './booking-facility
 import { BookingTimeStep } from './booking-time-step';
 import { BookingAddonsStep } from './booking-addons-step';
 import { BookingConfirmationStep } from './booking-confirmation-step';
+import {
+  useGetFacilitiesQuery,
+  useGetServicesQuery,
+  useGetBookingStaffQuery,
+} from '@clubvantage/api-client';
 
 // ============================================================================
 // MOCK DATA
@@ -194,6 +199,86 @@ export function CreateBookingModal({ className }: CreateBookingModalProps) {
 
   const { isOpen, currentStep, bookingType, selectedFacility, selectedService, selectedDate, selectedTime, selectedStaff, selectedAddOns, selectedVariation, selectedMember, isStaffFlow, needsFacility } = wizard;
 
+  // Fetch real data for wizard steps
+  const { data: facilitiesData } = useGetFacilitiesQuery();
+  const { data: servicesData } = useGetServicesQuery();
+  const { data: staffData } = useGetBookingStaffQuery();
+
+  // Map API facilities to picker format
+  const facilities: Facility[] = useMemo(() => {
+    if (!facilitiesData?.facilities) return mockFacilities;
+    const typeMap: Record<string, Facility['type']> = { COURT: 'court', SPA: 'spa', STUDIO: 'studio', POOL: 'pool', ROOM: 'room' };
+    return facilitiesData.facilities.map((f) => ({
+      id: f.id,
+      name: f.name,
+      type: typeMap[f.type] || 'room',
+      location: f.location ?? '',
+      status: f.isActive ? ('available' as const) : ('maintenance' as const),
+    }));
+  }, [facilitiesData]);
+
+  // Map API services to picker format
+  const services: Service[] = useMemo(() => {
+    if (!servicesData?.services) return mockServices;
+    return servicesData.services.map((s) => ({
+      id: s.id,
+      name: s.name,
+      category: s.category || 'Other',
+      duration: s.durationMinutes,
+      price: s.basePrice,
+      available: s.isActive,
+    }));
+  }, [servicesData]);
+
+  // Map API staff to staff step format
+  const staff: BookingStaff[] = useMemo(() => {
+    if (!staffData?.bookingStaff) return mockStaff;
+    const roleMap: Record<string, BookingStaff['role']> = { THERAPIST: 'therapist', TRAINER: 'trainer', INSTRUCTOR: 'instructor', COACH: 'coach' };
+    return staffData.bookingStaff.map((s) => ({
+      id: s.id,
+      name: `${s.firstName} ${s.lastName}`,
+      photoUrl: s.photoUrl ?? undefined,
+      role: roleMap[s.role?.toUpperCase() ?? ''] || 'therapist',
+      status: s.isActive ? ('available' as const) : ('off_duty' as const),
+      capabilities: s.capabilities ?? [],
+      rating: undefined,
+      schedule: {
+        workHours: { start: '09:00', end: '18:00' },
+        bookingsToday: 0,
+        totalSlotsToday: 8,
+      },
+    }));
+  }, [staffData]);
+
+  // Map services for staff-first flow (with requiresFacility flag)
+  const servicesForStaff: ServiceForStaff[] = useMemo(() => {
+    if (!servicesData?.services) return mockServicesForStaff;
+    return servicesData.services.map((s) => ({
+      id: s.id,
+      name: s.name,
+      category: s.category || 'Other',
+      duration: s.durationMinutes,
+      price: s.basePrice,
+      available: s.isActive,
+      requiresFacility: true, // Default to requiring facility
+    }));
+  }, [servicesData]);
+
+  // Map facilities for staff-first flow (with operating hours)
+  const facilitiesForStaff: FacilityForBooking[] = useMemo(() => {
+    if (!facilitiesData?.facilities) return mockFacilitiesForStaff;
+    const typeMap: Record<string, FacilityForBooking['type']> = { COURT: 'court', SPA: 'spa', STUDIO: 'studio', POOL: 'pool', ROOM: 'room' };
+    return facilitiesData.facilities.map((f) => ({
+      id: f.id,
+      name: f.name,
+      type: typeMap[f.type] || 'room',
+      location: f.location ?? '',
+      status: f.isActive ? ('available' as const) : ('maintenance' as const),
+      slotsAvailable: f.capacity ?? 0,
+      totalSlots: f.capacity ?? 0,
+    }));
+  }, [facilitiesData]);
+
   // Handle backdrop click
   const handleBackdropClick = useCallback(
     (e: React.MouseEvent) => {
@@ -217,20 +302,20 @@ export function CreateBookingModal({ className }: CreateBookingModalProps) {
   // Get selected facility/service details
   const selectedItem = useMemo(() => {
     if (selectedFacility && bookingType !== 'staff') {
-      const facility = mockFacilities.find((f) => f.id === selectedFacility.id);
+      const facility = facilities.find((f) => f.id === selectedFacility.id);
       return facility ? { name: facility.name, duration: 60, price: 500 } : null;
     }
     if (selectedService) {
       // For staff flow, look in staff services; otherwise in regular services
       if (bookingType === 'staff') {
-        const service = mockServicesForStaff.find((s) => s.id === selectedService.id);
+        const service = servicesForStaff.find((s) => s.id === selectedService.id);
         return service ? { name: service.name, duration: service.duration, price: service.price } : null;
       }
-      const service = mockServices.find((s) => s.id === selectedService.id);
+      const service = services.find((s) => s.id === selectedService.id);
       return service ? { name: service.name, duration: service.duration, price: service.price } : null;
     }
     return null;
-  }, [selectedFacility, selectedService, bookingType]);
+  }, [selectedFacility, selectedService, bookingType, facilities, services, servicesForStaff]);
 
   // Handle type selection and move to next step
   const handleTypeSelect = (type: BookingType) => {
@@ -240,7 +325,7 @@ export function CreateBookingModal({ className }: CreateBookingModalProps) {
   // Handle facility/service selection
   const handleItemSelect = (id: string) => {
     if (bookingType === 'facility') {
-      const facility = mockFacilities.find((f) => f.id === id);
+      const facility = facilities.find((f) => f.id === id);
       if (facility) {
         selectFacility({
           id: facility.id,
@@ -250,7 +335,7 @@ export function CreateBookingModal({ className }: CreateBookingModalProps) {
         });
       }
     } else {
-      const service = mockServices.find((s) => s.id === id);
+      const service = services.find((s) => s.id === id);
       if (service) {
         selectService({
           id: service.id,
@@ -344,7 +429,7 @@ export function CreateBookingModal({ className }: CreateBookingModalProps) {
       setNeedsFacility(false);
       // If staff has default facility and service requires one, auto-select it
       if (requiresFacility && staffHasDefaultFacility && selectedStaff?.defaultFacilityId) {
-        const defaultFacility = mockFacilitiesForStaff.find(f => f.id === selectedStaff.defaultFacilityId);
+        const defaultFacility = facilitiesForStaff.find(f => f.id === selectedStaff.defaultFacilityId);
         if (defaultFacility) {
           selectFacility({
             id: defaultFacility.id,
@@ -359,7 +444,7 @@ export function CreateBookingModal({ className }: CreateBookingModalProps) {
 
   // Handle facility selection in staff-first flow
   const handleStaffFlowFacilitySelect = (facilityId: string) => {
-    const facility = mockFacilitiesForStaff.find(f => f.id === facilityId);
+    const facility = facilitiesForStaff.find(f => f.id === facilityId);
     if (facility) {
       selectFacility({
         id: facility.id,
@@ -417,7 +502,7 @@ export function CreateBookingModal({ className }: CreateBookingModalProps) {
         {/* Staff Step - Staff-first flow */}
         {currentStep === 'staff' && bookingType === 'staff' && (
           <BookingStaffStep
-            staff={mockStaff}
+            staff={staff}
             selectedId={selectedStaff?.id || null}
             onSelect={handleStaffFlowStaffSelect}
             onBack={goToPreviousStep}
@@ -429,8 +514,8 @@ export function CreateBookingModal({ className }: CreateBookingModalProps) {
         {currentStep === 'select' && bookingType && bookingType !== 'staff' && (
           <BookingPickerStep
             mode={bookingType}
-            facilities={mockFacilities}
-            services={mockServices}
+            facilities={facilities}
+            services={services}
             selectedId={selectedFacility?.id || selectedService?.id || null}
             onSelect={handleItemSelect}
             onBack={goToPreviousStep}
@@ -447,7 +532,7 @@ export function CreateBookingModal({ className }: CreateBookingModalProps) {
               photoUrl: selectedStaff.photoUrl,
               capabilities: selectedStaff.capabilities || [],
             }}
-            services={mockServicesForStaff}
+            services={servicesForStaff}
             selectedId={selectedService?.id || null}
             onSelect={handleStaffFlowServiceSelect}
             onBack={goToPreviousStep}
@@ -462,7 +547,7 @@ export function CreateBookingModal({ className }: CreateBookingModalProps) {
             serviceName={selectedService.name}
             serviceCategory={selectedService.category}
             selectedDate={selectedDate}
-            facilities={mockFacilitiesForStaff}
+            facilities={facilitiesForStaff}
             selectedId={selectedFacility?.id || null}
             onSelect={handleStaffFlowFacilitySelect}
             onBack={goToPreviousStep}

@@ -23,13 +23,13 @@ export interface StatusLegendProps {
 }
 
 const defaultStatuses: BookingStatus[] = [
-  'confirmed',
-  'checked_in',
-  'in_progress',
-  'completed',
-  'no_show',
-  'cancelled',
-  'maintenance',
+  'CONFIRMED',
+  'CHECKED_IN',
+  'IN_PROGRESS',
+  'COMPLETED',
+  'NO_SHOW',
+  'CANCELLED',
+  'MAINTENANCE',
 ];
 
 /**

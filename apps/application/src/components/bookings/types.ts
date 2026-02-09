@@ -5,16 +5,17 @@
  * reference these status definitions for consistent state representation.
  */
 
-export type BookingStatus =
-  | 'available'
-  | 'confirmed'
-  | 'checked_in'
-  | 'in_progress'
-  | 'completed'
-  | 'no_show'
-  | 'cancelled'
-  | 'maintenance'
-  | 'outside_hours';
+import type { BookingStatus as CoreBookingStatus } from '@clubvantage/types';
+
+// Calendar-specific display states that extend core booking status
+// AVAILABLE = empty slot, MAINTENANCE = facility maintenance, OUTSIDE_HOURS = outside operating hours
+export type CalendarSlotStatus = CoreBookingStatus | 'AVAILABLE' | 'MAINTENANCE' | 'OUTSIDE_HOURS';
+
+// Backward-compatible alias — components importing BookingStatus get the extended type
+export type BookingStatus = CalendarSlotStatus;
+
+// Re-export the core type for code that wants strict booking-only statuses
+export type { CoreBookingStatus };
 
 export interface BookingStatusConfig {
   label: string;
