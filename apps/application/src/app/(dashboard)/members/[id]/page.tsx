@@ -43,6 +43,7 @@ import { AddressModal, type AddressFormData } from '@/components/members/address
 import { StatusChangeDialog, ConfirmationDialog } from '@/components/members/confirmation-dialog';
 import type { Dependent, Charge, MemberStatus, Member, Address } from '@/components/members/types';
 import { useMemberTransactions } from '@/hooks/use-billing';
+import { useARProfileByMember } from '@/hooks/use-ar-statements';
 
 export default function MemberDetailPage() {
   const params = useParams();
@@ -223,6 +224,9 @@ export default function MemberDetailPage() {
   // Fetch A/R transactions for this member
   const { transactions: arTransactions } = useMemberTransactions(memberId);
 
+  // Fetch AR profile for billing tab
+  const { profile: arProfile } = useARProfileByMember(memberId);
+
   // State for modals
   const [isDependentModalOpen, setIsDependentModalOpen] = useState(false);
   const [selectedDependent, setSelectedDependent] = useState<Dependent | undefined>();
@@ -273,21 +277,11 @@ export default function MemberDetailPage() {
   const handleConfirmStatusChange = useCallback(async (reason?: string) => {
     if (!statusChangeDialog.newStatus) return;
 
-    // Map component status to API status
-    // Component uses: PENDING, ACTIVE, SUSPENDED, INACTIVE, CANCELLED
-    // API uses: ACTIVE, SUSPENDED, TERMINATED, RESIGNED, LAPSED, etc.
-    const statusMap: Record<MemberStatus, ApiMemberStatus> = {
-      PENDING: 'APPLICANT',
-      ACTIVE: 'ACTIVE',
-      SUSPENDED: 'SUSPENDED',
-      INACTIVE: 'LAPSED',
-      CANCELLED: 'TERMINATED',
-    };
-
+    // Component MemberStatus now matches API MemberStatus directly
     changeMemberStatusMutation.mutate({
       id: memberId,
       input: {
-        status: statusMap[statusChangeDialog.newStatus],
+        status: statusChangeDialog.newStatus as ApiMemberStatus,
         reason: reason,
       },
     });
@@ -536,13 +530,13 @@ export default function MemberDetailPage() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 p-4 sm:p-6 lg:p-8">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-stone-900 dark:via-stone-800 dark:to-stone-900 p-4 sm:p-6 lg:p-8">
         <div className="mx-auto max-w-4xl">
-          <div className="relative overflow-hidden rounded-2xl border border-slate-200/60 bg-white/80 p-12 text-center shadow-xl shadow-slate-200/50 backdrop-blur-sm">
-            <div className="absolute inset-0 bg-gradient-to-br from-slate-50/50 to-transparent" />
+          <div className="relative overflow-hidden rounded-2xl border border-slate-200/60 dark:border-stone-700/60 bg-white/80 dark:bg-stone-900/80 p-12 text-center shadow-xl shadow-slate-200/50 backdrop-blur-sm">
+            <div className="absolute inset-0 bg-gradient-to-br from-slate-50/50 to-transparent dark:from-stone-900/50" />
             <div className="relative">
               <Loader2 className="mx-auto h-8 w-8 animate-spin text-amber-600" />
-              <p className="mt-4 text-lg font-medium text-slate-600">Loading member...</p>
+              <p className="mt-4 text-lg font-medium text-slate-600 dark:text-stone-400">Loading member...</p>
             </div>
           </div>
         </div>
@@ -553,12 +547,12 @@ export default function MemberDetailPage() {
   // Error state
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 p-4 sm:p-6 lg:p-8">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-stone-900 dark:via-stone-800 dark:to-stone-900 p-4 sm:p-6 lg:p-8">
         <div className="mx-auto max-w-4xl">
-          <div className="relative overflow-hidden rounded-2xl border border-red-200/60 bg-white/80 p-12 text-center shadow-xl shadow-red-200/50 backdrop-blur-sm">
+          <div className="relative overflow-hidden rounded-2xl border border-red-200/60 bg-white/80 dark:bg-stone-900/80 p-12 text-center shadow-xl shadow-red-200/50 backdrop-blur-sm">
             <div className="absolute inset-0 bg-gradient-to-br from-red-50/50 to-transparent" />
             <div className="relative">
-              <p className="text-lg font-medium text-red-600">Failed to load member</p>
+              <p className="text-lg font-medium text-red-600 dark:text-red-400">Failed to load member</p>
               <p className="mt-2 text-sm text-red-400">There was an error loading this member. Please try again.</p>
               <Button
                 variant="outline"
@@ -578,16 +572,16 @@ export default function MemberDetailPage() {
   // Not found state
   if (!member) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 p-4 sm:p-6 lg:p-8">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-stone-900 dark:via-stone-800 dark:to-stone-900 p-4 sm:p-6 lg:p-8">
         <div className="mx-auto max-w-4xl">
-          <div className="relative overflow-hidden rounded-2xl border border-slate-200/60 bg-white/80 p-12 text-center shadow-xl shadow-slate-200/50 backdrop-blur-sm">
-            <div className="absolute inset-0 bg-gradient-to-br from-slate-50/50 to-transparent" />
+          <div className="relative overflow-hidden rounded-2xl border border-slate-200/60 dark:border-stone-700/60 bg-white/80 dark:bg-stone-900/80 p-12 text-center shadow-xl shadow-slate-200/50 backdrop-blur-sm">
+            <div className="absolute inset-0 bg-gradient-to-br from-slate-50/50 to-transparent dark:from-stone-900/50" />
             <div className="relative">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
-                <Sparkles className="h-8 w-8 text-slate-400" />
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 dark:bg-stone-800">
+                <Sparkles className="h-8 w-8 text-slate-400 dark:text-stone-500" />
               </div>
-              <p className="text-lg font-medium text-slate-600">Member not found</p>
-              <p className="mt-2 text-sm text-slate-400">The member you&apos;re looking for doesn&apos;t exist or has been removed.</p>
+              <p className="text-lg font-medium text-slate-600 dark:text-stone-400">Member not found</p>
+              <p className="mt-2 text-sm text-slate-400 dark:text-stone-500">The member you&apos;re looking for doesn&apos;t exist or has been removed.</p>
               <Button
                 variant="outline"
                 className="mt-6 border-slate-300 hover:bg-slate-50"
@@ -604,7 +598,7 @@ export default function MemberDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50/80">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50/80 dark:from-stone-900 dark:via-stone-800 dark:to-stone-900">
       {/* Subtle texture overlay */}
       <div className="pointer-events-none fixed inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCI+CjxyZWN0IHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgZmlsbD0ibm9uZSIvPgo8Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIxIiBmaWxsPSJyZ2JhKDAsIDAsIDAsIDAuMDIpIi8+Cjwvc3ZnPg==')] opacity-50" />
 
@@ -614,12 +608,12 @@ export default function MemberDetailPage() {
           <nav className="flex items-center gap-2 text-sm">
             <button
               onClick={() => router.push('/members')}
-              className="text-slate-500 transition-colors hover:text-slate-900"
+              className="text-slate-500 dark:text-stone-400 transition-colors hover:text-slate-900 dark:hover:text-stone-100"
             >
               Members
             </button>
-            <span className="text-slate-300">/</span>
-            <span className="font-medium text-slate-900">
+            <span className="text-slate-300 dark:text-stone-600">/</span>
+            <span className="font-medium text-slate-900 dark:text-stone-100">
               {member.firstName} {member.lastName}
             </span>
           </nav>
@@ -627,7 +621,7 @@ export default function MemberDetailPage() {
             variant="outline"
             onClick={() => router.push('/members')}
             size="sm"
-            className="w-fit border-slate-200 bg-white/80 shadow-sm backdrop-blur-sm transition-all hover:bg-white hover:shadow-md"
+            className="w-fit border-slate-200 dark:border-stone-700 bg-white/80 dark:bg-stone-900/80 shadow-sm backdrop-blur-sm transition-all hover:bg-white dark:hover:bg-stone-800 hover:shadow-md"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             <span className="hidden sm:inline">Back to List</span>
@@ -647,13 +641,13 @@ export default function MemberDetailPage() {
         {/* Tabs Section */}
         <div className="relative">
           <Tabs defaultValue="profile" className="w-full">
-            <TabsList className="relative mb-6 grid w-full grid-cols-2 gap-1 rounded-xl bg-slate-100/80 p-1.5 backdrop-blur-sm sm:grid-cols-6 lg:w-fit lg:gap-2">
+            <TabsList className="relative mb-6 grid w-full grid-cols-2 gap-1 rounded-xl bg-slate-100/80 dark:bg-stone-800/80 p-1.5 backdrop-blur-sm sm:grid-cols-6 lg:w-fit lg:gap-2">
               <TabsTrigger
                 value="profile"
                 className={cn(
                   "relative rounded-lg px-4 py-2.5 text-sm font-medium transition-all",
-                  "text-slate-600 hover:text-slate-900",
-                  "data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm"
+                  "text-slate-600 dark:text-stone-400 hover:text-slate-900 dark:hover:text-stone-100",
+                  "data-[state=active]:bg-white dark:data-[state=active]:bg-stone-900 data-[state=active]:text-slate-900 dark:data-[state=active]:text-stone-100 data-[state=active]:shadow-sm"
                 )}
               >
                 Profile
@@ -662,8 +656,8 @@ export default function MemberDetailPage() {
                 value="contract"
                 className={cn(
                   "relative rounded-lg px-4 py-2.5 text-sm font-medium transition-all",
-                  "text-slate-600 hover:text-slate-900",
-                  "data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm"
+                  "text-slate-600 dark:text-stone-400 hover:text-slate-900 dark:hover:text-stone-100",
+                  "data-[state=active]:bg-white dark:data-[state=active]:bg-stone-900 data-[state=active]:text-slate-900 dark:data-[state=active]:text-stone-100 data-[state=active]:shadow-sm"
                 )}
               >
                 Contract
@@ -672,13 +666,13 @@ export default function MemberDetailPage() {
                 value="dependents"
                 className={cn(
                   "relative rounded-lg px-4 py-2.5 text-sm font-medium transition-all",
-                  "text-slate-600 hover:text-slate-900",
-                  "data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm"
+                  "text-slate-600 dark:text-stone-400 hover:text-slate-900 dark:hover:text-stone-100",
+                  "data-[state=active]:bg-white dark:data-[state=active]:bg-stone-900 data-[state=active]:text-slate-900 dark:data-[state=active]:text-stone-100 data-[state=active]:shadow-sm"
                 )}
               >
                 <span className="hidden sm:inline">Dependents</span>
                 <span className="sm:hidden">Family</span>
-                <span className="ml-1.5 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-slate-200/80 px-1.5 text-xs font-semibold text-slate-600">
+                <span className="ml-1.5 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-slate-200/80 dark:bg-stone-700/50 px-1.5 text-xs font-semibold text-slate-600 dark:text-stone-400">
                   {member.dependents.length}
                 </span>
               </TabsTrigger>
@@ -686,8 +680,8 @@ export default function MemberDetailPage() {
                 value="ar-history"
                 className={cn(
                   "relative rounded-lg px-4 py-2.5 text-sm font-medium transition-all",
-                  "text-slate-600 hover:text-slate-900",
-                  "data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm"
+                  "text-slate-600 dark:text-stone-400 hover:text-slate-900 dark:hover:text-stone-100",
+                  "data-[state=active]:bg-white dark:data-[state=active]:bg-stone-900 data-[state=active]:text-slate-900 dark:data-[state=active]:text-stone-100 data-[state=active]:shadow-sm"
                 )}
               >
                 <span className="hidden sm:inline">Billing History</span>
@@ -697,8 +691,8 @@ export default function MemberDetailPage() {
                 value="engagement"
                 className={cn(
                   "relative rounded-lg px-4 py-2.5 text-sm font-medium transition-all",
-                  "text-slate-600 hover:text-slate-900",
-                  "data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm"
+                  "text-slate-600 dark:text-stone-400 hover:text-slate-900 dark:hover:text-stone-100",
+                  "data-[state=active]:bg-white dark:data-[state=active]:bg-stone-900 data-[state=active]:text-slate-900 dark:data-[state=active]:text-stone-100 data-[state=active]:shadow-sm"
                 )}
               >
                 <Heart className="mr-1.5 h-4 w-4" />
@@ -708,8 +702,8 @@ export default function MemberDetailPage() {
                 value="documents"
                 className={cn(
                   "relative rounded-lg px-4 py-2.5 text-sm font-medium transition-all",
-                  "text-slate-600 hover:text-slate-900",
-                  "data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm"
+                  "text-slate-600 dark:text-stone-400 hover:text-slate-900 dark:hover:text-stone-100",
+                  "data-[state=active]:bg-white dark:data-[state=active]:bg-stone-900 data-[state=active]:text-slate-900 dark:data-[state=active]:text-stone-100 data-[state=active]:shadow-sm"
                 )}
               >
                 <FileText className="mr-1.5 h-4 w-4" />
@@ -754,7 +748,7 @@ export default function MemberDetailPage() {
             </TabsContent>
 
             <TabsContent value="ar-history" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
-              <ARHistoryTab member={member} transactions={arTransactions} />
+              <ARHistoryTab member={member} transactions={arTransactions} arProfile={arProfile} />
             </TabsContent>
 
             <TabsContent value="engagement" className="mt-0 focus-visible:outline-none focus-visible:ring-0">

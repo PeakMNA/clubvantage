@@ -3595,6 +3595,7 @@ enum AutoPaySchedule {
   INVOICE_DUE // Pay when invoice is due
   STATEMENT_DATE // Pay on statement date
   MONTHLY_FIXED // Pay on specific day each month
+  CYCLE_CLOSE // Pay on cycle close date
 }
 
 enum AutoPayAttemptStatus {

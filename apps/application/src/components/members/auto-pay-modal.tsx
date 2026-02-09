@@ -10,7 +10,9 @@ import {
   Bell,
   Shield,
   Settings2,
+  Clock,
 } from 'lucide-react';
+import { useClubBillingSettings, useMemberBillingProfile } from '@/hooks/use-billing-settings';
 import {
   Dialog,
   DialogContent,
@@ -30,10 +32,13 @@ import {
   useUpsertAutoPaySettingMutation,
   useDisableAutoPayMutation,
   type AutoPaySetting,
-  type AutoPaySchedule,
+  type AutoPaySchedule as BaseAutoPaySchedule,
   type StoredPaymentMethod,
   type AutoPaySettingInput,
 } from '@clubvantage/api-client';
+
+// Extended schedule type to include CYCLE_CLOSE (added to Prisma, pending codegen)
+type AutoPaySchedule = BaseAutoPaySchedule | 'CYCLE_CLOSE';
 import { useQueryClient } from '@tanstack/react-query';
 
 export interface AutoPayModalProps {
@@ -59,6 +64,11 @@ const SCHEDULE_OPTIONS: { value: AutoPaySchedule; label: string; description: st
     label: 'Monthly Fixed Date',
     description: 'Pay on a specific day each month',
   },
+  {
+    value: 'CYCLE_CLOSE',
+    label: 'Cycle Close Date',
+    description: 'Pay on billing cycle close',
+  },
 ];
 
 interface FormState {
@@ -70,6 +80,7 @@ interface FormState {
   monthlyMaxAmount: string;
   requireApprovalAbove: string;
   payDuesOnly: boolean;
+  payCurrentCycleOnly: boolean;
   notifyBeforePayment: boolean;
   notifyDaysBefore: number;
   notifyOnSuccess: boolean;
@@ -85,6 +96,7 @@ const initialFormState: FormState = {
   monthlyMaxAmount: '',
   requireApprovalAbove: '',
   payDuesOnly: false,
+  payCurrentCycleOnly: false,
   notifyBeforePayment: true,
   notifyDaysBefore: 3,
   notifyOnSuccess: true,
@@ -124,6 +136,9 @@ export function AutoPayModal({
   const [showSuccess, setShowSuccess] = useState(false);
   const [error, setError] = useState<string>();
 
+  const { settings: billingSettings } = useClubBillingSettings();
+  const { profile: billingProfile } = useMemberBillingProfile(memberId);
+
   const existingSetting = settingData?.memberAutoPaySetting;
   const paymentMethods = methodsData?.memberPaymentMethods ?? [];
   const activePaymentMethods = useMemo(
@@ -134,18 +149,34 @@ export function AutoPayModal({
   const isLoading = isLoadingSettings || isLoadingMethods;
   const isSaving = upsertMutation.isPending || disableMutation.isPending;
 
+  // Compute next cycle close date for display
+  const nextCycleCloseDate = useMemo(() => {
+    if (!billingSettings) return null;
+    const isMemberCycle = billingSettings.billingCycleMode === 'MEMBER_CYCLE';
+    const day = isMemberCycle
+      ? (billingProfile?.billingDay ?? billingSettings.defaultBillingDay)
+      : billingSettings.clubCycleClosingDay;
+    const now = new Date();
+    let nextDate = new Date(now.getFullYear(), now.getMonth(), day);
+    if (nextDate <= now) {
+      nextDate = new Date(now.getFullYear(), now.getMonth() + 1, day);
+    }
+    return nextDate;
+  }, [billingSettings, billingProfile]);
+
   // Initialize form when data loads
   useEffect(() => {
     if (existingSetting) {
       setFormState({
         isEnabled: existingSetting.isEnabled,
         paymentMethodId: existingSetting.paymentMethodId,
-        schedule: existingSetting.schedule,
+        schedule: existingSetting.schedule as AutoPaySchedule,
         paymentDayOfMonth: existingSetting.paymentDayOfMonth ?? 1,
         maxPaymentAmount: existingSetting.maxPaymentAmount?.toString() ?? '',
         monthlyMaxAmount: existingSetting.monthlyMaxAmount?.toString() ?? '',
         requireApprovalAbove: existingSetting.requireApprovalAbove?.toString() ?? '',
         payDuesOnly: existingSetting.payDuesOnly,
+        payCurrentCycleOnly: false,
         notifyBeforePayment: existingSetting.notifyBeforePayment,
         notifyDaysBefore: existingSetting.notifyDaysBefore,
         notifyOnSuccess: existingSetting.notifyOnSuccess,
@@ -204,7 +235,7 @@ export function AutoPayModal({
         memberId,
         paymentMethodId: formState.paymentMethodId,
         isEnabled: formState.isEnabled,
-        schedule: formState.schedule,
+        schedule: formState.schedule as BaseAutoPaySchedule,
         paymentDayOfMonth: formState.schedule === 'MONTHLY_FIXED' ? formState.paymentDayOfMonth : null,
         maxPaymentAmount: formState.maxPaymentAmount ? parseFloat(formState.maxPaymentAmount) : null,
         monthlyMaxAmount: formState.monthlyMaxAmount ? parseFloat(formState.monthlyMaxAmount) : null,
@@ -275,9 +306,9 @@ export function AutoPayModal({
         </DialogHeader>
 
         {memberName && (
-          <div className="rounded-lg border border-stone-200 bg-stone-50 p-3">
-            <p className="text-sm text-stone-600">
-              Configure automatic payments for <span className="font-medium text-stone-900">{memberName}</span>
+          <div className="rounded-lg border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 p-3">
+            <p className="text-sm text-stone-600 dark:text-stone-400">
+              Configure automatic payments for <span className="font-medium text-stone-900 dark:text-stone-100">{memberName}</span>
             </p>
           </div>
         )}
@@ -289,23 +320,23 @@ export function AutoPayModal({
           </div>
         ) : activePaymentMethods.length === 0 ? (
           <div className="py-8 text-center">
-            <CreditCard className="mx-auto h-12 w-12 text-stone-300" />
-            <h3 className="mt-4 text-base font-medium text-stone-900">No Payment Methods</h3>
-            <p className="mt-2 text-sm text-stone-500">
+            <CreditCard className="mx-auto h-12 w-12 text-stone-300 dark:text-stone-600" />
+            <h3 className="mt-4 text-base font-medium text-stone-900 dark:text-stone-100">No Payment Methods</h3>
+            <p className="mt-2 text-sm text-stone-500 dark:text-stone-400">
               Add a payment method before setting up auto-pay.
             </p>
           </div>
         ) : (
           <div className="space-y-6 py-2">
             {error && (
-              <div className="flex items-center gap-2 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+              <div className="flex items-center gap-2 rounded-lg bg-red-50 dark:bg-red-500/10 px-4 py-3 text-sm text-red-700 dark:text-red-400">
                 <AlertCircle className="h-4 w-4 shrink-0" />
                 {error}
               </div>
             )}
 
             {/* Enable/Disable Toggle */}
-            <div className="flex items-center justify-between rounded-lg border border-stone-200 bg-stone-50/50 p-4">
+            <div className="flex items-center justify-between rounded-lg border border-stone-200 dark:border-stone-700 bg-stone-50/50 dark:bg-stone-800/30 p-4">
               <div>
                 <Label className="text-base font-medium">Enable Auto-Pay</Label>
                 <p className="mt-0.5 text-sm text-muted-foreground">
@@ -323,7 +354,7 @@ export function AutoPayModal({
                 {/* Payment Method Selector */}
                 <div className="space-y-2">
                   <Label className="flex items-center gap-2">
-                    <CreditCard className="h-4 w-4 text-stone-500" />
+                    <CreditCard className="h-4 w-4 text-stone-500 dark:text-stone-400" />
                     Payment Method
                   </Label>
                   <select
@@ -349,7 +380,7 @@ export function AutoPayModal({
                 {/* Schedule */}
                 <div className="space-y-3">
                   <Label className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-stone-500" />
+                    <Calendar className="h-4 w-4 text-stone-500 dark:text-stone-400" />
                     Payment Schedule
                   </Label>
                   <div className="grid gap-2">
@@ -362,13 +393,13 @@ export function AutoPayModal({
                           'flex items-center justify-between rounded-lg border p-3 text-left transition-all',
                           formState.schedule === option.value
                             ? 'border-amber-500 bg-amber-50 ring-1 ring-amber-500'
-                            : 'border-stone-200 hover:border-stone-300 hover:bg-stone-50'
+                            : 'border-stone-200 dark:border-stone-700 hover:border-stone-300 dark:hover:border-stone-600 hover:bg-stone-50 dark:hover:bg-stone-800'
                         )}
                       >
                         <div>
                           <p className={cn(
                             'text-sm font-medium',
-                            formState.schedule === option.value ? 'text-amber-700' : 'text-stone-900'
+                            formState.schedule === option.value ? 'text-amber-700' : 'text-stone-900 dark:text-stone-100'
                           )}>
                             {option.label}
                           </p>
@@ -394,7 +425,7 @@ export function AutoPayModal({
 
                   {/* Monthly Fixed Date Picker */}
                   {formState.schedule === 'MONTHLY_FIXED' && (
-                    <div className="ml-4 mt-2 flex items-center gap-2 rounded-lg bg-stone-50 p-3">
+                    <div className="ml-4 mt-2 flex items-center gap-2 rounded-lg bg-stone-50 dark:bg-stone-800 p-3">
                       <Label className="text-sm whitespace-nowrap">Pay on day:</Label>
                       <Input
                         type="number"
@@ -407,12 +438,22 @@ export function AutoPayModal({
                       <span className="text-sm text-muted-foreground">of each month</span>
                     </div>
                   )}
+
+                  {/* Next scheduled payment for CYCLE_CLOSE */}
+                  {formState.schedule === 'CYCLE_CLOSE' && nextCycleCloseDate && (
+                    <div className="ml-4 mt-2 flex items-center gap-2 rounded-lg bg-amber-50 dark:bg-amber-500/10 p-3">
+                      <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                      <span className="text-sm text-amber-700 dark:text-amber-400">
+                        Next payment: {nextCycleCloseDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} (cycle close)
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Payment Limits */}
                 <div className="space-y-3">
                   <Label className="flex items-center gap-2">
-                    <Shield className="h-4 w-4 text-stone-500" />
+                    <Shield className="h-4 w-4 text-stone-500 dark:text-stone-400" />
                     Payment Limits
                   </Label>
 
@@ -465,7 +506,7 @@ export function AutoPayModal({
                     </p>
                   </div>
 
-                  <label className="flex items-center gap-2 rounded-lg bg-stone-50 p-3">
+                  <label className="flex items-center gap-2 rounded-lg bg-stone-50 dark:bg-stone-800 p-3">
                     <Checkbox
                       checked={formState.payDuesOnly}
                       onCheckedChange={(checked) => updateField('payDuesOnly', checked as boolean)}
@@ -475,16 +516,29 @@ export function AutoPayModal({
                       <p className="text-xs text-muted-foreground">Only auto-pay membership dues, not other charges</p>
                     </div>
                   </label>
+
+                  {formState.schedule === 'CYCLE_CLOSE' && (
+                    <label className="flex items-center gap-2 rounded-lg bg-stone-50 dark:bg-stone-800 p-3">
+                      <Checkbox
+                        checked={formState.payCurrentCycleOnly}
+                        onCheckedChange={(checked) => updateField('payCurrentCycleOnly', checked as boolean)}
+                      />
+                      <div>
+                        <span className="text-sm font-medium">Pay current cycle charges only</span>
+                        <p className="text-xs text-muted-foreground">Limits auto-pay to charges within the current billing cycle, not historical balance</p>
+                      </div>
+                    </label>
+                  )}
                 </div>
 
                 {/* Notification Preferences */}
                 <div className="space-y-3">
                   <Label className="flex items-center gap-2">
-                    <Bell className="h-4 w-4 text-stone-500" />
+                    <Bell className="h-4 w-4 text-stone-500 dark:text-stone-400" />
                     Notifications
                   </Label>
 
-                  <div className="space-y-2 rounded-lg border border-stone-200 p-3">
+                  <div className="space-y-2 rounded-lg border border-stone-200 dark:border-stone-700 p-3">
                     <label className="flex items-center justify-between">
                       <span className="text-sm">Notify before payment</span>
                       <Switch
@@ -507,7 +561,7 @@ export function AutoPayModal({
                       </div>
                     )}
 
-                    <div className="border-t border-stone-100 pt-2">
+                    <div className="border-t border-stone-100 dark:border-stone-700 pt-2">
                       <label className="flex items-center justify-between">
                         <span className="text-sm">Notify on successful payment</span>
                         <Switch
@@ -538,7 +592,7 @@ export function AutoPayModal({
               variant="ghost"
               onClick={handleDisable}
               disabled={isSaving}
-              className="text-red-600 hover:bg-red-50 hover:text-red-700"
+              className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-700"
             >
               Disable Auto-Pay
             </Button>

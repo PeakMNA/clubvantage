@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { ChevronDown, ChevronUp, Loader2, AlertTriangle, ShieldAlert } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -48,6 +48,11 @@ export interface ChargeModalProps {
   onSubmit: (data: ChargeFormData) => void;
   onRemove?: (chargeId: string) => void;
   isLoading?: boolean;
+  // Credit limit checking
+  currentBalance?: number;
+  creditLimit?: number | null;
+  autoSuspendOnCreditExceeded?: boolean;
+  allowManagerOverride?: boolean;
 }
 
 export interface ChargeFormData {
@@ -122,12 +127,39 @@ export function ChargeModal({
   onSubmit,
   onRemove,
   isLoading = false,
+  currentBalance = 0,
+  creditLimit,
+  autoSuspendOnCreditExceeded = false,
+  allowManagerOverride = false,
 }: ChargeModalProps) {
   const [formData, setFormData] = useState<ChargeFormData>(initialFormData);
   const [templatesExpanded, setTemplatesExpanded] = useState(false);
   const [useDefaultAttribution, setUseDefaultAttribution] = useState(true);
+  const [managerOverrideApproved, setManagerOverrideApproved] = useState(false);
 
   const isEditing = !!charge;
+
+  // Credit limit warning computation
+  const creditWarning = useMemo(() => {
+    if (creditLimit == null || creditLimit <= 0) return null;
+    const newBalance = currentBalance + formData.amount;
+    const utilization = (newBalance / creditLimit) * 100;
+    if (utilization >= 100) {
+      return {
+        level: 'exceeded' as const,
+        message: `This charge will exceed the credit limit (${Math.round(utilization)}% of ฿${creditLimit.toLocaleString()})`,
+        blocked: autoSuspendOnCreditExceeded && !managerOverrideApproved,
+      };
+    }
+    if (utilization >= 80) {
+      return {
+        level: 'warning' as const,
+        message: `Balance will reach ${Math.round(utilization)}% of credit limit (฿${creditLimit.toLocaleString()})`,
+        blocked: false,
+      };
+    }
+    return null;
+  }, [currentBalance, formData.amount, creditLimit, autoSuspendOnCreditExceeded, managerOverrideApproved]);
   const hasDefaults = !!(defaultRevenueCenterId || defaultOutletId);
 
   useEffect(() => {
@@ -245,7 +277,7 @@ export function ChargeModal({
                         key={template.id}
                         type="button"
                         onClick={() => handleApplyTemplate(template)}
-                        className="rounded-md border border-border bg-card px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:border-amber-300 hover:bg-amber-50"
+                        className="rounded-md border border-border bg-card px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:border-amber-300 hover:bg-amber-50 dark:hover:bg-amber-500/20"
                       >
                         {template.name}
                       </button>
@@ -266,8 +298,8 @@ export function ChargeModal({
                   className={cn(
                     'inline-flex items-center rounded-full px-3 py-1 text-sm font-medium',
                     formData.chargeType === 'RECURRING'
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'bg-purple-100 text-purple-700'
+                      ? 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400'
+                      : 'bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-400'
                   )}
                 >
                   {formData.chargeType === 'RECURRING' ? 'Recurring' : 'Usage-Based'}
@@ -283,7 +315,7 @@ export function ChargeModal({
                   className={cn(
                     'flex-1 rounded-md border px-4 py-2 text-sm font-medium transition-colors',
                     formData.chargeType === 'RECURRING'
-                      ? 'border-amber-500 bg-amber-50 text-amber-700'
+                      ? 'border-amber-500 bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400'
                       : 'border-border text-muted-foreground hover:bg-muted/50'
                   )}
                 >
@@ -295,7 +327,7 @@ export function ChargeModal({
                   className={cn(
                     'flex-1 rounded-md border px-4 py-2 text-sm font-medium transition-colors',
                     formData.chargeType === 'USAGE_BASED'
-                      ? 'border-purple-500 bg-purple-50 text-purple-700'
+                      ? 'border-purple-500 bg-purple-50 dark:bg-purple-500/20 text-purple-700 dark:text-purple-400'
                       : 'border-border text-muted-foreground hover:bg-muted/50'
                   )}
                 >
@@ -352,6 +384,41 @@ export function ChargeModal({
                   required
                 />
               </div>
+
+              {/* Credit Limit Warning */}
+              {creditWarning && (
+                <div className={cn(
+                  'col-span-2 flex items-start gap-2 rounded-lg px-3 py-2.5 text-sm',
+                  creditWarning.level === 'exceeded'
+                    ? 'bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400'
+                    : 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400'
+                )}>
+                  {creditWarning.level === 'exceeded' ? (
+                    <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
+                  ) : (
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                  )}
+                  <div>
+                    <p className="text-xs font-medium">{creditWarning.message}</p>
+                    {creditWarning.blocked && (
+                      <p className="mt-1 text-xs">
+                        Auto-suspend is enabled. {allowManagerOverride ? 'Manager override available below.' : 'This charge cannot be submitted.'}
+                      </p>
+                    )}
+                    {creditWarning.blocked && allowManagerOverride && (
+                      <label className="mt-2 flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={managerOverrideApproved}
+                          onChange={(e) => setManagerOverrideApproved(e.target.checked)}
+                          className="rounded border-red-300"
+                        />
+                        <span className="text-xs font-medium">Manager override: approve this charge</span>
+                      </label>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {formData.chargeType === 'RECURRING' ? (
                 <div className="space-y-2">
@@ -607,7 +674,7 @@ export function ChargeModal({
               <button
                 type="button"
                 onClick={() => onRemove(charge.id)}
-                className="text-sm text-red-600 hover:text-red-700 hover:underline"
+                className="text-sm text-red-600 dark:text-red-400 hover:text-red-700 hover:underline"
                 disabled={isLoading}
               >
                 Remove Charge
@@ -619,7 +686,7 @@ export function ChargeModal({
               </Button>
               <Button
                 type="submit"
-                disabled={isLoading || (formData.isSuspended && !formData.suspendReason)}
+                disabled={isLoading || (formData.isSuspended && !formData.suspendReason) || (creditWarning?.blocked ?? false)}
               >
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isEditing ? 'Save Changes' : 'Add Charge'}

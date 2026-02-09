@@ -143,6 +143,9 @@ export interface MemberBillingProfile {
   lateFeeExempt: boolean;
   autoPayEnabled: boolean;
   paymentMethodId: string | null;
+  billingHold: boolean;
+  billingHoldReason: string | null;
+  billingHoldUntil: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -175,6 +178,9 @@ export interface UpdateMemberBillingProfileInput {
   lateFeeExempt?: boolean;
   autoPayEnabled?: boolean;
   paymentMethodId?: string | null;
+  billingHold?: boolean;
+  billingHoldReason?: string | null;
+  billingHoldUntil?: string | null;
 }
 
 // =============================================================================
@@ -307,6 +313,9 @@ const GET_MEMBER_BILLING_PROFILE = `
       lateFeeExempt
       autoPayEnabled
       paymentMethodId
+      billingHold
+      billingHoldReason
+      billingHoldUntil
       createdAt
       updatedAt
     }

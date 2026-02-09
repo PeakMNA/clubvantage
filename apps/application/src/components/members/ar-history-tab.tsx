@@ -4,11 +4,6 @@ import { useState, useMemo } from 'react';
 import { cn, Badge, Button } from '@clubvantage/ui';
 import type { Member, ARTransaction, AgingBucket } from './types';
 import {
-  ArrowUpRight,
-  ArrowDownRight,
-  Minus,
-  FileText,
-  Receipt,
   Calendar,
   Wallet,
   CreditCard,
@@ -19,16 +14,13 @@ import {
   Loader2,
   AlertCircle,
   RotateCcw,
-  ExternalLink,
   Info,
+  Receipt,
+  FileText,
+  Shield,
+  AlertTriangle,
+  PauseCircle,
 } from 'lucide-react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@clubvantage/ui';
 import {
   useGetMemberAutoPayHistoryQuery,
   useRetryAutoPayAttemptMutation,
@@ -37,6 +29,12 @@ import {
 } from '@clubvantage/api-client';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToastErrors, ToastContainer } from './error-states';
+import { TransactionView } from './billing/transaction-view';
+import { StatementView } from './billing/statement-view';
+import { UnbilledActivity } from './billing/unbilled-activity';
+import { BillingHoldModal } from './billing-hold-modal';
+import type { ARProfile } from '@/hooks/use-ar-statements';
+import { useClubBillingSettings, useMemberBillingProfile } from '@/hooks/use-billing-settings';
 
 // Type for auto-pay attempt from the query result
 type AutoPayHistoryAttempt = GetMemberAutoPayHistoryQuery['memberAutoPayHistory'][number];
@@ -44,9 +42,12 @@ type AutoPayHistoryAttempt = GetMemberAutoPayHistoryQuery['memberAutoPayHistory'
 export interface ARHistoryTabProps {
   member: Member;
   transactions: ARTransaction[];
+  arProfile?: ARProfile | null;
   onViewInvoice?: (invoiceNumber: string) => void;
   onViewStatement?: (statementId: string) => void;
 }
+
+type BillingView = 'transactions' | 'statements' | 'unbilled';
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('en-US', {
@@ -79,18 +80,18 @@ function formatDateTime(dateString: string): string {
 
 const agingBucketLabels: Record<AgingBucket, string> = {
   CURRENT: 'Current',
-  '30': '30 Days',
-  '60': '60 Days',
-  '90': '90 Days',
-  '91+': '91+ Days',
+  DAYS_30: '30 Days',
+  DAYS_60: '60 Days',
+  DAYS_90: '90 Days',
+  DAYS_91_PLUS: '91+ Days',
 };
 
 const agingBucketColors: Record<AgingBucket, string> = {
   CURRENT: 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-500/30',
-  '30': 'bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-200/60 dark:border-amber-500/30',
-  '60': 'bg-orange-50 dark:bg-orange-500/20 text-orange-700 dark:text-orange-400 border-orange-200/60 dark:border-orange-500/30',
-  '90': 'bg-red-50 dark:bg-red-500/20 text-red-700 dark:text-red-400 border-red-200/60 dark:border-red-500/30',
-  '91+': 'bg-red-100 dark:bg-red-500/30 text-red-800 dark:text-red-300 border-red-300/60 dark:border-red-500/40',
+  DAYS_30: 'bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-200/60 dark:border-amber-500/30',
+  DAYS_60: 'bg-orange-50 dark:bg-orange-500/20 text-orange-700 dark:text-orange-400 border-orange-200/60 dark:border-orange-500/30',
+  DAYS_90: 'bg-red-50 dark:bg-red-500/20 text-red-700 dark:text-red-400 border-red-200/60 dark:border-red-500/30',
+  DAYS_91_PLUS: 'bg-red-100 dark:bg-red-500/30 text-red-800 dark:text-red-300 border-red-300/60 dark:border-red-500/40',
 };
 
 // Auto-pay status configuration
@@ -129,33 +130,6 @@ const autoPayStatusConfig: Record<
     iconClassName: 'text-stone-400',
   },
 };
-
-function TransactionIcon({ type }: { type: ARTransaction['type'] }) {
-  const iconStyles = {
-    INVOICE: 'from-blue-100 to-blue-200/50 text-blue-600',
-    PAYMENT: 'from-emerald-100 to-emerald-200/50 text-emerald-600',
-    CREDIT: 'from-purple-100 to-purple-200/50 text-purple-600',
-    ADJUSTMENT: 'from-muted to-muted/50 text-muted-foreground',
-  };
-
-  const icons = {
-    INVOICE: FileText,
-    PAYMENT: ArrowDownRight,
-    CREDIT: ArrowDownRight,
-    ADJUSTMENT: Minus,
-  };
-
-  const Icon = icons[type];
-
-  return (
-    <div className={cn(
-      'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br shadow-inner',
-      iconStyles[type]
-    )}>
-      <Icon className="h-5 w-5" />
-    </div>
-  );
-}
 
 // Auto-pay attempt card component
 interface AutoPayAttemptCardProps {
@@ -313,11 +287,11 @@ function AutoPayHistorySection({ memberId }: AutoPayHistorySectionProps) {
 
   return (
     <>
-      <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-white/80 shadow-lg shadow-slate-200/30 backdrop-blur-sm">
+      <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-white/80 dark:bg-stone-900/80 shadow-lg shadow-slate-200/30 dark:shadow-stone-900/30 backdrop-blur-sm">
         <div className="absolute inset-0 bg-gradient-to-br from-muted/50 to-transparent" />
 
         {/* Header */}
-        <div className="relative flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+        <div className="relative flex flex-col gap-3 border-b border-slate-100 dark:border-stone-700 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-muted to-muted/50 shadow-inner">
               <RefreshCw className="h-5 w-5 text-muted-foreground" />
@@ -357,9 +331,9 @@ function AutoPayHistorySection({ memberId }: AutoPayHistorySectionProps) {
               <span className="ml-2 text-muted-foreground">Loading auto-pay history...</span>
             </div>
           ) : error ? (
-            <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-red-200 bg-red-50/50 py-8">
+            <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-red-200 dark:border-red-500/30 bg-red-50/50 dark:bg-red-500/10 py-8">
               <AlertCircle className="h-8 w-8 text-red-400" />
-              <p className="mt-3 text-sm font-medium text-red-600">Failed to load auto-pay history</p>
+              <p className="mt-3 text-sm font-medium text-red-600 dark:text-red-400">Failed to load auto-pay history</p>
               <p className="mt-1 text-xs text-red-500">Please try again later</p>
             </div>
           ) : attempts.length === 0 ? (
@@ -393,52 +367,121 @@ function AutoPayHistorySection({ memberId }: AutoPayHistorySectionProps) {
   );
 }
 
-export function ARHistoryTab({ member, transactions, onViewInvoice }: ARHistoryTabProps) {
-  const [typeFilter, setTypeFilter] = useState<string>('ALL');
-  const [dateRange, setDateRange] = useState<string>('ALL');
+// AR Profile status configuration
+const arProfileStatusConfig: Record<string, { label: string; className: string }> = {
+  ACTIVE: {
+    label: 'Active',
+    className: 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-500/30',
+  },
+  SUSPENDED: {
+    label: 'Suspended',
+    className: 'bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-200/60 dark:border-amber-500/30',
+  },
+  CLOSED: {
+    label: 'Closed',
+    className: 'bg-stone-100 dark:bg-stone-500/20 text-stone-600 dark:text-stone-400 border-stone-200/60 dark:border-stone-500/30',
+  },
+};
 
-  // Filter transactions
-  const filteredTransactions = useMemo(() => {
-    let filtered = [...transactions];
+// Credit limit utilization bar component
+function CreditLimitDisplay({ arProfile }: { arProfile: ARProfile }) {
+  if (arProfile.creditLimit == null) return null;
 
-    // Type filter
-    if (typeFilter !== 'ALL') {
-      filtered = filtered.filter((tx) => tx.type === typeFilter);
+  const used = arProfile.currentBalance;
+  const limit = arProfile.creditLimit;
+  const utilization = limit > 0 ? (used / limit) * 100 : 0;
+  const available = Math.max(0, limit - used);
+  const isOverLimit = used > limit;
+
+  return (
+    <div className="mt-4 rounded-xl bg-muted/80 p-3 backdrop-blur-sm">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-medium text-muted-foreground">Credit Limit</p>
+        <p className="text-xs font-medium text-muted-foreground">
+          {Math.round(utilization)}% used
+        </p>
+      </div>
+      <p className="mt-1 text-sm font-semibold text-foreground">{formatCurrency(limit)}</p>
+
+      {/* Utilization bar */}
+      <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
+        <div
+          className={cn(
+            'h-full rounded-full transition-all',
+            isOverLimit
+              ? 'bg-red-500'
+              : utilization >= 80
+                ? 'bg-amber-500'
+                : 'bg-emerald-500'
+          )}
+          style={{ width: `${Math.min(100, utilization)}%` }}
+        />
+      </div>
+
+      <div className="mt-1.5 flex items-center justify-between text-xs text-muted-foreground">
+        <span>Available: {formatCurrency(available)}</span>
+        {isOverLimit && (
+          <Badge className="bg-red-50 dark:bg-red-500/20 text-red-700 dark:text-red-400 border-red-200/60 text-[10px]">
+            Over limit
+          </Badge>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export function ARHistoryTab({ member, transactions, arProfile, onViewInvoice }: ARHistoryTabProps) {
+  const [activeView, setActiveView] = useState<BillingView>('transactions');
+  const [showHoldModal, setShowHoldModal] = useState(false);
+  const { settings: billingSettings } = useClubBillingSettings();
+  const { profile: billingProfile, updateProfile, isUpdating } = useMemberBillingProfile(member.id);
+
+  const isMemberCycle = billingSettings?.billingCycleMode === 'MEMBER_CYCLE';
+  const cycleLabel = useMemo(() => {
+    if (!billingSettings) return null;
+    if (isMemberCycle) {
+      const cycleDay = billingProfile?.billingDay ?? billingSettings.defaultBillingDay;
+      return `Member Cycle (cycle date: ${cycleDay}${getOrdinalSuffix(cycleDay)})`;
     }
+    const closingDay = billingSettings.clubCycleClosingDay;
+    return `Club Cycle (closing day: ${closingDay}${getOrdinalSuffix(closingDay)})`;
+  }, [billingSettings, billingProfile, isMemberCycle]);
 
-    // Date range filter
-    if (dateRange !== 'ALL') {
-      const now = new Date();
-      let startDate: Date;
+  const profileStatus = arProfile ? arProfileStatusConfig[arProfile.status] : null;
 
-      switch (dateRange) {
-        case '30':
-          startDate = new Date(now.setDate(now.getDate() - 30));
-          break;
-        case '90':
-          startDate = new Date(now.setDate(now.getDate() - 90));
-          break;
-        case '180':
-          startDate = new Date(now.setDate(now.getDate() - 180));
-          break;
-        case '365':
-          startDate = new Date(now.setDate(now.getDate() - 365));
-          break;
-        default:
-          startDate = new Date(0);
+  // Compute unbilled total for summary
+  const unbilledTotal = useMemo(() => {
+    if (!arProfile?.lastStatementDate) return 0;
+    const lastDate = new Date(arProfile.lastStatementDate);
+    let total = 0;
+    for (const tx of transactions) {
+      if (new Date(tx.date) > lastDate) {
+        total += tx.type === 'INVOICE' || tx.type === 'ADJUSTMENT' ? Math.abs(tx.amount) : -Math.abs(tx.amount);
       }
-
-      filtered = filtered.filter((tx) => new Date(tx.date) >= startDate);
     }
-
-    // Sort by date descending
-    return filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [transactions, typeFilter, dateRange]);
+    return total;
+  }, [transactions, arProfile?.lastStatementDate]);
 
   return (
     <div className="space-y-4 sm:space-y-6">
+      {/* Billing Hold Banner */}
+      {billingProfile?.billingHold && (
+        <div className="flex items-start gap-3 rounded-xl border border-amber-200/60 dark:border-amber-500/30 bg-amber-50/80 dark:bg-amber-500/10 p-4">
+          <PauseCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">Billing on hold</p>
+            <p className="mt-0.5 text-xs text-amber-700 dark:text-amber-400">
+              {billingProfile.billingHoldReason || 'No reason specified'}
+              {billingProfile.billingHoldUntil && (
+                <> &mdash; Until {formatDate(billingProfile.billingHoldUntil)}</>
+              )}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Balance Summary */}
-      <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-white/80 shadow-lg shadow-slate-200/30 backdrop-blur-sm">
+      <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-white/80 dark:bg-stone-900/80 shadow-lg shadow-slate-200/30 dark:shadow-stone-900/30 backdrop-blur-sm">
         <div className="absolute inset-0 bg-gradient-to-br from-muted/50 to-transparent" />
 
         {/* Accent line - color based on balance */}
@@ -450,12 +493,32 @@ export function ARHistoryTab({ member, transactions, onViewInvoice }: ARHistoryT
         )} />
 
         <div className="relative p-4 sm:p-6">
-          {/* Header */}
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-muted to-muted/50 shadow-inner">
-              <Wallet className="h-5 w-5 text-muted-foreground" />
+          {/* Header with AR Profile Status */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-muted to-muted/50 shadow-inner">
+                <Wallet className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold tracking-tight text-foreground">Account Summary</h2>
+                {cycleLabel && (
+                  <p className="text-xs text-muted-foreground">{cycleLabel}</p>
+                )}
+              </div>
             </div>
-            <h2 className="text-lg font-semibold tracking-tight text-foreground">Account Summary</h2>
+            {profileStatus ? (
+              <Badge className={cn('text-xs font-medium', profileStatus.className)}>
+                <Shield className="mr-1 h-3 w-3" />
+                {profileStatus.label}
+                {arProfile?.status === 'SUSPENDED' && arProfile.suspendedReason && (
+                  <span title={arProfile.suspendedReason}> *</span>
+                )}
+              </Badge>
+            ) : (
+              <Badge className="bg-stone-100 dark:bg-stone-500/20 text-stone-500 dark:text-stone-400 border-stone-200/60 text-xs">
+                No AR Profile
+              </Badge>
+            )}
           </div>
 
           {/* Balance Display */}
@@ -467,7 +530,7 @@ export function ARHistoryTab({ member, transactions, onViewInvoice }: ARHistoryT
               <p
                 className={cn(
                   'mt-1 text-3xl font-bold tracking-tight sm:text-4xl',
-                  member.balance > 0 ? 'text-red-600' : 'text-emerald-600'
+                  member.balance > 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'
                 )}
               >
                 {formatCurrency(member.balance)}
@@ -483,6 +546,24 @@ export function ARHistoryTab({ member, transactions, onViewInvoice }: ARHistoryT
               </div>
             )}
           </div>
+
+          {/* Credit Limit Display */}
+          {arProfile && <CreditLimitDisplay arProfile={arProfile} />}
+
+          {/* Unbilled Summary */}
+          {arProfile?.lastStatementDate && unbilledTotal !== 0 && (
+            <div className="mt-4 flex items-center justify-between rounded-xl bg-amber-50/80 dark:bg-amber-500/10 p-3 backdrop-blur-sm">
+              <div>
+                <p className="text-xs font-medium text-amber-700 dark:text-amber-400">Unbilled</p>
+                <p className="text-xs text-muted-foreground">
+                  Since {new Date(arProfile.lastStatementDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
+                </p>
+              </div>
+              <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">
+                {formatCurrency(unbilledTotal)}
+              </p>
+            </div>
+          )}
 
           {/* Oldest Invoice Info */}
           {member.balance > 0 && member.oldestInvoiceDate && (
@@ -500,9 +581,27 @@ export function ARHistoryTab({ member, transactions, onViewInvoice }: ARHistoryT
           )}
 
           {/* Info */}
-          <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
-            <Info className="h-4 w-4" />
-            <span>History includes previous membership types</span>
+          <div className="mt-4 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Info className="h-4 w-4" />
+              <span>History includes previous membership types</span>
+            </div>
+            {billingProfile && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowHoldModal(true)}
+                className={cn(
+                  'h-7 text-xs',
+                  billingProfile.billingHold
+                    ? 'border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-500/30 dark:text-emerald-400 dark:hover:bg-emerald-500/10'
+                    : 'border-amber-200 text-amber-700 hover:bg-amber-50 dark:border-amber-500/30 dark:text-amber-400 dark:hover:bg-amber-500/10'
+                )}
+              >
+                <PauseCircle className="mr-1 h-3 w-3" />
+                {billingProfile.billingHold ? 'Remove Hold' : 'Place Hold'}
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -512,114 +611,104 @@ export function ARHistoryTab({ member, transactions, onViewInvoice }: ARHistoryT
         <AutoPayHistorySection memberId={member.id} />
       )}
 
-      {/* Transaction History */}
-      <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-white/80 shadow-lg shadow-slate-200/30 backdrop-blur-sm">
-        <div className="absolute inset-0 bg-gradient-to-br from-muted/50 to-transparent" />
-
-        {/* Header with Filters */}
-        <div className="relative flex flex-col gap-4 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-muted to-muted/50 shadow-inner">
-              <Receipt className="h-5 w-5 text-muted-foreground" />
-            </div>
-            <h2 className="text-lg font-semibold tracking-tight text-foreground">Transaction History</h2>
-          </div>
-
-          {/* Filters */}
-          <div className="flex gap-3">
-            <Select value={dateRange} onValueChange={setDateRange}>
-              <SelectTrigger className="w-36 bg-white/80">
-                <SelectValue placeholder="Date range" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">All Time</SelectItem>
-                <SelectItem value="30">Last 30 Days</SelectItem>
-                <SelectItem value="90">Last 90 Days</SelectItem>
-                <SelectItem value="180">Last 6 Months</SelectItem>
-                <SelectItem value="365">Last Year</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-36 bg-white/80">
-                <SelectValue placeholder="Type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">All Types</SelectItem>
-                <SelectItem value="INVOICE">Invoices</SelectItem>
-                <SelectItem value="PAYMENT">Payments</SelectItem>
-                <SelectItem value="CREDIT">Credits</SelectItem>
-                <SelectItem value="ADJUSTMENT">Adjustments</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="relative p-4 sm:p-6">
-          {filteredTransactions.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border bg-muted/50 py-12">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted">
-                <FileText className="h-7 w-7 text-muted-foreground" />
-              </div>
-              <p className="mt-4 text-sm font-medium text-muted-foreground">No transactions recorded</p>
-              <p className="mt-1 text-xs text-muted-foreground">Transaction history will appear here</p>
-            </div>
-          ) : (
-            <div className="space-y-3 sm:space-y-4">
-              {filteredTransactions.map((transaction, index) => (
-                <div
-                  key={transaction.id}
-                  className={cn(
-                    'group flex flex-col gap-3 rounded-xl border border-border/60 bg-white/60 p-4 transition-all duration-300 hover:bg-card hover:shadow-sm sm:flex-row sm:items-center sm:gap-4',
-                    index === 0 && 'ring-1 ring-slate-200/50'
-                  )}
-                >
-                  <TransactionIcon type={transaction.type} />
-
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-sm font-semibold text-foreground sm:text-base">
-                        {transaction.description}
-                      </p>
-                      {transaction.invoiceNumber && (
-                        <button
-                          type="button"
-                          onClick={() => onViewInvoice?.(transaction.invoiceNumber!)}
-                          className="flex items-center gap-1 rounded-md border bg-white/80 px-2 py-0.5 text-[10px] font-medium text-blue-600 transition-colors hover:bg-blue-50 hover:text-blue-700"
-                        >
-                          {transaction.invoiceNumber}
-                          <ExternalLink className="h-2.5 w-2.5" />
-                        </button>
-                      )}
-                    </div>
-                    <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground sm:text-sm">
-                      <Calendar className="h-3 w-3 text-muted-foreground" />
-                      {formatDate(transaction.date)}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between gap-4 sm:flex-col sm:items-end sm:gap-1">
-                    <p
-                      className={cn(
-                        'text-base font-bold tracking-tight sm:text-lg',
-                        transaction.type === 'INVOICE'
-                          ? 'text-red-600'
-                          : 'text-emerald-600'
-                      )}
-                    >
-                      {transaction.type === 'INVOICE' ? '+' : '-'}
-                      {formatCurrency(Math.abs(transaction.amount))}
-                    </p>
-                    <p className="rounded-md bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground sm:text-xs">
-                      Bal: {formatCurrency(transaction.runningBalance)}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
+      {/* View Toggle */}
+      <div className="flex items-center gap-1 rounded-lg bg-muted/60 p-1">
+        <button
+          type="button"
+          onClick={() => setActiveView('transactions')}
+          className={cn(
+            'flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-all',
+            activeView === 'transactions'
+              ? 'bg-white dark:bg-stone-800 text-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
           )}
-        </div>
+        >
+          <Receipt className="h-4 w-4" />
+          Transactions
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveView('statements')}
+          className={cn(
+            'flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-all',
+            activeView === 'statements'
+              ? 'bg-white dark:bg-stone-800 text-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
+          )}
+        >
+          <FileText className="h-4 w-4" />
+          Statements
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveView('unbilled')}
+          className={cn(
+            'flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-all',
+            activeView === 'unbilled'
+              ? 'bg-white dark:bg-stone-800 text-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
+          )}
+        >
+          <AlertTriangle className="h-4 w-4" />
+          Unbilled
+        </button>
       </div>
+
+      {/* Active View */}
+      {activeView === 'transactions' ? (
+        <TransactionView
+          transactions={transactions}
+          memberId={member.id}
+          onViewInvoice={onViewInvoice}
+        />
+      ) : activeView === 'unbilled' && arProfile ? (
+        <UnbilledActivity
+          memberId={member.id}
+          arProfile={arProfile}
+          transactions={transactions}
+          onViewInvoice={onViewInvoice}
+        />
+      ) : (
+        <StatementView memberId={member.id} />
+      )}
+
+      {/* Billing Hold Modal */}
+      {billingProfile && (
+        <BillingHoldModal
+          open={showHoldModal}
+          onOpenChange={setShowHoldModal}
+          memberName={`${member.firstName} ${member.lastName}`}
+          currentHold={
+            billingProfile.billingHold
+              ? {
+                  reason: billingProfile.billingHoldReason ?? '',
+                  holdUntil: billingProfile.billingHoldUntil ?? null,
+                }
+              : null
+          }
+          onPlaceHold={async (reason, holdUntil) => {
+            await updateProfile({
+              billingHold: true,
+              billingHoldReason: reason,
+              billingHoldUntil: holdUntil,
+            });
+          }}
+          onRemoveHold={async () => {
+            await updateProfile({
+              billingHold: false,
+              billingHoldReason: null,
+              billingHoldUntil: null,
+            });
+          }}
+          isSubmitting={isUpdating}
+        />
+      )}
     </div>
   );
+}
+
+function getOrdinalSuffix(n: number): string {
+  const s = ['th', 'st', 'nd', 'rd'];
+  const v = n % 100;
+  return s[(v - 20) % 10] ?? s[v] ?? 'th';
 }
