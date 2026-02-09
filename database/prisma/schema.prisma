@@ -162,12 +162,51 @@ model ClubBillingSettings {
   prorateChanges        Boolean          @default(true)
   prorationMethod       ProrationMethod  @default(DAILY)
 
+  // Billing Defaults (invoice configuration, tax, auto-suspension)
+  defaultPaymentTermsDays   Int              @default(30)
+  invoicePrefix             String           @default("INV-") @db.VarChar(20)
+  invoiceStartNumber        Int              @default(1001)
+  invoiceAutoGenerationDay  Int              @default(1) // Day of month for auto-generation
+  defaultVatRate            Decimal          @default(7) @db.Decimal(5, 2)
+  taxMethod                 TaxMethod        @default(INCLUDED)
+  whtEnabled                Boolean          @default(false)
+  whtRates                  Json             @default("[]") // Array of applicable WHT rates e.g. [1,2,3,5]
+  autoSuspendEnabled        Boolean          @default(false)
+  autoSuspendDays           Int              @default(91)
+
+  // Credit Limit Management (club-level defaults)
+  defaultCreditLimit            Decimal?         @db.Decimal(12, 2) // null = unlimited
+  creditLimitByMembershipType   Json             @default("{}") // { typeId: limitAmount }
+  creditAlertThreshold          Int              @default(80) // % of limit triggers alert
+  creditBlockThreshold          Int              @default(100) // % of limit blocks charges
+  sendCreditAlertToMember       Boolean          @default(true)
+  sendCreditAlertToStaff        Boolean          @default(true)
+  allowManagerCreditOverride    Boolean          @default(true)
+  creditOverrideMaxAmount       Decimal?         @db.Decimal(12, 2) // Max temporary increase
+  autoSuspendOnCreditExceeded   Boolean          @default(false)
+
+  // Statement Configuration
+  defaultStatementDelivery      StatementDelivery @default(EMAIL)
+  accountNumberPrefix           String            @default("AR") @db.VarChar(10)
+  accountNumberFormat           String            @default("{PREFIX}-{SEQ:6}") @db.VarChar(50)
+  autoCreateProfileOnActivation Boolean           @default(true)
+  requireZeroBalanceForClosure  Boolean           @default(true)
+  statementNumberPrefix         String            @default("STMT") @db.VarChar(10)
+
   // AR Period Settings (system-wide configuration)
   arCycleType           ARCycleType      @default(CALENDAR_MONTH)
   arCustomCycleStartDay Int              @default(1) // Day of month for CUSTOM cycle (1-28)
   arCutoffDays          Int              @default(5) // Days after period end to include transactions
   arCloseBehavior       ARCloseBehavior  @default(MANUAL)
   arAutoGenerateNext    Boolean          @default(true) // Create next period when current closes
+
+  // Billing Cycle Mode (Club Cycle vs Member Cycle)
+  billingCycleMode              BillingCycleMode    @default(CLUB_CYCLE)
+  clubCycleClosingDay           Int                 @default(28) // 1-28, used in CLUB_CYCLE mode
+  financialPeriodType           FinancialPeriodType @default(CALENDAR_MONTH)
+
+  // Close Checklist Configuration
+  closeChecklistTemplate        Json             @default("[]") // Default step definitions per club
 
   createdAt             DateTime         @default(now())
   updatedAt             DateTime         @updatedAt
@@ -3869,6 +3908,22 @@ enum LateFeeType {
   PERCENTAGE
   FIXED
   TIERED
+}
+
+enum TaxMethod {
+  ADDON
+  INCLUDED
+  EXEMPT
+}
+
+enum BillingCycleMode {
+  CLUB_CYCLE
+  MEMBER_CYCLE
+}
+
+enum FinancialPeriodType {
+  CALENDAR_MONTH
+  CUSTOM
 }
 
 // ============================================================================

@@ -16,6 +16,7 @@ import {
   BillingTiming,
   CycleAlignment,
   ProrationMethod,
+  StatementDelivery,
 } from './club-billing-settings.dto';
 
 /**
@@ -102,6 +103,46 @@ export class CreateMemberBillingProfileDto {
   @IsOptional()
   @IsBoolean()
   customLateFeeExempt?: boolean;
+
+  // AR Configuration
+  @ApiPropertyOptional({ description: 'Enable AR for this member', example: true })
+  @IsOptional()
+  @IsBoolean()
+  arEnabled?: boolean;
+
+  @ApiPropertyOptional({ enum: StatementDelivery, description: 'Statement delivery method override' })
+  @IsOptional()
+  @IsEnum(StatementDelivery)
+  arStatementDelivery?: StatementDelivery;
+
+  @ApiPropertyOptional({ description: 'Payment terms override in days', example: 30 })
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  @Max(90)
+  arPaymentTermsDays?: number;
+
+  @ApiPropertyOptional({ description: 'Member-specific credit limit' })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  arCreditLimit?: number;
+
+  @ApiPropertyOptional({ description: 'Auto-charge AR balance to member', example: false })
+  @IsOptional()
+  @IsBoolean()
+  arAutoChargeToMember?: boolean;
+
+  @ApiPropertyOptional({ description: 'Generate separate statement', example: false })
+  @IsOptional()
+  @IsBoolean()
+  arSeparateStatement?: boolean;
+
+  @ApiPropertyOptional({ description: 'AR billing contact override', maxLength: 255 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  arBillingContact?: string;
 }
 
 /**
@@ -217,4 +258,44 @@ export class UpdateMemberBillingProfileDto {
   @IsString()
   @MaxLength(1000)
   notes?: string;
+
+  // AR Configuration
+  @ApiPropertyOptional({ description: 'Enable AR for this member', example: true })
+  @IsOptional()
+  @IsBoolean()
+  arEnabled?: boolean;
+
+  @ApiPropertyOptional({ enum: StatementDelivery, description: 'Statement delivery method override' })
+  @IsOptional()
+  @IsEnum(StatementDelivery)
+  arStatementDelivery?: StatementDelivery;
+
+  @ApiPropertyOptional({ description: 'Payment terms override in days', example: 30 })
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  @Max(90)
+  arPaymentTermsDays?: number;
+
+  @ApiPropertyOptional({ description: 'Member-specific credit limit' })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  arCreditLimit?: number;
+
+  @ApiPropertyOptional({ description: 'Auto-charge AR balance to member', example: false })
+  @IsOptional()
+  @IsBoolean()
+  arAutoChargeToMember?: boolean;
+
+  @ApiPropertyOptional({ description: 'Generate separate statement', example: false })
+  @IsOptional()
+  @IsBoolean()
+  arSeparateStatement?: boolean;
+
+  @ApiPropertyOptional({ description: 'AR billing contact override', maxLength: 255 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  arBillingContact?: string;
 }

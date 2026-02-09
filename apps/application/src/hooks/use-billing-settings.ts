@@ -16,6 +16,10 @@ export type BillingTiming = 'ADVANCE' | 'ARREARS';
 export type BillingAlignment = 'CALENDAR' | 'ANNIVERSARY' | 'CUSTOM';
 export type LateFeeType = 'FIXED' | 'PERCENTAGE' | 'TIERED';
 export type ProrationMethod = 'DAILY' | 'HALF_MONTH' | 'FULL_MONTH' | 'NONE';
+export type TaxMethod = 'ADDON' | 'INCLUDED' | 'EXEMPT';
+export type BillingCycleMode = 'CLUB_CYCLE' | 'MEMBER_CYCLE';
+export type FinancialPeriodType = 'CALENDAR_MONTH' | 'CUSTOM';
+export type StatementDelivery = 'EMAIL' | 'PRINT' | 'PORTAL' | 'SMS' | 'EMAIL_AND_PRINT' | 'ALL';
 
 export interface ClubBillingSettings {
   id: string;
@@ -35,6 +39,40 @@ export interface ClubBillingSettings {
   prorateNewMembers: boolean;
   prorateChanges: boolean;
   prorationMethod: ProrationMethod;
+  // Billing Defaults
+  defaultPaymentTermsDays: number;
+  invoicePrefix: string;
+  invoiceStartNumber: number;
+  invoiceAutoGenerationDay: number;
+  defaultVatRate: number;
+  taxMethod: TaxMethod;
+  whtEnabled: boolean;
+  whtRates: number[];
+  autoSuspendEnabled: boolean;
+  autoSuspendDays: number;
+  // Credit Limit Management
+  defaultCreditLimit: number | null;
+  creditLimitByMembershipType: Record<string, number>;
+  creditAlertThreshold: number;
+  creditBlockThreshold: number;
+  sendCreditAlertToMember: boolean;
+  sendCreditAlertToStaff: boolean;
+  allowManagerCreditOverride: boolean;
+  creditOverrideMaxAmount: number | null;
+  autoSuspendOnCreditExceeded: boolean;
+  // Statement Configuration
+  defaultStatementDelivery: StatementDelivery;
+  accountNumberPrefix: string;
+  accountNumberFormat: string;
+  autoCreateProfileOnActivation: boolean;
+  requireZeroBalanceForClosure: boolean;
+  statementNumberPrefix: string;
+  // Billing Cycle Mode
+  billingCycleMode: BillingCycleMode;
+  clubCycleClosingDay: number;
+  financialPeriodType: FinancialPeriodType;
+  // Close Checklist
+  closeChecklistTemplate: any[];
   createdAt: string;
   updatedAt: string;
 }
@@ -55,6 +93,40 @@ export interface UpdateClubBillingSettingsInput {
   prorateNewMembers?: boolean;
   prorateChanges?: boolean;
   prorationMethod?: ProrationMethod;
+  // Billing Defaults
+  defaultPaymentTermsDays?: number;
+  invoicePrefix?: string;
+  invoiceStartNumber?: number;
+  invoiceAutoGenerationDay?: number;
+  defaultVatRate?: number;
+  taxMethod?: TaxMethod;
+  whtEnabled?: boolean;
+  whtRates?: number[];
+  autoSuspendEnabled?: boolean;
+  autoSuspendDays?: number;
+  // Credit Limit Management
+  defaultCreditLimit?: number | null;
+  creditLimitByMembershipType?: Record<string, number>;
+  creditAlertThreshold?: number;
+  creditBlockThreshold?: number;
+  sendCreditAlertToMember?: boolean;
+  sendCreditAlertToStaff?: boolean;
+  allowManagerCreditOverride?: boolean;
+  creditOverrideMaxAmount?: number | null;
+  autoSuspendOnCreditExceeded?: boolean;
+  // Statement Configuration
+  defaultStatementDelivery?: StatementDelivery;
+  accountNumberPrefix?: string;
+  accountNumberFormat?: string;
+  autoCreateProfileOnActivation?: boolean;
+  requireZeroBalanceForClosure?: boolean;
+  statementNumberPrefix?: string;
+  // Billing Cycle Mode
+  billingCycleMode?: BillingCycleMode;
+  clubCycleClosingDay?: number;
+  financialPeriodType?: FinancialPeriodType;
+  // Close Checklist
+  closeChecklistTemplate?: any[];
 }
 
 export interface MemberBillingProfile {
@@ -129,6 +201,35 @@ const GET_CLUB_BILLING_SETTINGS = `
       prorateNewMembers
       prorateChanges
       prorationMethod
+      defaultPaymentTermsDays
+      invoicePrefix
+      invoiceStartNumber
+      invoiceAutoGenerationDay
+      defaultVatRate
+      taxMethod
+      whtEnabled
+      whtRates
+      autoSuspendEnabled
+      autoSuspendDays
+      defaultCreditLimit
+      creditLimitByMembershipType
+      creditAlertThreshold
+      creditBlockThreshold
+      sendCreditAlertToMember
+      sendCreditAlertToStaff
+      allowManagerCreditOverride
+      creditOverrideMaxAmount
+      autoSuspendOnCreditExceeded
+      defaultStatementDelivery
+      accountNumberPrefix
+      accountNumberFormat
+      autoCreateProfileOnActivation
+      requireZeroBalanceForClosure
+      statementNumberPrefix
+      billingCycleMode
+      clubCycleClosingDay
+      financialPeriodType
+      closeChecklistTemplate
       createdAt
       updatedAt
     }
@@ -139,6 +240,7 @@ const UPDATE_CLUB_BILLING_SETTINGS = `
   mutation UpdateClubBillingSettings($input: UpdateClubBillingSettingsInput!) {
     updateClubBillingSettings(input: $input) {
       id
+      clubId
       defaultFrequency
       defaultTiming
       defaultAlignment
@@ -154,6 +256,37 @@ const UPDATE_CLUB_BILLING_SETTINGS = `
       prorateNewMembers
       prorateChanges
       prorationMethod
+      defaultPaymentTermsDays
+      invoicePrefix
+      invoiceStartNumber
+      invoiceAutoGenerationDay
+      defaultVatRate
+      taxMethod
+      whtEnabled
+      whtRates
+      autoSuspendEnabled
+      autoSuspendDays
+      defaultCreditLimit
+      creditLimitByMembershipType
+      creditAlertThreshold
+      creditBlockThreshold
+      sendCreditAlertToMember
+      sendCreditAlertToStaff
+      allowManagerCreditOverride
+      creditOverrideMaxAmount
+      autoSuspendOnCreditExceeded
+      defaultStatementDelivery
+      accountNumberPrefix
+      accountNumberFormat
+      autoCreateProfileOnActivation
+      requireZeroBalanceForClosure
+      statementNumberPrefix
+      billingCycleMode
+      clubCycleClosingDay
+      financialPeriodType
+      closeChecklistTemplate
+      createdAt
+      updatedAt
     }
   }
 `;

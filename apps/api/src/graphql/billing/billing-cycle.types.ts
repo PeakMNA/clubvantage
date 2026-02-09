@@ -12,7 +12,12 @@ import {
   CycleAlignment,
   ProrationMethod,
   LateFeeType,
+  TaxMethod,
+  BillingCycleMode,
+  FinancialPeriodType,
+  StatementDelivery,
 } from '@/modules/billing/dto/club-billing-settings.dto';
+import GraphQLJSON from 'graphql-type-json';
 
 // Register enums for GraphQL
 registerEnumType(BillingFrequency, {
@@ -40,6 +45,26 @@ registerEnumType(LateFeeType, {
   description: 'Late fee type options (PERCENTAGE, FIXED, TIERED)',
 });
 
+registerEnumType(TaxMethod, {
+  name: 'TaxMethod',
+  description: 'Tax calculation method (ADDON, INCLUDED, EXEMPT)',
+});
+
+registerEnumType(BillingCycleMode, {
+  name: 'BillingCycleMode',
+  description: 'Billing cycle mode (CLUB_CYCLE, MEMBER_CYCLE)',
+});
+
+registerEnumType(FinancialPeriodType, {
+  name: 'FinancialPeriodType',
+  description: 'Financial period type (CALENDAR_MONTH, CUSTOM)',
+});
+
+registerEnumType(StatementDelivery, {
+  name: 'BillingStatementDelivery',
+  description: 'Statement delivery method (EMAIL, PRINT, PORTAL, SMS, EMAIL_AND_PRINT, ALL)',
+});
+
 // Re-export enums for convenience
 export {
   BillingFrequency,
@@ -47,6 +72,10 @@ export {
   CycleAlignment,
   ProrationMethod,
   LateFeeType,
+  TaxMethod,
+  BillingCycleMode,
+  FinancialPeriodType,
+  StatementDelivery,
 };
 
 /**
@@ -104,6 +133,98 @@ export class ClubBillingSettingsType {
 
   @Field(() => ProrationMethod, { description: 'Method used for calculating prorated amounts' })
   prorationMethod: ProrationMethod;
+
+  // Billing Defaults
+  @Field(() => Int, { description: 'Default payment terms in days from statement date' })
+  defaultPaymentTermsDays: number;
+
+  @Field({ description: 'Invoice number prefix' })
+  invoicePrefix: string;
+
+  @Field(() => Int, { description: 'Invoice starting number' })
+  invoiceStartNumber: number;
+
+  @Field(() => Int, { description: 'Day of month for auto-generation (1-28)' })
+  invoiceAutoGenerationDay: number;
+
+  @Field(() => Float, { description: 'Default VAT rate percentage' })
+  defaultVatRate: number;
+
+  @Field(() => TaxMethod, { description: 'Tax calculation method' })
+  taxMethod: TaxMethod;
+
+  @Field({ description: 'Whether WHT is enabled for applicable members' })
+  whtEnabled: boolean;
+
+  @Field(() => GraphQLJSON, { description: 'Applicable WHT rates as JSON array' })
+  whtRates: number[];
+
+  @Field({ description: 'Whether auto-suspension is enabled for overdue balances' })
+  autoSuspendEnabled: boolean;
+
+  @Field(() => Int, { description: 'Days overdue before auto-suspension' })
+  autoSuspendDays: number;
+
+  // Credit Limit Management
+  @Field(() => Float, { nullable: true, description: 'Default credit limit (null = unlimited)' })
+  defaultCreditLimit?: number;
+
+  @Field(() => GraphQLJSON, { description: 'Credit limits per membership type' })
+  creditLimitByMembershipType: Record<string, number>;
+
+  @Field(() => Int, { description: 'Credit alert threshold percentage' })
+  creditAlertThreshold: number;
+
+  @Field(() => Int, { description: 'Credit block threshold percentage' })
+  creditBlockThreshold: number;
+
+  @Field({ description: 'Send credit alert to member' })
+  sendCreditAlertToMember: boolean;
+
+  @Field({ description: 'Send credit alert to staff' })
+  sendCreditAlertToStaff: boolean;
+
+  @Field({ description: 'Allow manager to override credit limit block' })
+  allowManagerCreditOverride: boolean;
+
+  @Field(() => Float, { nullable: true, description: 'Max temporary credit override amount' })
+  creditOverrideMaxAmount?: number;
+
+  @Field({ description: 'Auto-suspend AR when credit exceeded 30+ days' })
+  autoSuspendOnCreditExceeded: boolean;
+
+  // Statement Configuration
+  @Field(() => StatementDelivery, { description: 'Default statement delivery method' })
+  defaultStatementDelivery: StatementDelivery;
+
+  @Field({ description: 'AR account number prefix' })
+  accountNumberPrefix: string;
+
+  @Field({ description: 'AR account number format pattern' })
+  accountNumberFormat: string;
+
+  @Field({ description: 'Auto-create AR profile on member activation' })
+  autoCreateProfileOnActivation: boolean;
+
+  @Field({ description: 'Require zero balance before closing AR profile' })
+  requireZeroBalanceForClosure: boolean;
+
+  @Field({ description: 'Statement number prefix' })
+  statementNumberPrefix: string;
+
+  // Billing Cycle Mode
+  @Field(() => BillingCycleMode, { description: 'Billing cycle mode (Club or Member)' })
+  billingCycleMode: BillingCycleMode;
+
+  @Field(() => Int, { description: 'Closing day for Club Cycle mode (1-28)' })
+  clubCycleClosingDay: number;
+
+  @Field(() => FinancialPeriodType, { description: 'Financial period type for Member Cycle mode' })
+  financialPeriodType: FinancialPeriodType;
+
+  // Close Checklist
+  @Field(() => GraphQLJSON, { description: 'Close checklist step template' })
+  closeChecklistTemplate: any[];
 
   @Field({ description: 'When the settings were created' })
   createdAt: Date;
@@ -185,6 +306,28 @@ export class MemberBillingProfileType {
 
   @Field({ nullable: true, description: 'Internal notes about this billing profile' })
   notes?: string;
+
+  // AR Configuration
+  @Field({ description: 'Whether AR is enabled for this member' })
+  arEnabled: boolean;
+
+  @Field(() => StatementDelivery, { nullable: true, description: 'Override statement delivery method' })
+  arStatementDelivery?: StatementDelivery;
+
+  @Field(() => Int, { nullable: true, description: 'Override payment terms in days' })
+  arPaymentTermsDays?: number;
+
+  @Field(() => Float, { nullable: true, description: 'Member-specific credit limit' })
+  arCreditLimit?: number;
+
+  @Field({ description: 'Auto-charge AR balance to member payment method' })
+  arAutoChargeToMember: boolean;
+
+  @Field({ description: 'Generate separate statement for this member' })
+  arSeparateStatement: boolean;
+
+  @Field({ nullable: true, description: 'AR billing contact override' })
+  arBillingContact?: string;
 
   @Field({ description: 'When the profile was created' })
   createdAt: Date;

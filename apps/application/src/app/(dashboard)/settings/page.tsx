@@ -7,6 +7,10 @@ import {
   OrganizationSection,
   BillingDefaultsSection,
   BillingCycleSection,
+  ARPeriodSection,
+  CreditLimitSection,
+  StatementConfigSection,
+  ChecklistConfigSection,
   LocalizationSection,
   NotificationsSection,
   BrandingSection,
@@ -22,6 +26,10 @@ const sectionIds: SettingsSection[] = [
   'organization',
   'billing-defaults',
   'billing-cycle',
+  'ar-period',
+  'credit-limits',
+  'statement-config',
+  'checklist-config',
   'localization',
   'notifications',
   'branding',
@@ -112,6 +120,18 @@ export default function SettingsPage() {
 
         <div ref={(el) => setSectionRef('billing-cycle', el)}>
           <BillingCycleSection id="billing-cycle" />
+        </div>
+
+        <div ref={(el) => setSectionRef('ar-period', el)}>
+          <ARPeriodSection id="ar-period" />
+        </div>
+
+        <div ref={(el) => setSectionRef('credit-limits', el)}>
+          <CreditLimitSection id="credit-limits" />
+        </div>
+
+        <div ref={(el) => setSectionRef('statement-config', el)}>
+          <StatementConfigSection id="statement-config" />
         </div>
 
         <div ref={(el) => setSectionRef('localization', el)}>

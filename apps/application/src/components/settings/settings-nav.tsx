@@ -5,6 +5,7 @@ import {
   Landmark,
   Receipt,
   Calendar,
+  FileText,
   Globe,
   Bell,
   Palette,
@@ -12,6 +13,8 @@ import {
   List,
   FileSpreadsheet,
   ClipboardCheck,
+  Shield,
+  ScrollText,
 } from 'lucide-react'
 import { cn } from '@clubvantage/ui'
 import type { SettingsSection } from './types'
@@ -32,6 +35,10 @@ const sections: Array<{
   { id: 'gl-mapping', label: 'GL Mapping', icon: FileSpreadsheet },
   { id: 'billing-defaults', label: 'Billing Defaults', icon: Receipt },
   { id: 'billing-cycle', label: 'Billing Cycle', icon: Calendar },
+  { id: 'ar-period', label: 'AR Periods', icon: FileText },
+  { id: 'credit-limits', label: 'Credit Limits', icon: Shield },
+  { id: 'statement-config', label: 'Statement Config', icon: ScrollText },
+  { id: 'checklist-config', label: 'Close Checklist', icon: ClipboardCheck },
   { id: 'localization', label: 'Localization', icon: Globe },
   { id: 'notifications', label: 'Notifications', icon: Bell },
   { id: 'branding', label: 'Branding', icon: Palette },

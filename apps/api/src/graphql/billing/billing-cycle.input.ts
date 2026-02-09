@@ -6,6 +6,7 @@ import {
   IsNumber,
   IsBoolean,
   IsString,
+  IsArray,
   Min,
   Max,
   MaxLength,
@@ -16,7 +17,12 @@ import {
   CycleAlignment,
   ProrationMethod,
   LateFeeType,
+  TaxMethod,
+  BillingCycleMode,
+  FinancialPeriodType,
+  StatementDelivery,
 } from '@/modules/billing/dto/club-billing-settings.dto';
+import GraphQLJSON from 'graphql-type-json';
 
 // Register enums for GraphQL
 registerEnumType(BillingFrequency, {
@@ -51,6 +57,10 @@ export {
   CycleAlignment,
   ProrationMethod,
   LateFeeType,
+  TaxMethod,
+  BillingCycleMode,
+  FinancialPeriodType,
+  StatementDelivery,
 };
 
 /**
@@ -144,6 +154,175 @@ export class UpdateClubBillingSettingsInput {
   @IsOptional()
   @IsEnum(ProrationMethod)
   prorationMethod?: ProrationMethod;
+
+  // Billing Defaults
+  @Field(() => Int, { nullable: true, description: 'Default payment terms in days' })
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  @Max(90)
+  defaultPaymentTermsDays?: number;
+
+  @Field({ nullable: true, description: 'Invoice number prefix' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  invoicePrefix?: string;
+
+  @Field(() => Int, { nullable: true, description: 'Invoice starting number' })
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  invoiceStartNumber?: number;
+
+  @Field(() => Int, { nullable: true, description: 'Day of month for auto-generation (1-28)' })
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  @Max(28)
+  invoiceAutoGenerationDay?: number;
+
+  @Field(() => Float, { nullable: true, description: 'Default VAT rate percentage' })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  defaultVatRate?: number;
+
+  @Field(() => TaxMethod, { nullable: true, description: 'Tax calculation method' })
+  @IsOptional()
+  @IsEnum(TaxMethod)
+  taxMethod?: TaxMethod;
+
+  @Field({ nullable: true, description: 'Enable WHT for applicable members' })
+  @IsOptional()
+  @IsBoolean()
+  whtEnabled?: boolean;
+
+  @Field(() => GraphQLJSON, { nullable: true, description: 'Applicable WHT rates' })
+  @IsOptional()
+  @IsArray()
+  whtRates?: number[];
+
+  @Field({ nullable: true, description: 'Enable auto-suspension for overdue balances' })
+  @IsOptional()
+  @IsBoolean()
+  autoSuspendEnabled?: boolean;
+
+  @Field(() => Int, { nullable: true, description: 'Days overdue before auto-suspension' })
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  autoSuspendDays?: number;
+
+  // Credit Limit Management
+  @Field(() => Float, { nullable: true, description: 'Default credit limit (null = unlimited)' })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  defaultCreditLimit?: number;
+
+  @Field(() => GraphQLJSON, { nullable: true, description: 'Credit limits per membership type' })
+  @IsOptional()
+  creditLimitByMembershipType?: Record<string, number>;
+
+  @Field(() => Int, { nullable: true, description: 'Credit alert threshold percentage' })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  creditAlertThreshold?: number;
+
+  @Field(() => Int, { nullable: true, description: 'Credit block threshold percentage' })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(200)
+  creditBlockThreshold?: number;
+
+  @Field({ nullable: true, description: 'Send credit alert to member' })
+  @IsOptional()
+  @IsBoolean()
+  sendCreditAlertToMember?: boolean;
+
+  @Field({ nullable: true, description: 'Send credit alert to staff' })
+  @IsOptional()
+  @IsBoolean()
+  sendCreditAlertToStaff?: boolean;
+
+  @Field({ nullable: true, description: 'Allow manager to override credit limit block' })
+  @IsOptional()
+  @IsBoolean()
+  allowManagerCreditOverride?: boolean;
+
+  @Field(() => Float, { nullable: true, description: 'Max temporary credit override amount' })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  creditOverrideMaxAmount?: number;
+
+  @Field({ nullable: true, description: 'Auto-suspend AR when credit exceeded 30+ days' })
+  @IsOptional()
+  @IsBoolean()
+  autoSuspendOnCreditExceeded?: boolean;
+
+  // Statement Configuration
+  @Field(() => StatementDelivery, { nullable: true, description: 'Default statement delivery method' })
+  @IsOptional()
+  @IsEnum(StatementDelivery)
+  defaultStatementDelivery?: StatementDelivery;
+
+  @Field({ nullable: true, description: 'AR account number prefix' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(10)
+  accountNumberPrefix?: string;
+
+  @Field({ nullable: true, description: 'AR account number format pattern' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  accountNumberFormat?: string;
+
+  @Field({ nullable: true, description: 'Auto-create AR profile on member activation' })
+  @IsOptional()
+  @IsBoolean()
+  autoCreateProfileOnActivation?: boolean;
+
+  @Field({ nullable: true, description: 'Require zero balance before closing AR profile' })
+  @IsOptional()
+  @IsBoolean()
+  requireZeroBalanceForClosure?: boolean;
+
+  @Field({ nullable: true, description: 'Statement number prefix' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(10)
+  statementNumberPrefix?: string;
+
+  // Billing Cycle Mode
+  @Field(() => BillingCycleMode, { nullable: true, description: 'Billing cycle mode' })
+  @IsOptional()
+  @IsEnum(BillingCycleMode)
+  billingCycleMode?: BillingCycleMode;
+
+  @Field(() => Int, { nullable: true, description: 'Closing day for Club Cycle mode (1-28)' })
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  @Max(28)
+  clubCycleClosingDay?: number;
+
+  @Field(() => FinancialPeriodType, { nullable: true, description: 'Financial period type' })
+  @IsOptional()
+  @IsEnum(FinancialPeriodType)
+  financialPeriodType?: FinancialPeriodType;
+
+  // Close Checklist Configuration
+  @Field(() => GraphQLJSON, { nullable: true, description: 'Close checklist step template' })
+  @IsOptional()
+  @IsArray()
+  closeChecklistTemplate?: any[];
 }
 
 /**
@@ -196,6 +375,46 @@ export class CreateMemberBillingProfileInput {
   @IsOptional()
   @IsBoolean()
   customLateFeeExempt?: boolean;
+
+  // AR Configuration
+  @Field({ nullable: true, description: 'Enable AR for this member' })
+  @IsOptional()
+  @IsBoolean()
+  arEnabled?: boolean;
+
+  @Field(() => StatementDelivery, { nullable: true, description: 'Statement delivery method override' })
+  @IsOptional()
+  @IsEnum(StatementDelivery)
+  arStatementDelivery?: StatementDelivery;
+
+  @Field(() => Int, { nullable: true, description: 'Payment terms override in days' })
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  @Max(90)
+  arPaymentTermsDays?: number;
+
+  @Field(() => Float, { nullable: true, description: 'Member-specific credit limit' })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  arCreditLimit?: number;
+
+  @Field({ nullable: true, description: 'Auto-charge AR balance to member' })
+  @IsOptional()
+  @IsBoolean()
+  arAutoChargeToMember?: boolean;
+
+  @Field({ nullable: true, description: 'Generate separate statement' })
+  @IsOptional()
+  @IsBoolean()
+  arSeparateStatement?: boolean;
+
+  @Field({ nullable: true, description: 'AR billing contact override' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  arBillingContact?: string;
 }
 
 /**
@@ -265,6 +484,46 @@ export class UpdateMemberBillingProfileInput {
   @IsString()
   @MaxLength(1000)
   notes?: string;
+
+  // AR Configuration
+  @Field({ nullable: true, description: 'Enable AR for this member' })
+  @IsOptional()
+  @IsBoolean()
+  arEnabled?: boolean;
+
+  @Field(() => StatementDelivery, { nullable: true, description: 'Statement delivery method override' })
+  @IsOptional()
+  @IsEnum(StatementDelivery)
+  arStatementDelivery?: StatementDelivery;
+
+  @Field(() => Int, { nullable: true, description: 'Payment terms override in days' })
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  @Max(90)
+  arPaymentTermsDays?: number;
+
+  @Field(() => Float, { nullable: true, description: 'Member-specific credit limit' })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  arCreditLimit?: number;
+
+  @Field({ nullable: true, description: 'Auto-charge AR balance to member' })
+  @IsOptional()
+  @IsBoolean()
+  arAutoChargeToMember?: boolean;
+
+  @Field({ nullable: true, description: 'Generate separate statement' })
+  @IsOptional()
+  @IsBoolean()
+  arSeparateStatement?: boolean;
+
+  @Field({ nullable: true, description: 'AR billing contact override' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  arBillingContact?: string;
 }
 
 /**

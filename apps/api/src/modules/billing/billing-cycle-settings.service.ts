@@ -13,6 +13,12 @@ import {
   CycleAlignment,
   ProrationMethod,
   LateFeeType,
+  ARCycleType,
+  ARCloseBehavior,
+  TaxMethod,
+  BillingCycleMode,
+  FinancialPeriodType,
+  StatementDelivery,
 } from './dto/club-billing-settings.dto';
 import {
   CreateMemberBillingProfileDto,
@@ -71,6 +77,9 @@ export class BillingCycleSettingsService {
       lateFeeAmount: settings.lateFeeAmount.toNumber(),
       lateFeePercentage: settings.lateFeePercentage.toNumber(),
       maxLateFee: settings.maxLateFee?.toNumber() ?? null,
+      defaultVatRate: settings.defaultVatRate.toNumber(),
+      defaultCreditLimit: settings.defaultCreditLimit?.toNumber() ?? null,
+      creditOverrideMaxAmount: settings.creditOverrideMaxAmount?.toNumber() ?? null,
     };
   }
 
@@ -131,6 +140,114 @@ export class BillingCycleSettingsService {
     if (dto.prorationMethod !== undefined) {
       updateData.prorationMethod = dto.prorationMethod;
     }
+    // AR Period Settings
+    if (dto.arCycleType !== undefined) {
+      updateData.arCycleType = dto.arCycleType;
+    }
+    if (dto.arCustomCycleStartDay !== undefined) {
+      updateData.arCustomCycleStartDay = dto.arCustomCycleStartDay;
+    }
+    if (dto.arCutoffDays !== undefined) {
+      updateData.arCutoffDays = dto.arCutoffDays;
+    }
+    if (dto.arCloseBehavior !== undefined) {
+      updateData.arCloseBehavior = dto.arCloseBehavior;
+    }
+    if (dto.arAutoGenerateNext !== undefined) {
+      updateData.arAutoGenerateNext = dto.arAutoGenerateNext;
+    }
+    // Billing Defaults
+    if (dto.defaultPaymentTermsDays !== undefined) {
+      updateData.defaultPaymentTermsDays = dto.defaultPaymentTermsDays;
+    }
+    if (dto.invoicePrefix !== undefined) {
+      updateData.invoicePrefix = dto.invoicePrefix;
+    }
+    if (dto.invoiceStartNumber !== undefined) {
+      updateData.invoiceStartNumber = dto.invoiceStartNumber;
+    }
+    if (dto.invoiceAutoGenerationDay !== undefined) {
+      updateData.invoiceAutoGenerationDay = dto.invoiceAutoGenerationDay;
+    }
+    if (dto.defaultVatRate !== undefined) {
+      updateData.defaultVatRate = dto.defaultVatRate;
+    }
+    if (dto.taxMethod !== undefined) {
+      updateData.taxMethod = dto.taxMethod;
+    }
+    if (dto.whtEnabled !== undefined) {
+      updateData.whtEnabled = dto.whtEnabled;
+    }
+    if (dto.whtRates !== undefined) {
+      updateData.whtRates = dto.whtRates;
+    }
+    if (dto.autoSuspendEnabled !== undefined) {
+      updateData.autoSuspendEnabled = dto.autoSuspendEnabled;
+    }
+    if (dto.autoSuspendDays !== undefined) {
+      updateData.autoSuspendDays = dto.autoSuspendDays;
+    }
+    // Credit Limit Management
+    if (dto.defaultCreditLimit !== undefined) {
+      updateData.defaultCreditLimit = dto.defaultCreditLimit;
+    }
+    if (dto.creditLimitByMembershipType !== undefined) {
+      updateData.creditLimitByMembershipType = dto.creditLimitByMembershipType;
+    }
+    if (dto.creditAlertThreshold !== undefined) {
+      updateData.creditAlertThreshold = dto.creditAlertThreshold;
+    }
+    if (dto.creditBlockThreshold !== undefined) {
+      updateData.creditBlockThreshold = dto.creditBlockThreshold;
+    }
+    if (dto.sendCreditAlertToMember !== undefined) {
+      updateData.sendCreditAlertToMember = dto.sendCreditAlertToMember;
+    }
+    if (dto.sendCreditAlertToStaff !== undefined) {
+      updateData.sendCreditAlertToStaff = dto.sendCreditAlertToStaff;
+    }
+    if (dto.allowManagerCreditOverride !== undefined) {
+      updateData.allowManagerCreditOverride = dto.allowManagerCreditOverride;
+    }
+    if (dto.creditOverrideMaxAmount !== undefined) {
+      updateData.creditOverrideMaxAmount = dto.creditOverrideMaxAmount;
+    }
+    if (dto.autoSuspendOnCreditExceeded !== undefined) {
+      updateData.autoSuspendOnCreditExceeded = dto.autoSuspendOnCreditExceeded;
+    }
+    // Statement Configuration
+    if (dto.defaultStatementDelivery !== undefined) {
+      updateData.defaultStatementDelivery = dto.defaultStatementDelivery;
+    }
+    if (dto.accountNumberPrefix !== undefined) {
+      updateData.accountNumberPrefix = dto.accountNumberPrefix;
+    }
+    if (dto.accountNumberFormat !== undefined) {
+      updateData.accountNumberFormat = dto.accountNumberFormat;
+    }
+    if (dto.autoCreateProfileOnActivation !== undefined) {
+      updateData.autoCreateProfileOnActivation = dto.autoCreateProfileOnActivation;
+    }
+    if (dto.requireZeroBalanceForClosure !== undefined) {
+      updateData.requireZeroBalanceForClosure = dto.requireZeroBalanceForClosure;
+    }
+    if (dto.statementNumberPrefix !== undefined) {
+      updateData.statementNumberPrefix = dto.statementNumberPrefix;
+    }
+    // Billing Cycle Mode
+    if (dto.billingCycleMode !== undefined) {
+      updateData.billingCycleMode = dto.billingCycleMode;
+    }
+    if (dto.clubCycleClosingDay !== undefined) {
+      updateData.clubCycleClosingDay = dto.clubCycleClosingDay;
+    }
+    if (dto.financialPeriodType !== undefined) {
+      updateData.financialPeriodType = dto.financialPeriodType;
+    }
+    // Close Checklist Configuration
+    if (dto.closeChecklistTemplate !== undefined) {
+      updateData.closeChecklistTemplate = dto.closeChecklistTemplate;
+    }
 
     // Upsert settings (create if not exists, update if exists)
     const settings = await this.prisma.clubBillingSettings.upsert({
@@ -152,6 +269,46 @@ export class BillingCycleSettingsService {
         prorateNewMembers: dto.prorateNewMembers ?? true,
         prorateChanges: dto.prorateChanges ?? true,
         prorationMethod: dto.prorationMethod ?? ProrationMethod.DAILY,
+        // AR Period Settings
+        arCycleType: dto.arCycleType ?? ARCycleType.CALENDAR_MONTH,
+        arCustomCycleStartDay: dto.arCustomCycleStartDay ?? 1,
+        arCutoffDays: dto.arCutoffDays ?? 5,
+        arCloseBehavior: dto.arCloseBehavior ?? ARCloseBehavior.MANUAL,
+        arAutoGenerateNext: dto.arAutoGenerateNext ?? true,
+        // Billing Defaults
+        defaultPaymentTermsDays: dto.defaultPaymentTermsDays ?? 30,
+        invoicePrefix: dto.invoicePrefix ?? 'INV-',
+        invoiceStartNumber: dto.invoiceStartNumber ?? 1001,
+        invoiceAutoGenerationDay: dto.invoiceAutoGenerationDay ?? 1,
+        defaultVatRate: dto.defaultVatRate ?? 7,
+        taxMethod: dto.taxMethod ?? TaxMethod.INCLUDED,
+        whtEnabled: dto.whtEnabled ?? false,
+        whtRates: dto.whtRates ?? [],
+        autoSuspendEnabled: dto.autoSuspendEnabled ?? false,
+        autoSuspendDays: dto.autoSuspendDays ?? 91,
+        // Credit Limit Management
+        defaultCreditLimit: dto.defaultCreditLimit ?? null,
+        creditLimitByMembershipType: dto.creditLimitByMembershipType ?? {},
+        creditAlertThreshold: dto.creditAlertThreshold ?? 80,
+        creditBlockThreshold: dto.creditBlockThreshold ?? 100,
+        sendCreditAlertToMember: dto.sendCreditAlertToMember ?? true,
+        sendCreditAlertToStaff: dto.sendCreditAlertToStaff ?? true,
+        allowManagerCreditOverride: dto.allowManagerCreditOverride ?? true,
+        creditOverrideMaxAmount: dto.creditOverrideMaxAmount ?? null,
+        autoSuspendOnCreditExceeded: dto.autoSuspendOnCreditExceeded ?? false,
+        // Statement Configuration
+        defaultStatementDelivery: dto.defaultStatementDelivery ?? StatementDelivery.EMAIL,
+        accountNumberPrefix: dto.accountNumberPrefix ?? 'AR',
+        accountNumberFormat: dto.accountNumberFormat ?? '{PREFIX}-{SEQ:6}',
+        autoCreateProfileOnActivation: dto.autoCreateProfileOnActivation ?? true,
+        requireZeroBalanceForClosure: dto.requireZeroBalanceForClosure ?? true,
+        statementNumberPrefix: dto.statementNumberPrefix ?? 'STMT',
+        // Billing Cycle Mode
+        billingCycleMode: dto.billingCycleMode ?? BillingCycleMode.CLUB_CYCLE,
+        clubCycleClosingDay: dto.clubCycleClosingDay ?? 28,
+        financialPeriodType: dto.financialPeriodType ?? FinancialPeriodType.CALENDAR_MONTH,
+        // Close Checklist
+        closeChecklistTemplate: dto.closeChecklistTemplate ?? [],
       },
       update: updateData,
       include: { club: true },
@@ -176,6 +333,9 @@ export class BillingCycleSettingsService {
       lateFeeAmount: settings.lateFeeAmount.toNumber(),
       lateFeePercentage: settings.lateFeePercentage.toNumber(),
       maxLateFee: settings.maxLateFee?.toNumber() ?? null,
+      defaultVatRate: settings.defaultVatRate.toNumber(),
+      defaultCreditLimit: settings.defaultCreditLimit?.toNumber() ?? null,
+      creditOverrideMaxAmount: settings.creditOverrideMaxAmount?.toNumber() ?? null,
     };
   }
 
@@ -202,7 +362,13 @@ export class BillingCycleSettingsService {
     });
 
     // Return null if not found (profile may not exist yet)
-    return profile;
+    if (!profile) return null;
+
+    // Transform Decimal fields
+    return {
+      ...profile,
+      arCreditLimit: profile.arCreditLimit?.toNumber() ?? null,
+    };
   }
 
   /**
@@ -250,6 +416,14 @@ export class BillingCycleSettingsService {
         prorationOverride: dto.prorationOverride ?? null,
         customGracePeriod: dto.customGracePeriod ?? null,
         customLateFeeExempt: dto.customLateFeeExempt ?? false,
+        // AR Configuration
+        arEnabled: dto.arEnabled ?? true,
+        arStatementDelivery: dto.arStatementDelivery ?? null,
+        arPaymentTermsDays: dto.arPaymentTermsDays ?? null,
+        arCreditLimit: dto.arCreditLimit ?? null,
+        arAutoChargeToMember: dto.arAutoChargeToMember ?? false,
+        arSeparateStatement: dto.arSeparateStatement ?? false,
+        arBillingContact: dto.arBillingContact ?? null,
       },
       include: {
         member: {
@@ -284,7 +458,10 @@ export class BillingCycleSettingsService {
       `Created billing profile for member ${dto.memberId} (${member.firstName} ${member.lastName})`,
     );
 
-    return profile;
+    return {
+      ...profile,
+      arCreditLimit: profile.arCreditLimit?.toNumber() ?? null,
+    };
   }
 
   /**
@@ -353,6 +530,28 @@ export class BillingCycleSettingsService {
     if (dto.notes !== undefined) {
       updateData.notes = dto.notes;
     }
+    // AR Configuration
+    if (dto.arEnabled !== undefined) {
+      updateData.arEnabled = dto.arEnabled;
+    }
+    if (dto.arStatementDelivery !== undefined) {
+      updateData.arStatementDelivery = dto.arStatementDelivery;
+    }
+    if (dto.arPaymentTermsDays !== undefined) {
+      updateData.arPaymentTermsDays = dto.arPaymentTermsDays;
+    }
+    if (dto.arCreditLimit !== undefined) {
+      updateData.arCreditLimit = dto.arCreditLimit;
+    }
+    if (dto.arAutoChargeToMember !== undefined) {
+      updateData.arAutoChargeToMember = dto.arAutoChargeToMember;
+    }
+    if (dto.arSeparateStatement !== undefined) {
+      updateData.arSeparateStatement = dto.arSeparateStatement;
+    }
+    if (dto.arBillingContact !== undefined) {
+      updateData.arBillingContact = dto.arBillingContact;
+    }
 
     // Update profile
     const profile = await this.prisma.memberBillingProfile.update({
@@ -387,6 +586,9 @@ export class BillingCycleSettingsService {
       `Updated billing profile for member ${memberId} (${existing.member.firstName} ${existing.member.lastName})`,
     );
 
-    return profile;
+    return {
+      ...profile,
+      arCreditLimit: profile.arCreditLimit?.toNumber() ?? null,
+    };
   }
 }

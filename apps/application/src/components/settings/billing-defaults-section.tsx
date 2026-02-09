@@ -1,74 +1,124 @@
 'use client'
 
-import { useState } from 'react'
-import { Loader2, Check } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Loader2, Check, Receipt, Info } from 'lucide-react'
 import { Button } from '@clubvantage/ui'
 import { Input } from '@clubvantage/ui'
 import { Label } from '@clubvantage/ui'
 import { Checkbox } from '@clubvantage/ui'
-import { mockBillingDefaults } from './mock-data'
-import type { BillingDefaults } from './types'
+import {
+  useClubBillingSettings,
+  type TaxMethod,
+  type UpdateClubBillingSettingsInput,
+} from '@/hooks/use-billing-settings'
 
 interface BillingDefaultsSectionProps {
   id: string
 }
 
+const TAX_METHOD_OPTIONS: { value: TaxMethod; label: string; description: string }[] = [
+  { value: 'ADDON', label: 'Add-on', description: 'Tax added on top of price' },
+  { value: 'INCLUDED', label: 'Included', description: 'Tax included in price' },
+  { value: 'EXEMPT', label: 'Exempt', description: 'No tax applied' },
+]
+
 export function BillingDefaultsSection({ id }: BillingDefaultsSectionProps) {
-  const [defaults, setDefaults] = useState<BillingDefaults>(mockBillingDefaults)
-  const [isSaving, setIsSaving] = useState(false)
+  const { settings, isLoading, updateSettings, isUpdating } = useClubBillingSettings()
+  const [localSettings, setLocalSettings] = useState<UpdateClubBillingSettingsInput>({})
   const [showSuccess, setShowSuccess] = useState(false)
   const [hasChanges, setHasChanges] = useState(false)
 
-  const updateField = <K extends keyof BillingDefaults>(key: K, value: BillingDefaults[K]) => {
-    setDefaults({ ...defaults, [key]: value })
+  // Initialize local settings when remote settings load
+  useEffect(() => {
+    if (settings) {
+      setLocalSettings({
+        defaultPaymentTermsDays: settings.defaultPaymentTermsDays,
+        invoicePrefix: settings.invoicePrefix,
+        invoiceStartNumber: settings.invoiceStartNumber,
+        invoiceAutoGenerationDay: settings.invoiceAutoGenerationDay,
+        defaultVatRate: settings.defaultVatRate,
+        taxMethod: settings.taxMethod,
+        whtEnabled: settings.whtEnabled,
+        whtRates: settings.whtRates,
+        autoSuspendEnabled: settings.autoSuspendEnabled,
+        autoSuspendDays: settings.autoSuspendDays,
+      })
+      setHasChanges(false)
+    }
+  }, [settings])
+
+  const updateField = <K extends keyof UpdateClubBillingSettingsInput>(
+    key: K,
+    value: UpdateClubBillingSettingsInput[K]
+  ) => {
+    setLocalSettings((prev) => ({ ...prev, [key]: value }))
     setHasChanges(true)
   }
 
   const handleSave = async () => {
-    setIsSaving(true)
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    setIsSaving(false)
-    setShowSuccess(true)
-    setHasChanges(false)
-    setTimeout(() => setShowSuccess(false), 2000)
+    try {
+      await updateSettings(localSettings)
+      setShowSuccess(true)
+      setHasChanges(false)
+      setTimeout(() => setShowSuccess(false), 2000)
+    } catch (error) {
+      console.error('Failed to save billing defaults:', error)
+    }
   }
 
-  const invoicePreview = `${defaults.invoicePrefix}2024-${String(defaults.invoiceStartNumber).padStart(4, '0')}`
+  // Get display values with fallbacks
+  const paymentTermsDays = localSettings.defaultPaymentTermsDays ?? 30
+  const invoicePrefix = localSettings.invoicePrefix ?? 'INV-'
+  const invoiceStartNumber = localSettings.invoiceStartNumber ?? 1001
+  const autoGenerationDay = localSettings.invoiceAutoGenerationDay ?? 1
+  const vatRate = localSettings.defaultVatRate ?? 7
+  const taxMethod = localSettings.taxMethod ?? 'INCLUDED'
+  const whtEnabled = localSettings.whtEnabled ?? false
+  const whtRates = localSettings.whtRates ?? []
+  const autoSuspendEnabled = localSettings.autoSuspendEnabled ?? false
+  const autoSuspendDays = localSettings.autoSuspendDays ?? 91
+
+  const invoicePreview = `${invoicePrefix}2026-${String(invoiceStartNumber).padStart(4, '0')}`
+
+  if (isLoading) {
+    return (
+      <section id={id} className="border rounded-xl p-6 space-y-6 scroll-mt-24 shadow-lg shadow-stone-200/30">
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-6 w-6 animate-spin text-amber-500" />
+          <span className="ml-2 text-muted-foreground">Loading billing defaults...</span>
+        </div>
+      </section>
+    )
+  }
 
   return (
-    <section id={id} className="border rounded-lg p-6 space-y-6 scroll-mt-24">
+    <section id={id} className="border rounded-xl p-6 space-y-6 scroll-mt-24 shadow-lg shadow-stone-200/30">
+      {/* Header */}
       <div>
-        <h2 className="text-xl font-semibold">Billing Defaults</h2>
-        <p className="text-sm text-muted-foreground">Configure payment terms, taxes, and fee policies</p>
+        <h2 className="text-xl font-semibold flex items-center gap-2">
+          <Receipt className="h-5 w-5 text-amber-500" />
+          Billing Defaults
+        </h2>
+        <p className="text-sm text-muted-foreground mt-1">
+          Configure payment terms, invoice numbering, taxes, and auto-suspension policies
+        </p>
       </div>
 
       {/* Payment Terms */}
       <div className="space-y-4">
         <h3 className="font-medium">Payment Terms</h3>
-        <div className="grid gap-4 md:grid-cols-2">
-          <div>
-            <Label>Days Until Due</Label>
-            <div className="flex items-center gap-2">
-              <Input
-                type="number"
-                value={defaults.paymentTerms}
-                onChange={(e) => updateField('paymentTerms', parseInt(e.target.value) || 0)}
-                className="w-24"
-              />
-              <span className="text-sm text-muted-foreground">days</span>
-            </div>
-          </div>
-          <div>
-            <Label>Grace Period</Label>
-            <div className="flex items-center gap-2">
-              <Input
-                type="number"
-                value={defaults.gracePeriod}
-                onChange={(e) => updateField('gracePeriod', parseInt(e.target.value) || 0)}
-                className="w-24"
-              />
-              <span className="text-sm text-muted-foreground">days</span>
-            </div>
+        <div>
+          <Label className="text-sm">Days Until Due</Label>
+          <div className="flex items-center gap-2 mt-1">
+            <Input
+              type="number"
+              min={1}
+              max={90}
+              value={paymentTermsDays}
+              onChange={(e) => updateField('defaultPaymentTermsDays', parseInt(e.target.value) || 1)}
+              className="w-24"
+            />
+            <span className="text-sm text-muted-foreground">days from statement date</span>
           </div>
         </div>
       </div>
@@ -78,36 +128,39 @@ export function BillingDefaultsSection({ id }: BillingDefaultsSectionProps) {
         <h3 className="font-medium">Invoice Settings</h3>
         <div className="grid gap-4 md:grid-cols-2">
           <div>
-            <Label>Invoice Prefix</Label>
+            <Label className="text-sm">Invoice Prefix</Label>
             <Input
-              value={defaults.invoicePrefix}
+              value={invoicePrefix}
               onChange={(e) => updateField('invoicePrefix', e.target.value)}
-              className="w-32"
+              className="w-32 mt-1"
+              maxLength={20}
             />
           </div>
           <div>
-            <Label>Starting Number</Label>
+            <Label className="text-sm">Starting Number</Label>
             <Input
               type="number"
-              value={defaults.invoiceStartNumber}
+              min={1}
+              value={invoiceStartNumber}
               onChange={(e) => updateField('invoiceStartNumber', parseInt(e.target.value) || 1)}
-              className="w-32"
+              className="w-32 mt-1"
             />
           </div>
           <div className="md:col-span-2">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground flex items-center gap-1">
+              <Info className="h-3 w-3" />
               Preview: <span className="font-mono">{invoicePreview}</span>
             </p>
           </div>
           <div>
-            <Label>Auto-generation Day</Label>
-            <div className="flex items-center gap-2">
+            <Label className="text-sm">Auto-generation Day</Label>
+            <div className="flex items-center gap-2 mt-1">
               <Input
                 type="number"
                 min={1}
                 max={28}
-                value={defaults.autoGenerationDay}
-                onChange={(e) => updateField('autoGenerationDay', parseInt(e.target.value) || 1)}
+                value={autoGenerationDay}
+                onChange={(e) => updateField('invoiceAutoGenerationDay', parseInt(e.target.value) || 1)}
                 className="w-20"
               />
               <span className="text-sm text-muted-foreground">of each month</span>
@@ -121,30 +174,33 @@ export function BillingDefaultsSection({ id }: BillingDefaultsSectionProps) {
         <h3 className="font-medium">Tax Configuration</h3>
         <div className="grid gap-4 md:grid-cols-2">
           <div>
-            <Label>Default VAT Rate</Label>
-            <div className="flex items-center gap-2">
+            <Label className="text-sm">Default VAT Rate</Label>
+            <div className="flex items-center gap-2 mt-1">
               <Input
                 type="number"
-                value={defaults.vatRate}
-                onChange={(e) => updateField('vatRate', parseFloat(e.target.value) || 0)}
-                className="w-20"
+                step="0.01"
+                min={0}
+                max={100}
+                value={vatRate}
+                onChange={(e) => updateField('defaultVatRate', parseFloat(e.target.value) || 0)}
+                className="w-24"
               />
               <span className="text-sm text-muted-foreground">%</span>
             </div>
           </div>
           <div>
-            <Label>Tax Method</Label>
+            <Label className="text-sm">Tax Method</Label>
             <div className="flex gap-4 mt-2">
-              {(['addon', 'included', 'exempt'] as const).map((method) => (
-                <label key={method} className="flex items-center gap-2">
+              {TAX_METHOD_OPTIONS.map((option) => (
+                <label key={option.value} className="flex items-center gap-2">
                   <input
                     type="radio"
                     name="taxMethod"
-                    checked={defaults.taxMethod === method}
-                    onChange={() => updateField('taxMethod', method)}
-                    className="h-4 w-4"
+                    checked={taxMethod === option.value}
+                    onChange={() => updateField('taxMethod', option.value)}
+                    className="h-4 w-4 text-amber-500 focus:ring-amber-500"
                   />
-                  <span className="text-sm capitalize">{method}</span>
+                  <span className="text-sm">{option.label}</span>
                 </label>
               ))}
             </div>
@@ -153,23 +209,23 @@ export function BillingDefaultsSection({ id }: BillingDefaultsSectionProps) {
         <div className="space-y-2">
           <label className="flex items-center gap-2">
             <Checkbox
-              checked={defaults.whtEnabled}
+              checked={whtEnabled}
               onCheckedChange={(checked) => updateField('whtEnabled', checked as boolean)}
             />
             <span className="text-sm">Enable WHT for applicable members</span>
           </label>
-          {defaults.whtEnabled && (
+          {whtEnabled && (
             <div className="ml-6 flex items-center gap-3">
               <span className="text-sm text-muted-foreground">WHT Rates:</span>
               {[1, 2, 3, 5].map((rate) => (
                 <label key={rate} className="flex items-center gap-1">
                   <Checkbox
-                    checked={defaults.whtRates.includes(rate)}
+                    checked={whtRates.includes(rate)}
                     onCheckedChange={(checked) => {
                       if (checked) {
-                        updateField('whtRates', [...defaults.whtRates, rate].sort())
+                        updateField('whtRates', [...whtRates, rate].sort((a, b) => a - b))
                       } else {
-                        updateField('whtRates', defaults.whtRates.filter((r) => r !== rate))
+                        updateField('whtRates', whtRates.filter((r) => r !== rate))
                       }
                     }}
                   />
@@ -181,91 +237,24 @@ export function BillingDefaultsSection({ id }: BillingDefaultsSectionProps) {
         </div>
       </div>
 
-      {/* Late Fee Configuration */}
-      <div className="space-y-4 pt-4 border-t">
-        <h3 className="font-medium">Late Fees</h3>
-        <label className="flex items-center gap-2">
-          <Checkbox
-            checked={defaults.lateFeeEnabled}
-            onCheckedChange={(checked) => updateField('lateFeeEnabled', checked as boolean)}
-          />
-          <span className="text-sm">Apply late fees automatically</span>
-        </label>
-        {defaults.lateFeeEnabled && (
-          <div className="ml-6 space-y-4">
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  name="lateFeeType"
-                  checked={defaults.lateFeeType === 'percentage'}
-                  onChange={() => updateField('lateFeeType', 'percentage')}
-                  className="h-4 w-4"
-                />
-                <span className="text-sm">Percentage</span>
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  name="lateFeeType"
-                  checked={defaults.lateFeeType === 'fixed'}
-                  onChange={() => updateField('lateFeeType', 'fixed')}
-                  className="h-4 w-4"
-                />
-                <span className="text-sm">Fixed Amount</span>
-              </label>
-            </div>
-            <div className="flex items-center gap-2">
-              <Input
-                type="number"
-                step="0.1"
-                value={defaults.lateFeeAmount}
-                onChange={(e) => updateField('lateFeeAmount', parseFloat(e.target.value) || 0)}
-                className="w-24"
-              />
-              <span className="text-sm text-muted-foreground">
-                {defaults.lateFeeType === 'percentage' ? '% per month' : 'THB'}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Checkbox
-                checked={!!defaults.lateFeeCap}
-                onCheckedChange={(checked) => updateField('lateFeeCap', checked ? 25 : undefined)}
-              />
-              <span className="text-sm">Cap total late fees at</span>
-              {defaults.lateFeeCap && (
-                <>
-                  <Input
-                    type="number"
-                    value={defaults.lateFeeCap}
-                    onChange={(e) => updateField('lateFeeCap', parseInt(e.target.value) || 0)}
-                    className="w-20"
-                  />
-                  <span className="text-sm text-muted-foreground">%</span>
-                </>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-
       {/* Auto-Suspension */}
       <div className="space-y-4 pt-4 border-t">
         <h3 className="font-medium">Auto-Suspension</h3>
         <label className="flex items-center gap-2">
           <Checkbox
-            checked={defaults.autoSuspendEnabled}
+            checked={autoSuspendEnabled}
             onCheckedChange={(checked) => updateField('autoSuspendEnabled', checked as boolean)}
           />
           <span className="text-sm">Automatically suspend members with overdue balances</span>
         </label>
-        {defaults.autoSuspendEnabled && (
+        {autoSuspendEnabled && (
           <div className="ml-6 flex items-center gap-2">
             <span className="text-sm">Suspend after</span>
             <Input
               type="number"
-              value={defaults.autoSuspendDays}
-              onChange={(e) => updateField('autoSuspendDays', parseInt(e.target.value) || 0)}
+              min={1}
+              value={autoSuspendDays}
+              onChange={(e) => updateField('autoSuspendDays', parseInt(e.target.value) || 1)}
               className="w-20"
             />
             <span className="text-sm text-muted-foreground">days overdue</span>
@@ -273,14 +262,19 @@ export function BillingDefaultsSection({ id }: BillingDefaultsSectionProps) {
         )}
       </div>
 
+      {/* Save Button */}
       <div className="flex justify-end pt-4 border-t">
         <Button
           onClick={handleSave}
-          disabled={isSaving || !hasChanges}
+          disabled={isUpdating || !hasChanges}
           className="bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 disabled:opacity-50"
         >
-          {isSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : showSuccess ? <Check className="h-4 w-4 mr-2" /> : null}
-          {showSuccess ? 'Saved' : 'Save Section'}
+          {isUpdating ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : showSuccess ? (
+            <Check className="h-4 w-4 mr-2" />
+          ) : null}
+          {showSuccess ? 'Saved' : 'Save Settings'}
         </Button>
       </div>
     </section>
