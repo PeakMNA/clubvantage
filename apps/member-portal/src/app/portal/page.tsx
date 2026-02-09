@@ -7,7 +7,6 @@ export const metadata: Metadata = {
 }
 import {
   ChevronRight,
-  Sun,
   Flag,
   Calendar,
   QrCode,
@@ -73,10 +72,6 @@ export default async function DashboardPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-stone-50 rounded-full">
-            <Sun className="h-4 w-4 text-amber-500" />
-            <span className="text-xs font-medium text-stone-600">28°C</span>
-          </div>
           <div className="h-10 w-10 rounded-full bg-stone-900 flex items-center justify-center">
             <span className="text-sm font-bold text-white">{initials}</span>
           </div>
@@ -85,19 +80,42 @@ export default async function DashboardPage() {
 
       {/* Balance Card */}
       <div className="rounded-2xl p-5 card-glass shadow-lg shadow-stone-200/30">
-        <p className="text-xs text-stone-500 font-medium">Current Balance</p>
-        <p className="text-3xl font-bold text-stone-900 mt-1 tracking-tight">
-          ฿{balance.balance.toLocaleString()}
-        </p>
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-xs text-stone-500 font-medium">Outstanding</p>
+            <p className="text-3xl font-bold text-stone-900 mt-1 tracking-tight">
+              ฿{balance.balance.toLocaleString()}
+            </p>
+          </div>
+          {balance.unbilledTotal > 0 && (
+            <div className="text-right">
+              <p className="text-xs text-stone-500 font-medium">Unbilled</p>
+              <p className="text-lg font-semibold text-amber-600 mt-1">
+                ฿{balance.unbilledTotal.toLocaleString()}
+              </p>
+            </div>
+          )}
+        </div>
         {balance.dueDate && (
-          <p className="text-sm text-stone-500 mt-1">
+          <p className="text-sm text-stone-500 mt-2">
             Due by {format(balance.dueDate, 'MMM d')}
           </p>
         )}
         {balance.balance > 0 && (
-          <button className="mt-4 px-5 py-2.5 rounded-xl text-sm font-semibold bg-amber-600 text-white hover:bg-amber-700 transition-colors cursor-pointer shadow-md shadow-amber-600/20">
-            Pay Now
-          </button>
+          <div className="flex items-center gap-3 mt-4">
+            <Link
+              href="/portal/pay"
+              className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-amber-600 text-white hover:bg-amber-700 transition-colors cursor-pointer shadow-md shadow-amber-600/20"
+            >
+              Pay Now
+            </Link>
+            <Link
+              href="/portal/statements"
+              className="px-5 py-2.5 rounded-xl text-sm font-medium text-stone-600 bg-stone-100 hover:bg-stone-200 transition-colors"
+            >
+              View Statements
+            </Link>
+          </div>
         )}
       </div>
 

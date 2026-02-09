@@ -1,13 +1,16 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
+import { useCallback } from 'react'
 import { format } from 'date-fns'
 import { cn } from '@clubvantage/ui'
+import Link from 'next/link'
 import {
   ArrowLeft,
   Download,
   Share2,
   FileText,
+  ArrowRight,
 } from 'lucide-react'
 
 interface StatementTransaction {
@@ -42,6 +45,8 @@ interface StatementData {
   memberDisplayId: string | null
   membershipType: string | null
   accountNumber: string
+  cycleMode: string
+  isPartialPeriod: boolean
 }
 
 function AgingBar({ label, amount, total }: { label: string; amount: number; total: number }) {
@@ -64,8 +69,29 @@ function AgingBar({ label, amount, total }: { label: string; amount: number; tot
 
 export function StatementDetailContent({ statement }: { statement: StatementData }) {
   const router = useRouter()
+  const pathname = usePathname()
 
   const periodLabel = format(new Date(statement.periodStart), 'MMMM yyyy')
+
+  const handleShare = useCallback(async () => {
+    const pdfUrl = `${window.location.origin}/api/statements/${statement.id}/pdf`
+    const shareData = {
+      title: `Statement ${statement.statementNumber ?? periodLabel}`,
+      text: `Statement for ${format(new Date(statement.periodStart), 'MMM d')} – ${format(new Date(statement.periodEnd), 'MMM d, yyyy')}`,
+      url: pdfUrl,
+    }
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData)
+      } catch {
+        // User cancelled or error — ignore
+      }
+    } else {
+      // Fallback: copy PDF URL to clipboard
+      await navigator.clipboard.writeText(pdfUrl)
+    }
+  }, [statement, periodLabel])
   const isPaid = statement.closingBalance <= 0
   const totalAging =
     statement.agingCurrent +
@@ -95,7 +121,10 @@ export function StatementDetailContent({ statement }: { statement: StatementData
             >
               <Download className="h-5 w-5 text-stone-500" />
             </a>
-            <button className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-stone-50">
+            <button
+              onClick={handleShare}
+              className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-stone-50"
+            >
               <Share2 className="h-5 w-5 text-stone-500" />
             </button>
           </div>
@@ -111,14 +140,26 @@ export function StatementDetailContent({ statement }: { statement: StatementData
             </div>
             <div className="flex-1">
               <h2 className="text-xl font-semibold text-stone-900">{periodLabel}</h2>
-              <p className="text-sm text-stone-500 mt-0.5">
-                {format(new Date(statement.periodStart), 'MMM d')} – {format(new Date(statement.periodEnd), 'MMM d, yyyy')}
-              </p>
-              {statement.statementNumber && (
-                <p className="text-xs text-stone-400 mt-1 font-mono">
-                  #{statement.statementNumber}
+              <div className="flex items-center gap-2 mt-0.5">
+                <p className="text-sm text-stone-500">
+                  {format(new Date(statement.periodStart), 'MMM d')} – {format(new Date(statement.periodEnd), 'MMM d, yyyy')}
                 </p>
-              )}
+                {statement.isPartialPeriod && (
+                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700">
+                    Partial Period
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2 mt-1">
+                {statement.statementNumber && (
+                  <span className="text-xs text-stone-400 font-mono">
+                    #{statement.statementNumber}
+                  </span>
+                )}
+                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-stone-100 text-stone-500">
+                  {statement.cycleMode === 'MEMBER_CYCLE' ? 'Member Cycle' : 'Club Cycle'}
+                </span>
+              </div>
             </div>
             <span
               className={cn(
@@ -255,6 +296,18 @@ export function StatementDetailContent({ statement }: { statement: StatementData
           )}
         </div>
 
+        {/* View Unbilled Activity Link */}
+        <Link
+          href="/portal/statements/unbilled"
+          className="flex items-center justify-between py-4 border-b border-stone-100 group"
+        >
+          <div className="flex items-center gap-2">
+            <FileText className="h-4 w-4 text-amber-600" />
+            <span className="text-sm font-medium text-stone-900">View Unbilled Activity</span>
+          </div>
+          <ArrowRight className="h-4 w-4 text-stone-300 group-hover:text-stone-500 transition-colors" />
+        </Link>
+
         {/* Actions */}
         <div className="flex gap-3 pt-5">
           <a
@@ -265,7 +318,10 @@ export function StatementDetailContent({ statement }: { statement: StatementData
             <Download className="h-4 w-4" />
             Download PDF
           </a>
-          <button className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border border-stone-200 text-sm font-medium text-stone-700">
+          <button
+            onClick={handleShare}
+            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border border-stone-200 text-sm font-medium text-stone-700"
+          >
             <Share2 className="h-4 w-4" />
             Share
           </button>
@@ -284,9 +340,12 @@ export function StatementDetailContent({ statement }: { statement: StatementData
                 Due {format(new Date(statement.dueDate), 'MMM d')}
               </p>
             </div>
-            <button className="px-6 py-3 rounded-xl text-sm font-semibold bg-stone-900 text-white">
+            <Link
+              href="/portal/pay"
+              className="px-6 py-3 rounded-xl text-sm font-semibold bg-stone-900 text-white"
+            >
               Pay Now
-            </button>
+            </Link>
           </div>
         </div>
       )}
