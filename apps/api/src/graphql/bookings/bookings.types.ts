@@ -511,7 +511,7 @@ export class StaffCertificationType {
   expiresAt?: Date;
 
   @Field()
-  status: string; // 'valid' | 'expiring' | 'expired'
+  status: string; // 'VALID' | 'EXPIRING' | 'EXPIRED'
 }
 
 @ObjectType()

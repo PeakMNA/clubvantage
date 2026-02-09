@@ -1,4 +1,7 @@
 import type { NextConfig } from 'next';
+import createNextIntlPlugin from 'next-intl/plugin';
+
+const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
@@ -6,6 +9,7 @@ const nextConfig: NextConfig = {
     '@clubvantage/ui',
     '@clubvantage/types',
     '@clubvantage/utils',
+    '@clubvantage/i18n',
   ],
   images: {
     remotePatterns: [
@@ -20,8 +24,12 @@ const nextConfig: NextConfig = {
     ],
   },
   experimental: {
-    optimizePackageImports: ['lucide-react', '@clubvantage/ui'],
+    optimizePackageImports: [
+      'lucide-react',
+      '@clubvantage/ui',
+      '@clubvantage/api-client',
+    ],
   },
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);

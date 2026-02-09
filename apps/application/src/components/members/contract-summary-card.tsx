@@ -57,7 +57,7 @@ export function ContractSummaryCard({
   return (
     <div
       className={cn(
-        'relative overflow-hidden rounded-2xl border border/60 bg-white/80 shadow-lg shadow-slate-200/30 backdrop-blur-sm',
+        'relative overflow-hidden rounded-2xl border border/60 bg-white/80 dark:bg-stone-900/80 shadow-lg shadow-slate-200/30 dark:shadow-stone-900/30 backdrop-blur-sm',
         className
       )}
     >
@@ -72,7 +72,7 @@ export function ContractSummaryCard({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100/50 shadow-inner">
-              <Sparkles className="h-5 w-5 text-emerald-600" />
+              <Sparkles className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
               <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Contract Status</p>
@@ -114,7 +114,7 @@ export function ContractSummaryCard({
                 <span className="font-medium text-muted-foreground">Ends:</span>{' '}
                 <span className={cn(
                   'font-semibold',
-                  endDate ? 'text-foreground' : 'text-emerald-600'
+                  endDate ? 'text-foreground' : 'text-emerald-600 dark:text-emerald-400'
                 )}>
                   {endDate ? formatDate(endDate) : 'Ongoing'}
                 </span>
@@ -138,7 +138,7 @@ export function ContractSummaryCard({
                   variant="outline"
                   size="sm"
                   onClick={onEndContract}
-                  className="border bg-white/80 shadow-sm backdrop-blur-sm transition-all hover:bg-card hover:shadow-md"
+                  className="border bg-white/80 dark:bg-stone-900/80 shadow-sm backdrop-blur-sm transition-all hover:bg-card hover:shadow-md"
                 >
                   End Contract
                 </Button>

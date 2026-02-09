@@ -28,8 +28,8 @@ function MiniFlightSlot({
   onFlightClick?: (flight: Flight, nineHole: NineHoleType) => void
   onBookSlot?: (flight: Flight, position: number, nineHole: NineHoleType) => void
 }) {
-  const isBlocked = flight.status === 'blocked'
-  const isNoShow = flight.status === 'no-show'
+  const isBlocked = flight.status === 'BLOCKED'
+  const isNoShow = flight.status === 'NO_SHOW'
   const filledSlots = flight.players.filter(Boolean).length
   const isPartial = filledSlots > 0 && filledSlots < 4 && !isBlocked
   const hasLinkedBooking = !!linkedFlightId

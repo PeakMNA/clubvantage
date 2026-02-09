@@ -37,11 +37,13 @@ export const getMemberStats = cache(async () => {
       where: {
         clubId,
         status: 'COMPLETED',
+        players: { some: { memberId } },
       },
     }),
     prisma.booking.count({
       where: {
         clubId,
+        memberId,
       },
     }),
     prisma.member.findUnique({

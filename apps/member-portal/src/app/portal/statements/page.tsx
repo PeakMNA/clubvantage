@@ -24,12 +24,12 @@ function formatDateRange(start: Date, end: Date): string {
 
 function getStatementStatus(closingBalance: number, dueDate: Date | null) {
   if (closingBalance <= 0) {
-    return { label: 'Paid', className: 'text-emerald-600 bg-emerald-50' }
+    return { label: 'Paid', className: 'text-emerald-600 bg-emerald-50 dark:bg-emerald-500/20 dark:text-emerald-400' }
   }
   if (dueDate && dueDate < new Date()) {
-    return { label: 'Overdue', className: 'text-red-600 bg-red-50' }
+    return { label: 'Overdue', className: 'text-red-600 bg-red-50 dark:bg-red-500/20 dark:text-red-400' }
   }
-  return { label: 'Due', className: 'text-amber-600 bg-amber-50' }
+  return { label: 'Due', className: 'text-amber-600 bg-amber-50 dark:bg-amber-500/20 dark:text-amber-400' }
 }
 
 export default async function StatementsPage() {
@@ -44,11 +44,11 @@ export default async function StatementsPage() {
     <div className="px-5 py-6 pb-36 space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-[22px] font-semibold text-stone-900">Statements</h1>
+        <h1 className="text-[22px] font-semibold text-stone-900 dark:text-stone-100">Statements</h1>
       </div>
 
       {/* Balance Card */}
-      <div className="rounded-2xl bg-stone-900 p-6 text-white">
+      <div className="rounded-2xl bg-stone-900 dark:bg-stone-800 p-6 text-white">
         <p className="text-sm text-white/60">Outstanding Balance</p>
         <p className="text-4xl font-bold mt-1 tracking-tight">
           ฿{balance.balance.toLocaleString()}
@@ -72,21 +72,21 @@ export default async function StatementsPage() {
       {unbilled.categories.length > 0 && (
         <Link
           href="/portal/statements/unbilled"
-          className="block rounded-xl border border-amber-100 bg-amber-50/60 p-4 active:opacity-70 transition-opacity"
+          className="block rounded-xl border border-amber-100 dark:border-amber-500/30 bg-amber-50/60 dark:bg-amber-500/10 p-4 active:opacity-70 transition-opacity"
         >
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-amber-600" />
-              <p className="text-sm font-semibold text-amber-800">
+              <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+              <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
                 Current Activity
                 {unbilled.sinceDate && (
-                  <span className="font-normal text-amber-600"> (since {format(unbilled.sinceDate, 'd MMM')})</span>
+                  <span className="font-normal text-amber-600 dark:text-amber-400"> (since {format(unbilled.sinceDate, 'd MMM')})</span>
                 )}
               </p>
             </div>
             <ChevronRight className="h-4 w-4 text-amber-400" />
           </div>
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-amber-700">
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-amber-700 dark:text-amber-400">
             {unbilled.categories.slice(0, 3).map((cat) => (
               <span key={cat.name}>
                 {cat.name}: ฿{cat.subtotal.toLocaleString()}
@@ -96,9 +96,9 @@ export default async function StatementsPage() {
               <span>+{unbilled.categories.length - 3} more</span>
             )}
           </div>
-          <div className="mt-2 pt-2 border-t border-amber-200/60 flex items-center justify-between">
-            <p className="text-xs font-medium text-amber-700">Net Unbilled</p>
-            <p className="text-sm font-bold text-amber-800">
+          <div className="mt-2 pt-2 border-t border-amber-200/60 dark:border-amber-500/20 flex items-center justify-between">
+            <p className="text-xs font-medium text-amber-700 dark:text-amber-400">Net Unbilled</p>
+            <p className="text-sm font-bold text-amber-800 dark:text-amber-300">
               ฿{unbilled.netUnbilled.toLocaleString()}
             </p>
           </div>
@@ -108,29 +108,29 @@ export default async function StatementsPage() {
       {/* Recent Activity */}
       <section>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-semibold text-stone-900">Recent Activity</h2>
+          <h2 className="text-base font-semibold text-stone-900 dark:text-stone-100">Recent Activity</h2>
         </div>
-        <div className="divide-y divide-stone-100">
+        <div className="divide-y divide-stone-100 dark:divide-stone-800">
           {transactions.map((tx) => {
             const isCredit = tx.amount > 0
             const Icon = isCredit ? CreditCard : Flag
             return (
               <div key={tx.id} className="flex items-center gap-3 py-4 first:pt-0">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-stone-50 flex-shrink-0">
-                  <Icon className="h-5 w-5 text-stone-600" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-stone-50 dark:bg-stone-800 flex-shrink-0">
+                  <Icon className="h-5 w-5 text-stone-600 dark:text-stone-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[15px] font-medium text-stone-900 truncate">
+                  <p className="text-[15px] font-medium text-stone-900 dark:text-stone-100 truncate">
                     {tx.description}
                   </p>
-                  <p className="text-xs text-stone-500">
+                  <p className="text-xs text-stone-500 dark:text-stone-400">
                     {format(tx.date, 'MMM d')}
                   </p>
                 </div>
                 <p
                   className={cn(
                     'text-[15px] font-semibold',
-                    isCredit ? 'text-emerald-600' : 'text-stone-900'
+                    isCredit ? 'text-emerald-600 dark:text-emerald-400' : 'text-stone-900 dark:text-stone-100'
                   )}
                 >
                   {isCredit ? '+' : '-'}฿{Math.abs(tx.amount).toLocaleString()}
@@ -139,14 +139,14 @@ export default async function StatementsPage() {
             )
           })}
           {transactions.length === 0 && (
-            <p className="text-sm text-stone-400 py-8 text-center">No recent activity</p>
+            <p className="text-sm text-stone-400 dark:text-stone-500 py-8 text-center">No recent activity</p>
           )}
         </div>
       </section>
 
       {/* Closed Statements (3-Month Rolling) */}
       <section>
-        <h2 className="text-base font-semibold text-stone-900 mb-4">
+        <h2 className="text-base font-semibold text-stone-900 dark:text-stone-100 mb-4">
           Closed Statements
         </h2>
         <div className="space-y-3">
@@ -156,28 +156,28 @@ export default async function StatementsPage() {
               <Link
                 key={statement.id}
                 href={`/portal/statements/${statement.id}`}
-                className="flex items-center gap-3 rounded-xl border border-stone-100 bg-white p-4 active:opacity-70 transition-opacity group"
+                className="flex items-center gap-3 rounded-xl border border-stone-100 dark:border-stone-800 bg-white dark:bg-stone-900 p-4 active:opacity-70 transition-opacity group"
               >
                 <div className={cn(
                   'flex h-10 w-10 items-center justify-center rounded-xl flex-shrink-0',
                   statement.closingBalance <= 0
-                    ? 'bg-emerald-50'
+                    ? 'bg-emerald-50 dark:bg-emerald-500/20'
                     : statement.dueDate && statement.dueDate < new Date()
-                      ? 'bg-red-50'
-                      : 'bg-amber-50'
+                      ? 'bg-red-50 dark:bg-red-500/20'
+                      : 'bg-amber-50 dark:bg-amber-500/20'
                 )}>
                   <FileText className={cn(
                     'h-5 w-5',
                     statement.closingBalance <= 0
-                      ? 'text-emerald-600'
+                      ? 'text-emerald-600 dark:text-emerald-400'
                       : statement.dueDate && statement.dueDate < new Date()
-                        ? 'text-red-600'
-                        : 'text-amber-600'
+                        ? 'text-red-600 dark:text-red-400'
+                        : 'text-amber-600 dark:text-amber-400'
                   )} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="text-[15px] font-medium text-stone-900">
+                    <p className="text-[15px] font-medium text-stone-900 dark:text-stone-100">
                       {formatDateRange(statement.periodStart, statement.periodEnd)}
                     </p>
                     <span className={cn(
@@ -187,32 +187,32 @@ export default async function StatementsPage() {
                       {status.label}
                     </span>
                   </div>
-                  <p className="text-xs text-stone-500 mt-0.5">
+                  <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
                     {statement.statementNumber}
                   </p>
                 </div>
                 <div className="text-right flex-shrink-0">
                   <p className={cn(
                     'text-[15px] font-semibold',
-                    statement.closingBalance > 0 ? 'text-stone-900' : 'text-emerald-600'
+                    statement.closingBalance > 0 ? 'text-stone-900 dark:text-stone-100' : 'text-emerald-600 dark:text-emerald-400'
                   )}>
                     ฿{statement.closingBalance.toLocaleString()}
                   </p>
                 </div>
-                <ChevronRight className="h-5 w-5 text-stone-300 group-hover:text-stone-500 transition-colors flex-shrink-0" />
+                <ChevronRight className="h-5 w-5 text-stone-300 dark:text-stone-600 group-hover:text-stone-500 transition-colors flex-shrink-0" />
               </Link>
             )
           })}
           {statements.length === 0 && (
-            <p className="text-sm text-stone-400 py-8 text-center">No statements yet</p>
+            <p className="text-sm text-stone-400 dark:text-stone-500 py-8 text-center">No statements yet</p>
           )}
         </div>
 
         {/* Archived Note */}
         {statements.length > 0 && (
           <div className="flex items-center gap-2 mt-4 px-2">
-            <Clock className="h-3.5 w-3.5 text-stone-400 flex-shrink-0" />
-            <p className="text-xs text-stone-400">
+            <Clock className="h-3.5 w-3.5 text-stone-400 dark:text-stone-500 flex-shrink-0" />
+            <p className="text-xs text-stone-400 dark:text-stone-500">
               Showing 3 most recent statements. Older statements are archived.
             </p>
           </div>
@@ -222,16 +222,16 @@ export default async function StatementsPage() {
       {/* WHT Certificates */}
       <Link
         href="/portal/statements/wht"
-        className="flex items-center gap-3 rounded-xl border border-stone-100 bg-stone-50 p-4 active:opacity-70 transition-opacity"
+        className="flex items-center gap-3 rounded-xl border border-stone-100 dark:border-stone-800 bg-stone-50 dark:bg-stone-800 p-4 active:opacity-70 transition-opacity"
       >
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white flex-shrink-0">
-          <FileText className="h-5 w-5 text-stone-600" />
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white dark:bg-stone-900 flex-shrink-0">
+          <FileText className="h-5 w-5 text-stone-600 dark:text-stone-400" />
         </div>
         <div className="flex-1">
-          <p className="text-[15px] font-medium text-stone-900">WHT Certificates</p>
-          <p className="text-xs text-stone-500">Submit and track withholding tax certificates</p>
+          <p className="text-[15px] font-medium text-stone-900 dark:text-stone-100">WHT Certificates</p>
+          <p className="text-xs text-stone-500 dark:text-stone-400">Submit and track withholding tax certificates</p>
         </div>
-        <ChevronRight className="h-5 w-5 text-stone-300 flex-shrink-0" />
+        <ChevronRight className="h-5 w-5 text-stone-300 dark:text-stone-600 flex-shrink-0" />
       </Link>
     </div>
   )

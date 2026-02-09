@@ -137,7 +137,7 @@ function PaymentMethodCard({
   return (
     <div
       className={cn(
-        'group relative overflow-hidden rounded-xl border bg-white/80 p-4 shadow-sm backdrop-blur-sm transition-all duration-300 hover:shadow-md sm:p-5',
+        'group relative overflow-hidden rounded-xl border bg-white/80 dark:bg-stone-900/80 p-4 shadow-sm backdrop-blur-sm transition-all duration-300 hover:shadow-md sm:p-5',
         method.isDefault
           ? 'border-amber-200/60 dark:border-amber-500/30 ring-1 ring-amber-200/40'
           : 'border-border/60'
@@ -197,7 +197,7 @@ function PaymentMethodCard({
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 rounded-lg opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-50 hover:text-red-600"
+              className="h-8 w-8 rounded-lg opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-50 dark:hover:bg-red-500/20 hover:text-red-600 dark:hover:text-red-400"
               onClick={onRemove}
             >
               <Trash2 className="h-4 w-4" />
@@ -214,7 +214,7 @@ function PaymentMethodCard({
               <span
                 className={cn(
                   'font-medium',
-                  isExpired ? 'text-red-600' : 'text-foreground'
+                  isExpired ? 'text-red-600 dark:text-red-400' : 'text-foreground'
                 )}
               >
                 {formatExpiry(method.expiryMonth, method.expiryYear)}
@@ -330,7 +330,7 @@ export function BillingMethodsSection({
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Header Card */}
-      <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-white/80 shadow-lg shadow-slate-200/30 backdrop-blur-sm">
+      <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-white/80 dark:bg-stone-900/80 shadow-lg shadow-slate-200/30 dark:shadow-stone-900/30 backdrop-blur-sm">
         <div className="absolute inset-0 bg-gradient-to-br from-muted/50 to-transparent" />
 
         <div className="relative flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">

@@ -152,7 +152,7 @@ function AccountSearchResultItem({
           <span className="truncate font-medium text-foreground">
             {account.accountName}
           </span>
-          {account.agingStatus && account.agingStatus !== 'current' && (
+          {account.agingStatus && account.agingStatus !== 'CURRENT' && (
             <AgingBadge status={account.agingStatus} />
           )}
         </div>

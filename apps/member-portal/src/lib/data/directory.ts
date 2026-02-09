@@ -43,21 +43,20 @@ export const getDirectoryMembers = cache(async (search?: string) => {
 export const getDirectoryMember = cache(async (id: string) => {
   const clubId = await getClubId()
 
-  const member = await prisma.member.findUnique({
-    where: { id },
+  const member = await prisma.member.findFirst({
+    where: { id, clubId },
     select: {
       id: true,
       firstName: true,
       lastName: true,
       avatarUrl: true,
       joinDate: true,
-      clubId: true,
       membershipType: { select: { name: true } },
       interests: { select: { category: { select: { name: true } } } },
     },
   })
 
-  if (!member || member.clubId !== clubId) return null
+  if (!member) return null
 
   return {
     id: member.id,

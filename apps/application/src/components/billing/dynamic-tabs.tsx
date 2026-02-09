@@ -150,3 +150,12 @@ export const DynamicCreditNoteList = dynamic(
   () => import('./credit-note-list').then((mod) => mod.CreditNoteList),
   { loading: () => <TabLoadingSkeleton />, ssr: false }
 )
+
+/**
+ * Dynamically imported StatementRegister component
+ * Only loaded when the Statements tab is active
+ */
+export const DynamicStatementRegister = dynamic(
+  () => import('./statement-register').then((mod) => mod.StatementRegister),
+  { loading: () => <TabLoadingSkeleton />, ssr: false }
+)

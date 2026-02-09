@@ -16,7 +16,7 @@ const playerTypeLabels: Record<string, string> = {
   MEMBER: 'M',
   GUEST: 'G',
   DEPENDENT: 'D',
-  WALKUP: 'W',
+  WALK_UP: 'W',
 }
 
 export function StarterTicketPreview({
@@ -87,7 +87,7 @@ export function StarterTicketPreview({
                       player.type === 'MEMBER' && 'bg-blue-100 text-blue-700',
                       player.type === 'GUEST' && 'bg-amber-100 text-amber-700',
                       player.type === 'DEPENDENT' && 'bg-teal-100 text-teal-700',
-                      player.type === 'WALKUP' && 'bg-stone-100 text-stone-700'
+                      player.type === 'WALK_UP' && 'bg-stone-100 text-stone-700'
                     )}
                   >
                     {playerTypeLabels[player.type]}

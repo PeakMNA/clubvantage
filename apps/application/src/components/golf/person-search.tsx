@@ -27,11 +27,11 @@ async function defaultSearchFn(query: string): Promise<Person[]> {
   await new Promise((resolve) => setTimeout(resolve, 300)) // Simulate network delay
 
   const mockData: Person[] = [
-    { id: '1', name: 'John Smith', type: 'member', phone: '081-234-5678', memberId: 'M-0001' },
-    { id: '2', name: 'Jane Doe', type: 'member', email: 'jane@example.com', memberId: 'M-0002' },
-    { id: '3', name: 'Mike Johnson', type: 'guest', phone: '082-345-6789' },
-    { id: '4', name: 'Sarah Wilson', type: 'dependent', memberId: 'D-0001' },
-    { id: '5', name: 'Tom Brown', type: 'member', phone: '083-456-7890', memberId: 'M-0003' },
+    { id: '1', name: 'John Smith', type: 'MEMBER', phone: '081-234-5678', memberId: 'M-0001' },
+    { id: '2', name: 'Jane Doe', type: 'MEMBER', email: 'jane@example.com', memberId: 'M-0002' },
+    { id: '3', name: 'Mike Johnson', type: 'GUEST', phone: '082-345-6789' },
+    { id: '4', name: 'Sarah Wilson', type: 'DEPENDENT', memberId: 'D-0001' },
+    { id: '5', name: 'Tom Brown', type: 'MEMBER', phone: '083-456-7890', memberId: 'M-0003' },
   ]
 
   const lowerQuery = query.toLowerCase()

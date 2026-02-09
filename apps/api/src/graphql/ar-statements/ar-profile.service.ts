@@ -130,6 +130,56 @@ export class ARProfileService {
   }
 
   /**
+   * Create standalone city ledger AR profile (without linked CityLedger entity)
+   */
+  async createStandaloneCityLedger(
+    clubId: string,
+    accountInfo: {
+      accountName: string;
+      contactEmail?: string;
+      contactPhone?: string;
+      billingAddress?: string;
+      taxId?: string;
+      businessRegistrationId?: string;
+      branchName?: string;
+      branchCode?: string;
+    },
+    options?: {
+      statementDelivery?: StatementDelivery;
+      paymentTermsDays?: number;
+      creditLimit?: number;
+    },
+    userId?: string,
+  ) {
+    if (!accountInfo.accountName) {
+      throw new BadRequestException('Account name is required for standalone city ledger profiles');
+    }
+
+    const accountNumber = await this.generateAccountNumber(clubId, 'CITY_LEDGER');
+
+    return this.prisma.aRProfile.create({
+      data: {
+        clubId,
+        accountNumber,
+        profileType: 'CITY_LEDGER',
+        // No cityLedgerId - this is a standalone profile
+        accountName: accountInfo.accountName,
+        contactEmail: accountInfo.contactEmail,
+        contactPhone: accountInfo.contactPhone,
+        billingAddress: accountInfo.billingAddress,
+        taxId: accountInfo.taxId,
+        businessRegistrationId: accountInfo.businessRegistrationId,
+        branchName: accountInfo.branchName,
+        branchCode: accountInfo.branchCode,
+        statementDelivery: options?.statementDelivery ?? 'EMAIL',
+        paymentTermsDays: options?.paymentTermsDays ?? 30,
+        creditLimit: options?.creditLimit,
+        createdBy: userId,
+      },
+    });
+  }
+
+  /**
    * Find all AR profiles for a club
    */
   async findAll(
@@ -256,6 +306,14 @@ export class ARProfileService {
       statementDelivery?: StatementDelivery;
       paymentTermsDays?: number;
       creditLimit?: number;
+      accountName?: string;
+      contactEmail?: string;
+      contactPhone?: string;
+      billingAddress?: string;
+      taxId?: string;
+      businessRegistrationId?: string;
+      branchName?: string;
+      branchCode?: string;
     },
     userId?: string,
   ) {
@@ -389,5 +447,180 @@ export class ARProfileService {
       },
       { active: 0, suspended: 0, closed: 0 } as Record<string, number>,
     );
+  }
+
+  /**
+   * Sync all active members to AR profiles
+   * Creates AR profiles for members who don't have one
+   */
+  async syncMembersToARProfiles(
+    clubId: string,
+    options?: {
+      statementDelivery?: StatementDelivery;
+      paymentTermsDays?: number;
+    },
+    userId?: string,
+  ): Promise<{ created: number; skipped: number; errors: string[] }> {
+    this.logger.log(`Starting AR profile sync for club ${clubId}`);
+
+    // Find all active members without AR profiles
+    const membersWithoutProfiles = await this.prisma.member.findMany({
+      where: {
+        clubId,
+        status: 'ACTIVE',
+        deletedAt: null,
+        arProfile: null, // No existing AR profile
+      },
+      select: {
+        id: true,
+        memberId: true,
+        firstName: true,
+        lastName: true,
+      },
+    });
+
+    this.logger.log(`Found ${membersWithoutProfiles.length} members without AR profiles`);
+
+    let created = 0;
+    let skipped = 0;
+    const errors: string[] = [];
+
+    // Create AR profiles in batches
+    for (const member of membersWithoutProfiles) {
+      try {
+        const accountNumber = await this.generateAccountNumber(clubId, 'MEMBER');
+
+        await this.prisma.aRProfile.create({
+          data: {
+            clubId,
+            accountNumber,
+            profileType: 'MEMBER',
+            memberId: member.id,
+            statementDelivery: options?.statementDelivery ?? 'EMAIL',
+            paymentTermsDays: options?.paymentTermsDays ?? 15,
+            createdBy: userId,
+          },
+        });
+
+        created++;
+        this.logger.debug(`Created AR profile for member ${member.memberId}`);
+      } catch (error) {
+        const errorMsg = `Failed to create AR profile for ${member.memberId}: ${error instanceof Error ? error.message : 'Unknown error'}`;
+        this.logger.error(errorMsg);
+        errors.push(errorMsg);
+        skipped++;
+      }
+    }
+
+    this.logger.log(`AR profile sync complete: ${created} created, ${skipped} skipped`);
+
+    return { created, skipped, errors };
+  }
+
+  /**
+   * Sync all active city ledgers to AR profiles
+   * Creates AR profiles for city ledgers who don't have one
+   */
+  async syncCityLedgersToARProfiles(
+    clubId: string,
+    options?: {
+      statementDelivery?: StatementDelivery;
+      paymentTermsDays?: number;
+    },
+    userId?: string,
+  ): Promise<{ created: number; skipped: number; errors: string[] }> {
+    this.logger.log(`Starting AR profile sync for city ledgers in club ${clubId}`);
+
+    // Find all active city ledgers without AR profiles
+    const cityLedgersWithoutProfiles = await this.prisma.cityLedger.findMany({
+      where: {
+        clubId,
+        status: 'ACTIVE',
+        arProfile: null, // No existing AR profile
+      },
+      select: {
+        id: true,
+        accountNumber: true,
+        accountName: true,
+        paymentTerms: true,
+        creditLimit: true,
+      },
+    });
+
+    this.logger.log(`Found ${cityLedgersWithoutProfiles.length} city ledgers without AR profiles`);
+
+    let created = 0;
+    let skipped = 0;
+    const errors: string[] = [];
+
+    for (const cityLedger of cityLedgersWithoutProfiles) {
+      try {
+        const accountNumber = await this.generateAccountNumber(clubId, 'CITY_LEDGER');
+
+        await this.prisma.aRProfile.create({
+          data: {
+            clubId,
+            accountNumber,
+            profileType: 'CITY_LEDGER',
+            cityLedgerId: cityLedger.id,
+            statementDelivery: options?.statementDelivery ?? 'EMAIL',
+            paymentTermsDays: cityLedger.paymentTerms || options?.paymentTermsDays || 30,
+            creditLimit: cityLedger.creditLimit,
+            createdBy: userId,
+          },
+        });
+
+        created++;
+        this.logger.debug(`Created AR profile for city ledger ${cityLedger.accountNumber}`);
+      } catch (error) {
+        const errorMsg = `Failed to create AR profile for ${cityLedger.accountName}: ${error instanceof Error ? error.message : 'Unknown error'}`;
+        this.logger.error(errorMsg);
+        errors.push(errorMsg);
+        skipped++;
+      }
+    }
+
+    this.logger.log(`City ledger AR profile sync complete: ${created} created, ${skipped} skipped`);
+
+    return { created, skipped, errors };
+  }
+
+  /**
+   * Get members without AR profiles (for preview before sync)
+   */
+  async getMembersWithoutARProfiles(clubId: string) {
+    return this.prisma.member.findMany({
+      where: {
+        clubId,
+        status: 'ACTIVE',
+        deletedAt: null,
+        arProfile: null,
+      },
+      select: {
+        id: true,
+        memberId: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        membershipType: {
+          select: { name: true },
+        },
+      },
+      orderBy: { memberId: 'asc' },
+    });
+  }
+
+  /**
+   * Get count of members without AR profiles
+   */
+  async getMembersWithoutARProfilesCount(clubId: string): Promise<number> {
+    return this.prisma.member.count({
+      where: {
+        clubId,
+        status: 'ACTIVE',
+        deletedAt: null,
+        arProfile: null,
+      },
+    });
   }
 }

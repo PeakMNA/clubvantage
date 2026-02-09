@@ -30,10 +30,16 @@ export async function GET(request: NextRequest) {
 
     if (!meResponse.ok) {
       if (meResponse.status === 401) {
-        return NextResponse.json(
+        // Clear stale cookies so middleware redirects directly to login next time
+        const response = NextResponse.json(
           { error: 'Session expired' },
           { status: 401 }
         )
+        const isProduction = process.env.NODE_ENV === 'production'
+        const clearCookieOptions = `HttpOnly; Path=/; SameSite=Lax; Max-Age=0${isProduction ? '; Secure' : ''}`
+        response.headers.append('Set-Cookie', `sb-access-token=; ${clearCookieOptions}`)
+        response.headers.append('Set-Cookie', `sb-refresh-token=; ${clearCookieOptions}`)
+        return response
       }
       return NextResponse.json(
         { error: 'Failed to get user info' },

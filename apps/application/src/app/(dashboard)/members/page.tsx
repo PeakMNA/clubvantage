@@ -68,16 +68,20 @@ function formatCurrency(amount: number) {
 function getBalanceColor(member: Member): string {
   if (member.balance <= 0) return 'text-muted-foreground';
   if (member.status === 'SUSPENDED') return 'text-red-600 dark:text-red-400';
-  if (member.agingBucket === '91+') return 'text-red-600 dark:text-red-400';
+  if (member.agingBucket === 'DAYS_91_PLUS') return 'text-red-600 dark:text-red-400';
   return 'text-amber-600 dark:text-amber-400';
 }
 
-const statusMap: Record<MemberStatus, 'active' | 'pending' | 'suspended' | 'inactive' | 'cancelled'> = {
+const statusMap: Record<MemberStatus, string> = {
+  PROSPECT: 'prospect',
+  LEAD: 'lead',
+  APPLICANT: 'applicant',
   ACTIVE: 'active',
-  PENDING: 'pending',
   SUSPENDED: 'suspended',
-  INACTIVE: 'inactive',
-  CANCELLED: 'cancelled',
+  LAPSED: 'lapsed',
+  RESIGNED: 'resigned',
+  TERMINATED: 'terminated',
+  REACTIVATED: 'reactivated',
 };
 
 export default function MembersPage() {

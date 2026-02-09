@@ -17,10 +17,10 @@ function formatDateKey(date: Date): string {
 
 function getAvailabilityColor(level: AvailabilityLevel): string {
   switch (level) {
-    case 'open': return 'bg-emerald-500'
-    case 'limited': return 'bg-amber-500'
-    case 'full': return 'bg-red-500'
-    case 'blocked': return 'bg-muted-foreground'
+    case 'OPEN': return 'bg-emerald-500'
+    case 'LIMITED': return 'bg-amber-500'
+    case 'FULL': return 'bg-red-500'
+    case 'BLOCKED': return 'bg-muted-foreground'
     default: return 'bg-muted'
   }
 }

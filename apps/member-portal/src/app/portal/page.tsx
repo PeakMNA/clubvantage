@@ -64,40 +64,40 @@ export default async function DashboardPage() {
       {/* Greeting Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-[22px] font-semibold text-stone-900">
+          <h1 className="text-[22px] font-semibold text-stone-900 dark:text-stone-100">
             {getGreeting()}, {member.firstName}
           </h1>
-          <p className="text-sm text-stone-500 mt-0.5">
+          <p className="text-sm text-stone-500 dark:text-stone-400 mt-0.5">
             Member since {memberSinceYear}
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-stone-900 flex items-center justify-center">
+          <div className="h-10 w-10 rounded-full bg-stone-900 dark:bg-stone-700 flex items-center justify-center">
             <span className="text-sm font-bold text-white">{initials}</span>
           </div>
         </div>
       </div>
 
       {/* Balance Card */}
-      <div className="rounded-2xl p-5 card-glass shadow-lg shadow-stone-200/30">
+      <div className="rounded-2xl p-5 card-glass shadow-lg shadow-stone-200/30 dark:shadow-none">
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-xs text-stone-500 font-medium">Outstanding</p>
-            <p className="text-3xl font-bold text-stone-900 mt-1 tracking-tight">
+            <p className="text-xs text-stone-500 dark:text-stone-400 font-medium">Outstanding</p>
+            <p className="text-3xl font-bold text-stone-900 dark:text-stone-100 mt-1 tracking-tight">
               ฿{balance.balance.toLocaleString()}
             </p>
           </div>
           {balance.unbilledTotal > 0 && (
             <div className="text-right">
-              <p className="text-xs text-stone-500 font-medium">Unbilled</p>
-              <p className="text-lg font-semibold text-amber-600 mt-1">
+              <p className="text-xs text-stone-500 dark:text-stone-400 font-medium">Unbilled</p>
+              <p className="text-lg font-semibold text-amber-600 dark:text-amber-400 mt-1">
                 ฿{balance.unbilledTotal.toLocaleString()}
               </p>
             </div>
           )}
         </div>
         {balance.dueDate && (
-          <p className="text-sm text-stone-500 mt-2">
+          <p className="text-sm text-stone-500 dark:text-stone-400 mt-2">
             Due by {format(balance.dueDate, 'MMM d')}
           </p>
         )}
@@ -111,7 +111,7 @@ export default async function DashboardPage() {
             </Link>
             <Link
               href="/portal/statements"
-              className="px-5 py-2.5 rounded-xl text-sm font-medium text-stone-600 bg-stone-100 hover:bg-stone-200 transition-colors"
+              className="px-5 py-2.5 rounded-xl text-sm font-medium text-stone-600 dark:text-stone-300 bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
             >
               View Statements
             </Link>
@@ -139,10 +139,10 @@ export default async function DashboardPage() {
               href={action.href}
               className="flex flex-col items-center gap-2 group cursor-pointer"
             >
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl transition-all duration-200 group-hover:shadow-md group-hover:shadow-stone-200/50 group-active:scale-95 bg-white/80 backdrop-blur-sm border border-stone-100 text-stone-700">
-                <Icon className="h-6 w-6 text-amber-600 group-hover:text-amber-700 transition-colors" />
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl transition-all duration-200 group-hover:shadow-md group-hover:shadow-stone-200/50 group-active:scale-95 bg-white/80 dark:bg-stone-800/80 backdrop-blur-sm border border-stone-100 dark:border-stone-700 text-stone-700 dark:text-stone-300">
+                <Icon className="h-6 w-6 text-amber-600 dark:text-amber-400 group-hover:text-amber-700 dark:group-hover:text-amber-300 transition-colors" />
               </div>
-              <span className="text-[11px] font-medium text-stone-600 text-center leading-tight group-hover:text-stone-900 transition-colors">
+              <span className="text-[11px] font-medium text-stone-600 dark:text-stone-400 text-center leading-tight group-hover:text-stone-900 dark:group-hover:text-stone-200 transition-colors">
                 {action.label}
               </span>
             </Link>
@@ -154,10 +154,10 @@ export default async function DashboardPage() {
       {recentActivity.length > 0 && (
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-semibold text-stone-900">Recent Activity</h2>
+            <h2 className="text-base font-semibold text-stone-900 dark:text-stone-100">Recent Activity</h2>
             <Link
               href="/portal/spending"
-              className="flex items-center text-sm text-stone-500 font-medium"
+              className="flex items-center text-sm text-stone-500 dark:text-stone-400 font-medium"
             >
               See All
               <ChevronRight className="h-4 w-4 ml-0.5" />
@@ -167,27 +167,27 @@ export default async function DashboardPage() {
             {recentActivity.slice(0, 5).map((item) => (
               <div
                 key={item.id}
-                className="flex items-center gap-3 p-3 rounded-xl bg-white/80 backdrop-blur-sm border border-stone-100"
+                className="flex items-center gap-3 p-3 rounded-xl bg-white/80 dark:bg-stone-900/80 backdrop-blur-sm border border-stone-100 dark:border-stone-800"
               >
                 <div className={`flex h-10 w-10 items-center justify-center rounded-xl flex-shrink-0 ${
-                  item.type === 'payment' ? 'bg-emerald-50' : 'bg-stone-50'
+                  item.type === 'payment' ? 'bg-emerald-50 dark:bg-emerald-500/20' : 'bg-stone-50 dark:bg-stone-800'
                 }`}>
                   {item.type === 'payment' ? (
-                    <ArrowDownLeft className="h-5 w-5 text-emerald-600" />
+                    <ArrowDownLeft className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                   ) : (
-                    <ArrowUpRight className="h-5 w-5 text-stone-500" />
+                    <ArrowUpRight className="h-5 w-5 text-stone-500 dark:text-stone-400" />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[15px] font-medium text-stone-900 truncate">
+                  <p className="text-[15px] font-medium text-stone-900 dark:text-stone-100 truncate">
                     {item.description}
                   </p>
-                  <p className="text-xs text-stone-500">
+                  <p className="text-xs text-stone-500 dark:text-stone-400">
                     {format(item.date, 'MMM d')}
                   </p>
                 </div>
                 <p className={`text-[15px] font-semibold flex-shrink-0 ${
-                  item.amount > 0 ? 'text-emerald-600' : 'text-stone-900'
+                  item.amount > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-stone-900 dark:text-stone-100'
                 }`}>
                   {item.amount > 0 ? '+' : ''}฿{Math.abs(item.amount).toLocaleString()}
                 </p>
@@ -201,10 +201,10 @@ export default async function DashboardPage() {
       {upcomingTeeTimes.length > 0 && (
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-semibold text-stone-900">Upcoming</h2>
+            <h2 className="text-base font-semibold text-stone-900 dark:text-stone-100">Upcoming</h2>
             <Link
               href="/portal/bookings"
-              className="flex items-center text-sm text-stone-500 font-medium"
+              className="flex items-center text-sm text-stone-500 dark:text-stone-400 font-medium"
             >
               See All
               <ChevronRight className="h-4 w-4 ml-0.5" />
@@ -215,20 +215,20 @@ export default async function DashboardPage() {
               <Link
                 key={tt.id}
                 href={`/portal/golf/bookings/${tt.id}`}
-                className="flex items-center gap-3 p-3 rounded-xl card-elevated cursor-pointer bg-white/80 backdrop-blur-sm border border-stone-100"
+                className="flex items-center gap-3 p-3 rounded-xl card-elevated cursor-pointer bg-white/80 dark:bg-stone-900/80 backdrop-blur-sm border border-stone-100 dark:border-stone-800"
               >
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 flex-shrink-0">
-                  <Flag className="h-5 w-5 text-amber-600" />
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 dark:bg-amber-500/20 flex-shrink-0">
+                  <Flag className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[15px] font-medium text-stone-900 tracking-tight">
+                  <p className="text-[15px] font-medium text-stone-900 dark:text-stone-100 tracking-tight">
                     {format(tt.date, 'EEE, MMM d')} &middot; {tt.time}
                   </p>
-                  <p className="text-sm text-stone-500 mt-0.5">
+                  <p className="text-sm text-stone-500 dark:text-stone-400 mt-0.5">
                     {tt.courseName} &middot; {tt.playerCount} Players
                   </p>
                 </div>
-                <ChevronRight className="h-5 w-5 text-stone-300 flex-shrink-0" />
+                <ChevronRight className="h-5 w-5 text-stone-300 dark:text-stone-600 flex-shrink-0" />
               </Link>
             ))}
           </div>
@@ -239,10 +239,10 @@ export default async function DashboardPage() {
       {events.length > 0 && (
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-semibold text-stone-900">Upcoming Events</h2>
+            <h2 className="text-base font-semibold text-stone-900 dark:text-stone-100">Upcoming Events</h2>
             <Link
               href="/portal/events"
-              className="flex items-center text-sm text-stone-500 font-medium"
+              className="flex items-center text-sm text-stone-500 dark:text-stone-400 font-medium"
             >
               See All
               <ChevronRight className="h-4 w-4 ml-0.5" />
@@ -260,8 +260,8 @@ export default async function DashboardPage() {
                   {event.imageUrl ? (
                     <img src={event.imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
                   ) : (
-                    <div className="absolute inset-0 bg-stone-100 flex items-center justify-center">
-                      <CalendarDays className="h-10 w-10 text-stone-300" />
+                    <div className="absolute inset-0 bg-stone-100 dark:bg-stone-800 flex items-center justify-center">
+                      <CalendarDays className="h-10 w-10 text-stone-300 dark:text-stone-600" />
                     </div>
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
@@ -282,10 +282,10 @@ export default async function DashboardPage() {
       {announcements.length > 0 && (
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-semibold text-stone-900">Club News</h2>
+            <h2 className="text-base font-semibold text-stone-900 dark:text-stone-100">Club News</h2>
             <Link
               href="/portal/news"
-              className="flex items-center text-sm text-stone-500 font-medium"
+              className="flex items-center text-sm text-stone-500 dark:text-stone-400 font-medium"
             >
               See All
               <ChevronRight className="h-4 w-4 ml-0.5" />
@@ -296,22 +296,22 @@ export default async function DashboardPage() {
               <Link
                 key={item.id}
                 href={`/portal/news/${item.id}`}
-                className="flex items-center gap-3 p-3 rounded-xl bg-white/80 backdrop-blur-sm border border-stone-100 active:opacity-70 transition-opacity"
+                className="flex items-center gap-3 p-3 rounded-xl bg-white/80 dark:bg-stone-900/80 backdrop-blur-sm border border-stone-100 dark:border-stone-800 active:opacity-70 transition-opacity"
               >
                 {item.imageUrl ? (
-                  <div className="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden bg-stone-100">
+                  <div className="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden bg-stone-100 dark:bg-stone-800">
                     <img src={item.imageUrl} alt="" className="h-full w-full object-cover" />
                   </div>
                 ) : (
-                  <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-stone-50 flex items-center justify-center">
-                    <Newspaper className="h-5 w-5 text-stone-400" />
+                  <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-stone-50 dark:bg-stone-800 flex items-center justify-center">
+                    <Newspaper className="h-5 w-5 text-stone-400 dark:text-stone-500" />
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-[15px] font-medium text-stone-900 line-clamp-1">{item.title}</p>
-                  <p className="text-sm text-stone-500 line-clamp-1 mt-0.5">{item.body}</p>
+                  <p className="text-[15px] font-medium text-stone-900 dark:text-stone-100 line-clamp-1">{item.title}</p>
+                  <p className="text-sm text-stone-500 dark:text-stone-400 line-clamp-1 mt-0.5">{item.body}</p>
                 </div>
-                <ChevronRight className="h-5 w-5 text-stone-300 flex-shrink-0" />
+                <ChevronRight className="h-5 w-5 text-stone-300 dark:text-stone-600 flex-shrink-0" />
               </Link>
             ))}
           </div>

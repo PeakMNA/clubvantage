@@ -62,7 +62,7 @@ function getActionsForStatus(
   const actions: ActionButton[] = []
 
   switch (status) {
-    case 'booked':
+    case 'BOOKED':
       // [Check In - Primary] [Move] [Copy] [Edit] [Cancel - Danger]
       actions.push({
         label: 'Check In',
@@ -96,7 +96,7 @@ function getActionsForStatus(
       })
       break
 
-    case 'checked-in':
+    case 'CHECKED_IN':
       // [Mark On Course - Primary] [Settle] [Move] [Edit] [Cancel - Danger]
       actions.push({
         label: 'Mark On Course',
@@ -130,7 +130,7 @@ function getActionsForStatus(
       })
       break
 
-    case 'on-course':
+    case 'STARTED':
       // [Mark Finished - Primary] [Settle] [Edit]
       actions.push({
         label: 'Mark Finished',
@@ -152,7 +152,7 @@ function getActionsForStatus(
       })
       break
 
-    case 'completed':
+    case 'COMPLETED':
       // [View Receipt] [Copy]
       actions.push({
         label: 'View Receipt',
@@ -168,7 +168,7 @@ function getActionsForStatus(
       })
       break
 
-    case 'cancelled':
+    case 'CANCELLED':
       // [View Details]
       // Note: View Details is typically handled by the modal itself being open
       // This is a placeholder that could open an expanded view
@@ -180,7 +180,7 @@ function getActionsForStatus(
       })
       break
 
-    case 'no-show':
+    case 'NO_SHOW':
       // [Override Penalty] [View Details]
       actions.push({
         label: 'Override Penalty',

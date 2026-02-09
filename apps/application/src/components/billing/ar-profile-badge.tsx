@@ -36,7 +36,7 @@ const typeConfig: Record<ARProfileType, {
 }
 
 export function ARProfileTypeBadge({ type, className, showIcon = true }: ARProfileTypeBadgeProps) {
-  const config = typeConfig[type]
+  const config = typeConfig[type] ?? typeConfig.MEMBER
   const { Icon } = config
 
   return (
@@ -48,7 +48,7 @@ export function ARProfileTypeBadge({ type, className, showIcon = true }: ARProfi
         className
       )}
     >
-      {showIcon && <Icon className="h-3 w-3" />}
+      {showIcon && Icon && <Icon className="h-3 w-3" />}
       {config.label}
       <span className="sr-only">Profile type: {config.label}</span>
     </span>
@@ -87,7 +87,7 @@ const statusConfig: Record<ARProfileStatus, {
 }
 
 export function ARProfileStatusBadge({ status, className }: ARProfileStatusBadgeProps) {
-  const config = statusConfig[status]
+  const config = statusConfig[status] ?? statusConfig.ACTIVE
 
   return (
     <span
@@ -150,7 +150,7 @@ const deliveryStatusConfig: Record<DeliveryStatus, {
 }
 
 export function DeliveryStatusBadge({ status, channel, className }: DeliveryStatusBadgeProps) {
-  const config = deliveryStatusConfig[status]
+  const config = deliveryStatusConfig[status] ?? deliveryStatusConfig.PENDING
 
   return (
     <span

@@ -330,7 +330,7 @@ export function AddMemberModal({
               className={cn(
                 'flex flex-col items-center gap-2 rounded-lg border-2 p-4 text-center transition-colors',
                 effectiveMode === 'quick' && !requiresApproval
-                  ? 'border-amber-500 bg-amber-50'
+                  ? 'border-amber-500 bg-amber-50 dark:bg-amber-500/20'
                   : 'border bg-card hover:bg-muted',
                 requiresApproval && 'cursor-not-allowed opacity-50'
               )}
@@ -351,7 +351,7 @@ export function AddMemberModal({
               className={cn(
                 'flex flex-col items-center gap-2 rounded-lg border-2 p-4 text-center transition-colors',
                 effectiveMode === 'application'
-                  ? 'border-amber-500 bg-amber-50'
+                  ? 'border-amber-500 bg-amber-50 dark:bg-amber-500/20'
                   : 'border bg-card hover:bg-muted'
               )}
             >
@@ -650,12 +650,12 @@ export function AddMemberModal({
                     onDrop={handleDrop('id')}
                     className={cn(
                       'flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-4 transition-colors hover:bg-muted',
-                      documents.id ? 'border-emerald-500 bg-emerald-50' : 'border-border',
-                      dragOver.id && 'border-amber-500 bg-amber-50',
+                      documents.id ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/20' : 'border-border',
+                      dragOver.id && 'border-amber-500 bg-amber-50 dark:bg-amber-500/20',
                       loading && 'cursor-not-allowed opacity-50'
                     )}
                   >
-                    <Upload className={cn('h-6 w-6', documents.id ? 'text-emerald-600' : dragOver.id ? 'text-amber-500' : 'text-muted-foreground')} />
+                    <Upload className={cn('h-6 w-6', documents.id ? 'text-emerald-600 dark:text-emerald-400' : dragOver.id ? 'text-amber-500' : 'text-muted-foreground')} />
                     <span className="mt-2 text-center text-sm text-muted-foreground">
                       {documents.id ? documents.id.name : dragOver.id ? 'Drop file here' : 'Drag & drop or click to upload'}
                     </span>
@@ -676,12 +676,12 @@ export function AddMemberModal({
                     onDrop={handleDrop('address')}
                     className={cn(
                       'flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-4 transition-colors hover:bg-muted',
-                      documents.address ? 'border-emerald-500 bg-emerald-50' : 'border-border',
-                      dragOver.address && 'border-amber-500 bg-amber-50',
+                      documents.address ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/20' : 'border-border',
+                      dragOver.address && 'border-amber-500 bg-amber-50 dark:bg-amber-500/20',
                       loading && 'cursor-not-allowed opacity-50'
                     )}
                   >
-                    <Upload className={cn('h-6 w-6', documents.address ? 'text-emerald-600' : dragOver.address ? 'text-amber-500' : 'text-muted-foreground')} />
+                    <Upload className={cn('h-6 w-6', documents.address ? 'text-emerald-600 dark:text-emerald-400' : dragOver.address ? 'text-amber-500' : 'text-muted-foreground')} />
                     <span className="mt-2 text-center text-sm text-muted-foreground">
                       {documents.address ? documents.address.name : dragOver.address ? 'Drop file here' : 'Drag & drop or click to upload'}
                     </span>

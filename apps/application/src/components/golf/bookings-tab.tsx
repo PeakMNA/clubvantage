@@ -22,26 +22,6 @@ interface BookingsTabProps {
   onBookingSelect: (bookingId: string) => void
 }
 
-// Map BookingStatus to FlightStatus for the badge
-function mapBookingStatusToFlightStatus(status: BookingStatus): 'booked' | 'checked-in' | 'on-course' | 'finished' | 'no-show' | 'cancelled' {
-  switch (status) {
-    case 'booked':
-      return 'booked'
-    case 'checked-in':
-      return 'checked-in'
-    case 'on-course':
-      return 'on-course'
-    case 'completed':
-      return 'finished'
-    case 'cancelled':
-      return 'cancelled'
-    case 'no-show':
-      return 'no-show'
-    default:
-      return 'booked'
-  }
-}
-
 // Format date string to "Jan 28" format
 function formatDate(dateString: string): string {
   const date = new Date(dateString)
@@ -225,7 +205,7 @@ export function BookingsTab({
                     {booking.playerCount}
                   </td>
                   <td className="py-3 px-4">
-                    <FlightStatusBadge status={mapBookingStatusToFlightStatus(booking.status)} />
+                    <FlightStatusBadge status={booking.status} />
                   </td>
                 </tr>
               ))

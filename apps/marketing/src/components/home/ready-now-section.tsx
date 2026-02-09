@@ -1,4 +1,7 @@
-import Link from 'next/link';
+'use client';
+
+import { Link } from '@/i18n/navigation';
+import { useTranslations } from 'next-intl';
 import {
   Users,
   Receipt,
@@ -9,65 +12,68 @@ import {
   CheckCircle2
 } from 'lucide-react';
 
-const builtModules = [
-  {
-    icon: Users,
-    title: 'Members',
-    description: 'Complete member lifecycle management',
-    features: [
-      'Member profiles with full history',
-      'Application workflow with approvals',
-      'Dependent and corporate management',
-    ],
-    href: '/features/membership',
-  },
-  {
-    icon: Receipt,
-    title: 'Billing',
-    description: 'Invoicing, payments, tax compliance',
-    features: [
-      'Automated invoice generation',
-      'Multiple payment gateways',
-      'Tax compliance (VAT, GST, SST)',
-    ],
-    href: '/features/billing',
-  },
-  {
-    icon: Trophy,
-    title: 'Golf',
-    description: 'Visual tee sheet, caddies, carts',
-    features: [
-      'Drag-and-drop tee sheet',
-      'Caddie & cart assignment',
-      'Course configuration',
-    ],
-    href: '/features/golf',
-  },
-  {
-    icon: CalendarDays,
-    title: 'Facility Booking',
-    description: 'Courts, rooms, services',
-    features: [
-      'Real-time availability',
-      'Recurring bookings',
-      'Waitlist management',
-    ],
-    href: '/features/booking',
-  },
-  {
-    icon: ShoppingBag,
-    title: 'POS',
-    description: 'Pro shop and retail operations',
-    features: [
-      'Fast checkout with scanning',
-      'Inventory management',
-      'Member account charging',
-    ],
-    href: '/features/retail',
-  },
-];
-
 export function ReadyNowSection() {
+  const t = useTranslations('readyNow');
+  const tc = useTranslations('common');
+
+  const builtModules = [
+    {
+      icon: Users,
+      title: t('members'),
+      description: t('membersDesc'),
+      features: [
+        t('membersF1'),
+        t('membersF2'),
+        t('membersF3'),
+      ],
+      href: '/features/membership' as const,
+    },
+    {
+      icon: Receipt,
+      title: t('billing'),
+      description: t('billingDesc'),
+      features: [
+        t('billingF1'),
+        t('billingF2'),
+        t('billingF3'),
+      ],
+      href: '/features/billing' as const,
+    },
+    {
+      icon: Trophy,
+      title: t('golf'),
+      description: t('golfDesc'),
+      features: [
+        t('golfF1'),
+        t('golfF2'),
+        t('golfF3'),
+      ],
+      href: '/features/golf' as const,
+    },
+    {
+      icon: CalendarDays,
+      title: t('facilityBooking'),
+      description: t('facilityBookingDesc'),
+      features: [
+        t('facilityBookingF1'),
+        t('facilityBookingF2'),
+        t('facilityBookingF3'),
+      ],
+      href: '/features/booking' as const,
+    },
+    {
+      icon: ShoppingBag,
+      title: t('pos'),
+      description: t('posDesc'),
+      features: [
+        t('posF1'),
+        t('posF2'),
+        t('posF3'),
+      ],
+      href: '/features/retail' as const,
+    },
+  ];
+
   return (
     <section className="py-20 md:py-28 bg-white">
       <div className="container">
@@ -77,14 +83,14 @@ export function ReadyNowSection() {
             <CheckCircle2 className="h-5 w-5 text-emerald-600" />
           </div>
           <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-sm font-medium">
-            Built
+            {tc('built')}
           </span>
         </div>
         <h2 className="font-serif text-h1 text-charcoal-800 max-w-2xl">
-          What&apos;s Ready Now
+          {t('whatsReadyNow')}
         </h2>
         <p className="mt-4 text-body-lg text-charcoal-500 max-w-2xl">
-          These modules are complete and ready for founding members at launch.
+          {t('subtitle')}
         </p>
 
         {/* Module Cards Grid */}
@@ -102,7 +108,7 @@ export function ReadyNowSection() {
                 <div className="absolute top-4 right-4">
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-medium">
                     <CheckCircle2 className="h-3 w-3" />
-                    Built
+                    {tc('built')}
                   </span>
                 </div>
 
@@ -133,7 +139,7 @@ export function ReadyNowSection() {
                 {/* Learn more link */}
                 <div className="mt-4 flex items-center gap-1 text-sm font-medium text-primary-600
                               group-hover:text-primary-500 transition-colors">
-                  Learn more
+                  {tc('learnMore')}
                   <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
                 </div>
               </Link>

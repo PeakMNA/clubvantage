@@ -76,8 +76,8 @@ function FlightCard({
   onFlightClick?: (flight: Flight) => void
   onBookSlot?: (flight: Flight, position: number) => void
 }) {
-  const isBlocked = flight.status === 'blocked'
-  const isNoShow = flight.status === 'no-show'
+  const isBlocked = flight.status === 'BLOCKED'
+  const isNoShow = flight.status === 'NO_SHOW'
   const filledSlots = flight.players.filter(Boolean).length
   const emptySlots = 4 - filledSlots
   const isPartial = filledSlots > 0 && filledSlots < 4 && !isBlocked

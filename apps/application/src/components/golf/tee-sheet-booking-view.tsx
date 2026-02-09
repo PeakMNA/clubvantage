@@ -30,22 +30,6 @@ interface TeeSheetBookingViewProps {
   onReleaseBlock: (blockId: string) => void
 }
 
-// Map flight status to display status
-function mapFlightStatus(status: string): 'available' | 'booked' | 'checked-in' | 'on-course' | 'finished' | 'no-show' | 'cancelled' | 'blocked' {
-  const map: Record<string, 'available' | 'booked' | 'checked-in' | 'on-course' | 'finished' | 'no-show' | 'cancelled' | 'blocked'> = {
-    'available': 'available',
-    'booked': 'booked',
-    'checked-in': 'checked-in',
-    'on-course': 'on-course',
-    'finished': 'finished',
-    'completed': 'finished',
-    'no-show': 'no-show',
-    'cancelled': 'cancelled',
-    'blocked': 'blocked',
-  }
-  return map[status] || 'available'
-}
-
 // Player slot component
 function PlayerSlot({
   player,
@@ -146,7 +130,7 @@ export function TeeSheetBookingView({
     position: { x: number; y: number }
     bookingId: string
     status: BookingStatus
-  }>({ isOpen: false, position: { x: 0, y: 0 }, bookingId: '', status: 'booked' })
+  }>({ isOpen: false, position: { x: 0, y: 0 }, bookingId: '', status: 'BOOKED' })
 
   const [slotContextMenu, setSlotContextMenu] = useState<{
     isOpen: boolean
@@ -176,7 +160,7 @@ export function TeeSheetBookingView({
       isOpen: true,
       position: { x: e.clientX, y: e.clientY },
       bookingId, // Use the player's actual booking ID
-      status: mapFlightStatus(status) as BookingStatus,
+      status: status as BookingStatus,
     })
   }
 
@@ -310,10 +294,9 @@ export function TeeSheetBookingView({
           Array.from({ length: 10 }).map((_, i) => <SkeletonRow key={i} />)
         ) : (
           flightList.map((flight) => {
-            const isBlocked = flight.status === 'blocked'
+            const isBlocked = flight.status === 'BLOCKED'
             const filledSlots = flight.players.filter(Boolean).length
             const isPartial = filledSlots > 0 && filledSlots < 4 && !isBlocked
-            const displayStatus = mapFlightStatus(flight.status)
 
             // Get smart validation for this slot during placement mode
             const slotValidation = placementMode.state.active
@@ -388,7 +371,7 @@ export function TeeSheetBookingView({
 
                 {/* Status */}
                 <td className="px-4 py-3">
-                  <FlightStatusBadge status={displayStatus} />
+                  <FlightStatusBadge status={flight.status} />
                 </td>
               </tr>
             )

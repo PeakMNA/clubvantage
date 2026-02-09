@@ -5,7 +5,7 @@ import { cn } from '@clubvantage/ui'
 import { Search, X, Star, ChevronDown, Users } from 'lucide-react'
 
 type SkillLevel = 'beginner' | 'intermediate' | 'advanced'
-type CaddyStatus = 'available' | 'assigned' | 'off-duty'
+type CaddyStatus = 'AVAILABLE' | 'ASSIGNED' | 'OFF_DUTY'
 
 interface Caddy {
   id: string
@@ -273,7 +273,7 @@ export function CaddyPicker({
             ) : (
               filteredCaddies.map((caddy) => {
                 const isSelected = value === caddy.id
-                const isAvailable = caddy.status === 'available'
+                const isAvailable = caddy.status === 'AVAILABLE'
 
                 return (
                   <button
@@ -310,7 +310,7 @@ export function CaddyPicker({
                       </div>
                       {!isAvailable && (
                         <span className="text-xs text-stone-500 dark:text-stone-400">
-                          {caddy.status === 'assigned'
+                          {caddy.status === 'ASSIGNED'
                             ? 'Currently assigned'
                             : 'Off duty'}
                         </span>

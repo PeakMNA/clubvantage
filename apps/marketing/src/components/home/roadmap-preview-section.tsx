@@ -1,40 +1,42 @@
 'use client';
 
 import * as React from 'react';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { ChevronUp, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const topFeatures = [
-  {
-    id: '1',
-    title: 'AI Marketing - Member Engagement',
-    description: 'AI-powered campaigns for retention: smart emails, push notifications, and personalized offers.',
-    votes: 68,
-    category: 'Marketing',
-    eta: 'Q4 2026',
-  },
-  {
-    id: '2',
-    title: 'WhatsApp Notifications',
-    description: 'Booking confirmations, payment reminders, and announcements via WhatsApp.',
-    votes: 67,
-    category: 'Integrations',
-    eta: 'Q4 2026',
-  },
-  {
-    id: '3',
-    title: 'AI Marketing - Acquisition',
-    description: 'AI creates and optimizes ad campaigns on Google, Facebook, and Instagram.',
-    votes: 56,
-    category: 'Marketing',
-    eta: '2027',
-  },
-];
-
 export function RoadmapPreviewSection() {
+  const t = useTranslations('roadmapPreview');
   const [votedFeatures, setVotedFeatures] = React.useState<Set<string>>(new Set());
+
+  const topFeatures = [
+    {
+      id: '1',
+      title: t('feature1Title'),
+      description: t('feature1Desc'),
+      votes: 68,
+      category: t('feature1Category'),
+      eta: 'Q4 2026',
+    },
+    {
+      id: '2',
+      title: t('feature2Title'),
+      description: t('feature2Desc'),
+      votes: 67,
+      category: t('feature2Category'),
+      eta: 'Q4 2026',
+    },
+    {
+      id: '3',
+      title: t('feature3Title'),
+      description: t('feature3Desc'),
+      votes: 56,
+      category: t('feature3Category'),
+      eta: '2027',
+    },
+  ];
 
   const handleVote = (featureId: string) => {
     setVotedFeatures((prev) => {
@@ -58,10 +60,10 @@ export function RoadmapPreviewSection() {
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-12">
           <h2 className="font-serif text-h1 text-cream-50">
-            Help Us Decide What&apos;s Next
+            {t('title')}
           </h2>
           <p className="mt-4 text-body-lg text-cream-100">
-            These are the most-requested features. Join the waitlist to vote and influence our roadmap.
+            {t('subtitle')}
           </p>
         </div>
 
@@ -120,7 +122,7 @@ export function RoadmapPreviewSection() {
         <div className="mt-12 text-center">
           <Button asChild size="lg" variant="accent" className="group">
             <Link href="/roadmap">
-              Vote on the Roadmap
+              {t('voteOnRoadmap')}
               <ArrowRight className="h-4 w-4 ml-2 transition-transform group-hover:translate-x-1" />
             </Link>
           </Button>

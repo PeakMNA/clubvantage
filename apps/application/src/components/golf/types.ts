@@ -1,5 +1,11 @@
-import type { FlightStatus } from './flight-status-badge'
-import type { PlayerType } from './player-type-badge'
+import type { TeeTimeStatus, PlayerType, RentalStatus } from '@clubvantage/types'
+
+// Re-export shared types for backward compatibility
+export type { TeeTimeStatus, PlayerType, RentalStatus }
+
+// Backward-compatible aliases
+export type FlightStatus = TeeTimeStatus
+export type BackendPlayerType = PlayerType
 
 // Tee Sheet Booking Mode - controls tee sheet display
 export type BookingMode = 'EIGHTEEN' | 'CROSS'
@@ -27,8 +33,7 @@ export interface BookingGroup {
   holeChoice?: HoleChoice // 9-hole or 18-hole booking
 }
 
-// Rental status options for cart and caddy
-export type RentalStatus = 'none' | 'requested' | 'paid' | 'assigned' | 'returned'
+// RentalStatus imported from @clubvantage/types (NONE, REQUESTED, PAID, ASSIGNED, RETURNED)
 
 export interface Player {
   id: string              // TeeTimePlayer.id (UUID of the player record)
@@ -91,7 +96,7 @@ export interface Course {
   rating: number
   slope: number
   interval?: number // Now configured via Settings tab schedule
-  status: 'active' | 'maintenance' | 'closed'
+  status: 'ACTIVE' | 'MAINTENANCE' | 'CLOSED'
   condition?: string
   firstTeeTime?: string // Now configured via Settings tab schedule
   lastTeeTime?: string // Now configured via Settings tab schedule
@@ -119,7 +124,7 @@ export interface Cart {
   id: string
   number: string
   type: '2-seater' | '4-seater'
-  status: 'available' | 'in-use' | 'maintenance' | 'out-of-service'
+  status: 'AVAILABLE' | 'IN_USE' | 'MAINTENANCE' | 'OUT_OF_SERVICE'
   currentAssignment?: string
   conditionNotes?: string
   lastMaintenance?: string
@@ -129,7 +134,7 @@ export interface Caddy {
   id: string
   name: string
   skillLevel: 'beginner' | 'intermediate' | 'advanced' | 'expert'
-  status: 'available' | 'assigned' | 'off-duty'
+  status: 'AVAILABLE' | 'ASSIGNED' | 'OFF_DUTY'
   experience: number // years
   currentAssignment?: string
   notes?: string
@@ -179,7 +184,7 @@ export interface TeeSheetSideBySide {
 }
 
 // Availability levels for calendar views
-export type AvailabilityLevel = 'open' | 'limited' | 'full' | 'blocked'
+export type AvailabilityLevel = 'OPEN' | 'LIMITED' | 'FULL' | 'BLOCKED'
 
 export interface DayAvailability {
   date: string
@@ -191,7 +196,7 @@ export interface DayAvailability {
 }
 
 // Slot position status for week view
-export type SlotPositionStatus = 'available' | 'occupied' | 'blocked'
+export type SlotPositionStatus = 'AVAILABLE' | 'OCCUPIED' | 'BLOCKED'
 
 export interface TimeSlotOccupancy {
   time: string
@@ -207,13 +212,12 @@ export interface TimeSlotOccupancy {
 export type NineType = 'FRONT' | 'BACK'
 export type PositionStatusType = 'AVAILABLE' | 'BOOKED' | 'BLOCKED'
 
-// Backend player types (uppercase from GraphQL)
-export type BackendPlayerType = 'MEMBER' | 'GUEST' | 'DEPENDENT' | 'WALK_UP'
+// BackendPlayerType aliased to PlayerType from @clubvantage/types
 
 export interface WeekViewPlayer {
   id: string
   name: string
-  type: BackendPlayerType
+  type: PlayerType
   memberId?: string
 }
 
@@ -240,15 +244,10 @@ export interface WeekViewOccupancy {
 // ============================================================================
 
 /**
- * Booking status - independent lifecycle for each booking
+ * Booking status - uses TeeTimeStatus for golf booking lifecycle
+ * BOOKED, CHECKED_IN, STARTED, COMPLETED, CANCELLED, NO_SHOW
  */
-export type BookingStatus =
-  | 'booked'
-  | 'checked-in'
-  | 'on-course'
-  | 'completed'
-  | 'cancelled'
-  | 'no-show'
+export type BookingStatus = TeeTimeStatus
 
 /**
  * Cancellation reason options
@@ -321,7 +320,7 @@ export interface Booking {
   bookerId: string
   bookerName: string
   bookerMemberId?: string
-  bookerType: 'member' | 'staff'
+  bookerType: 'MEMBER' | 'STAFF'
 
   // Players
   players: BookingPlayer[]
@@ -369,7 +368,7 @@ export interface Party {
   totalPlayers: number
 
   // Billing
-  greenFeesPaidBy: 'organizer' | 'individual'
+  greenFeesPaidBy: 'ORGANIZER' | 'INDIVIDUAL'
 
   // Timestamps
   createdAt: string
@@ -379,7 +378,7 @@ export interface Party {
 /**
  * Block type - starter (dynamic) or maintenance (recurring)
  */
-export type BlockType = 'starter' | 'maintenance'
+export type BlockType = 'STARTER' | 'MAINTENANCE'
 
 /**
  * Time slot block (starter or maintenance)
@@ -414,19 +413,19 @@ export interface Block {
  * Audit trail action types
  */
 export type AuditAction =
-  | 'created'
-  | 'modified'
-  | 'cancelled'
-  | 'checked_in'
-  | 'marked_on_course'
-  | 'marked_finished'
-  | 'moved'
-  | 'copied'
-  | 'player_added'
-  | 'player_removed'
-  | 'cart_assigned'
-  | 'caddy_assigned'
-  | 'no_show'
+  | 'CREATED'
+  | 'MODIFIED'
+  | 'CANCELLED'
+  | 'CHECKED_IN'
+  | 'MARKED_ON_COURSE'
+  | 'MARKED_FINISHED'
+  | 'MOVED'
+  | 'COPIED'
+  | 'PLAYER_ADDED'
+  | 'PLAYER_REMOVED'
+  | 'CART_ASSIGNED'
+  | 'CADDY_ASSIGNED'
+  | 'NO_SHOW'
 
 /**
  * Audit trail entry for booking history
@@ -460,7 +459,7 @@ export interface WaitlistEntry {
   createdAt: string
   notifiedAt?: string
   expiredAt?: string
-  status: 'waiting' | 'notified' | 'expired' | 'booked'
+  status: 'WAITING' | 'NOTIFIED' | 'EXPIRED' | 'BOOKED'
 }
 
 /**

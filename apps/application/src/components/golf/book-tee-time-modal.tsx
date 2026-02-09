@@ -119,7 +119,7 @@ export function BookTeeTimeModal({
       return data.data.members.edges.map(({ node }: { node: { id: string; memberId: string; firstName: string; lastName: string; email: string | null; phone: string | null } }) => ({
         id: node.id, // This is the actual UUID
         name: `${node.firstName} ${node.lastName}`,
-        type: 'member' as PlayerType,
+        type: 'MEMBER' as PlayerType,
         phone: node.phone || undefined,
         email: node.email || undefined,
         memberId: node.memberId, // This is the member number like M-0001 (for display)
@@ -210,7 +210,7 @@ export function BookTeeTimeModal({
         {
           id: `walkup-${Date.now()}`,
           name: walkupName.trim(),
-          type: 'walkup',
+          type: 'WALK_UP',
         },
       ])
       setWalkupName('')

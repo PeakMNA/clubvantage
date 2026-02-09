@@ -41,16 +41,20 @@ function formatCurrency(amount: number): string {
 function getBalanceColor(member: Member): string {
   if (member.balance <= 0) return 'text-foreground';
   if (member.status === 'SUSPENDED') return 'text-red-600';
-  if (member.agingBucket === '91+') return 'text-red-600';
+  if (member.agingBucket === 'DAYS_91_PLUS') return 'text-red-600';
   return 'text-amber-600';
 }
 
-const statusMap: Record<MemberStatus, 'active' | 'pending' | 'suspended' | 'inactive' | 'cancelled'> = {
+const statusMap: Record<MemberStatus, string> = {
+  PROSPECT: 'prospect',
+  LEAD: 'lead',
+  APPLICANT: 'applicant',
   ACTIVE: 'active',
-  PENDING: 'pending',
   SUSPENDED: 'suspended',
-  INACTIVE: 'inactive',
-  CANCELLED: 'cancelled',
+  LAPSED: 'lapsed',
+  RESIGNED: 'resigned',
+  TERMINATED: 'terminated',
+  REACTIVATED: 'reactivated',
 };
 
 export function MemberTableRow({
@@ -62,7 +66,7 @@ export function MemberTableRow({
   onChangeStatus,
   onDelete,
 }: MemberTableRowProps) {
-  const isCancelled = member.status === 'CANCELLED';
+  const isCancelled = member.status === 'TERMINATED' || member.status === 'RESIGNED';
 
   const handleRowClick = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;

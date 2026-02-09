@@ -3,11 +3,14 @@
  * Based on PRD spec for comprehensive membership management
  */
 
-// =============================================================================
-// Status Types
-// =============================================================================
+import { MemberStatus, DependentRelationship } from '@clubvantage/types';
 
-export type MemberStatus = 'PENDING' | 'ACTIVE' | 'SUSPENDED' | 'INACTIVE' | 'CANCELLED';
+// Re-export shared types for backwards compat within this module
+export { MemberStatus, DependentRelationship };
+
+// =============================================================================
+// Status Types (local-only, not in packages/types)
+// =============================================================================
 
 export type ApplicationStatus =
   | 'SUBMITTED'
@@ -18,8 +21,6 @@ export type ApplicationStatus =
   | 'WITHDRAWN';
 
 export type DocumentStatus = 'PENDING' | 'VERIFIED' | 'REJECTED';
-
-export type DependentRelationship = 'SPOUSE' | 'CHILD' | 'PARENT' | 'SIBLING';
 
 export type PersonType = 'MEMBER' | 'DEPENDENT' | 'GUEST';
 
@@ -35,7 +36,7 @@ export type UsageType = 'PER_VISIT' | 'PER_BOOKING' | 'PER_HOUR' | 'PER_SESSION'
 
 export type TaxMethod = 'ADD_ON' | 'INCLUDED' | 'EXEMPT';
 
-export type AgingBucket = 'CURRENT' | '30' | '60' | '90' | '91+';
+export type AgingBucket = 'CURRENT' | 'DAYS_30' | 'DAYS_60' | 'DAYS_90' | 'DAYS_91_PLUS';
 
 // =============================================================================
 // Core Entity Types

@@ -293,7 +293,10 @@ function getServerClient(): GraphQLClient {
 
 async function getCurrentMemberId(): Promise<string> {
   const session = await getSession()
-  return session.isLoggedIn ? session.memberId : 'member-placeholder'
+  if (!session.isLoggedIn || !session.memberId) {
+    throw new Error('Not authenticated')
+  }
+  return session.memberId
 }
 
 // ==========================================================================

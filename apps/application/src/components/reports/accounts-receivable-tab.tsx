@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@clubvantage/ui'
 import { Lock, AlertTriangle, Search, MoreHorizontal } from 'lucide-react'
 import { cn } from '@clubvantage/ui'
 
-type AgingStatus = 'current' | '30' | '60' | '90' | 'suspended'
+type AgingStatus = 'CURRENT' | 'DAYS_30' | 'DAYS_60' | 'DAYS_90' | 'SUSPENDED'
 
 interface AgingBucket {
   status: AgingStatus
@@ -44,11 +44,11 @@ interface AccountsReceivableTabProps {
 }
 
 const defaultAgingBuckets: AgingBucket[] = [
-  { status: 'current', label: 'Current (0-30)', amount: 450000, count: 234, percentage: 50 },
-  { status: '30', label: '1-30 Days', amount: 180000, count: 45, percentage: 20 },
-  { status: '60', label: '31-60 Days', amount: 120000, count: 28, percentage: 13 },
-  { status: '90', label: '61-90 Days', amount: 85000, count: 15, percentage: 10 },
-  { status: 'suspended', label: '91+ Suspended', amount: 55000, count: 8, percentage: 7 },
+  { status: 'CURRENT', label: 'Current (0-30)', amount: 450000, count: 234, percentage: 50 },
+  { status: 'DAYS_30', label: '1-30 Days', amount: 180000, count: 45, percentage: 20 },
+  { status: 'DAYS_60', label: '31-60 Days', amount: 120000, count: 28, percentage: 13 },
+  { status: 'DAYS_90', label: '61-90 Days', amount: 85000, count: 15, percentage: 10 },
+  { status: 'SUSPENDED', label: '91+ Suspended', amount: 55000, count: 8, percentage: 7 },
 ]
 
 const defaultMembers: AgingMember[] = [
@@ -60,7 +60,7 @@ const defaultMembers: AgingMember[] = [
     totalDue: 120000,
     oldestInvoice: new Date('2023-09-15'),
     daysOverdue: 125,
-    status: 'suspended',
+    status: 'SUSPENDED',
   },
   {
     id: 'M002',
@@ -70,7 +70,7 @@ const defaultMembers: AgingMember[] = [
     totalDue: 55000,
     oldestInvoice: new Date('2023-11-01'),
     daysOverdue: 78,
-    status: '90',
+    status: 'DAYS_90',
   },
   {
     id: 'M003',
@@ -80,7 +80,7 @@ const defaultMembers: AgingMember[] = [
     totalDue: 32000,
     oldestInvoice: new Date('2023-12-15'),
     daysOverdue: 35,
-    status: '60',
+    status: 'DAYS_60',
   },
   {
     id: 'M004',
@@ -90,25 +90,25 @@ const defaultMembers: AgingMember[] = [
     totalDue: 18000,
     oldestInvoice: new Date('2024-01-05'),
     daysOverdue: 14,
-    status: '30',
+    status: 'DAYS_30',
   },
 ]
 
 const filterConfig = [
   { id: 'all', label: 'All', type: 'toggle' as const },
-  { id: 'current', label: 'Current', type: 'toggle' as const },
-  { id: '30plus', label: '30+', type: 'toggle' as const },
-  { id: '60plus', label: '60+', type: 'toggle' as const },
-  { id: '90plus', label: '90+', type: 'toggle' as const },
-  { id: 'suspended', label: 'Suspended', type: 'toggle' as const },
+  { id: 'CURRENT', label: 'Current', type: 'toggle' as const },
+  { id: 'DAYS_30_PLUS', label: '30+', type: 'toggle' as const },
+  { id: 'DAYS_60_PLUS', label: '60+', type: 'toggle' as const },
+  { id: 'DAYS_90_PLUS', label: '90+', type: 'toggle' as const },
+  { id: 'SUSPENDED', label: 'Suspended', type: 'toggle' as const },
 ]
 
 const statusConfig: Record<AgingStatus, { bg: string; text: string; label: string }> = {
-  current: { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'Current' },
-  '30': { bg: 'bg-amber-100', text: 'text-amber-700', label: '30 Days' },
-  '60': { bg: 'bg-orange-100', text: 'text-orange-700', label: '60 Days' },
-  '90': { bg: 'bg-red-100', text: 'text-red-700', label: '90 Days' },
-  suspended: { bg: 'bg-red-500', text: 'text-white', label: 'Suspended' },
+  CURRENT: { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'Current' },
+  DAYS_30: { bg: 'bg-amber-100', text: 'text-amber-700', label: '30 Days' },
+  DAYS_60: { bg: 'bg-orange-100', text: 'text-orange-700', label: '60 Days' },
+  DAYS_90: { bg: 'bg-red-100', text: 'text-red-700', label: '90 Days' },
+  SUSPENDED: { bg: 'bg-red-500', text: 'text-white', label: 'Suspended' },
 }
 
 function formatCurrency(value: number) {
@@ -130,7 +130,7 @@ function AgingBadge({ status }: { status: AgingStatus }) {
         config.text
       )}
     >
-      {status === 'suspended' && <Lock className="h-3 w-3" />}
+      {status === 'SUSPENDED' && <Lock className="h-3 w-3" />}
       {config.label}
     </span>
   )
@@ -178,17 +178,17 @@ export function AccountsReceivableTab({
             key={bucket.status}
             className={cn(
               'border-l-4',
-              bucket.status === 'current' && 'border-l-emerald-500',
-              bucket.status === '30' && 'border-l-amber-500',
-              bucket.status === '60' && 'border-l-orange-500',
-              bucket.status === '90' && 'border-l-red-500',
-              bucket.status === 'suspended' && 'border-l-red-700'
+              bucket.status === 'CURRENT' && 'border-l-emerald-500',
+              bucket.status === 'DAYS_30' && 'border-l-amber-500',
+              bucket.status === 'DAYS_60' && 'border-l-orange-500',
+              bucket.status === 'DAYS_90' && 'border-l-red-500',
+              bucket.status === 'SUSPENDED' && 'border-l-red-700'
             )}
           >
             <CardContent className="p-4">
               <div className="flex items-center gap-2">
                 <span className="text-sm text-stone-500">{bucket.label}</span>
-                {bucket.status === 'suspended' && <Lock className="h-3 w-3 text-red-500" />}
+                {bucket.status === 'SUSPENDED' && <Lock className="h-3 w-3 text-red-500" />}
               </div>
               <p className="text-2xl font-bold text-stone-900">{formatCurrency(bucket.amount)}</p>
               <p className="text-sm text-stone-500">{bucket.count} invoices</p>
@@ -285,7 +285,7 @@ export function AccountsReceivableTab({
                     key={member.id}
                     className={cn(
                       'border-b border-stone-50 hover:bg-stone-50',
-                      member.status === 'suspended' && 'bg-red-50/50'
+                      member.status === 'SUSPENDED' && 'bg-red-50/50'
                     )}
                   >
                     <td className="py-3">
@@ -331,7 +331,7 @@ export function AccountsReceivableTab({
                             >
                               View Member
                             </button>
-                            {member.status === 'suspended' && canOverrideSuspension && (
+                            {member.status === 'SUSPENDED' && canOverrideSuspension && (
                               <button
                                 onClick={() => {
                                   onOverrideSuspension?.(member.id)

@@ -29,7 +29,7 @@ export function DependentsTab({
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Header Card */}
-      <div className="relative overflow-hidden rounded-2xl border border/60 bg-white/80 shadow-lg shadow-slate-200/30 backdrop-blur-sm">
+      <div className="relative overflow-hidden rounded-2xl border border/60 bg-white/80 dark:bg-stone-900/80 shadow-lg shadow-slate-200/30 dark:shadow-stone-900/30 backdrop-blur-sm">
         <div className="absolute inset-0 bg-gradient-to-br from-muted/50 to-transparent" />
 
         <div className="relative flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
@@ -41,7 +41,7 @@ export function DependentsTab({
               <h2 className="text-lg font-semibold tracking-tight text-foreground">Family Members</h2>
               {maxDependents && (
                 <div className="mt-1 flex items-center gap-2">
-                  <div className="h-1.5 w-24 overflow-hidden rounded-full bg-slate-200">
+                  <div className="h-1.5 w-24 overflow-hidden rounded-full bg-slate-200 dark:bg-stone-700">
                     <div
                       className={cn(
                         'h-full rounded-full transition-all',

@@ -67,42 +67,42 @@ function SearchableMultiSelect({
 
   return (
     <div className="space-y-3">
-      <Label className="text-sm font-semibold text-stone-700">{label}</Label>
+      <Label className="text-sm font-semibold text-stone-700 dark:text-stone-300">{label}</Label>
       <div className="relative">
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
           className={cn(
-            'flex h-10 w-full items-center justify-between rounded-md border border-stone-200 bg-white px-3 py-2 text-sm transition-colors',
-            'hover:border-stone-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20',
+            'flex h-10 w-full items-center justify-between rounded-md border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 px-3 py-2 text-sm transition-colors',
+            'hover:border-stone-300 dark:hover:border-stone-600 focus:outline-none focus:ring-2 focus:ring-amber-500/20',
             isOpen && 'border-amber-500 ring-2 ring-amber-500/20'
           )}
         >
-          <span className={cn(selectedCount === 0 && 'text-stone-400')}>
+          <span className={cn(selectedCount === 0 && 'text-stone-400 dark:text-stone-500')}>
             {selectedCount === 0
               ? `Select ${label.toLowerCase()}...`
               : `${selectedCount} selected`}
           </span>
           <ChevronDown
             className={cn(
-              'h-4 w-4 text-stone-400 transition-transform',
+              'h-4 w-4 text-stone-400 dark:text-stone-500 transition-transform',
               isOpen && 'rotate-180'
             )}
           />
         </button>
 
         {isOpen && (
-          <div className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-md border border-stone-200 bg-white shadow-lg">
+          <div className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-md border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 shadow-lg">
             {/* Search input */}
-            <div className="border-b border-stone-100 p-2">
+            <div className="border-b border-stone-100 dark:border-stone-700 p-2">
               <div className="relative">
-                <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
+                <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400 dark:text-stone-500" />
                 <input
                   type="text"
                   placeholder={placeholder}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="h-8 w-full rounded border border-stone-200 bg-stone-50 pl-8 pr-3 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                  className="h-8 w-full rounded border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 pl-8 pr-3 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
                 />
               </div>
             </div>
@@ -110,7 +110,7 @@ function SearchableMultiSelect({
             {/* Options list */}
             <div className="max-h-48 overflow-y-auto p-1">
               {filteredOptions.length === 0 ? (
-                <div className="px-3 py-4 text-center text-sm text-stone-500">
+                <div className="px-3 py-4 text-center text-sm text-stone-500 dark:text-stone-400">
                   No options found
                 </div>
               ) : (
@@ -124,8 +124,8 @@ function SearchableMultiSelect({
                       className={cn(
                         'flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm transition-colors',
                         isSelected
-                          ? 'bg-amber-50 text-amber-700'
-                          : 'hover:bg-stone-50'
+                          ? 'bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400'
+                          : 'hover:bg-stone-50 dark:hover:bg-stone-800'
                       )}
                     >
                       <div
@@ -140,7 +140,7 @@ function SearchableMultiSelect({
                       </div>
                       <span className="flex-1 truncate">{option.name}</span>
                       {option.code && (
-                        <span className="text-xs text-stone-400">
+                        <span className="text-xs text-stone-400 dark:text-stone-500">
                           {option.code}
                         </span>
                       )}
@@ -152,14 +152,14 @@ function SearchableMultiSelect({
 
             {/* Clear selection */}
             {selectedCount > 0 && (
-              <div className="border-t border-stone-100 p-2">
+              <div className="border-t border-stone-100 dark:border-stone-700 p-2">
                 <button
                   type="button"
                   onClick={() => {
                     onChange([]);
                     setSearchQuery('');
                   }}
-                  className="w-full rounded px-3 py-1.5 text-sm text-stone-500 hover:bg-stone-50 hover:text-stone-700"
+                  className="w-full rounded px-3 py-1.5 text-sm text-stone-500 dark:text-stone-400 hover:bg-stone-50 dark:hover:bg-stone-800 hover:text-stone-700 dark:hover:text-stone-300"
                 >
                   Clear selection
                 </button>
@@ -174,10 +174,12 @@ function SearchableMultiSelect({
 
 const statusOptions: { value: MemberStatus; label: string }[] = [
   { value: 'ACTIVE', label: 'Active' },
-  { value: 'PENDING', label: 'Pending' },
+  { value: 'PROSPECT', label: 'Prospect' },
+  { value: 'APPLICANT', label: 'Applicant' },
   { value: 'SUSPENDED', label: 'Suspended' },
-  { value: 'INACTIVE', label: 'Inactive' },
-  { value: 'CANCELLED', label: 'Cancelled' },
+  { value: 'LAPSED', label: 'Lapsed' },
+  { value: 'RESIGNED', label: 'Resigned' },
+  { value: 'TERMINATED', label: 'Terminated' },
 ];
 
 const membershipTypeOptions = [
@@ -187,11 +189,11 @@ const membershipTypeOptions = [
 ];
 
 const agingBucketOptions = [
-  { value: 'current', label: 'Current' },
-  { value: '30', label: '30 days' },
-  { value: '60', label: '60 days' },
-  { value: '90', label: '90 days' },
-  { value: '91+', label: '91+ days' },
+  { value: 'CURRENT', label: 'Current' },
+  { value: 'DAYS_30', label: '30 days' },
+  { value: 'DAYS_60', label: '60 days' },
+  { value: 'DAYS_90', label: '90 days' },
+  { value: 'DAYS_91_PLUS', label: '91+ days' },
 ];
 
 const datePresets = [
@@ -318,7 +320,7 @@ export function AdvancedFiltersPanel({
         <div className="space-y-6">
           {/* Status */}
           <div className="space-y-3">
-            <Label className="text-sm font-semibold text-stone-700">Status</Label>
+            <Label className="text-sm font-semibold text-stone-700 dark:text-stone-300">Status</Label>
             <div className="space-y-2">
               {statusOptions.map((option) => (
                 <div key={option.value} className="flex items-center space-x-2">
@@ -342,7 +344,7 @@ export function AdvancedFiltersPanel({
 
           {/* Membership Type */}
           <div className="space-y-3">
-            <Label className="text-sm font-semibold text-stone-700">
+            <Label className="text-sm font-semibold text-stone-700 dark:text-stone-300">
               Membership Type
             </Label>
             <div className="space-y-2">
@@ -392,7 +394,7 @@ export function AdvancedFiltersPanel({
 
           {/* Join Date Range */}
           <div className="space-y-3">
-            <Label className="text-sm font-semibold text-stone-700">
+            <Label className="text-sm font-semibold text-stone-700 dark:text-stone-300">
               Join Date Range
             </Label>
             <div className="flex flex-wrap gap-2">
@@ -405,7 +407,7 @@ export function AdvancedFiltersPanel({
                     'rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
                     datePreset === preset.value
                       ? 'bg-amber-500 text-white'
-                      : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
+                      : 'bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700'
                   )}
                 >
                   {preset.label}
@@ -414,7 +416,7 @@ export function AdvancedFiltersPanel({
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label className="text-xs text-stone-500">From</Label>
+                <Label className="text-xs text-stone-500 dark:text-stone-400">From</Label>
                 <Input
                   type="date"
                   value={localFilters.joinDateFrom || ''}
@@ -429,7 +431,7 @@ export function AdvancedFiltersPanel({
                 />
               </div>
               <div>
-                <Label className="text-xs text-stone-500">To</Label>
+                <Label className="text-xs text-stone-500 dark:text-stone-400">To</Label>
                 <Input
                   type="date"
                   value={localFilters.joinDateTo || ''}
@@ -448,12 +450,12 @@ export function AdvancedFiltersPanel({
 
           {/* Balance Range */}
           <div className="space-y-3">
-            <Label className="text-sm font-semibold text-stone-700">
+            <Label className="text-sm font-semibold text-stone-700 dark:text-stone-300">
               Balance Range
             </Label>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label className="text-xs text-stone-500">Min Balance</Label>
+                <Label className="text-xs text-stone-500 dark:text-stone-400">Min Balance</Label>
                 <Input
                   type="number"
                   placeholder="0"
@@ -468,7 +470,7 @@ export function AdvancedFiltersPanel({
                 />
               </div>
               <div>
-                <Label className="text-xs text-stone-500">Max Balance</Label>
+                <Label className="text-xs text-stone-500 dark:text-stone-400">Max Balance</Label>
                 <Input
                   type="number"
                   placeholder="No limit"
@@ -487,7 +489,7 @@ export function AdvancedFiltersPanel({
 
           {/* Aging Bucket */}
           <div className="space-y-3">
-            <Label className="text-sm font-semibold text-stone-700">
+            <Label className="text-sm font-semibold text-stone-700 dark:text-stone-300">
               Aging Bucket
             </Label>
             <div className="space-y-2">
@@ -515,7 +517,7 @@ export function AdvancedFiltersPanel({
 
           {/* Phone Number */}
           <div className="space-y-3">
-            <Label className="text-sm font-semibold text-stone-700">
+            <Label className="text-sm font-semibold text-stone-700 dark:text-stone-300">
               Phone Number
             </Label>
             <Input
@@ -536,7 +538,7 @@ export function AdvancedFiltersPanel({
           <Button
             variant="ghost"
             onClick={handleClearAll}
-            className="text-stone-500 hover:text-stone-700"
+            className="text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-300"
           >
             Clear All
           </Button>

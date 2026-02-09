@@ -1,4 +1,4 @@
-import { InputType, Field, ID, ArgsType, Float } from '@nestjs/graphql';
+import { InputType, Field, ID, ArgsType, Float, Int } from '@nestjs/graphql';
 import {
   IsOptional,
   IsString,
@@ -8,10 +8,12 @@ import {
   IsArray,
   ValidateNested,
   Min,
+  Max,
   IsDate,
+  IsBoolean,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { InvoiceStatus, PaymentMethod, CreditNoteType, CreditNoteReason, CreditNoteStatus, ArAccountType } from './billing.types';
+import { InvoiceStatus, PaymentMethod, CreditNoteType, CreditNoteReason, CreditNoteStatus, ArAccountType, ARCycleType, ARCloseBehavior } from './billing.types';
 import { PaginationArgs } from '../common/pagination';
 
 @InputType()
@@ -383,4 +385,37 @@ export class GenerateStatementInput {
   @Type(() => Date)
   @IsDate()
   endDate: Date;
+}
+
+// AR Period Settings Input
+@InputType()
+export class UpdateARSettingsInput {
+  @Field(() => ARCycleType, { nullable: true })
+  @IsOptional()
+  @IsEnum(ARCycleType)
+  arCycleType?: ARCycleType;
+
+  @Field(() => Int, { nullable: true })
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  @Max(28)
+  arCustomCycleStartDay?: number;
+
+  @Field(() => Int, { nullable: true })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(15)
+  arCutoffDays?: number;
+
+  @Field(() => ARCloseBehavior, { nullable: true })
+  @IsOptional()
+  @IsEnum(ARCloseBehavior)
+  arCloseBehavior?: ARCloseBehavior;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsBoolean()
+  arAutoGenerateNext?: boolean;
 }

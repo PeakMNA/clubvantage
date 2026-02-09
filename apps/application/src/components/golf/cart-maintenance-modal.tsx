@@ -9,7 +9,7 @@ import type { Cart } from './types'
 type MaintenanceType = 'routine' | 'repair' | 'inspection' | 'battery' | 'tire' | 'cleaning'
 type Priority = 'low' | 'medium' | 'high' | 'urgent'
 type Recurrence = 'one-time' | 'weekly' | 'bi-weekly' | 'monthly' | 'quarterly'
-type MaintenanceStatus = 'scheduled' | 'in-progress' | 'completed' | 'cancelled'
+type MaintenanceStatus = 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
 
 interface MaintenanceItem {
   id: string
@@ -43,10 +43,10 @@ export interface CartMaintenanceModalProps {
 
 function CartStatusBadge({ status }: { status: Cart['status'] }) {
   const config = {
-    available: { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'Available' },
-    'in-use': { bg: 'bg-blue-100', text: 'text-blue-700', label: 'In Use' },
-    maintenance: { bg: 'bg-amber-100', text: 'text-amber-700', label: 'Maintenance' },
-    'out-of-service': { bg: 'bg-red-100', text: 'text-red-700', label: 'Out of Service' },
+    AVAILABLE: { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'Available' },
+    IN_USE: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'In Use' },
+    MAINTENANCE: { bg: 'bg-amber-100', text: 'text-amber-700', label: 'Maintenance' },
+    OUT_OF_SERVICE: { bg: 'bg-red-100', text: 'text-red-700', label: 'Out of Service' },
   }[status]
 
   return (

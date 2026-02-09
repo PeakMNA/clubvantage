@@ -259,7 +259,7 @@ export function BookingContextMenu({
   onAction,
 }: BookingContextMenuProps) {
   // Determine if check-in should be shown based on booking status
-  const canCheckIn = bookingStatus === 'booked'
+  const canCheckIn = bookingStatus === 'BOOKED'
 
   const items: MenuItem[] = [
     {

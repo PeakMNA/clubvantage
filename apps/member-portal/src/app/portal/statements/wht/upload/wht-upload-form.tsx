@@ -115,11 +115,11 @@ export function WHTUploadForm({ invoices }: WHTUploadFormProps) {
   if (isSuccess) {
     return (
       <div className="flex flex-col items-center text-center py-16 space-y-4">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50">
-          <CheckCircle2 className="h-8 w-8 text-emerald-600" />
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-500/20">
+          <CheckCircle2 className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
         </div>
-        <p className="text-lg font-semibold text-stone-900">Certificate Submitted</p>
-        <p className="text-sm text-stone-500">Your WHT certificate is being reviewed.</p>
+        <p className="text-lg font-semibold text-stone-900 dark:text-stone-100">Certificate Submitted</p>
+        <p className="text-sm text-stone-500 dark:text-stone-400">Your WHT certificate is being reviewed.</p>
       </div>
     )
   }
@@ -130,41 +130,41 @@ export function WHTUploadForm({ invoices }: WHTUploadFormProps) {
       <div className="flex items-center gap-3">
         <Link
           href="/portal/statements/wht"
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-stone-100 active:bg-stone-200 transition-colors"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-stone-100 dark:bg-stone-800 active:bg-stone-200 dark:active:bg-stone-700 transition-colors"
         >
-          <ArrowLeft className="h-5 w-5 text-stone-600" />
+          <ArrowLeft className="h-5 w-5 text-stone-600 dark:text-stone-400" />
         </Link>
-        <h1 className="text-[22px] font-semibold text-stone-900">Upload WHT Certificate</h1>
+        <h1 className="text-[22px] font-semibold text-stone-900 dark:text-stone-100">Upload WHT Certificate</h1>
       </div>
 
       {/* Certificate Number */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-stone-700">Certificate Number</label>
+        <label className="text-sm font-medium text-stone-700 dark:text-stone-300">Certificate Number</label>
         <input
           type="text"
           value={certificateNumber}
           onChange={(e) => setCertificateNumber(e.target.value)}
           placeholder="e.g. WHT-2026-001"
-          className="w-full rounded-xl border border-stone-200 bg-white py-3 px-4 text-[15px] text-stone-900 placeholder:text-stone-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+          className="w-full rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 py-3 px-4 text-[15px] text-stone-900 dark:text-stone-100 placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
         />
       </div>
 
       {/* Certificate Date */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-stone-700">Certificate Date</label>
+        <label className="text-sm font-medium text-stone-700 dark:text-stone-300">Certificate Date</label>
         <input
           type="date"
           value={certificateDate}
           onChange={(e) => setCertificateDate(e.target.value)}
-          className="w-full rounded-xl border border-stone-200 bg-white py-3 px-4 text-[15px] text-stone-900 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+          className="w-full rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 py-3 px-4 text-[15px] text-stone-900 dark:text-stone-100 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
         />
       </div>
 
       {/* WHT Amount */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-stone-700">WHT Amount</label>
+        <label className="text-sm font-medium text-stone-700 dark:text-stone-300">WHT Amount</label>
         <div className="relative">
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-medium text-stone-500">
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-medium text-stone-500 dark:text-stone-400">
             ฿
           </span>
           <input
@@ -174,14 +174,14 @@ export function WHTUploadForm({ invoices }: WHTUploadFormProps) {
             min={1}
             step={0.01}
             placeholder="0.00"
-            className="w-full rounded-xl border border-stone-200 bg-white py-3 pl-8 pr-4 text-lg font-semibold text-stone-900 placeholder:text-stone-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+            className="w-full rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 py-3 pl-8 pr-4 text-lg font-semibold text-stone-900 dark:text-stone-100 placeholder:text-stone-400 dark:placeholder:text-stone-500 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
           />
         </div>
       </div>
 
       {/* File Upload */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-stone-700">Document</label>
+        <label className="text-sm font-medium text-stone-700 dark:text-stone-300">Document</label>
         <input
           ref={fileInputRef}
           type="file"
@@ -190,29 +190,29 @@ export function WHTUploadForm({ invoices }: WHTUploadFormProps) {
           className="hidden"
         />
         {file ? (
-          <div className="flex items-center gap-3 rounded-xl border border-stone-200 bg-stone-50 p-3">
-            <FileText className="h-5 w-5 text-stone-500 flex-shrink-0" />
+          <div className="flex items-center gap-3 rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 p-3">
+            <FileText className="h-5 w-5 text-stone-500 dark:text-stone-400 flex-shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-stone-900 truncate">{file.name}</p>
-              <p className="text-xs text-stone-500">{(file.size / 1024).toFixed(0)} KB</p>
+              <p className="text-sm font-medium text-stone-900 dark:text-stone-100 truncate">{file.name}</p>
+              <p className="text-xs text-stone-500 dark:text-stone-400">{(file.size / 1024).toFixed(0)} KB</p>
             </div>
             <button
               type="button"
               onClick={() => { setFile(null); if (fileInputRef.current) fileInputRef.current.value = '' }}
-              className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-stone-200"
+              className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-stone-200 dark:hover:bg-stone-700"
             >
-              <X className="h-4 w-4 text-stone-500" />
+              <X className="h-4 w-4 text-stone-500 dark:text-stone-400" />
             </button>
           </div>
         ) : (
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="flex flex-col items-center gap-2 w-full py-6 rounded-xl border-2 border-dashed border-stone-200 text-stone-500 active:bg-stone-50 transition-colors"
+            className="flex flex-col items-center gap-2 w-full py-6 rounded-xl border-2 border-dashed border-stone-200 dark:border-stone-700 text-stone-500 dark:text-stone-400 active:bg-stone-50 dark:active:bg-stone-800 transition-colors"
           >
             <Upload className="h-6 w-6" />
             <span className="text-sm font-medium">Browse or Drag & Drop</span>
-            <span className="text-xs text-stone-400">PDF, JPG, PNG (max 10MB)</span>
+            <span className="text-xs text-stone-400 dark:text-stone-500">PDF, JPG, PNG (max 10MB)</span>
           </button>
         )}
       </div>
@@ -220,7 +220,7 @@ export function WHTUploadForm({ invoices }: WHTUploadFormProps) {
       {/* Apply to Invoice */}
       {invoices.length > 0 && (
         <div className="space-y-2">
-          <label className="text-sm font-medium text-stone-700">Apply to Invoice (optional)</label>
+          <label className="text-sm font-medium text-stone-700 dark:text-stone-300">Apply to Invoice (optional)</label>
           <div className="space-y-2">
             {invoices.map((inv) => (
               <button
@@ -230,17 +230,17 @@ export function WHTUploadForm({ invoices }: WHTUploadFormProps) {
                 className={cn(
                   'flex items-center justify-between w-full rounded-xl border p-3 text-left transition-colors',
                   selectedInvoiceId === inv.id
-                    ? 'border-amber-500 bg-amber-50'
-                    : 'border-stone-200 bg-white active:bg-stone-50'
+                    ? 'border-amber-500 bg-amber-50 dark:bg-amber-500/20'
+                    : 'border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 active:bg-stone-50 dark:active:bg-stone-800'
                 )}
               >
                 <div>
-                  <p className="text-sm font-medium text-stone-900">{inv.invoiceNumber}</p>
-                  <p className="text-xs text-stone-500">
+                  <p className="text-sm font-medium text-stone-900 dark:text-stone-100">{inv.invoiceNumber}</p>
+                  <p className="text-xs text-stone-500 dark:text-stone-400">
                     Due: {new Date(inv.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </p>
                 </div>
-                <p className="text-sm font-semibold text-stone-900">
+                <p className="text-sm font-semibold text-stone-900 dark:text-stone-100">
                   ฿{inv.amount.toLocaleString()}
                 </p>
               </button>
@@ -251,7 +251,7 @@ export function WHTUploadForm({ invoices }: WHTUploadFormProps) {
 
       {/* Error */}
       {error && (
-        <div className="rounded-xl bg-red-50 p-3 text-sm text-red-700">
+        <div className="rounded-xl bg-red-50 dark:bg-red-500/20 p-3 text-sm text-red-700 dark:text-red-400">
           {error}
         </div>
       )}
@@ -263,7 +263,7 @@ export function WHTUploadForm({ invoices }: WHTUploadFormProps) {
         className={cn(
           'w-full rounded-xl px-5 py-3.5 text-sm font-semibold text-white transition-colors',
           isSubmitting
-            ? 'bg-stone-400 cursor-not-allowed'
+            ? 'bg-stone-400 dark:bg-stone-600 cursor-not-allowed'
             : 'bg-amber-600 active:bg-amber-700'
         )}
       >

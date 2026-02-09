@@ -13,14 +13,14 @@ interface CaddiesTabProps {
   onViewSchedule: (caddy: Caddy) => void
 }
 
-type FilterStatus = 'all' | 'available' | 'assigned' | 'off-duty'
+type FilterStatus = 'all' | 'AVAILABLE' | 'ASSIGNED' | 'OFF_DUTY'
 type FilterSkill = 'all' | 'beginner' | 'intermediate' | 'advanced' | 'expert'
 
 function CaddyStatusBadge({ status }: { status: Caddy['status'] }) {
   const config = {
-    available: { bg: 'bg-emerald-50 dark:bg-emerald-500/20 border-emerald-200/60 dark:border-emerald-500/30', text: 'text-emerald-700 dark:text-emerald-400', label: 'Available' },
-    assigned: { bg: 'bg-blue-50 dark:bg-blue-500/20 border-blue-200/60 dark:border-blue-500/30', text: 'text-blue-700 dark:text-blue-400', label: 'Assigned' },
-    'off-duty': { bg: 'bg-amber-50 dark:bg-amber-500/20 border-amber-200/60 dark:border-amber-500/30', text: 'text-amber-700 dark:text-amber-400', label: 'Off Duty' },
+    AVAILABLE: { bg: 'bg-emerald-50 dark:bg-emerald-500/20 border-emerald-200/60 dark:border-emerald-500/30', text: 'text-emerald-700 dark:text-emerald-400', label: 'Available' },
+    ASSIGNED: { bg: 'bg-blue-50 dark:bg-blue-500/20 border-blue-200/60 dark:border-blue-500/30', text: 'text-blue-700 dark:text-blue-400', label: 'Assigned' },
+    OFF_DUTY: { bg: 'bg-amber-50 dark:bg-amber-500/20 border-amber-200/60 dark:border-amber-500/30', text: 'text-amber-700 dark:text-amber-400', label: 'Off Duty' },
   }[status]
 
   return (
@@ -65,9 +65,9 @@ function CaddyCard({
       {/* Accent line - color based on status */}
       <div className={cn(
         'absolute left-0 top-0 h-1 w-full',
-        caddy.status === 'available' && 'bg-gradient-to-r from-emerald-300 via-emerald-500 to-emerald-300',
-        caddy.status === 'assigned' && 'bg-gradient-to-r from-blue-300 via-blue-500 to-blue-300',
-        caddy.status === 'off-duty' && 'bg-gradient-to-r from-amber-300 via-amber-500 to-amber-300'
+        caddy.status === 'AVAILABLE' && 'bg-gradient-to-r from-emerald-300 via-emerald-500 to-emerald-300',
+        caddy.status === 'ASSIGNED' && 'bg-gradient-to-r from-blue-300 via-blue-500 to-blue-300',
+        caddy.status === 'OFF_DUTY' && 'bg-gradient-to-r from-amber-300 via-amber-500 to-amber-300'
       )} />
 
       <div className="relative p-4 sm:p-5">
@@ -76,15 +76,15 @@ function CaddyCard({
           <div className="flex items-center gap-3">
             <div className={cn(
               'flex h-10 w-10 items-center justify-center rounded-xl shadow-inner',
-              caddy.status === 'available' && 'bg-gradient-to-br from-emerald-100 to-emerald-200/50',
-              caddy.status === 'assigned' && 'bg-gradient-to-br from-blue-100 to-blue-200/50',
-              caddy.status === 'off-duty' && 'bg-gradient-to-br from-amber-100 to-amber-200/50'
+              caddy.status === 'AVAILABLE' && 'bg-gradient-to-br from-emerald-100 to-emerald-200/50',
+              caddy.status === 'ASSIGNED' && 'bg-gradient-to-br from-blue-100 to-blue-200/50',
+              caddy.status === 'OFF_DUTY' && 'bg-gradient-to-br from-amber-100 to-amber-200/50'
             )}>
               <User className={cn(
                 'h-5 w-5',
-                caddy.status === 'available' && 'text-emerald-600',
-                caddy.status === 'assigned' && 'text-blue-600',
-                caddy.status === 'off-duty' && 'text-amber-600'
+                caddy.status === 'AVAILABLE' && 'text-emerald-600',
+                caddy.status === 'ASSIGNED' && 'text-blue-600',
+                caddy.status === 'OFF_DUTY' && 'text-amber-600'
               )} />
             </div>
             <div>
@@ -97,7 +97,7 @@ function CaddyCard({
 
         {/* Details */}
         <div className="space-y-3 mb-4">
-          {caddy.status === 'assigned' && caddy.currentAssignment && (
+          {caddy.status === 'ASSIGNED' && caddy.currentAssignment && (
             <p className="text-sm text-blue-600 dark:text-blue-400 font-medium bg-blue-50/80 dark:bg-blue-500/10 px-3 py-2 rounded-lg border border-blue-100 dark:border-blue-500/30">
               Flight: {caddy.currentAssignment}
             </p>
@@ -172,20 +172,20 @@ export function CaddiesTab({
     return matchesStatus && matchesSkill
   })
 
-  const availableCount = caddies.filter((c) => c.status === 'available').length
+  const availableCount = caddies.filter((c) => c.status === 'AVAILABLE').length
 
   const statusCounts = {
     all: caddies.length,
-    available: caddies.filter((c) => c.status === 'available').length,
-    assigned: caddies.filter((c) => c.status === 'assigned').length,
-    'off-duty': caddies.filter((c) => c.status === 'off-duty').length,
+    AVAILABLE: caddies.filter((c) => c.status === 'AVAILABLE').length,
+    ASSIGNED: caddies.filter((c) => c.status === 'ASSIGNED').length,
+    OFF_DUTY: caddies.filter((c) => c.status === 'OFF_DUTY').length,
   }
 
   const statusFilters: { id: FilterStatus; label: string }[] = [
     { id: 'all', label: 'All' },
-    { id: 'available', label: 'Available' },
-    { id: 'assigned', label: 'Assigned' },
-    { id: 'off-duty', label: 'Off Duty' },
+    { id: 'AVAILABLE', label: 'Available' },
+    { id: 'ASSIGNED', label: 'Assigned' },
+    { id: 'OFF_DUTY', label: 'Off Duty' },
   ]
 
   const skillFilters: { id: FilterSkill; label: string }[] = [

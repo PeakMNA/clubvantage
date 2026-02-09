@@ -2,7 +2,7 @@
 
 import { cn } from '@clubvantage/ui'
 
-export type PlayerBlockStatus = 'available' | 'booked' | 'blocked'
+export type PlayerBlockStatus = 'AVAILABLE' | 'BOOKED' | 'BLOCKED'
 export type PlayerBlockType = 'M' | 'G' | 'D' | 'W'
 
 interface PlayerBlockProps {
@@ -17,9 +17,9 @@ interface PlayerBlockProps {
 }
 
 const statusStyles: Record<PlayerBlockStatus, string> = {
-  available: 'bg-stone-100 hover:bg-stone-200 border-stone-200',
-  booked: 'border-transparent',
-  blocked: 'bg-gray-200 cursor-not-allowed',
+  AVAILABLE: 'bg-stone-100 hover:bg-stone-200 border-stone-200',
+  BOOKED: 'border-transparent',
+  BLOCKED: 'bg-gray-200 cursor-not-allowed',
 }
 
 const playerTypeStyles: Record<PlayerBlockType, string> = {
@@ -45,28 +45,28 @@ export function PlayerBlock({
   className,
   asDiv = false,
 }: PlayerBlockProps) {
-  const isClickable = status !== 'blocked' && !disabled && onClick
+  const isClickable = status !== 'BLOCKED' && !disabled && onClick
 
   const sharedProps = {
-    title: status === 'booked' && playerType
+    title: status === 'BOOKED' && playerType
       ? playerTypeLabels[playerType]
-      : status === 'available'
+      : status === 'AVAILABLE'
         ? 'Available - Click to book'
         : 'Blocked',
     className: cn(
       'w-5 h-5 rounded-sm border text-[9px] font-semibold flex items-center justify-center',
       'transition-all duration-150',
       statusStyles[status],
-      status === 'booked' && playerType && playerTypeStyles[playerType],
-      status === 'booked' && 'text-white',
-      status === 'blocked' && 'bg-[repeating-linear-gradient(45deg,transparent,transparent_2px,rgba(0,0,0,0.05)_2px,rgba(0,0,0,0.05)_4px)]',
+      status === 'BOOKED' && playerType && playerTypeStyles[playerType],
+      status === 'BOOKED' && 'text-white',
+      status === 'BLOCKED' && 'bg-[repeating-linear-gradient(45deg,transparent,transparent_2px,rgba(0,0,0,0.05)_2px,rgba(0,0,0,0.05)_4px)]',
       isClickable && 'cursor-pointer',
       isHighlighted && 'ring-2 ring-amber-400 ring-offset-1',
       className
     ),
   }
 
-  const content = status === 'booked' && playerType && playerType
+  const content = status === 'BOOKED' && playerType && playerType
 
   // Render as div when used inside a PopoverTrigger (to avoid button nesting)
   if (asDiv) {
@@ -81,7 +81,7 @@ export function PlayerBlock({
     <button
       type="button"
       onClick={isClickable ? onClick : undefined}
-      disabled={status === 'blocked' || disabled}
+      disabled={status === 'BLOCKED' || disabled}
       {...sharedProps}
     >
       {content}
@@ -98,17 +98,17 @@ export function PlayerBlockCompact({
   disabled = false,
   className,
 }: PlayerBlockProps) {
-  const isClickable = status !== 'blocked' && !disabled && onClick
+  const isClickable = status !== 'BLOCKED' && !disabled && onClick
 
   return (
     <button
       type="button"
       onClick={isClickable ? onClick : undefined}
-      disabled={status === 'blocked' || disabled}
+      disabled={status === 'BLOCKED' || disabled}
       title={
-        status === 'booked' && playerType
+        status === 'BOOKED' && playerType
           ? playerTypeLabels[playerType]
-          : status === 'available'
+          : status === 'AVAILABLE'
             ? 'Available'
             : 'Blocked'
       }
@@ -116,15 +116,15 @@ export function PlayerBlockCompact({
         'w-4 h-4 rounded-[2px] border text-[8px] font-bold flex items-center justify-center',
         'transition-all duration-100',
         statusStyles[status],
-        status === 'booked' && playerType && playerTypeStyles[playerType],
-        status === 'booked' && 'text-white',
-        status === 'blocked' && 'bg-[repeating-linear-gradient(45deg,transparent,transparent_2px,rgba(0,0,0,0.05)_2px,rgba(0,0,0,0.05)_4px)]',
+        status === 'BOOKED' && playerType && playerTypeStyles[playerType],
+        status === 'BOOKED' && 'text-white',
+        status === 'BLOCKED' && 'bg-[repeating-linear-gradient(45deg,transparent,transparent_2px,rgba(0,0,0,0.05)_2px,rgba(0,0,0,0.05)_4px)]',
         isClickable && 'cursor-pointer hover:scale-110',
         isHighlighted && 'ring-2 ring-amber-400 ring-offset-1',
         className
       )}
     >
-      {status === 'booked' && playerType && playerType}
+      {status === 'BOOKED' && playerType && playerType}
     </button>
   )
 }
@@ -154,7 +154,7 @@ export function PlayerBlockGroup({
 
   // Ensure we always have 4 positions
   const normalizedPositions = Array.from({ length: 4 }, (_, i) =>
-    positions[i] || { status: 'available' as const }
+    positions[i] || { status: 'AVAILABLE' as const }
   )
 
   return (

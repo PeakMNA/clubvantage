@@ -1,38 +1,41 @@
 'use client';
 
 import * as React from 'react';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Play, Sparkles } from 'lucide-react';
 
-const stats = [
-  { value: '50', label: 'Founding Spots', suffix: '' },
-  { value: '12', label: 'Members Joined', suffix: '' },
-  { value: '50', label: 'Lifetime Discount', suffix: '%' },
-];
-
-const benefits = [
-  {
-    number: '01',
-    title: 'Shape the Product',
-    description: 'Direct influence on features, priorities, and the roadmap that matters to you.',
-  },
-  {
-    number: '02',
-    title: 'Early Access',
-    description: 'Be among the first to experience new capabilities before public release.',
-  },
-  {
-    number: '03',
-    title: 'Founder Pricing',
-    description: 'Lock in exclusive lifetime pricing as a founding member.',
-  },
-];
-
 export function EarlyAccessHero() {
+  const t = useTranslations('hero');
+  const tc = useTranslations('common');
   const [mousePosition, setMousePosition] = React.useState({ x: 0, y: 0 });
   const heroRef = React.useRef<HTMLElement>(null);
+
+  const stats = [
+    { value: '50', label: t('foundingSpots'), suffix: '' },
+    { value: '12', label: t('membersJoined'), suffix: '' },
+    { value: '50', label: t('lifetimeDiscount'), suffix: '%' },
+  ];
+
+  const benefits = [
+    {
+      number: '01',
+      title: t('shapeTheProduct'),
+      description: t('shapeDescription'),
+    },
+    {
+      number: '02',
+      title: t('earlyAccess'),
+      description: t('earlyAccessDescription'),
+    },
+    {
+      number: '03',
+      title: t('founderPricing'),
+      description: t('founderPricingDescription'),
+    },
+  ];
 
   // Subtle parallax effect on mouse move
   React.useEffect(() => {
@@ -115,18 +118,18 @@ export function EarlyAccessHero() {
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-accent-400" />
               </span>
               <span className="text-label uppercase tracking-widest text-cream-100">
-                Now Accepting Founding Members
+                {t('nowAccepting')}
               </span>
             </div>
 
             {/* Editorial headline with staggered animation */}
             <h1 className="font-serif text-display-xl text-cream-50 leading-[0.95] tracking-tight">
               <span className="block opacity-0 animate-fade-up fill-forwards" style={{ animationDelay: '100ms' }}>
-                The Future of
+                {t('theFutureOf')}
               </span>
               <span className="block opacity-0 animate-fade-up fill-forwards" style={{ animationDelay: '200ms' }}>
                 <span className="relative">
-                  <span className="text-accent-300">Club Management</span>
+                  <span className="text-accent-300">{t('clubManagement')}</span>
                   {/* Decorative underline */}
                   <svg
                     className="absolute -bottom-2 left-0 w-full h-3 text-accent-400/30"
@@ -145,14 +148,13 @@ export function EarlyAccessHero() {
                 </span>
               </span>
               <span className="block opacity-0 animate-fade-up fill-forwards" style={{ animationDelay: '300ms' }}>
-                Starts Here
+                {t('startsHere')}
               </span>
             </h1>
 
             {/* Subheadline */}
             <p className="mt-10 text-body-xl text-cream-100 max-w-xl leading-relaxed opacity-0 animate-fade-up fill-forwards" style={{ animationDelay: '400ms' }}>
-              AI-first platform for golf clubs, fitness centers, and recreational facilities across Southeast Asia.
-              Join our founding members to shape what we build.
+              {t('subheadline')}
             </p>
 
             {/* CTA buttons */}
@@ -160,14 +162,14 @@ export function EarlyAccessHero() {
               <Button asChild size="lg" className="group pulse-glow">
                 <Link href="/waitlist">
                   <Sparkles className="h-4 w-4 mr-2 transition-all duration-300 group-hover:rotate-12 group-hover:scale-110" />
-                  Join the Waitlist
+                  {tc('joinTheWaitlist')}
                   <ArrowRight className="h-4 w-4 ml-2 transition-transform group-hover:translate-x-1" />
                 </Link>
               </Button>
               <Button asChild size="lg" variant="secondary" className="border-cream-100/30 text-cream-100 hover:bg-cream-100/10">
                 <Link href="#video">
                   <Play className="h-4 w-4 mr-2" />
-                  Watch Video
+                  {tc('watchVideo')}
                 </Link>
               </Button>
             </div>
@@ -234,7 +236,7 @@ export function EarlyAccessHero() {
             <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-cream-100/10 hover-lift-glow">
               <Image
                 src="/images/hero-dashboard.png"
-                alt="ClubVantage Dashboard - Modern club management interface"
+                alt={t('dashboardAlt')}
                 width={1200}
                 height={675}
                 className="w-full h-auto transition-transform duration-700 hover:scale-[1.02]"

@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Eye, EyeOff, Loader2, Settings } from 'lucide-react';
 import { Button, Input, Label, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@clubvantage/ui';
-import { useAuth } from '@clubvantage/api-client';
+// Direct import to avoid pulling entire api-client bundle
+import { useAuth } from '@clubvantage/api-client/auth';
 
 export default function LoginPage() {
   const router = useRouter();

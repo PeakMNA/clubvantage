@@ -289,9 +289,12 @@ cd database
 npx prisma db seed
 ```
 
-**Demo Credentials:**
-- Staff App: `admin@royalbangkokclub.com` / `Admin123!`
-- Member Portal: `member@demo.com` / `Member123!`
+**Demo Credentials** (full list in `docs/CREDENTIALS.md`):
+- Staff App (Royal Bangkok): `admin@royalbangkokclub.com` / `Admin123!`
+- Staff App (Phuket Ocean): `admin@phuketoceanclub.com` / `Admin123!`
+- Member Portal: `member@demo.com` / `Member123!` (Somchai — full demo data)
+- Member Portal: `corporate@demo.com` / `Member123!` (Corporate member)
+- Member Portal: `phuket@demo.com` / `Member123!` (Phuket club, no golf)
 
 ### Generating Prisma Client
 After schema changes, regenerate the client:

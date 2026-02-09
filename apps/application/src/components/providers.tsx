@@ -2,7 +2,9 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
-import { initializeClient, closeClients, AuthProvider } from '@clubvantage/api-client';
+// Direct imports to avoid pulling entire api-client bundle (hundreds of KB of generated hooks)
+import { initializeClient, closeClients } from '@clubvantage/api-client/client';
+import { AuthProvider } from '@clubvantage/api-client/auth';
 import { ThemeProvider } from './theme';
 
 // API configuration - uses environment variables

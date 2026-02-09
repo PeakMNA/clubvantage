@@ -135,8 +135,9 @@ export const getPastFacilityBookings = cache(async () => {
 })
 
 export const getFacilityById = cache(async (id: string) => {
-  const facility = await prisma.facility.findUnique({
-    where: { id },
+  const clubId = await getClubId()
+  const facility = await prisma.facility.findFirst({
+    where: { id, clubId },
     include: {
       resources: {
         where: { isActive: true, isBookable: true },

@@ -49,12 +49,11 @@ export class ScheduleConfigResolver {
   async getScheduleConfig(
     @GqlCurrentUser() user: JwtPayload,
     @Args() args: GetScheduleConfigArgs,
-    @Args('autoCreate', { type: () => Boolean, nullable: true, defaultValue: false }) autoCreate: boolean,
   ): Promise<GolfScheduleConfigType | null> {
     const config = await this.scheduleConfigService.getScheduleConfig(
       user.tenantId,
       args.courseId,
-      autoCreate,
+      args.autoCreate ?? false,
     );
 
     if (!config) {

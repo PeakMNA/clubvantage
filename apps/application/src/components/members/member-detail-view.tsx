@@ -38,7 +38,7 @@ import {
 } from '@clubvantage/ui';
 
 import { EngagementTab } from './tabs/engagement-tab';
-import type { Member as EngagementMember } from './types';
+import type { Member as EngagementMember, MemberStatus } from './types';
 
 interface Member {
   id: string;
@@ -394,7 +394,7 @@ export function MemberDetailView({ member }: MemberDetailViewProps) {
               nationality: '',
               membershipTypeId: '',
               membershipTypeName: member.membershipType,
-              status: member.status.toUpperCase() as 'ACTIVE' | 'SUSPENDED' | 'INACTIVE',
+              status: member.status.toUpperCase() as MemberStatus,
               joinDate: member.joinDate,
               balance: member.balance,
               autoPay: false,

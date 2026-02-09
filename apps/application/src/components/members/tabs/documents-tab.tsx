@@ -74,37 +74,37 @@ const documentTypeConfig: Record<
   CONTRACT: {
     label: 'Contract',
     icon: FileSignature,
-    color: 'bg-blue-50 text-blue-700 border-blue-200',
+    color: 'bg-blue-50 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-500/30',
   },
   ID_DOCUMENT: {
     label: 'ID Document',
     icon: FileScan,
-    color: 'bg-purple-50 text-purple-700 border-purple-200',
+    color: 'bg-purple-50 dark:bg-purple-500/20 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-500/30',
   },
   PROOF_OF_ADDRESS: {
     label: 'Proof of Address',
     icon: FileText,
-    color: 'bg-amber-50 text-amber-700 border-amber-200',
+    color: 'bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-500/30',
   },
   MEDICAL_CERT: {
     label: 'Medical Certificate',
     icon: FileCheck,
-    color: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    color: 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30',
   },
   WAIVER: {
     label: 'Waiver',
     icon: FileWarning,
-    color: 'bg-orange-50 text-orange-700 border-orange-200',
+    color: 'bg-orange-50 dark:bg-orange-500/20 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-500/30',
   },
   PHOTO: {
     label: 'Photo',
     icon: FileImage,
-    color: 'bg-pink-50 text-pink-700 border-pink-200',
+    color: 'bg-pink-50 dark:bg-pink-500/20 text-pink-700 dark:text-pink-400 border-pink-200 dark:border-pink-500/30',
   },
   OTHER: {
     label: 'Other',
     icon: FileText,
-    color: 'bg-stone-50 text-stone-700 border-stone-200',
+    color: 'bg-stone-50 dark:bg-stone-800 text-stone-700 dark:text-stone-300 border-stone-200 dark:border-stone-700',
   },
 };
 
@@ -168,7 +168,7 @@ function DocumentCard({
   const expiringSoon = isExpiringSoon(document.expiryDate);
 
   return (
-    <div className="group relative overflow-hidden rounded-xl border border-slate-200/60 bg-white/80 p-4 shadow-sm backdrop-blur-sm transition-all duration-300 hover:shadow-md">
+    <div className="group relative overflow-hidden rounded-xl border border-slate-200/60 dark:border-stone-700/60 bg-white/80 dark:bg-stone-900/80 p-4 shadow-sm backdrop-blur-sm transition-all duration-300 hover:shadow-md">
       {/* Subtle gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-muted/30 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
 
@@ -231,7 +231,7 @@ function DocumentCard({
               )}
               <DropdownMenuItem
                 onClick={onDelete}
-                className="text-red-600 focus:bg-red-50 focus:text-red-700"
+                className="text-red-600 dark:text-red-400 focus:bg-red-50 dark:focus:bg-red-500/20 focus:text-red-700 dark:focus:text-red-400"
               >
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete
@@ -259,12 +259,12 @@ function DocumentCard({
         <div className="mt-3 flex flex-wrap items-center gap-2">
           {/* Verification badge */}
           {document.isVerified ? (
-            <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200/60 text-[10px] font-medium">
+            <Badge className="bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-500/30 text-[10px] font-medium">
               <ShieldCheck className="mr-1 h-3 w-3" />
               Verified
             </Badge>
           ) : (
-            <Badge className="bg-stone-50 text-stone-500 border-stone-200/60 text-[10px] font-medium">
+            <Badge className="bg-stone-50 dark:bg-stone-800 text-stone-500 dark:text-stone-400 border-stone-200/60 dark:border-stone-700/60 text-[10px] font-medium">
               <Shield className="mr-1 h-3 w-3" />
               Unverified
             </Badge>
@@ -274,17 +274,17 @@ function DocumentCard({
           {document.expiryDate && (
             <>
               {expired ? (
-                <Badge className="bg-red-50 text-red-700 border-red-200/60 text-[10px] font-medium">
+                <Badge className="bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 border-red-200/60 dark:border-red-500/30 text-[10px] font-medium">
                   <AlertTriangle className="mr-1 h-3 w-3" />
                   Expired
                 </Badge>
               ) : expiringSoon ? (
-                <Badge className="bg-amber-50 text-amber-700 border-amber-200/60 text-[10px] font-medium">
+                <Badge className="bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-200/60 dark:border-amber-500/30 text-[10px] font-medium">
                   <Clock className="mr-1 h-3 w-3" />
                   Expires {formatDate(document.expiryDate)}
                 </Badge>
               ) : (
-                <Badge className="bg-blue-50 text-blue-700 border-blue-200/60 text-[10px] font-medium">
+                <Badge className="bg-blue-50 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-200/60 dark:border-blue-500/30 text-[10px] font-medium">
                   <CalendarDays className="mr-1 h-3 w-3" />
                   Exp: {formatDate(document.expiryDate)}
                 </Badge>
@@ -434,8 +434,8 @@ function UploadDocumentModal({
             className={cn(
               'relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 transition-colors',
               isDragging
-                ? 'border-amber-500 bg-amber-50'
-                : 'border-slate-300 bg-slate-50 hover:border-slate-400'
+                ? 'border-amber-500 bg-amber-50 dark:bg-amber-500/20'
+                : 'border-slate-300 dark:border-stone-600 bg-slate-50 dark:bg-stone-800 hover:border-slate-400 dark:hover:border-stone-500'
             )}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
@@ -621,7 +621,7 @@ function PreviewModal({
             {document.fileName} - {formatFileSize(document.fileSize)}
           </DialogDescription>
         </DialogHeader>
-        <div className="flex items-center justify-center min-h-[400px] bg-slate-100 rounded-lg">
+        <div className="flex items-center justify-center min-h-[400px] bg-slate-100 dark:bg-stone-800 rounded-lg">
           {!signedUrl ? (
             <div className="text-center text-muted-foreground">
               <FileText className="h-16 w-16 mx-auto mb-4" />
@@ -739,12 +739,12 @@ export function DocumentsTab({ memberId }: DocumentsTabProps) {
 
   if (error) {
     return (
-      <div className="relative overflow-hidden rounded-2xl border border-red-200/60 bg-red-50/80 p-6">
+      <div className="relative overflow-hidden rounded-2xl border border-red-200/60 dark:border-red-500/30 bg-red-50/80 dark:bg-red-500/10 p-6">
         <div className="flex items-center gap-3">
-          <AlertTriangle className="h-6 w-6 text-red-600" />
+          <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />
           <div>
-            <h3 className="font-semibold text-red-900">Error Loading Documents</h3>
-            <p className="text-sm text-red-700">
+            <h3 className="font-semibold text-red-900 dark:text-red-100">Error Loading Documents</h3>
+            <p className="text-sm text-red-700 dark:text-red-400">
               {(error as Error).message || 'An error occurred while loading documents'}
             </p>
           </div>
@@ -756,7 +756,7 @@ export function DocumentsTab({ memberId }: DocumentsTabProps) {
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Header with filters and upload button */}
-      <div className="relative overflow-hidden rounded-2xl border border-slate-200/60 bg-white/80 shadow-lg shadow-slate-200/30 backdrop-blur-sm">
+      <div className="relative overflow-hidden rounded-2xl border border-slate-200/60 dark:border-stone-700/60 bg-white/80 dark:bg-stone-900/80 shadow-lg shadow-slate-200/30 dark:shadow-stone-900/30 backdrop-blur-sm">
         <div className="absolute inset-0 bg-gradient-to-br from-muted/50 to-transparent" />
 
         <div className="relative flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
@@ -775,7 +775,7 @@ export function DocumentsTab({ memberId }: DocumentsTabProps) {
               value={typeFilter}
               onValueChange={(v) => setTypeFilter(v as DocumentType | 'ALL')}
             >
-              <SelectTrigger className="w-[180px] bg-white/80">
+              <SelectTrigger className="w-[180px] bg-white/80 dark:bg-stone-900/80">
                 <SelectValue placeholder="Filter by type" />
               </SelectTrigger>
               <SelectContent>
@@ -824,7 +824,7 @@ export function DocumentsTab({ memberId }: DocumentsTabProps) {
 
       {/* Document grid */}
       {documents.length === 0 ? (
-        <div className="relative overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-muted/50 p-12 text-center">
+        <div className="relative overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 dark:border-stone-700 bg-muted/50 p-12 text-center">
           <div className="flex flex-col items-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
               <FileText className="h-8 w-8 text-muted-foreground" />

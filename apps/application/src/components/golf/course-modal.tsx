@@ -31,7 +31,7 @@ export function CourseModal({
     par: 72,
     rating: 72.0,
     slope: 113,
-    status: 'active' as Course['status'],
+    status: 'ACTIVE' as Course['status'],
     condition: '',
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -58,7 +58,7 @@ export function CourseModal({
         par: 72,
         rating: 72.0,
         slope: 113,
-        status: 'active',
+        status: 'ACTIVE',
         condition: '',
       })
     }
@@ -299,22 +299,22 @@ export function CourseModal({
           <h3 className="font-medium text-foreground">Status</h3>
 
           <div className="flex gap-2">
-            {(['active', 'maintenance', 'closed'] as const).map((status) => (
+            {([['ACTIVE', 'Active'], ['MAINTENANCE', 'Maintenance'], ['CLOSED', 'Closed']] as const).map(([value, label]) => (
               <button
-                key={status}
-                onClick={() => setFormData({ ...formData, status })}
+                key={value}
+                onClick={() => setFormData({ ...formData, status: value as Course['status'] })}
                 className={cn(
-                  'flex-1 py-2 px-3 text-sm rounded-md border transition-colors capitalize',
-                  formData.status === status
-                    ? status === 'active'
+                  'flex-1 py-2 px-3 text-sm rounded-md border transition-colors',
+                  formData.status === value
+                    ? value === 'ACTIVE'
                       ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/30'
-                      : status === 'maintenance'
+                      : value === 'MAINTENANCE'
                       ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-500/30'
                       : 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-300 border-red-300 dark:border-red-500/30'
                     : 'hover:border-border'
                 )}
               >
-                {status}
+                {label}
               </button>
             ))}
           </div>

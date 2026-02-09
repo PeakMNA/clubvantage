@@ -2,6 +2,7 @@ import type { Config } from 'tailwindcss';
 import sharedConfig from '@clubvantage/config/tailwind';
 
 const config: Config = {
+  darkMode: 'class',
   content: [
     './src/**/*.{js,ts,jsx,tsx,mdx}',
     '../../packages/ui/src/**/*.{js,ts,jsx,tsx}',

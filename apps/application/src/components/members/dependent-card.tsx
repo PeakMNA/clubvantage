@@ -86,7 +86,7 @@ export function DependentCard({
     <div
       onClick={handleCardClick}
       className={cn(
-        'group relative cursor-pointer overflow-hidden rounded-xl border border/60 bg-white/80 shadow-sm backdrop-blur-sm transition-all duration-300 hover:shadow-md',
+        'group relative cursor-pointer overflow-hidden rounded-xl border border/60 bg-white/80 dark:bg-stone-900/80 shadow-sm backdrop-blur-sm transition-all duration-300 hover:shadow-md',
         isInactive && 'opacity-70',
         className
       )}
@@ -185,7 +185,7 @@ export function DependentCard({
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => onRemove?.(dependent)}
-                className="cursor-pointer text-red-600 focus:text-red-600"
+                className="cursor-pointer text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400"
               >
                 Remove
               </DropdownMenuItem>

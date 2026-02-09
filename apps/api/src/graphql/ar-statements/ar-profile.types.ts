@@ -37,6 +37,39 @@ registerEnumType(StatementDeliveryEnum, {
 });
 
 @ObjectType()
+export class ARProfileSyncResultType {
+  @Field(() => Int)
+  created: number;
+
+  @Field(() => Int)
+  skipped: number;
+
+  @Field(() => [String])
+  errors: string[];
+}
+
+@ObjectType()
+export class MemberWithoutARProfileType {
+  @Field(() => ID)
+  id: string;
+
+  @Field()
+  memberId: string;
+
+  @Field()
+  firstName: string;
+
+  @Field()
+  lastName: string;
+
+  @Field({ nullable: true })
+  email?: string;
+
+  @Field({ nullable: true })
+  membershipTypeName?: string;
+}
+
+@ObjectType()
 export class ARProfileGQLType {
   @Field(() => ID)
   id: string;
@@ -52,6 +85,32 @@ export class ARProfileGQLType {
 
   @Field(() => ID, { nullable: true })
   cityLedgerId?: string;
+
+  // Standalone account info (for CITY_LEDGER without linked entity)
+  @Field({ nullable: true, description: 'Account name for standalone city ledger profiles' })
+  accountName?: string;
+
+  @Field({ nullable: true, description: 'Contact email for standalone profiles' })
+  contactEmail?: string;
+
+  @Field({ nullable: true, description: 'Contact phone for standalone profiles' })
+  contactPhone?: string;
+
+  @Field({ nullable: true, description: 'Billing address for standalone profiles' })
+  billingAddress?: string;
+
+  // Business details (for CITY_LEDGER corporate accounts)
+  @Field({ nullable: true, description: 'Tax ID for corporate accounts' })
+  taxId?: string;
+
+  @Field({ nullable: true, description: 'Business registration number' })
+  businessRegistrationId?: string;
+
+  @Field({ nullable: true, description: 'Branch name (e.g., Head Office, Bangkok Branch)' })
+  branchName?: string;
+
+  @Field({ nullable: true, description: 'Branch code (e.g., 00000 for head office)' })
+  branchCode?: string;
 
   @Field(() => StatementDeliveryEnum)
   statementDelivery: StatementDeliveryEnum;

@@ -88,7 +88,7 @@ export function StatementConfigSection({ id }: StatementConfigSectionProps) {
 
   if (isLoading) {
     return (
-      <section id={id} className="border rounded-xl p-6 space-y-6 scroll-mt-24 shadow-lg shadow-stone-200/30">
+      <section id={id} className="border rounded-xl p-6 space-y-6 scroll-mt-24 shadow-lg shadow-stone-200/30 dark:shadow-none">
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-6 w-6 animate-spin text-amber-500" />
           <span className="ml-2 text-muted-foreground">Loading statement configuration...</span>
@@ -98,7 +98,7 @@ export function StatementConfigSection({ id }: StatementConfigSectionProps) {
   }
 
   return (
-    <section id={id} className="border rounded-xl p-6 space-y-6 scroll-mt-24 shadow-lg shadow-stone-200/30">
+    <section id={id} className="border rounded-xl p-6 space-y-6 scroll-mt-24 shadow-lg shadow-stone-200/30 dark:shadow-none">
       {/* Header */}
       <div>
         <h2 className="text-xl font-semibold flex items-center gap-2">
@@ -171,8 +171,8 @@ export function StatementConfigSection({ id }: StatementConfigSectionProps) {
               className={cn(
                 'p-3 rounded-lg border-2 transition-all text-center text-sm',
                 delivery === option.value
-                  ? 'border-amber-500 bg-amber-50 font-medium text-amber-700 shadow-md'
-                  : 'border-stone-200 hover:border-stone-300 hover:bg-stone-50 text-stone-700'
+                  ? 'border-amber-500 bg-amber-50 dark:bg-amber-500/20 font-medium text-amber-700 dark:text-amber-400 shadow-md'
+                  : 'border-stone-200 dark:border-stone-700 hover:border-stone-300 dark:hover:border-stone-600 hover:bg-stone-50 dark:hover:bg-stone-800 text-stone-700 dark:text-stone-300'
               )}
             >
               {option.label}

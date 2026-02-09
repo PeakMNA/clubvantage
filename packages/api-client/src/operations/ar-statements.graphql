@@ -244,6 +244,8 @@ query GetStatement($id: ID!) {
     id
     arProfileId
     openingBalance
+    totalDebits
+    totalCredits
     closingBalance
     periodStart
     periodEnd
@@ -271,6 +273,8 @@ query GetStatement($id: ID!) {
     aging61to90
     aging90Plus
     profileSnapshot
+    transactionCount
+    transactions
     createdAt
     updatedAt
   }
@@ -281,6 +285,8 @@ query GetProfileStatements($arProfileId: ID!, $onlyFinal: Boolean! = true) {
     id
     arProfileId
     openingBalance
+    totalDebits
+    totalCredits
     closingBalance
     periodStart
     periodEnd
@@ -291,7 +297,14 @@ query GetProfileStatements($arProfileId: ID!, $onlyFinal: Boolean! = true) {
     portalStatus
     smsStatus
     pdfUrl
+    agingCurrent
+    aging1to30
+    aging31to60
+    aging61to90
+    aging90Plus
+    transactionCount
     createdAt
+    updatedAt
   }
 }
 

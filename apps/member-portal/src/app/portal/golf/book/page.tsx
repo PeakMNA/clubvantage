@@ -20,6 +20,7 @@ import {
   fetchMyCourses,
   fetchTeeSheet,
   fetchMyDependents,
+  fetchCurrentMember,
   createGolfBooking,
   type CreateGolfBookingInput,
 } from '../actions'
@@ -57,36 +58,35 @@ export default function BookTeeTimePage() {
   const [caddy, setCaddy] = useState<'none' | 'shared' | 'individual'>('none')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [currentMember, setCurrentMember] = useState<BookingPlayer | null>(null)
 
-  // Current member (placeholder - should come from auth)
-  const currentMember: BookingPlayer = {
-    id: 'self',
-    name: 'John Smith',
-    type: 'member',
-    memberId: 'M-0001',
-  }
-
-  // Load courses on mount
+  // Load courses and current member on mount
   useEffect(() => {
-    async function loadCourses() {
+    async function loadInitialData() {
       setIsLoadingCourses(true)
       try {
-        const data = await fetchMyCourses()
-        setCourses(data)
+        const [coursesData, memberData] = await Promise.all([
+          fetchMyCourses(),
+          fetchCurrentMember(),
+        ])
+        setCourses(coursesData)
+        if (memberData) {
+          const member: BookingPlayer = {
+            id: memberData.id,
+            name: memberData.name,
+            type: 'member',
+            memberId: memberData.memberId,
+          }
+          setCurrentMember(member)
+          setPlayers([member])
+        }
       } catch (err) {
-        console.error('Error loading courses:', err)
+        console.error('Error loading initial data:', err)
       } finally {
         setIsLoadingCourses(false)
       }
     }
-    loadCourses()
-  }, [])
-
-  // Initialize players with current member
-  useEffect(() => {
-    if (players.length === 0) {
-      setPlayers([currentMember])
-    }
+    loadInitialData()
   }, [])
 
   // Load tee sheet when course and date are selected
@@ -221,7 +221,7 @@ export default function BookTeeTimePage() {
   }
 
   const removePlayer = (playerId: string) => {
-    if (playerId !== currentMember.id) {
+    if (currentMember && playerId !== currentMember.id) {
       setPlayers(players.filter((p) => p.id !== playerId))
     }
   }
@@ -444,7 +444,7 @@ export default function BookTeeTimePage() {
                   key={player.id}
                   player={player}
                   editable
-                  isSelf={player.id === currentMember.id}
+                  isSelf={currentMember !== null && player.id === currentMember.id}
                   onRemove={() => removePlayer(player.id)}
                 />
               ))}

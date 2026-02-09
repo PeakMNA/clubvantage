@@ -47,11 +47,11 @@ function ChargeSection({
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border/60 bg-white/80 shadow-lg shadow-slate-200/30 backdrop-blur-sm">
+    <div className="relative overflow-hidden rounded-2xl border border/60 bg-white/80 dark:bg-stone-900/80 shadow-lg shadow-slate-200/30 dark:shadow-stone-900/30 backdrop-blur-sm">
       <div className="absolute inset-0 bg-gradient-to-br from-muted/50 to-transparent" />
 
       {/* Header */}
-      <div className="relative flex items-center justify-between border-b border-slate-100 p-4 sm:p-5">
+      <div className="relative flex items-center justify-between border-b border-slate-100 dark:border-stone-700 p-4 sm:p-5">
         <button
           type="button"
           onClick={() => setIsExpanded(!isExpanded)}
@@ -78,7 +78,7 @@ function ChargeSection({
           variant="outline"
           size="sm"
           onClick={onAddCharge}
-          className="border bg-white/80 shadow-sm backdrop-blur-sm transition-all hover:bg-card hover:shadow-md"
+          className="border bg-white/80 dark:bg-stone-900/80 shadow-sm backdrop-blur-sm transition-all hover:bg-card hover:shadow-md"
         >
           <Plus className="mr-1.5 h-3.5 w-3.5" />
           <span className="hidden sm:inline">Add</span>
@@ -131,7 +131,7 @@ export function ContractTab({
 
   if (!contract) {
     return (
-      <div className="relative overflow-hidden rounded-2xl border border/60 bg-white/80 shadow-lg shadow-slate-200/30 backdrop-blur-sm">
+      <div className="relative overflow-hidden rounded-2xl border border/60 bg-white/80 dark:bg-stone-900/80 shadow-lg shadow-slate-200/30 dark:shadow-stone-900/30 backdrop-blur-sm">
         <div className="absolute inset-0 bg-gradient-to-br from-muted/50 to-transparent" />
         <div className="relative flex flex-col items-center justify-center p-12 text-center">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">

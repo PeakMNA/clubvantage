@@ -1,6 +1,11 @@
 import { Resolver, Query, Mutation, Subscription, Args, ID } from '@nestjs/graphql';
 import { UseGuards, Inject, Logger } from '@nestjs/common';
 import { GolfService } from '@/modules/golf/golf.service';
+import { TeeSheetService } from '@/modules/golf/tee-sheet.service';
+import { FlightService } from '@/modules/golf/flight.service';
+import { GolfScheduleService } from '@/modules/golf/golf-schedule.service';
+import { BlockService } from '@/modules/golf/block.service';
+import { PlayerRentalService } from '@/modules/golf/player-rental.service';
 import { TeeTicketService } from '@/modules/golf/tee-ticket.service';
 import { PrismaService } from '@/shared/prisma/prisma.service';
 import { GqlAuthGuard } from '../guards/gql-auth.guard';
@@ -84,6 +89,11 @@ export class GolfResolver {
 
   constructor(
     private readonly golfService: GolfService,
+    private readonly teeSheetService: TeeSheetService,
+    private readonly flightService: FlightService,
+    private readonly golfScheduleService: GolfScheduleService,
+    private readonly blockService: BlockService,
+    private readonly playerRentalService: PlayerRentalService,
     private readonly teeTicketService: TeeTicketService,
     private readonly prisma: PrismaService,
     private readonly ratesService: RatesService,
@@ -99,7 +109,7 @@ export class GolfResolver {
   ): Promise<TeeSheetSlotType[]> {
     const dateStr = args.date.toISOString().split('T')[0];
     this.logger.debug(`getTeeSheet - tenantId: ${user.tenantId}, courseId: ${args.courseId}, date: ${dateStr}`);
-    const slots = await this.golfService.getTeeSheet(user.tenantId, args.courseId, dateStr);
+    const slots = await this.teeSheetService.getTeeSheet(user.tenantId, args.courseId, dateStr);
 
     return slots.map((slot: any) => ({
       time: slot.time,
@@ -148,7 +158,7 @@ export class GolfResolver {
     @GqlCurrentUser() user: JwtPayload,
     @Args('input') input: WeekViewOccupancyInput,
   ): Promise<WeekViewOccupancyResponse> {
-    const slots = await this.golfService.getWeekViewOccupancy(
+    const slots = await this.teeSheetService.getWeekViewOccupancy(
       user.tenantId,
       input.courseId,
       input.startDate,
@@ -255,7 +265,7 @@ export class GolfResolver {
     @GqlCurrentUser() user: JwtPayload,
     @Args('id', { type: () => ID }) id: string,
   ): Promise<TeeTimeType> {
-    const teeTime = await this.golfService.getFlight(user.tenantId, id);
+    const teeTime = await this.flightService.getFlight(user.tenantId, id);
     return this.transformTeeTime(teeTime);
   }
 
@@ -333,7 +343,7 @@ export class GolfResolver {
     });
 
     try {
-      const teeTime = await this.golfService.createFlight(
+      const teeTime = await this.flightService.createFlight(
         user.tenantId,
         {
           courseId: input.courseId,
@@ -370,7 +380,7 @@ export class GolfResolver {
     @Args('id', { type: () => ID }) id: string,
     @Args('input') input: UpdateTeeTimeInput,
   ): Promise<TeeTimeType> {
-    const teeTime = await this.golfService.updateFlight(
+    const teeTime = await this.flightService.updateFlight(
       user.tenantId,
       id,
       input,
@@ -395,7 +405,7 @@ export class GolfResolver {
     @Args('id', { type: () => ID }) id: string,
     @Args('players', { type: () => [TeeTimePlayerInput] }) players: TeeTimePlayerInput[],
   ): Promise<TeeTimeType> {
-    const teeTime = await this.golfService.updateFlightPlayers(
+    const teeTime = await this.flightService.updateFlightPlayers(
       user.tenantId,
       id,
       players.map(p => ({
@@ -436,7 +446,7 @@ export class GolfResolver {
     @Args('playerId', { type: () => ID }) playerId: string,
     @Args('input') input: UpdatePlayerRentalStatusInput,
   ) {
-    const player = await this.golfService.updatePlayerRentalStatus(
+    const player = await this.playerRentalService.updatePlayerRentalStatus(
       user.tenantId,
       playerId,
       {
@@ -473,13 +483,13 @@ export class GolfResolver {
     @GqlCurrentUser() user: JwtPayload,
     @Args('id', { type: () => ID }) id: string,
   ): Promise<FlightCheckInResponseType> {
-    const result = await this.golfService.checkinFlight(
+    const result = await this.flightService.checkinFlight(
       user.tenantId,
       id,
       user.sub,
       user.email,
     );
-    const teeTime = await this.golfService.getFlight(user.tenantId, id);
+    const teeTime = await this.flightService.getFlight(user.tenantId, id);
     const transformedTeeTime = this.transformTeeTime(teeTime);
 
     // Publish check-in event
@@ -501,10 +511,10 @@ export class GolfResolver {
     @Args('id', { type: () => ID }) id: string,
     @Args('reason', { nullable: true }) reason?: string,
   ): Promise<CancelResponseType> {
-    await this.golfService.cancelFlight(user.tenantId, id, reason || '', user.sub, user.email);
+    await this.flightService.cancelFlight(user.tenantId, id, reason || '', user.sub, user.email);
 
     // Publish cancellation event
-    const teeTime = await this.golfService.getFlight(user.tenantId, id);
+    const teeTime = await this.flightService.getFlight(user.tenantId, id);
     await this.pubSub.publish(SubscriptionEvents.TEE_TIME_CANCELLED, {
       teeTimeCancelled: this.transformTeeTime(teeTime),
       tenantId: user.tenantId,
@@ -534,7 +544,7 @@ export class GolfResolver {
     }
 
     // Check for capacity at the new slot
-    // Multiple bookings can share a flight as long as total players ≤ 4
+    // Multiple bookings can share a flight as long as total players <= 4
     const existingAtDestination = await this.prisma.teeTime.findMany({
       where: {
         clubId: user.tenantId,

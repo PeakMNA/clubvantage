@@ -37,7 +37,7 @@ export function validateSlotForPlacement(
   }
 
   // Blocked slot - invalid
-  if (targetFlight.status === 'blocked') {
+  if (targetFlight.status === 'BLOCKED') {
     return {
       status: 'invalid',
       availablePositions: 0,

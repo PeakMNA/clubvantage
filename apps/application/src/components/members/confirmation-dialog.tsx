@@ -189,11 +189,11 @@ export function StatusChangeDialog({
   const [reason, setReason] = useState('');
 
   const isSuspending = newStatus === 'SUSPENDED';
-  const isCancelling = newStatus === 'CANCELLED';
-  const requiresReason = isSuspending || isCancelling;
+  const isTerminating = newStatus === 'TERMINATED' || newStatus === 'RESIGNED';
+  const requiresReason = isSuspending || isTerminating;
 
   const getVariant = (): ConfirmationVariant => {
-    if (isCancelling) return 'danger';
+    if (isTerminating) return 'danger';
     if (isSuspending) return 'warning';
     if (newStatus === 'ACTIVE') return 'success';
     return 'info';
@@ -203,8 +203,8 @@ export function StatusChangeDialog({
     if (isSuspending) {
       return `This will suspend ${memberName}'s membership. They will lose access to club facilities until reactivated.`;
     }
-    if (isCancelling) {
-      return `This will permanently cancel ${memberName}'s membership. This action cannot be undone.`;
+    if (isTerminating) {
+      return `This will terminate ${memberName}'s membership. This action cannot be undone.`;
     }
     if (newStatus === 'ACTIVE') {
       return `This will reactivate ${memberName}'s membership and restore their access to club facilities.`;
@@ -216,15 +216,15 @@ export function StatusChangeDialog({
     <ConfirmationDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={`${newStatus === 'ACTIVE' ? 'Reactivate' : newStatus === 'SUSPENDED' ? 'Suspend' : newStatus === 'CANCELLED' ? 'Cancel' : 'Change'} Member`}
+      title={`${newStatus === 'ACTIVE' ? 'Reactivate' : newStatus === 'SUSPENDED' ? 'Suspend' : isTerminating ? 'Terminate' : 'Change'} Member`}
       description={getDescription()}
       variant={getVariant()}
-      confirmLabel={newStatus === 'ACTIVE' ? 'Reactivate' : newStatus === 'SUSPENDED' ? 'Suspend' : newStatus === 'CANCELLED' ? 'Cancel Membership' : 'Confirm'}
+      confirmLabel={newStatus === 'ACTIVE' ? 'Reactivate' : newStatus === 'SUSPENDED' ? 'Suspend' : isTerminating ? 'Terminate Membership' : 'Confirm'}
       onConfirm={() => onConfirm(requiresReason ? reason : undefined)}
       isLoading={isLoading}
       requireReason={requiresReason}
-      reasonLabel={isSuspending ? 'Suspension Reason' : 'Cancellation Reason'}
-      reasonPlaceholder={isSuspending ? 'e.g., Non-payment of dues' : 'e.g., Member requested cancellation'}
+      reasonLabel={isSuspending ? 'Suspension Reason' : 'Termination Reason'}
+      reasonPlaceholder={isSuspending ? 'e.g., Non-payment of dues' : 'e.g., Member requested termination'}
       onReasonChange={setReason}
     />
   );

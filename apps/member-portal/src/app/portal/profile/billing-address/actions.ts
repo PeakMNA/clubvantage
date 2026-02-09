@@ -89,6 +89,13 @@ export async function updateBillingAddress(
   }
 
   if (id) {
+    // Verify ownership before updating
+    const existing = await prisma.memberAddress.findFirst({
+      where: { id, memberId },
+    })
+    if (!existing) {
+      return { success: false, error: 'Address not found' }
+    }
     await prisma.memberAddress.update({
       where: { id },
       data,

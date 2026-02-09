@@ -1,11 +1,11 @@
 <svg width="320" height="48" viewBox="0 0 320 48" fill="none" xmlns="http://www.w3.org/2000/svg">
   <!-- ClubVantage Wordmark -->
-  <!-- "Club" in charcoal -->
-  <text x="0" y="36" font-family="SF Pro Display, -apple-system, BlinkMacSystemFont, Inter, sans-serif" font-size="36" font-weight="600" fill="#2D3436">Club</text>
+  <!-- "Club" in medium gray (visible on light & dark) -->
+  <text x="0" y="36" font-family="SF Pro Display, -apple-system, BlinkMacSystemFont, Inter, sans-serif" font-size="36" font-weight="600" fill="#6B7280">Club</text>
 
-  <!-- "antage" in teal (after the V) -->
-  <text x="122" y="36" font-family="SF Pro Display, -apple-system, BlinkMacSystemFont, Inter, sans-serif" font-size="36" font-weight="600" fill="#1B4332">antage</text>
+  <!-- "antage" in green -->
+  <text x="122" y="36" font-family="SF Pro Display, -apple-system, BlinkMacSystemFont, Inter, sans-serif" font-size="36" font-weight="600" fill="#22C55E">antage</text>
 
-  <!-- "V" as upward arrow in teal -->
-  <path d="M89 36 L100.5 8 L112 36 L106 36 L100.5 18 L95 36 Z" fill="#1B4332"/>
+  <!-- "V" as checkmark in green -->
+  <path d="M86 20 L91 14 L100 28 L116 6 L122 12 L102 40 L98 40 Z" fill="#22C55E"/>
 </svg>

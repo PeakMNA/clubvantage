@@ -1,6 +1,5 @@
 'use server'
 
-import { GraphQLClient } from '@clubvantage/api-client/client'
 import { getSession } from '@/lib/auth/session'
 import { prisma } from '@/lib/db'
 
@@ -9,320 +8,7 @@ import type {
   BookingPlayer,
   GolfTimeSlot,
   PortalCourse,
-  CancellationPolicy,
 } from '@/lib/types'
-
-// ============================================================================
-// GRAPHQL DOCUMENTS
-// ============================================================================
-
-const GetCoursesDocument = /* GraphQL */ `
-  query GetCourses {
-    courses {
-      id
-      name
-      code
-      description
-      holes
-      par
-      slope
-      rating
-      firstTeeTime
-      lastTeeTime
-      teeInterval
-      isActive
-    }
-  }
-`
-
-const GetTeeSheetDocument = /* GraphQL */ `
-  query GetTeeSheet($courseId: ID!, $date: DateTime!) {
-    teeSheet(courseId: $courseId, date: $date) {
-      time
-      courseId
-      date
-      available
-      booking {
-        id
-        teeTimeNumber
-        teeDate
-        teeTime
-        holes
-        status
-        notes
-        course {
-          id
-          name
-        }
-        players {
-          id
-          position
-          playerType
-          member {
-            id
-            memberId
-            firstName
-            lastName
-          }
-          guestName
-          guestEmail
-          guestPhone
-          cartType
-          caddy {
-            id
-            firstName
-            lastName
-          }
-        }
-      }
-    }
-  }
-`
-
-const GetTeeTimesDocument = /* GraphQL */ `
-  query GetTeeTimes(
-    $memberId: ID
-    $startDate: DateTime
-    $endDate: DateTime
-    $status: TeeTimeStatus
-    $first: Int
-    $skip: Int
-  ) {
-    teeTimes(
-      memberId: $memberId
-      startDate: $startDate
-      endDate: $endDate
-      status: $status
-      first: $first
-      skip: $skip
-    ) {
-      edges {
-        node {
-          id
-          teeTimeNumber
-          teeDate
-          teeTime
-          holes
-          status
-          notes
-          createdAt
-          course {
-            id
-            name
-            code
-          }
-          players {
-            id
-            position
-            playerType
-            member {
-              id
-              memberId
-              firstName
-              lastName
-            }
-            guestName
-            guestEmail
-            guestPhone
-            cartType
-            sharedWithPosition
-            caddy {
-              id
-              firstName
-              lastName
-            }
-          }
-        }
-      }
-      totalCount
-    }
-  }
-`
-
-const GetTeeTimeDocument = /* GraphQL */ `
-  query GetTeeTime($id: ID!) {
-    teeTime(id: $id) {
-      id
-      teeTimeNumber
-      teeDate
-      teeTime
-      holes
-      status
-      notes
-      createdAt
-      updatedAt
-      course {
-        id
-        name
-        code
-        description
-        holes
-        par
-      }
-      players {
-        id
-        position
-        playerType
-        member {
-          id
-          memberId
-          firstName
-          lastName
-        }
-        guestName
-        guestEmail
-        guestPhone
-        cartType
-        sharedWithPosition
-        caddy {
-          id
-          caddyNumber
-          firstName
-          lastName
-        }
-        checkedInAt
-      }
-    }
-  }
-`
-
-const CreateTeeTimeDocument = /* GraphQL */ `
-  mutation CreateTeeTime($input: CreateTeeTimeInput!) {
-    createTeeTime(input: $input) {
-      id
-      teeTimeNumber
-      teeDate
-      teeTime
-      status
-      course {
-        id
-        name
-      }
-      players {
-        id
-        position
-        playerType
-      }
-    }
-  }
-`
-
-const CancelTeeTimeDocument = /* GraphQL */ `
-  mutation CancelTeeTime($id: ID!, $reason: String) {
-    cancelTeeTime(id: $id, reason: $reason) {
-      message
-    }
-  }
-`
-
-const GetDependentsDocument = /* GraphQL */ `
-  query GetDependents {
-    myDependents {
-      id
-      firstName
-      lastName
-      relationship
-      email
-      phone
-    }
-  }
-`
-
-// ============================================================================
-// TYPE DEFINITIONS FOR GRAPHQL RESPONSES
-// ============================================================================
-
-interface GolfCourseResponse {
-  id: string
-  name: string
-  code: string
-  description?: string
-  holes: number
-  par: number
-  slope?: number
-  rating?: number
-  firstTeeTime: string
-  lastTeeTime: string
-  teeInterval: number
-  isActive: boolean
-}
-
-interface TeeSheetSlotResponse {
-  time: string
-  courseId: string
-  date: string
-  available: boolean
-  booking?: TeeTimeResponse
-}
-
-interface TeeTimeResponse {
-  id: string
-  teeTimeNumber: string
-  teeDate: string
-  teeTime: string
-  holes: number
-  status: string
-  notes?: string
-  createdAt: string
-  updatedAt?: string
-  course?: {
-    id: string
-    name: string
-    code?: string
-    description?: string
-    holes?: number
-    par?: number
-  }
-  players: TeeTimePlayerResponse[]
-}
-
-interface TeeTimePlayerResponse {
-  id: string
-  position: number
-  playerType: string
-  member?: {
-    id: string
-    memberId: string
-    firstName: string
-    lastName: string
-  }
-  guestName?: string
-  guestEmail?: string
-  guestPhone?: string
-  cartType: string
-  sharedWithPosition?: number
-  caddy?: {
-    id: string
-    caddyNumber?: string
-    firstName: string
-    lastName: string
-  }
-  checkedInAt?: string
-}
-
-interface DependentResponse {
-  id: string
-  firstName: string
-  lastName: string
-  relationship: string
-  email?: string
-  phone?: string
-}
-
-// ============================================================================
-// SERVER-SIDE GRAPHQL CLIENT
-// ============================================================================
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
-
-function getServerClient(): GraphQLClient {
-  return new GraphQLClient(`${API_URL}/graphql`, {})
-}
-
-async function getCurrentMemberId(): Promise<string> {
-  const session = await getSession()
-  return session.isLoggedIn ? session.memberId : 'member-placeholder'
-}
 
 // ============================================================================
 // TYPE MAPPING HELPERS
@@ -356,153 +42,30 @@ function mapBookingStatus(
   return statusMap[status] || 'pending'
 }
 
-function getCaddyType(
-  players: TeeTimePlayerResponse[]
-): 'none' | 'shared' | 'individual' {
-  const playersWithCaddy = players.filter((p) => p.caddy)
-  if (playersWithCaddy.length === 0) return 'none'
-  if (playersWithCaddy.length === 1 && players.length > 1) return 'shared'
-  if (playersWithCaddy.length === players.length) return 'individual'
-  return 'shared'
-}
-
-function hasCart(players: TeeTimePlayerResponse[]): boolean {
-  return players.some(
-    (p) => p.cartType === 'SINGLE' || p.cartType === 'SHARED'
-  )
-}
-
-interface GolfRates {
-  greenFeePerPlayer: number
-  cartFee: number
-  caddyFeeShared: number
-  caddyFeeIndividual: number
-}
-
-async function getGolfRates(courseId: string): Promise<GolfRates> {
-  const rateConfig = await prisma.golfRateConfig.findFirst({
-    where: {
-      courseId,
-      isActive: true,
-      effectiveFrom: { lte: new Date() },
-      OR: [{ effectiveTo: null }, { effectiveTo: { gte: new Date() } }],
-    },
-    orderBy: { effectiveFrom: 'desc' },
-    include: {
-      greenFeeRates: true,
-      cartRates: true,
-      caddyRates: true,
-    },
-  })
-
-  const greenFee = rateConfig?.greenFeeRates.find(
-    (r) => r.playerType === 'MEMBER' && r.holes === 18
-  )
-  const cartRate = rateConfig?.cartRates.find((r) => r.cartType === 'SHARED')
-  const caddyShared = rateConfig?.caddyRates.find((r) => r.caddyType === 'SHARED')
-  const caddyIndividual = rateConfig?.caddyRates.find((r) => r.caddyType === 'INDIVIDUAL')
-
-  return {
-    greenFeePerPlayer: greenFee ? Number(greenFee.amount) : 3500,
-    cartFee: cartRate ? Number(cartRate.amount) : 500,
-    caddyFeeShared: caddyShared ? Number(caddyShared.amount) : 1500,
-    caddyFeeIndividual: caddyIndividual ? Number(caddyIndividual.amount) : 2500,
-  }
-}
-
-function transformTeeTimeToBooking(teeTime: TeeTimeResponse, rates: GolfRates): TeeTimeBooking {
-  const teeDate = new Date(teeTime.teeDate)
-  const cancellationDeadline = new Date(teeDate)
-  cancellationDeadline.setHours(cancellationDeadline.getHours() - 24)
-
-  const cancellationPolicy: CancellationPolicy = {
-    fullRefundBefore: cancellationDeadline.toISOString(),
-    partialRefundBefore: teeDate.toISOString(),
-    noRefundAfter: teeDate.toISOString(),
-    partialRefundPercent: 50,
-  }
-
-  const players: BookingPlayer[] = teeTime.players.map((p) => ({
-    id: p.id,
-    name: p.member
-      ? `${p.member.firstName} ${p.member.lastName}`
-      : p.guestName || 'Guest',
-    type: mapPlayerType(p.playerType),
-    memberId: p.member?.memberId,
-    phone: p.guestPhone,
-    email: p.guestEmail,
-  }))
-
-  const { greenFeePerPlayer, cartFee, caddyFeeShared, caddyFeeIndividual } = rates
-
-  const caddyType = getCaddyType(teeTime.players)
-  const cartIncluded = hasCart(teeTime.players)
-
-  let totalPrice = greenFeePerPlayer * players.length
-  const priceBreakdown = [
-    {
-      label: `Green Fee (${players.length} player${players.length > 1 ? 's' : ''})`,
-      amount: greenFeePerPlayer * players.length,
-    },
-  ]
-
-  if (cartIncluded) {
-    totalPrice += cartFee
-    priceBreakdown.push({ label: 'Golf Cart', amount: cartFee })
-  }
-
-  if (caddyType === 'shared') {
-    totalPrice += caddyFeeShared
-    priceBreakdown.push({ label: 'Shared Caddy', amount: caddyFeeShared })
-  } else if (caddyType === 'individual') {
-    const caddyTotal = caddyFeeIndividual * players.length
-    totalPrice += caddyTotal
-    priceBreakdown.push({
-      label: `Individual Caddies (${players.length})`,
-      amount: caddyTotal,
-    })
-  }
-
-  return {
-    id: teeTime.id,
-    date: teeDate.toISOString().split('T')[0] || '',
-    time: teeTime.teeTime,
-    courseName: teeTime.course?.name || 'Unknown Course',
-    courseId: teeTime.course?.id || '',
-    roundType: teeTime.holes === 18 ? '18-hole' : '9-hole',
-    players,
-    cart: cartIncluded,
-    caddy: caddyType,
-    status: mapBookingStatus(teeTime.status),
-    totalPrice,
-    priceBreakdown,
-    cancellationPolicy,
-    createdAt: teeTime.createdAt,
-  }
-}
-
 // ============================================================================
 // FETCH ACTIONS
 // ============================================================================
 
 /**
  * Fetch all available golf courses
+ * Uses direct Prisma query (the GraphQL API requires a JWT the portal doesn't have)
  */
 export async function fetchMyCourses(): Promise<PortalCourse[]> {
   try {
-    const client = getServerClient()
-    const result = await client.request<{ courses: GolfCourseResponse[] }>(
-      GetCoursesDocument
-    )
+    const session = await getSession()
+    if (!session.isLoggedIn || !session.clubId) return []
 
-    return (result.courses || [])
-      .filter((c) => c.isActive)
-      .map((c) => ({
-        id: c.id,
-        name: c.name,
-        enable18HoleBooking: c.holes >= 18,
-        advanceBookingDays: 14, // Default, could be from course settings
-      }))
+    const courses = await prisma.golfCourse.findMany({
+      where: { clubId: session.clubId, isActive: true },
+      orderBy: { sortOrder: 'asc' },
+    })
+
+    return courses.map((c) => ({
+      id: c.id,
+      name: c.name,
+      enable18HoleBooking: c.holes >= 18,
+      advanceBookingDays: c.memberAdvanceDays ?? 14,
+    }))
   } catch (error) {
     console.error('Error fetching courses:', error)
     return []
@@ -511,27 +74,80 @@ export async function fetchMyCourses(): Promise<PortalCourse[]> {
 
 /**
  * Fetch tee sheet for a specific course and date
+ * Generates time slots from course config and marks booked ones
  */
 export async function fetchTeeSheet(
   courseId: string,
   date: Date
 ): Promise<GolfTimeSlot[]> {
   try {
-    const client = getServerClient()
-    const result = await client.request<{ teeSheet: TeeSheetSlotResponse[] }>(
-      GetTeeSheetDocument,
-      {
+    const session = await getSession()
+    if (!session.isLoggedIn || !session.clubId) return []
+
+    const course = await prisma.golfCourse.findFirst({
+      where: { id: courseId, clubId: session.clubId, isActive: true },
+    })
+    if (!course) return []
+
+    // Fetch green fee rate for this course
+    const rateConfig = await prisma.golfRateConfig.findFirst({
+      where: {
         courseId,
-        date: date.toISOString(),
-      }
+        isActive: true,
+        effectiveFrom: { lte: new Date() },
+        OR: [{ effectiveTo: null }, { effectiveTo: { gte: new Date() } }],
+      },
+      include: {
+        greenFeeRates: {
+          where: { playerType: 'MEMBER', holes: 18 },
+          take: 1,
+        },
+      },
+      orderBy: { effectiveFrom: 'desc' },
+    })
+    const greenFeePrice = rateConfig?.greenFeeRates[0]
+      ? Number(rateConfig.greenFeeRates[0].amount)
+      : 0
+
+    // Fetch existing bookings for this date
+    const teeDate = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+    const bookedTimes = await prisma.teeTime.findMany({
+      where: {
+        courseId,
+        teeDate,
+        status: { notIn: ['CANCELLED'] },
+      },
+      select: {
+        teeTime: true,
+        _count: { select: { players: true } },
+      },
+    })
+    const bookedMap = new Map(
+      bookedTimes.map((t) => [t.teeTime, t._count.players])
     )
 
-    return (result.teeSheet || []).map((slot) => ({
-      time: slot.time,
-      available: slot.available,
-      price: 3500, // Default price, should come from rate configuration
-      holes: '18',
-    }))
+    // Generate slots from firstTeeTime to lastTeeTime
+    const slots: GolfTimeSlot[] = []
+    const [startH, startM] = course.firstTeeTime.split(':').map(Number)
+    const [endH, endM] = course.lastTeeTime.split(':').map(Number)
+    const startMinutes = startH * 60 + startM
+    const endMinutes = endH * 60 + endM
+    const interval = course.teeInterval || 8
+
+    for (let min = startMinutes; min <= endMinutes; min += interval) {
+      const h = Math.floor(min / 60)
+      const m = min % 60
+      const time = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+      const playersBooked = bookedMap.get(time) ?? 0
+      slots.push({
+        time,
+        available: playersBooked < (course.maxPlayers || 4),
+        price: greenFeePrice,
+        holes: '18',
+      })
+    }
+
+    return slots
   } catch (error) {
     console.error('Error fetching tee sheet:', error)
     return []
@@ -540,64 +156,112 @@ export async function fetchTeeSheet(
 
 /**
  * Fetch member's golf bookings
+ * Uses direct Prisma query filtered by the logged-in member's tee time players
  */
 export async function fetchMyGolfBookings(
   status?: 'upcoming' | 'past'
 ): Promise<TeeTimeBooking[]> {
   try {
-    const client = getServerClient()
-    const memberId = await getCurrentMemberId()
+    const session = await getSession()
+    if (!session.isLoggedIn || !session.memberId || !session.clubId) return []
+
     const now = new Date()
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
 
-    let startDate: string | undefined
-    let endDate: string | undefined
-
-    if (status === 'upcoming') {
-      startDate = now.toISOString()
-    } else if (status === 'past') {
-      endDate = now.toISOString()
-    }
-
-    const result = await client.request<{
-      teeTimes: {
-        edges: { node: TeeTimeResponse }[]
-        totalCount: number
-      }
-    }>(GetTeeTimesDocument, {
-      memberId,
-      startDate,
-      endDate,
-      first: 50,
+    const teeTimes = await prisma.teeTime.findMany({
+      where: {
+        clubId: session.clubId,
+        players: { some: { memberId: session.memberId } },
+        ...(status === 'upcoming' ? { teeDate: { gte: today } } : {}),
+        ...(status === 'past' ? { teeDate: { lt: today } } : {}),
+      },
+      include: {
+        course: { select: { id: true, name: true, holes: true, par: true } },
+        players: {
+          include: {
+            member: { select: { id: true, firstName: true, lastName: true, memberId: true } },
+            dependent: { select: { id: true, firstName: true, lastName: true } },
+          },
+          orderBy: { position: 'asc' },
+        },
+      },
+      orderBy: [
+        { teeDate: status === 'past' ? 'desc' : 'asc' },
+        { teeTime: status === 'past' ? 'desc' : 'asc' },
+      ],
+      take: 50,
     })
 
-    // Pre-fetch rates per unique course to avoid N+1 queries
-    const edges = result.teeTimes?.edges || []
-    const courseIds = [...new Set(edges.map((e) => e.node.course?.id).filter(Boolean) as string[])]
-    const ratesMap = new Map<string, GolfRates>()
-    await Promise.all(
-      courseIds.map(async (cid) => {
-        ratesMap.set(cid, await getGolfRates(cid))
-      })
-    )
-
-    const defaultRates: GolfRates = {
-      greenFeePerPlayer: 3500, cartFee: 500, caddyFeeShared: 1500, caddyFeeIndividual: 2500,
-    }
-
-    const bookings = edges
-      .map((edge) => {
-        const rates = ratesMap.get(edge.node.course?.id ?? '') ?? defaultRates
-        return transformTeeTimeToBooking(edge.node, rates)
-      })
-      .sort((a, b) => {
-        const dateA = new Date(`${a.date}T${a.time}`)
-        const dateB = new Date(`${b.date}T${b.time}`)
-        return status === 'past'
-          ? dateB.getTime() - dateA.getTime()
-          : dateA.getTime() - dateB.getTime()
+    return teeTimes.map((tt) => {
+      const players: BookingPlayer[] = tt.players.map((p) => {
+        let name = p.guestName ?? 'Unknown'
+        let playerMemberId: string | undefined
+        if (p.member) {
+          name = `${p.member.firstName} ${p.member.lastName}`
+          playerMemberId = p.member.memberId
+        } else if (p.dependent) {
+          name = `${p.dependent.firstName} ${p.dependent.lastName}`
+        }
+        return {
+          id: p.id,
+          name,
+          type: mapPlayerType(p.playerType),
+          memberId: playerMemberId,
+          email: p.guestEmail ?? undefined,
+          phone: p.guestPhone ?? undefined,
+        }
       })
 
-    return bookings
+      // Sum actual fees from player records
+      const totalGreenFees = tt.players.reduce((sum, p) => sum + Number(p.greenFee ?? 0), 0)
+      const totalCartFees = tt.players.reduce((sum, p) => sum + Number(p.cartFee ?? 0), 0)
+      const totalCaddyFees = tt.players.reduce((sum, p) => sum + Number(p.caddyFee ?? 0), 0)
+      const totalPrice = totalGreenFees + totalCartFees + totalCaddyFees
+      const hasCart = tt.players.some((p) => p.cartType !== 'WALKING')
+      const hasCaddy = tt.players.some((p) => p.caddyStatus !== 'NONE')
+
+      const priceBreakdown: { label: string; amount: number }[] = []
+      if (totalGreenFees > 0) {
+        priceBreakdown.push({ label: `Green Fee (${players.length} player${players.length > 1 ? 's' : ''})`, amount: totalGreenFees })
+      }
+      if (totalCartFees > 0) {
+        priceBreakdown.push({ label: 'Cart Fee', amount: totalCartFees })
+      }
+      if (totalCaddyFees > 0) {
+        priceBreakdown.push({ label: 'Caddy Fee', amount: totalCaddyFees })
+      }
+
+      const dateStr =
+        tt.teeDate instanceof Date
+          ? tt.teeDate.toISOString().split('T')[0]!
+          : String(tt.teeDate).split('T')[0]!
+
+      const teeDate = tt.teeDate instanceof Date ? tt.teeDate : new Date(String(tt.teeDate))
+      const cancellationDeadline = new Date(teeDate)
+      cancellationDeadline.setHours(cancellationDeadline.getHours() - 24)
+
+      return {
+        id: tt.id,
+        date: dateStr,
+        time: tt.teeTime,
+        courseName: tt.course?.name ?? 'Unknown Course',
+        courseId: tt.course?.id ?? '',
+        roundType: (tt.holes === 9 ? '9-hole' : '18-hole') as '9-hole' | '18-hole',
+        status: mapBookingStatus(tt.status),
+        players,
+        cart: hasCart,
+        caddy: hasCaddy ? 'shared' as const : 'none' as const,
+        totalPrice,
+        priceBreakdown,
+        cancellationPolicy: {
+          fullRefundBefore: cancellationDeadline.toISOString(),
+          partialRefundBefore: teeDate.toISOString(),
+          noRefundAfter: teeDate.toISOString(),
+          partialRefundPercent: 50,
+        },
+        createdAt: tt.createdAt.toISOString(),
+      }
+    })
   } catch (error) {
     console.error('Error fetching golf bookings:', error)
     return []
@@ -611,19 +275,97 @@ export async function fetchGolfBookingById(
   id: string
 ): Promise<TeeTimeBooking | null> {
   try {
-    const client = getServerClient()
-    const result = await client.request<{ teeTime: TeeTimeResponse }>(
-      GetTeeTimeDocument,
-      { id }
-    )
+    const session = await getSession()
+    if (!session.isLoggedIn || !session.clubId || !session.memberId) return null
 
-    if (!result.teeTime) return null
+    const tt = await prisma.teeTime.findFirst({
+      where: {
+        id,
+        clubId: session.clubId,
+        players: { some: { memberId: session.memberId } },
+      },
+      include: {
+        course: { select: { id: true, name: true, holes: true, par: true } },
+        players: {
+          include: {
+            member: { select: { id: true, firstName: true, lastName: true, memberId: true } },
+            dependent: { select: { id: true, firstName: true, lastName: true } },
+          },
+          orderBy: { position: 'asc' },
+        },
+      },
+    })
 
-    const rates = result.teeTime.course?.id
-      ? await getGolfRates(result.teeTime.course.id)
-      : { greenFeePerPlayer: 3500, cartFee: 500, caddyFeeShared: 1500, caddyFeeIndividual: 2500 }
+    if (!tt) return null
 
-    return transformTeeTimeToBooking(result.teeTime, rates)
+    const players: BookingPlayer[] = tt.players.map((p) => {
+      let name = p.guestName ?? 'Unknown'
+      let playerMemberId: string | undefined
+      if (p.member) {
+        name = `${p.member.firstName} ${p.member.lastName}`
+        playerMemberId = p.member.memberId
+      } else if (p.dependent) {
+        name = `${p.dependent.firstName} ${p.dependent.lastName}`
+      }
+      return {
+        id: p.id,
+        name,
+        type: mapPlayerType(p.playerType),
+        memberId: playerMemberId,
+        email: p.guestEmail ?? undefined,
+        phone: p.guestPhone ?? undefined,
+      }
+    })
+
+    // Sum actual fees from player records
+    const totalGreenFees = tt.players.reduce((sum, p) => sum + Number(p.greenFee ?? 0), 0)
+    const totalCartFees = tt.players.reduce((sum, p) => sum + Number(p.cartFee ?? 0), 0)
+    const totalCaddyFees = tt.players.reduce((sum, p) => sum + Number(p.caddyFee ?? 0), 0)
+    const totalPrice = totalGreenFees + totalCartFees + totalCaddyFees
+    const hasCart = tt.players.some((p) => p.cartType !== 'WALKING')
+    const hasCaddy = tt.players.some((p) => p.caddyStatus !== 'NONE')
+
+    const priceBreakdown: { label: string; amount: number }[] = []
+    if (totalGreenFees > 0) {
+      priceBreakdown.push({ label: `Green Fee (${players.length} player${players.length > 1 ? 's' : ''})`, amount: totalGreenFees })
+    }
+    if (totalCartFees > 0) {
+      priceBreakdown.push({ label: 'Cart Fee', amount: totalCartFees })
+    }
+    if (totalCaddyFees > 0) {
+      priceBreakdown.push({ label: 'Caddy Fee', amount: totalCaddyFees })
+    }
+
+    const dateStr =
+      tt.teeDate instanceof Date
+        ? tt.teeDate.toISOString().split('T')[0]!
+        : String(tt.teeDate).split('T')[0]!
+
+    const teeDate = tt.teeDate instanceof Date ? tt.teeDate : new Date(String(tt.teeDate))
+    const cancellationDeadline = new Date(teeDate)
+    cancellationDeadline.setHours(cancellationDeadline.getHours() - 24)
+
+    return {
+      id: tt.id,
+      date: dateStr,
+      time: tt.teeTime,
+      courseName: tt.course?.name ?? 'Unknown Course',
+      courseId: tt.course?.id ?? '',
+      roundType: (tt.holes === 9 ? '9-hole' : '18-hole') as '9-hole' | '18-hole',
+      status: mapBookingStatus(tt.status),
+      players,
+      cart: hasCart,
+      caddy: hasCaddy ? 'shared' as const : 'none' as const,
+      totalPrice,
+      priceBreakdown,
+      cancellationPolicy: {
+        fullRefundBefore: cancellationDeadline.toISOString(),
+        partialRefundBefore: teeDate.toISOString(),
+        noRefundAfter: teeDate.toISOString(),
+        partialRefundPercent: 50,
+      },
+      createdAt: tt.createdAt.toISOString(),
+    }
   } catch (error) {
     console.error('Error fetching golf booking:', error)
     return null
@@ -635,21 +377,53 @@ export async function fetchGolfBookingById(
  */
 export async function fetchMyDependents(): Promise<BookingPlayer[]> {
   try {
-    const client = getServerClient()
-    const result = await client.request<{ myDependents: DependentResponse[] }>(
-      GetDependentsDocument
-    )
+    const session = await getSession()
+    if (!session.isLoggedIn || !session.memberId) return []
 
-    return (result.myDependents || []).map((d) => ({
+    const dependents = await prisma.dependent.findMany({
+      where: { memberId: session.memberId, isActive: true },
+    })
+
+    return dependents.map((d) => ({
       id: d.id,
       name: `${d.firstName} ${d.lastName}`,
       type: 'dependent' as const,
-      email: d.email,
-      phone: d.phone,
+      email: d.email ?? undefined,
+      phone: d.phone ?? undefined,
     }))
   } catch (error) {
     console.error('Error fetching dependents:', error)
     return []
+  }
+}
+
+/**
+ * Fetch current logged-in member info for booking forms
+ */
+export async function fetchCurrentMember(): Promise<{
+  id: string
+  name: string
+  memberId: string
+} | null> {
+  try {
+    const session = await getSession()
+    if (!session.isLoggedIn || !session.memberId) return null
+
+    const member = await prisma.member.findUnique({
+      where: { id: session.memberId },
+      select: { id: true, firstName: true, lastName: true, memberId: true },
+    })
+
+    if (!member) return null
+
+    return {
+      id: member.id,
+      name: `${member.firstName} ${member.lastName}`,
+      memberId: member.memberId,
+    }
+  } catch (error) {
+    console.error('Error fetching current member:', error)
+    return null
   }
 }
 
@@ -678,30 +452,91 @@ export interface CreateGolfBookingInput {
 
 /**
  * Create a new golf booking
+ * Uses direct Prisma — generates teeTimeNumber, validates slot, creates tee time + players
  */
 export async function createGolfBooking(
   input: CreateGolfBookingInput
 ): Promise<{ success: boolean; bookingId?: string; error?: string }> {
   try {
-    const client = getServerClient()
+    const session = await getSession()
+    if (!session.isLoggedIn || !session.clubId || !session.memberId) {
+      return { success: false, error: 'Not authenticated' }
+    }
 
-    const result = await client.request<{
-      createTeeTime: TeeTimeResponse
-    }>(CreateTeeTimeDocument, {
-      input: {
-        courseId: input.courseId,
-        teeDate: new Date(input.teeDate).toISOString(),
-        teeTime: input.teeTime,
-        holes: input.holes || 18,
-        players: input.players,
-        notes: input.notes,
+    // Validate course belongs to this club
+    const course = await prisma.golfCourse.findFirst({
+      where: { id: input.courseId, clubId: session.clubId, isActive: true },
+    })
+    if (!course) {
+      return { success: false, error: 'Course not found' }
+    }
+
+    // Check slot availability
+    const teeDate = new Date(input.teeDate + 'T00:00:00')
+    const existingPlayers = await prisma.teeTimePlayer.count({
+      where: {
+        teeTime: {
+          courseId: input.courseId,
+          teeDate,
+          teeTime: input.teeTime,
+          status: { notIn: ['CANCELLED'] },
+        },
       },
     })
 
-    return {
-      success: true,
-      bookingId: result.createTeeTime.id,
+    const maxPlayers = course.maxPlayers || 4
+    if (existingPlayers + input.players.length > maxPlayers) {
+      const available = maxPlayers - existingPlayers
+      return {
+        success: false,
+        error: available > 0
+          ? `Only ${available} position${available === 1 ? '' : 's'} available`
+          : 'This tee time is fully booked',
+      }
     }
+
+    // Generate tee time number (TT-YYYY-NNNNN)
+    const year = new Date().getFullYear()
+    const lastTeeTime = await prisma.teeTime.findFirst({
+      where: {
+        clubId: session.clubId,
+        teeTimeNumber: { startsWith: `TT-${year}` },
+      },
+      orderBy: { teeTimeNumber: 'desc' },
+    })
+    const nextNumber = lastTeeTime
+      ? parseInt(lastTeeTime.teeTimeNumber.split('-')[2] ?? '0', 10) + 1
+      : 1
+    const teeTimeNumber = `TT-${year}-${nextNumber.toString().padStart(5, '0')}`
+
+    const teeTime = await prisma.teeTime.create({
+      data: {
+        clubId: session.clubId,
+        teeTimeNumber,
+        courseId: input.courseId,
+        teeDate,
+        teeTime: input.teeTime,
+        holes: input.holes || 18,
+        status: 'CONFIRMED',
+        confirmedAt: new Date(),
+        notes: input.notes,
+        players: {
+          create: input.players.map((p) => ({
+            position: p.position,
+            playerType: p.playerType,
+            memberId: p.playerType === 'MEMBER' ? p.memberId : null,
+            guestName: p.guestName,
+            guestEmail: p.guestEmail,
+            guestPhone: p.guestPhone,
+            cartType: p.cartType || 'WALKING',
+            sharedWithPosition: p.sharedWithPosition,
+            caddyId: p.caddyId,
+          })),
+        },
+      },
+    })
+
+    return { success: true, bookingId: teeTime.id }
   } catch (error) {
     console.error('Error creating golf booking:', error)
     return {
@@ -713,18 +548,44 @@ export async function createGolfBooking(
 
 /**
  * Cancel a golf booking
+ * Uses direct Prisma — validates ownership and updates status
  */
 export async function cancelGolfBooking(
   id: string,
   reason?: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const client = getServerClient()
+    const session = await getSession()
+    if (!session.isLoggedIn || !session.clubId || !session.memberId) {
+      return { success: false, error: 'Not authenticated' }
+    }
 
-    await client.request<{ cancelTeeTime: { message: string } }>(
-      CancelTeeTimeDocument,
-      { id, reason }
-    )
+    // Verify the tee time belongs to this club and the member is a player
+    const teeTime = await prisma.teeTime.findFirst({
+      where: {
+        id,
+        clubId: session.clubId,
+        players: { some: { memberId: session.memberId } },
+      },
+    })
+
+    if (!teeTime) {
+      return { success: false, error: 'Booking not found' }
+    }
+
+    if (teeTime.status === 'CANCELLED') {
+      return { success: false, error: 'Booking is already cancelled' }
+    }
+
+    await prisma.teeTime.update({
+      where: { id },
+      data: {
+        status: 'CANCELLED',
+        cancelReason: reason ?? 'Cancelled by member',
+        cancelledAt: new Date(),
+        cancelledBy: session.userId,
+      },
+    })
 
     return { success: true }
   } catch (error) {

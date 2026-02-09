@@ -31,12 +31,12 @@ const statusConfig: Record<
   ApplicationStatus,
   { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline'; className: string }
 > = {
-  SUBMITTED: { label: 'Submitted', variant: 'default', className: 'bg-blue-100 text-blue-700 border-blue-200' },
-  UNDER_REVIEW: { label: 'Under Review', variant: 'default', className: 'bg-amber-100 text-amber-700 border-amber-200' },
-  PENDING_BOARD: { label: 'Pending Board', variant: 'default', className: 'bg-purple-100 text-purple-700 border-purple-200' },
-  APPROVED: { label: 'Approved', variant: 'default', className: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
-  REJECTED: { label: 'Rejected', variant: 'destructive', className: 'bg-red-100 text-red-700 border-red-200' },
-  WITHDRAWN: { label: 'Withdrawn', variant: 'secondary', className: 'bg-stone-100 text-stone-600 border-stone-200' },
+  SUBMITTED: { label: 'Submitted', variant: 'default', className: 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/20 dark:text-blue-400 dark:border-blue-500/30' },
+  UNDER_REVIEW: { label: 'Under Review', variant: 'default', className: 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/20 dark:text-amber-400 dark:border-amber-500/30' },
+  PENDING_BOARD: { label: 'Pending Board', variant: 'default', className: 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-500/20 dark:text-purple-400 dark:border-purple-500/30' },
+  APPROVED: { label: 'Approved', variant: 'default', className: 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30' },
+  REJECTED: { label: 'Rejected', variant: 'destructive', className: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-500/20 dark:text-red-400 dark:border-red-500/30' },
+  WITHDRAWN: { label: 'Withdrawn', variant: 'secondary', className: 'bg-stone-100 text-stone-600 border-stone-200 dark:bg-stone-800 dark:text-stone-400 dark:border-stone-700' },
 };
 
 // Filter tabs
@@ -234,8 +234,8 @@ export default function ApplicationsPage() {
             { label: 'Applications' },
           ]}
         />
-        <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
-          <p className="text-red-600">Failed to load applications. Please try again.</p>
+        <div className="rounded-lg border border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10 p-6 text-center">
+          <p className="text-red-600 dark:text-red-400">Failed to load applications. Please try again.</p>
         </div>
       </div>
     );
@@ -253,7 +253,7 @@ export default function ApplicationsPage() {
       />
 
       {/* Status Filter Tabs */}
-      <div className="flex gap-2 border-b border-stone-200">
+      <div className="flex gap-2 border-b border-stone-200 dark:border-stone-700">
         {statusFilters.map((filter) => (
           <button
             key={filter.value}
@@ -263,7 +263,7 @@ export default function ApplicationsPage() {
               ${
                 activeFilter === filter.value
                   ? 'text-amber-600'
-                  : 'text-stone-500 hover:text-stone-700'
+                  : 'text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-300'
               }
             `}
           >
@@ -275,8 +275,8 @@ export default function ApplicationsPage() {
                     rounded-full px-2 py-0.5 text-xs
                     ${
                       activeFilter === filter.value
-                        ? 'bg-amber-100 text-amber-700'
-                        : 'bg-stone-100 text-stone-600'
+                        ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400'
+                        : 'bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-400'
                     }
                   `}
                 >
@@ -292,27 +292,27 @@ export default function ApplicationsPage() {
       </div>
 
       {/* Applications Table */}
-      <div className="rounded-lg border border-stone-200 bg-white">
+      <div className="rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b bg-stone-50">
+            <thead className="border-b dark:border-stone-700 bg-stone-50 dark:bg-stone-800">
               <tr>
-                <th className="h-12 px-4 text-left font-medium text-stone-500">
+                <th className="h-12 px-4 text-left font-medium text-stone-500 dark:text-stone-400">
                   Applicant Name
                 </th>
-                <th className="h-12 w-32 px-4 text-left font-medium text-stone-500">
+                <th className="h-12 w-32 px-4 text-left font-medium text-stone-500 dark:text-stone-400">
                   Type
                 </th>
-                <th className="h-12 w-28 px-4 text-left font-medium text-stone-500">
+                <th className="h-12 w-28 px-4 text-left font-medium text-stone-500 dark:text-stone-400">
                   Submitted
                 </th>
-                <th className="h-12 w-40 px-4 text-left font-medium text-stone-500">
+                <th className="h-12 w-40 px-4 text-left font-medium text-stone-500 dark:text-stone-400">
                   Sponsor
                 </th>
-                <th className="h-12 w-32 px-4 text-left font-medium text-stone-500">
+                <th className="h-12 w-32 px-4 text-left font-medium text-stone-500 dark:text-stone-400">
                   Status
                 </th>
-                <th className="h-12 w-44 px-4 text-right font-medium text-stone-500">
+                <th className="h-12 w-44 px-4 text-right font-medium text-stone-500 dark:text-stone-400">
                   Actions
                 </th>
               </tr>
@@ -322,7 +322,7 @@ export default function ApplicationsPage() {
                 <tr>
                   <td colSpan={6} className="p-8 text-center">
                     <Loader2 className="mx-auto h-6 w-6 animate-spin text-amber-600" />
-                    <p className="mt-2 text-sm text-stone-500">Loading applications...</p>
+                    <p className="mt-2 text-sm text-stone-500 dark:text-stone-400">Loading applications...</p>
                   </td>
                 </tr>
               ) : applications.length === 0 ? (
@@ -335,26 +335,26 @@ export default function ApplicationsPage() {
                 applications.map((app) => (
                   <tr
                     key={app.id}
-                    className="border-b border-stone-100 transition-colors hover:bg-stone-50"
+                    className="border-b border-stone-100 dark:border-stone-700 transition-colors hover:bg-stone-50 dark:hover:bg-stone-800"
                   >
                     <td className="px-4 py-3">
                       <Link
                         href={`/members/applications/${app.id}`}
-                        className="font-medium text-stone-900 hover:text-amber-600 hover:underline"
+                        className="font-medium text-stone-900 dark:text-stone-100 hover:text-amber-600 hover:underline"
                       >
                         {app.firstName} {app.lastName}
                       </Link>
-                      <p className="text-xs text-stone-500">{app.email}</p>
+                      <p className="text-xs text-stone-500 dark:text-stone-400">{app.email}</p>
                     </td>
                     <td className="px-4 py-3">
                       <Badge variant="outline" className="text-xs">
                         {app.membershipType.name}
                       </Badge>
                     </td>
-                    <td className="px-4 py-3 text-stone-600">
+                    <td className="px-4 py-3 text-stone-600 dark:text-stone-400">
                       {formatDate(app.submittedAt)}
                     </td>
-                    <td className="px-4 py-3 text-stone-600">
+                    <td className="px-4 py-3 text-stone-600 dark:text-stone-400">
                       {app.sponsor ? `${app.sponsor.firstName} ${app.sponsor.lastName}` : '—'}
                     </td>
                     <td className="px-4 py-3">
@@ -396,8 +396,8 @@ export default function ApplicationsPage() {
 
         {/* Pagination */}
         {applications.length > 0 && (
-          <div className="flex items-center justify-between border-t border-stone-100 px-4 py-3">
-            <p className="text-sm text-stone-500">
+          <div className="flex items-center justify-between border-t border-stone-100 dark:border-stone-700 px-4 py-3">
+            <p className="text-sm text-stone-500 dark:text-stone-400">
               Showing {applications.length} of {data?.applications?.totalCount ?? 0} applications
             </p>
             <div className="flex items-center gap-2">

@@ -54,7 +54,7 @@ function getActionButtons(
   const dangerButtonClass = 'py-3 px-4 border border-red-200 text-red-600 rounded-xl font-medium hover:bg-red-50 transition-all duration-300 active:scale-[0.98]'
 
   switch (status) {
-    case 'booked':
+    case 'BOOKED':
       return (
         <>
           <button onClick={handlers.onCheckIn} className={primaryButtonClass}>
@@ -65,7 +65,7 @@ function getActionButtons(
           </button>
         </>
       )
-    case 'checked-in':
+    case 'CHECKED_IN':
       return (
         <>
           <button onClick={handlers.onSettle} className={primaryButtonClass}>
@@ -76,7 +76,7 @@ function getActionButtons(
           </button>
         </>
       )
-    case 'on-course':
+    case 'STARTED':
       return (
         <>
           <button onClick={handlers.onSettle} className={primaryButtonClass}>
@@ -87,13 +87,13 @@ function getActionButtons(
           </button>
         </>
       )
-    case 'finished':
+    case 'COMPLETED':
       return (
         <button onClick={handlers.onViewReceipt} className={secondaryButtonClass}>
           View Receipt
         </button>
       )
-    case 'no-show':
+    case 'NO_SHOW':
       return (
         <>
           <button onClick={handlers.onOverridePenalty} className={secondaryButtonClass}>
@@ -278,7 +278,7 @@ export function FlightDetailPanel({
                         player={player}
                         position={(index + 1) as 1 | 2 | 3 | 4}
                         onViewProfile={
-                          player.type === 'member' || player.type === 'dependent'
+                          player.type === 'MEMBER' || player.type === 'DEPENDENT'
                             ? () => onViewPlayerProfile?.(player)
                             : undefined
                         }
@@ -495,7 +495,7 @@ export function FlightDetailPanel({
         </div>
 
         {/* Footer Actions */}
-        {flight && flight.status !== 'available' && flight.status !== 'cancelled' && flight.status !== 'blocked' && (
+        {flight && flight.status !== 'AVAILABLE' && flight.status !== 'CANCELLED' && flight.status !== 'BLOCKED' && (
           <div className="border-t border-border p-4 sm:p-5 bg-muted/50 flex gap-3">
             {getActionButtons(flight.status, {
               onCheckIn,

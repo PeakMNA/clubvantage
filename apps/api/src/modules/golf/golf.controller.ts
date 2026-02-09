@@ -14,7 +14,10 @@ import {
   ApiOperation,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import { GolfService, CreateFlightDto, UpdateFlightDto } from './golf.service';
+import { GolfService } from './golf.service';
+import { TeeSheetService } from './tee-sheet.service';
+import { FlightService } from './flight.service';
+import { CreateFlightDto, UpdateFlightDto } from './golf.types';
 import { CurrentUser, CurrentTenant } from '@/common/decorators';
 import { RequirePermissions } from '@/common/decorators/permissions.decorator';
 import { JwtPayload } from '@/modules/auth/interfaces/jwt-payload.interface';
@@ -23,7 +26,11 @@ import { JwtPayload } from '@/modules/auth/interfaces/jwt-payload.interface';
 @ApiBearerAuth('JWT-auth')
 @Controller({ path: 'golf', version: '1' })
 export class GolfController {
-  constructor(private readonly golfService: GolfService) {}
+  constructor(
+    private readonly golfService: GolfService,
+    private readonly teeSheetService: TeeSheetService,
+    private readonly flightService: FlightService,
+  ) {}
 
   @Get('teesheet')
   @RequirePermissions('golf.read')
@@ -33,7 +40,7 @@ export class GolfController {
     @Query('courseId', ParseUUIDPipe) courseId: string,
     @Query('date') date: string,
   ) {
-    return this.golfService.getTeeSheet(tenantId, courseId, date);
+    return this.teeSheetService.getTeeSheet(tenantId, courseId, date);
   }
 
   @Post('flights')
@@ -44,7 +51,7 @@ export class GolfController {
     @CurrentUser() user: JwtPayload,
     @Body() dto: CreateFlightDto,
   ) {
-    return this.golfService.createFlight(tenantId, dto, user.sub, user.email);
+    return this.flightService.createFlight(tenantId, dto, user.sub, user.email);
   }
 
   @Get('flights/:id')
@@ -54,7 +61,7 @@ export class GolfController {
     @CurrentTenant() tenantId: string,
     @Param('id', ParseUUIDPipe) id: string,
   ) {
-    return this.golfService.getFlight(tenantId, id);
+    return this.flightService.getFlight(tenantId, id);
   }
 
   @Patch('flights/:id')
@@ -66,7 +73,7 @@ export class GolfController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateFlightDto,
   ) {
-    return this.golfService.updateFlight(tenantId, id, dto, user.sub, user.email);
+    return this.flightService.updateFlight(tenantId, id, dto, user.sub, user.email);
   }
 
   @Delete('flights/:id')
@@ -78,7 +85,7 @@ export class GolfController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body('reason') reason: string,
   ) {
-    return this.golfService.cancelFlight(tenantId, id, reason, user.sub, user.email);
+    return this.flightService.cancelFlight(tenantId, id, reason, user.sub, user.email);
   }
 
   @Post('flights/:id/checkin')
@@ -89,7 +96,7 @@ export class GolfController {
     @CurrentUser() user: JwtPayload,
     @Param('id', ParseUUIDPipe) id: string,
   ) {
-    return this.golfService.checkinFlight(tenantId, id, user.sub, user.email);
+    return this.flightService.checkinFlight(tenantId, id, user.sub, user.email);
   }
 
   @Get('courses')

@@ -188,7 +188,7 @@ export const members: Member[] = [
     status: 'ACTIVE',
     joinDate: '2023-06-01',
     balance: 45000,
-    agingBucket: '30',
+    agingBucket: 'DAYS_30',
     oldestInvoiceDate: '2024-12-15',
     autoPay: false,
     addresses: [
@@ -249,7 +249,7 @@ export const members: Member[] = [
     nationality: 'Thai',
     membershipTypeId: 'mt-001',
     membershipTypeName: 'Individual',
-    status: 'INACTIVE',
+    status: 'LAPSED',
     inactiveReason: 'Medical leave - recovery from surgery',
     joinDate: '2019-08-10',
     balance: 0,
@@ -286,7 +286,7 @@ export const members: Member[] = [
     suspensionReason: '91+ days overdue - booking blocked',
     joinDate: '2023-11-01',
     balance: 125700,
-    agingBucket: '91+',
+    agingBucket: 'DAYS_91_PLUS',
     oldestInvoiceDate: '2024-09-15',
     autoPay: false,
     addresses: [
@@ -334,7 +334,7 @@ export const members: Member[] = [
         lastName: 'Roberts',
         relationship: 'CHILD',
         dateOfBirth: '2015-01-22',
-        status: 'INACTIVE',
+        status: 'LAPSED',
       },
     ],
   },
@@ -349,7 +349,7 @@ export const members: Member[] = [
     nationality: 'Thai',
     membershipTypeId: 'mt-001',
     membershipTypeName: 'Individual',
-    status: 'PENDING',
+    status: 'APPLICANT',
     joinDate: '2024-12-28',
     balance: 65000,
     autoPay: false,
@@ -380,7 +380,7 @@ export const members: Member[] = [
     nationality: 'Thai',
     membershipTypeId: 'mt-001',
     membershipTypeName: 'Individual',
-    status: 'CANCELLED',
+    status: 'TERMINATED',
     inactiveReason: 'Relocated overseas',
     joinDate: '2018-02-14',
     balance: 0,
@@ -543,8 +543,8 @@ export const savedFilters: SavedFilter[] = [
   { id: 'sf-001', name: 'Active Members', filters: { statuses: ['ACTIVE'] }, isDefault: true },
   { id: 'sf-002', name: 'Overdue Balances', filters: { statuses: ['ACTIVE'], balanceMin: 1 } },
   { id: 'sf-003', name: 'New This Month', filters: {} },
-  { id: 'sf-004', name: 'Inactive & Cancelled', filters: { statuses: ['INACTIVE', 'CANCELLED'] } },
-  { id: 'sf-005', name: 'Suspended (91+ Days)', filters: { statuses: ['SUSPENDED'], agingBuckets: ['91+'] } },
+  { id: 'sf-004', name: 'Lapsed & Terminated', filters: { statuses: ['LAPSED', 'TERMINATED'] } },
+  { id: 'sf-005', name: 'Suspended (91+ Days)', filters: { statuses: ['SUSPENDED'], agingBuckets: ['DAYS_91_PLUS'] } },
 ];
 
 // =============================================================================
@@ -731,7 +731,7 @@ export function searchPersons(query: string, types?: import('./types').PersonTyp
           email: member.email,
           phone: member.phone,
           photoUrl: member.photoUrl,
-          status: member.status === 'ACTIVE' ? 'ACTIVE' : member.status === 'SUSPENDED' ? 'SUSPENDED' : member.status === 'PENDING' ? 'PENDING' : 'INACTIVE',
+          status: member.status === 'ACTIVE' ? 'ACTIVE' : member.status === 'SUSPENDED' ? 'SUSPENDED' : member.status === 'APPLICANT' ? 'PENDING' : 'INACTIVE',
           membershipTypeName: member.membershipTypeName,
         });
       }

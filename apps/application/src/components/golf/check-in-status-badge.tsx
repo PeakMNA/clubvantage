@@ -55,7 +55,7 @@ export function CheckInStatusBadge({
     )
   }
 
-  const config = statusConfig[paymentStatus]
+  const config = statusConfig[paymentStatus] ?? statusConfig.NO_CHARGES
   const Icon = config.icon
 
   return (

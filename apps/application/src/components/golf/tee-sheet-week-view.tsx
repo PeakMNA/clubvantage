@@ -4,8 +4,8 @@ import { useMemo, memo, useCallback } from 'react'
 import { cn } from '@clubvantage/ui'
 import { PlayerBlock, PlayerBlockGroup, type PlayerBlockStatus, type PlayerBlockType } from './player-block'
 import { PlayerBlockPopover, BookedPlayerBlock } from './player-block-popover'
-import type { PlayerType } from './player-type-badge'
-import type { WeekViewSlot, WeekViewPosition, NineType, BackendPlayerType } from './types'
+import type { PlayerType } from './types'
+import type { WeekViewSlot, WeekViewPosition, NineType } from './types'
 
 // Rule: rerender-memo-with-default-value - Hoist default prop values outside component
 const EMPTY_SLOTS: WeekViewSlot[] = []
@@ -49,35 +49,21 @@ function formatDisplayTime(time24: string): string {
   return `${displayHour}:${minutes?.toString().padStart(2, '0')} ${ampm}`
 }
 
-// Convert BackendPlayerType to PlayerBlockType
-function mapPlayerType(type: BackendPlayerType): PlayerBlockType {
-  switch (type) {
-    case 'MEMBER': return 'M'
-    case 'GUEST': return 'G'
-    case 'DEPENDENT': return 'D'
-    case 'WALK_UP': return 'W'
-    default: return 'M'
-  }
+// Map PlayerType to PlayerBlockType letter
+const playerTypeLetters: Record<string, PlayerBlockType> = {
+  MEMBER: 'M',
+  GUEST: 'G',
+  DEPENDENT: 'D',
+  WALK_UP: 'W',
 }
 
-// Convert BackendPlayerType to frontend PlayerType
-function mapToFrontendPlayerType(type: BackendPlayerType): PlayerType {
-  switch (type) {
-    case 'MEMBER': return 'member'
-    case 'GUEST': return 'guest'
-    case 'DEPENDENT': return 'dependent'
-    case 'WALK_UP': return 'walkup'
-    default: return 'member'
-  }
-}
-
-// Convert PositionStatusType to PlayerBlockStatus
+// Convert PositionStatusType to PlayerBlockStatus (both use UPPER_CASE now)
 function mapPositionStatus(status: string): PlayerBlockStatus {
   switch (status) {
-    case 'AVAILABLE': return 'available'
-    case 'BOOKED': return 'booked'
-    case 'BLOCKED': return 'blocked'
-    default: return 'available'
+    case 'AVAILABLE': return 'AVAILABLE'
+    case 'BOOKED': return 'BOOKED'
+    case 'BLOCKED': return 'BLOCKED'
+    default: return 'AVAILABLE'
   }
 }
 
@@ -257,7 +243,7 @@ export const TeeSheetWeekView = memo(function TeeSheetWeekView({
                               // Render 4 player blocks using data from the query
                               slot.positions.map((pos) => {
                                 const blockStatus = mapPositionStatus(pos.status)
-                                const playerType = pos.player ? mapPlayerType(pos.player.type) : undefined
+                                const playerType = pos.player ? (playerTypeLetters[pos.player.type] || 'M') : undefined
 
                                 if (pos.status === 'BOOKED' && pos.player) {
                                   // Booked position - show with popover
@@ -268,7 +254,7 @@ export const TeeSheetWeekView = memo(function TeeSheetWeekView({
                                       player={{
                                         id: pos.player.id,
                                         name: pos.player.name,
-                                        type: mapToFrontendPlayerType(pos.player.type),
+                                        type: pos.player.type,
                                         memberId: pos.player.memberId,
                                       }}
                                       onEdit={() => onPlayerEdit?.(pos.player!.id, date, time, nine)}
@@ -285,11 +271,11 @@ export const TeeSheetWeekView = memo(function TeeSheetWeekView({
                                     status={blockStatus}
                                     playerType={playerType}
                                     onClick={
-                                      blockStatus === 'available'
+                                      blockStatus === 'AVAILABLE'
                                         ? () => handlePositionClick(date, time, nine, pos.position, slot)
                                         : undefined
                                     }
-                                    disabled={blockStatus === 'blocked'}
+                                    disabled={blockStatus === 'BLOCKED'}
                                   />
                                 )
                               })
@@ -297,10 +283,10 @@ export const TeeSheetWeekView = memo(function TeeSheetWeekView({
                               // No data yet - show 4 empty available blocks
                               <PlayerBlockGroup
                                 positions={[
-                                  { status: 'available' },
-                                  { status: 'available' },
-                                  { status: 'available' },
-                                  { status: 'available' },
+                                  { status: 'AVAILABLE' },
+                                  { status: 'AVAILABLE' },
+                                  { status: 'AVAILABLE' },
+                                  { status: 'AVAILABLE' },
                                 ]}
                                 onPositionClick={(pos) => handlePositionClick(date, time, nine, pos + 1)}
                               />
@@ -321,27 +307,27 @@ export const TeeSheetWeekView = memo(function TeeSheetWeekView({
       <div className="border-t px-4 py-3 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
         <span className="text-muted-foreground font-medium">Legend:</span>
         <div className="flex items-center gap-2">
-          <PlayerBlock status="available" />
+          <PlayerBlock status="AVAILABLE" />
           <span>Available</span>
         </div>
         <div className="flex items-center gap-2">
-          <PlayerBlock status="booked" playerType="M" />
+          <PlayerBlock status="BOOKED" playerType="M" />
           <span>Member</span>
         </div>
         <div className="flex items-center gap-2">
-          <PlayerBlock status="booked" playerType="G" />
+          <PlayerBlock status="BOOKED" playerType="G" />
           <span>Guest</span>
         </div>
         <div className="flex items-center gap-2">
-          <PlayerBlock status="booked" playerType="D" />
+          <PlayerBlock status="BOOKED" playerType="D" />
           <span>Dependent</span>
         </div>
         <div className="flex items-center gap-2">
-          <PlayerBlock status="booked" playerType="W" />
+          <PlayerBlock status="BOOKED" playerType="W" />
           <span>Walk-up</span>
         </div>
         <div className="flex items-center gap-2">
-          <PlayerBlock status="blocked" />
+          <PlayerBlock status="BLOCKED" />
           <span>Blocked</span>
         </div>
       </div>

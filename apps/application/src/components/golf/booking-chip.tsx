@@ -27,36 +27,46 @@ const statusColors: Record<
   BookingStatus,
   { bg: string; border: string; text: string; strikethrough?: boolean }
 > = {
-  booked: {
+  AVAILABLE: {
+    bg: 'bg-stone-50',
+    border: 'border-stone-200',
+    text: 'text-stone-500',
+  },
+  BOOKED: {
     bg: 'bg-blue-50',
     border: 'border-blue-200',
     text: 'text-blue-700',
   },
-  'checked-in': {
+  CHECKED_IN: {
     bg: 'bg-emerald-50',
     border: 'border-emerald-200',
     text: 'text-emerald-700',
   },
-  'on-course': {
+  STARTED: {
     bg: 'bg-amber-50',
     border: 'border-amber-200',
     text: 'text-amber-700',
   },
-  completed: {
+  COMPLETED: {
     bg: 'bg-stone-100',
     border: 'border-stone-200',
     text: 'text-stone-500',
   },
-  cancelled: {
+  CANCELLED: {
     bg: 'bg-stone-50',
     border: 'border-stone-200',
     text: 'text-stone-400',
     strikethrough: true,
   },
-  'no-show': {
+  NO_SHOW: {
     bg: 'bg-red-50',
     border: 'border-red-200',
     text: 'text-red-600',
+  },
+  BLOCKED: {
+    bg: 'bg-stone-100',
+    border: 'border-stone-200',
+    text: 'text-stone-500',
   },
 }
 
@@ -165,13 +175,13 @@ export function BookingChip({
           // Badge uses slightly darker/more opaque version of the chip color
           bookingIndex === 1
             ? 'bg-purple-100 text-purple-800'
-            : status === 'booked'
+            : status === 'BOOKED'
               ? 'bg-blue-100 text-blue-800'
-              : status === 'checked-in'
+              : status === 'CHECKED_IN'
                 ? 'bg-emerald-100 text-emerald-800'
-                : status === 'on-course'
+                : status === 'STARTED'
                   ? 'bg-amber-100 text-amber-800'
-                  : status === 'no-show'
+                  : status === 'NO_SHOW'
                     ? 'bg-red-100 text-red-800'
                     : 'bg-stone-200 text-stone-600'
         )}

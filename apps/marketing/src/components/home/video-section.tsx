@@ -1,18 +1,21 @@
 'use client';
 
 import * as React from 'react';
-import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 import { Play, Pause, Users, Calendar } from 'lucide-react';
 
-const stats = [
-  { icon: Users, value: '50', label: 'Founding Spots' },
-  { icon: Users, value: '12', label: 'Members Joined' },
-  { icon: Calendar, value: '2.5', label: 'Year Roadmap' },
-];
-
 export function VideoSection() {
+  const tv = useTranslations('video');
+  const th = useTranslations('hero');
+  const tc = useTranslations('common');
   const [isPlaying, setIsPlaying] = React.useState(false);
   const videoRef = React.useRef<HTMLVideoElement>(null);
+
+  const stats = [
+    { icon: Users, value: '50', label: th('foundingSpots') },
+    { icon: Users, value: '12', label: th('membersJoined') },
+    { icon: Calendar, value: '2.5', label: tv('yearRoadmap') },
+  ];
 
   const handlePlayPause = () => {
     if (videoRef.current) {
@@ -31,13 +34,13 @@ export function VideoSection() {
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-12">
           <span className="text-label uppercase tracking-widest text-accent-500">
-            Our Vision
+            {tv('ourVision')}
           </span>
           <h2 className="mt-4 font-serif text-h1 text-charcoal-800">
-            See What We&apos;re Building
+            {tv('seeWhatWereBuilding')}
           </h2>
           <p className="mt-4 text-body-lg text-charcoal-500">
-            25 years of club expertise, rebuilt for the AI era.
+            {tv('subtitle')}
           </p>
         </div>
 
@@ -50,8 +53,10 @@ export function VideoSection() {
               className="absolute inset-0 w-full h-full object-cover"
               poster="/images/clubvantage-golf.png"
               onEnded={() => setIsPlaying(false)}
+              playsInline
+              preload="auto"
             >
-              <source src="/video/clubvantage-video.mp4" type="video/mp4" />
+              <source src="/video/TheClubThatRunsItself.mp4" type="video/mp4" />
               Your browser does not support the video tag.
             </video>
 
@@ -62,7 +67,7 @@ export function VideoSection() {
                 <button
                   onClick={handlePlayPause}
                   className="absolute inset-0 flex items-center justify-center group/play"
-                  aria-label="Play video"
+                  aria-label={tc('playVideo')}
                 >
                   <div className="relative">
                     <div className="absolute inset-0 rounded-full bg-accent-400/20 animate-ping" />
@@ -75,7 +80,7 @@ export function VideoSection() {
                   </div>
                 </button>
                 <div className="absolute bottom-4 right-4 px-3 py-1 rounded-full bg-charcoal-900/70 text-cream-100 text-sm">
-                  1:30
+                  1:35
                 </div>
               </>
             )}
@@ -86,7 +91,7 @@ export function VideoSection() {
                 onClick={handlePlayPause}
                 className="absolute bottom-4 right-4 flex items-center justify-center w-12 h-12 rounded-full
                          bg-charcoal-900/70 text-cream-100 opacity-0 group-hover:opacity-100 transition-opacity"
-                aria-label="Pause video"
+                aria-label={tc('pauseVideo')}
               >
                 <Pause className="h-5 w-5" fill="currentColor" />
               </button>

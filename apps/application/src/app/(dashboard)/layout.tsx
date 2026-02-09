@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { useAuth } from '@clubvantage/api-client';
+// Direct import to avoid pulling entire api-client bundle
+import { useAuth } from '@clubvantage/api-client/auth';
 
 import { AppShell } from '@/components/layout/app-shell';
 import { Sidebar } from '@/components/layout/sidebar';

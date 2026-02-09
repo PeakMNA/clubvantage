@@ -31,7 +31,7 @@ export interface EngagementTabProps {
 
 function SectionHeader({ icon: Icon, title }: { icon: React.ComponentType<{ className?: string }>; title: string }) {
   return (
-    <div className="relative flex items-center gap-3 border-b border-slate-100 p-4 sm:p-6">
+    <div className="relative flex items-center gap-3 border-b border-slate-100 dark:border-stone-700 p-4 sm:p-6">
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-muted to-muted/50 shadow-inner">
         <Icon className="h-5 w-5 text-muted-foreground" />
       </div>
@@ -43,7 +43,7 @@ function SectionHeader({ icon: Icon, title }: { icon: React.ComponentType<{ clas
 function LoadingState() {
   return (
     <div className="space-y-4 sm:space-y-6">
-      <div className="rounded-2xl border bg-white/80 p-6">
+      <div className="rounded-2xl border bg-white/80 dark:bg-stone-900/80 p-6">
         <Skeleton className="h-8 w-48 mb-4" />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -57,11 +57,11 @@ function LoadingState() {
 
 function ErrorState({ message, onRetry }: { message: string; onRetry?: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-red-200 bg-red-50/50 py-12">
-      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-100">
-        <AlertCircle className="h-7 w-7 text-red-600" />
+    <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-red-200 dark:border-red-500/30 bg-red-50/50 dark:bg-red-500/10 py-12">
+      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-100 dark:bg-red-500/20">
+        <AlertCircle className="h-7 w-7 text-red-600 dark:text-red-400" />
       </div>
-      <p className="mt-4 text-sm font-medium text-red-700">{message}</p>
+      <p className="mt-4 text-sm font-medium text-red-700 dark:text-red-400">{message}</p>
       {onRetry && (
         <Button variant="outline" size="sm" className="mt-4" onClick={onRetry}>
           Try Again
@@ -161,7 +161,7 @@ export function EngagementTab({ member }: EngagementTabProps) {
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Activity Interests Section */}
-      <div className="relative overflow-hidden rounded-2xl border border/60 bg-white/80 shadow-lg shadow-slate-200/30 backdrop-blur-sm">
+      <div className="relative overflow-hidden rounded-2xl border border/60 bg-white/80 dark:bg-stone-900/80 shadow-lg shadow-slate-200/30 dark:shadow-stone-900/30 backdrop-blur-sm">
         <div className="absolute inset-0 bg-gradient-to-br from-muted/50 to-transparent" />
 
         <div className="relative">
@@ -183,7 +183,7 @@ export function EngagementTab({ member }: EngagementTabProps) {
       </div>
 
       {/* Communication Preferences Section */}
-      <div className="relative overflow-hidden rounded-2xl border border/60 bg-white/80 shadow-lg shadow-slate-200/30 backdrop-blur-sm">
+      <div className="relative overflow-hidden rounded-2xl border border/60 bg-white/80 dark:bg-stone-900/80 shadow-lg shadow-slate-200/30 dark:shadow-stone-900/30 backdrop-blur-sm">
         <div className="absolute inset-0 bg-gradient-to-br from-muted/50 to-transparent" />
 
         <div className="relative">
@@ -204,7 +204,7 @@ export function EngagementTab({ member }: EngagementTabProps) {
                 {/* Email Promotions */}
                 <div className="flex items-center justify-between p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white dark:bg-stone-800 shadow-sm">
                       <Mail className="h-5 w-5 text-muted-foreground" />
                     </div>
                     <div>
@@ -225,7 +225,7 @@ export function EngagementTab({ member }: EngagementTabProps) {
                 {/* SMS Promotions */}
                 <div className="flex items-center justify-between p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white dark:bg-stone-800 shadow-sm">
                       <MessageSquare className="h-5 w-5 text-muted-foreground" />
                     </div>
                     <div>
@@ -246,7 +246,7 @@ export function EngagementTab({ member }: EngagementTabProps) {
                 {/* Push Notifications */}
                 <div className="flex items-center justify-between p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white dark:bg-stone-800 shadow-sm">
                       <Smartphone className="h-5 w-5 text-muted-foreground" />
                     </div>
                     <div>
@@ -266,8 +266,8 @@ export function EngagementTab({ member }: EngagementTabProps) {
 
                 {/* Unsubscribed categories info */}
                 {prefs?.unsubscribedCategories && prefs.unsubscribedCategories.length > 0 && (
-                  <div className="mt-4 p-4 rounded-xl bg-amber-50 border border-amber-200">
-                    <p className="text-sm text-amber-800">
+                  <div className="mt-4 p-4 rounded-xl bg-amber-50 dark:bg-amber-500/20 border border-amber-200 dark:border-amber-500/30">
+                    <p className="text-sm text-amber-800 dark:text-amber-300">
                       <strong>Note:</strong> Member has opted out of {prefs.unsubscribedCategories.length} activity
                       {prefs.unsubscribedCategories.length !== 1 ? ' categories' : ' category'}.
                     </p>

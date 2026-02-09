@@ -1,12 +1,12 @@
 'use server'
 
-import { prisma, getMemberId } from '@/lib/db'
+import { prisma, getMemberId, getClubId } from '@/lib/db'
 
 export async function registerForEvent(eventId: string): Promise<{ success: boolean; error?: string }> {
-  const memberId = await getMemberId()
+  const [memberId, clubId] = await Promise.all([getMemberId(), getClubId()])
 
-  const event = await prisma.event.findUnique({
-    where: { id: eventId },
+  const event = await prisma.event.findFirst({
+    where: { id: eventId, clubId },
     include: {
       _count: { select: { registrations: { where: { status: 'REGISTERED' } } } },
     },

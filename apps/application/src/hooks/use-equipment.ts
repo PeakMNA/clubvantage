@@ -19,9 +19,9 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 
 // Frontend types matching the equipment-tab.tsx expectations
-export type EquipmentCategoryType = 'cart' | 'bike' | 'sports' | 'fitness' | 'apparel' | 'other';
-export type EquipmentStatusType = 'available' | 'in_use' | 'reserved' | 'maintenance';
-export type EquipmentConditionType = 'excellent' | 'good' | 'fair' | 'needs_repair';
+export type EquipmentCategoryType = 'CART' | 'BIKE' | 'SPORTS' | 'FITNESS' | 'APPAREL' | 'OTHER';
+export type EquipmentStatusType = 'AVAILABLE' | 'IN_USE' | 'RESERVED' | 'MAINTENANCE';
+export type EquipmentConditionType = 'EXCELLENT' | 'GOOD' | 'FAIR' | 'NEEDS_REPAIR';
 
 export interface EquipmentAssignment {
   assignmentId: string;
@@ -70,48 +70,48 @@ export interface EquipmentCategory {
 // Map API category codes to frontend category types
 function mapCategoryCode(code: string): EquipmentCategoryType {
   const codeMap: Record<string, EquipmentCategoryType> = {
-    'GOLF_CARTS': 'cart',
-    'GOLF_CLUBS': 'sports',
-    'PULL_CARTS': 'cart',
-    'RANGE_BALLS': 'sports',
-    'TENNIS_RACKETS': 'sports',
-    'TENNIS_BALLS': 'sports',
-    'PROJECTORS': 'other',
-    'AUDIO_SYSTEMS': 'other',
-    'TABLES': 'other',
-    'CHAIRS': 'other',
-    'BIKES': 'bike',
-    'ELECTRIC_BIKES': 'bike',
-    'FITNESS_EQUIPMENT': 'fitness',
-    'YOGA_MATS': 'fitness',
-    'SWIM_GEAR': 'apparel',
+    'GOLF_CARTS': 'CART',
+    'GOLF_CLUBS': 'SPORTS',
+    'PULL_CARTS': 'CART',
+    'RANGE_BALLS': 'SPORTS',
+    'TENNIS_RACKETS': 'SPORTS',
+    'TENNIS_BALLS': 'SPORTS',
+    'PROJECTORS': 'OTHER',
+    'AUDIO_SYSTEMS': 'OTHER',
+    'TABLES': 'OTHER',
+    'CHAIRS': 'OTHER',
+    'BIKES': 'BIKE',
+    'ELECTRIC_BIKES': 'BIKE',
+    'FITNESS_EQUIPMENT': 'FITNESS',
+    'YOGA_MATS': 'FITNESS',
+    'SWIM_GEAR': 'APPAREL',
   };
-  return codeMap[code] || 'other';
+  return codeMap[code] || 'OTHER';
 }
 
 // Map API status to frontend status
 function mapStatus(apiStatus: EquipmentStatus): EquipmentStatusType {
   const statusMap: Record<string, EquipmentStatusType> = {
-    'AVAILABLE': 'available',
-    'IN_USE': 'in_use',
-    'RESERVED': 'reserved',
-    'MAINTENANCE': 'maintenance',
-    'RETIRED': 'maintenance',
+    'AVAILABLE': 'AVAILABLE',
+    'IN_USE': 'IN_USE',
+    'RESERVED': 'RESERVED',
+    'MAINTENANCE': 'MAINTENANCE',
+    'RETIRED': 'MAINTENANCE',
   };
-  return statusMap[apiStatus] || 'available';
+  return statusMap[apiStatus] || 'AVAILABLE';
 }
 
 // Map API condition to frontend condition
 function mapCondition(apiCondition: EquipmentCondition): EquipmentConditionType {
   const conditionMap: Record<string, EquipmentConditionType> = {
-    'EXCELLENT': 'excellent',
-    'GOOD': 'good',
-    'FAIR': 'fair',
-    'POOR': 'needs_repair',
-    'NEEDS_REPAIR': 'needs_repair',
-    'OUT_OF_SERVICE': 'needs_repair',
+    'EXCELLENT': 'EXCELLENT',
+    'GOOD': 'GOOD',
+    'FAIR': 'FAIR',
+    'POOR': 'NEEDS_REPAIR',
+    'NEEDS_REPAIR': 'NEEDS_REPAIR',
+    'OUT_OF_SERVICE': 'NEEDS_REPAIR',
   };
-  return conditionMap[apiCondition] || 'good';
+  return conditionMap[apiCondition] || 'GOOD';
 }
 
 // Format time for assignment display
@@ -217,9 +217,9 @@ export function useEquipment(operationType?: OperationType, filter?: Omit<Equipm
   const counts = useMemo(() => {
     return {
       total: equipment.length,
-      available: equipment.filter((e: Equipment) => e.status === 'available').length,
-      inUse: equipment.filter((e: Equipment) => e.status === 'in_use' || e.status === 'reserved').length,
-      maintenance: equipment.filter((e: Equipment) => e.status === 'maintenance').length,
+      available: equipment.filter((e: Equipment) => e.status === 'AVAILABLE').length,
+      inUse: equipment.filter((e: Equipment) => e.status === 'IN_USE' || e.status === 'RESERVED').length,
+      maintenance: equipment.filter((e: Equipment) => e.status === 'MAINTENANCE').length,
     };
   }, [equipment]);
 

@@ -7,7 +7,7 @@ import { Loader2 } from 'lucide-react';
 
 const buttonVariants = cva(
   // Base styles - Refined and elegant with enhanced transitions
-  `inline-flex items-center justify-center gap-2 font-medium
+  `inline-flex items-center justify-center gap-2 font-medium whitespace-nowrap
    transition-all duration-300 ease-out
    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2
    disabled:pointer-events-none disabled:opacity-50
@@ -72,10 +72,10 @@ const buttonVariants = cva(
         `,
       },
       size: {
-        sm: 'h-9 px-4 text-sm rounded-lg',
-        md: 'h-11 px-6 text-base rounded-lg',
-        lg: 'h-13 px-8 text-base rounded-xl',
-        xl: 'h-14 px-10 text-lg rounded-xl',
+        sm: 'min-h-9 py-2 px-4 text-sm rounded-lg',
+        md: 'min-h-11 py-2.5 px-6 text-base rounded-lg',
+        lg: 'min-h-13 py-3 px-8 text-base rounded-xl',
+        xl: 'min-h-14 py-3.5 px-10 text-lg rounded-xl',
         icon: 'h-10 w-10 rounded-lg',
       },
       fullWidth: {
@@ -139,7 +139,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ) : (
           <>
             {leftIcon && <span className="shrink-0 transition-transform duration-300 group-hover:scale-110">{leftIcon}</span>}
-            <span className="relative z-10">{children}</span>
+            <span className="relative z-10 inline-flex items-center gap-1">{children}</span>
             {rightIcon && <span className="shrink-0 transition-transform duration-300 group-hover:translate-x-0.5">{rightIcon}</span>}
           </>
         )}

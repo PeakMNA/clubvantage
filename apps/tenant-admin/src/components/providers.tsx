@@ -2,7 +2,9 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
-import { initializeClient, closeClients, AuthProvider } from '@clubvantage/api-client';
+// Direct imports to avoid pulling entire api-client bundle
+import { initializeClient, closeClients } from '@clubvantage/api-client/client';
+import { AuthProvider } from '@clubvantage/api-client/auth';
 
 // API configuration - uses environment variables
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';

@@ -54,7 +54,7 @@ const statusConfig: Record<StatementRunStatus, {
 }
 
 export function RunStatusBadge({ status, className, showIcon = true }: RunStatusBadgeProps) {
-  const config = statusConfig[status]
+  const config = statusConfig[status] ?? statusConfig.PENDING
   const { Icon } = config
 
   return (
@@ -66,7 +66,7 @@ export function RunStatusBadge({ status, className, showIcon = true }: RunStatus
         className
       )}
     >
-      {showIcon && <Icon className={cn('h-3 w-3', config.animate && 'animate-spin')} />}
+      {showIcon && Icon && <Icon className={cn('h-3 w-3', config.animate && 'animate-spin')} />}
       {config.label}
       <span className="sr-only">Run status: {config.label}</span>
     </span>

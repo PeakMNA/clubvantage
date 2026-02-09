@@ -46,8 +46,8 @@ export interface BulkSelectionBarProps {
 const statusOptions: { value: MemberStatus; label: string }[] = [
   { value: 'ACTIVE', label: 'Active' },
   { value: 'SUSPENDED', label: 'Suspended' },
-  { value: 'INACTIVE', label: 'Inactive' },
-  { value: 'CANCELLED', label: 'Cancelled' },
+  { value: 'LAPSED', label: 'Lapsed' },
+  { value: 'TERMINATED', label: 'Terminated' },
 ];
 
 // =============================================================================
@@ -83,7 +83,7 @@ export function BulkSelectionBar({
   const hasMixedStatuses = statusEntries.length > 1;
 
   // Check for invalid combinations (e.g., can't send invoice to cancelled members)
-  const hasInvalidForInvoice = statusCounts['CANCELLED'] > 0;
+  const hasInvalidForInvoice = statusCounts['TERMINATED'] > 0 || statusCounts['RESIGNED'] > 0;
 
   // Handle Escape key to clear selection
   const handleKeyDown = useCallback(
@@ -272,10 +272,10 @@ export function BulkSelectionBar({
                   className={cn(
                     'inline-block h-2 w-2 rounded-full',
                     status === 'ACTIVE' && 'bg-emerald-500',
-                    status === 'PENDING' && 'bg-amber-500',
+                    status === 'REACTIVATED' && 'bg-emerald-500',
+                    (status === 'PROSPECT' || status === 'LEAD' || status === 'APPLICANT') && 'bg-amber-500',
                     status === 'SUSPENDED' && 'bg-red-500',
-                    status === 'INACTIVE' && 'bg-stone-400',
-                    status === 'CANCELLED' && 'bg-stone-400'
+                    (status === 'LAPSED' || status === 'RESIGNED' || status === 'TERMINATED') && 'bg-stone-400'
                   )}
                 />
                 {count} {status.toLowerCase()}

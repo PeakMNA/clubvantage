@@ -93,7 +93,7 @@ export function ChargeCard({
   return (
     <div
       className={cn(
-        'group relative overflow-hidden rounded-xl border border/60 bg-white/80 shadow-sm backdrop-blur-sm transition-all duration-300 hover:shadow-md',
+        'group relative overflow-hidden rounded-xl border border/60 bg-white/80 dark:bg-stone-900/80 shadow-sm backdrop-blur-sm transition-all duration-300 hover:shadow-md',
         isEnded && 'opacity-60',
         className
       )}
@@ -194,7 +194,7 @@ export function ChargeCard({
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() => onRemove?.(charge)}
-                  className="cursor-pointer text-red-600 focus:text-red-600"
+                  className="cursor-pointer text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400"
                 >
                   Remove
                 </DropdownMenuItem>
@@ -206,7 +206,7 @@ export function ChargeCard({
 
       {/* Expanded View */}
       {isExpanded && (
-        <div className="relative border-t border-slate-100 bg-muted/30 px-4 pb-4 pt-3 sm:px-5 sm:pb-5 sm:pt-4">
+        <div className="relative border-t border-slate-100 dark:border-stone-700 bg-muted/30 px-4 pb-4 pt-3 sm:px-5 sm:pb-5 sm:pt-4">
           {/* Description */}
           {charge.description && (
             <p className="text-sm text-muted-foreground">{charge.description}</p>
@@ -231,7 +231,7 @@ export function ChargeCard({
                 <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">End Date</p>
                 <p className={cn(
                   'text-sm font-medium',
-                  charge.endDate ? 'text-foreground' : 'text-emerald-600'
+                  charge.endDate ? 'text-foreground' : 'text-emerald-600 dark:text-emerald-400'
                 )}>
                   {charge.endDate ? formatDate(charge.endDate) : 'Ongoing'}
                 </p>

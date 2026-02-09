@@ -282,14 +282,14 @@ export function ReceiptForm({
 
     // Check if this would result in reinstatement
     const agingStatus = activeAccount?.agingStatus || selectedMember?.agingStatus
-    if (agingStatus === 'suspended') {
+    if (agingStatus === 'SUSPENDED') {
       const outstandingAfter = pendingInvoices.reduce((sum, inv) => {
         const allocated = allocations[inv.id] || 0
         return sum + (inv.balance - allocated)
       }, 0)
 
       const has91PlusOutstanding = pendingInvoices.some(
-        (inv) => inv.agingStatus === 'suspended' && (inv.balance - (allocations[inv.id] || 0)) > 0
+        (inv) => inv.agingStatus === 'SUSPENDED' && (inv.balance - (allocations[inv.id] || 0)) > 0
       )
 
       if (has91PlusOutstanding) {

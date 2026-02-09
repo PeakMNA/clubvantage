@@ -132,7 +132,7 @@ export function ARPeriodSection({ id }: ARPeriodSectionProps) {
 
   if (isLoading) {
     return (
-      <section id={id} className="border rounded-xl p-6 space-y-6 scroll-mt-24 shadow-lg shadow-stone-200/30">
+      <section id={id} className="border rounded-xl p-6 space-y-6 scroll-mt-24 shadow-lg shadow-stone-200/30 dark:shadow-none">
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-6 w-6 animate-spin text-amber-500" />
           <span className="ml-2 text-muted-foreground">Loading AR period settings...</span>
@@ -142,7 +142,7 @@ export function ARPeriodSection({ id }: ARPeriodSectionProps) {
   }
 
   return (
-    <section id={id} className="border rounded-xl p-6 space-y-6 scroll-mt-24 shadow-lg shadow-stone-200/30">
+    <section id={id} className="border rounded-xl p-6 space-y-6 scroll-mt-24 shadow-lg shadow-stone-200/30 dark:shadow-none">
       {/* Header */}
       <div>
         <h2 className="text-xl font-semibold flex items-center gap-2">
@@ -157,7 +157,7 @@ export function ARPeriodSection({ id }: ARPeriodSectionProps) {
       {/* Billing Cycle Mode */}
       <div className="space-y-4">
         <h3 className="font-medium flex items-center gap-2">
-          <Clock className="h-4 w-4 text-stone-500" />
+          <Clock className="h-4 w-4 text-stone-500 dark:text-stone-400" />
           Billing Cycle Mode
         </h3>
         <div className="grid gap-3 sm:grid-cols-2">
@@ -169,13 +169,13 @@ export function ARPeriodSection({ id }: ARPeriodSectionProps) {
               className={cn(
                 'flex flex-col items-start p-4 rounded-lg border-2 transition-all text-left',
                 cycleMode === option.value
-                  ? 'border-amber-500 bg-amber-50 shadow-md'
-                  : 'border-stone-200 hover:border-stone-300 hover:bg-stone-50'
+                  ? 'border-amber-500 bg-amber-50 dark:bg-amber-500/20 shadow-md'
+                  : 'border-stone-200 dark:border-stone-700 hover:border-stone-300 dark:hover:border-stone-600 hover:bg-stone-50 dark:hover:bg-stone-800'
               )}
             >
               <span className={cn(
                 'font-medium',
-                cycleMode === option.value ? 'text-amber-700' : 'text-stone-900'
+                cycleMode === option.value ? 'text-amber-700 dark:text-amber-400' : 'text-stone-900 dark:text-stone-100'
               )}>
                 {option.label}
               </span>
@@ -186,9 +186,9 @@ export function ARPeriodSection({ id }: ARPeriodSectionProps) {
 
         {/* Warning when cycle mode is changed */}
         {cycleModeChanged && (
-          <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
-            <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
-            <p className="text-sm text-amber-800">
+          <div className="p-3 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-lg flex items-start gap-2">
+            <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+            <p className="text-sm text-amber-800 dark:text-amber-300">
               Changing billing cycle mode affects all future periods. Existing periods and statements are not affected.
             </p>
           </div>
@@ -196,7 +196,7 @@ export function ARPeriodSection({ id }: ARPeriodSectionProps) {
 
         {/* Club Cycle: Closing Day */}
         {cycleMode === 'CLUB_CYCLE' && (
-          <div className="ml-4 p-4 bg-stone-50 rounded-lg border border-stone-200">
+          <div className="ml-4 p-4 bg-stone-50 dark:bg-stone-800 rounded-lg border border-stone-200 dark:border-stone-700">
             <Label className="text-sm font-medium">Closing Day</Label>
             <div className="flex items-center gap-2 mt-2">
               <Input
@@ -219,7 +219,7 @@ export function ARPeriodSection({ id }: ARPeriodSectionProps) {
         {/* Member Cycle: Financial Period Type */}
         {cycleMode === 'MEMBER_CYCLE' && (
           <div className="ml-4 space-y-3">
-            <div className="p-4 bg-stone-50 rounded-lg border border-stone-200">
+            <div className="p-4 bg-stone-50 dark:bg-stone-800 rounded-lg border border-stone-200 dark:border-stone-700">
               <Label className="text-sm font-medium">Financial Period Type</Label>
               <p className="text-xs text-muted-foreground mt-1 mb-3">
                 Each member&apos;s AR cycle is computed from their join date. The financial period is for accounting/close checklist purposes only.
@@ -233,13 +233,13 @@ export function ARPeriodSection({ id }: ARPeriodSectionProps) {
                     className={cn(
                       'flex flex-col items-start p-3 rounded-lg border transition-all text-left',
                       financialPeriodType === option.value
-                        ? 'border-amber-500 bg-amber-50'
-                        : 'border-stone-200 hover:border-stone-300'
+                        ? 'border-amber-500 bg-amber-50 dark:bg-amber-500/20'
+                        : 'border-stone-200 dark:border-stone-700 hover:border-stone-300 dark:hover:border-stone-600'
                     )}
                   >
                     <span className={cn(
                       'text-sm font-medium',
-                      financialPeriodType === option.value ? 'text-amber-700' : 'text-stone-900'
+                      financialPeriodType === option.value ? 'text-amber-700 dark:text-amber-400' : 'text-stone-900 dark:text-stone-100'
                     )}>
                       {option.label}
                     </span>
@@ -267,13 +267,13 @@ export function ARPeriodSection({ id }: ARPeriodSectionProps) {
                 className={cn(
                   'flex flex-col items-start p-4 rounded-lg border-2 transition-all text-left',
                   cycleType === option.value
-                    ? 'border-amber-500 bg-amber-50 shadow-md'
-                    : 'border-stone-200 hover:border-stone-300 hover:bg-stone-50'
+                    ? 'border-amber-500 bg-amber-50 dark:bg-amber-500/20 shadow-md'
+                    : 'border-stone-200 dark:border-stone-700 hover:border-stone-300 dark:hover:border-stone-600 hover:bg-stone-50 dark:hover:bg-stone-800'
                 )}
               >
                 <span className={cn(
                   'font-medium',
-                  cycleType === option.value ? 'text-amber-700' : 'text-stone-900'
+                  cycleType === option.value ? 'text-amber-700 dark:text-amber-400' : 'text-stone-900 dark:text-stone-100'
                 )}>
                   {option.label}
                 </span>
@@ -284,7 +284,7 @@ export function ARPeriodSection({ id }: ARPeriodSectionProps) {
 
           {/* Custom Cycle Start Day - only show when cycle type is CUSTOM */}
           {cycleType === 'CUSTOM' && (
-            <div className="ml-4 p-4 bg-stone-50 rounded-lg border border-stone-200">
+            <div className="ml-4 p-4 bg-stone-50 dark:bg-stone-800 rounded-lg border border-stone-200 dark:border-stone-700">
               <Label className="text-sm font-medium">Custom Cycle Start Day</Label>
               <div className="flex items-center gap-2 mt-2">
                 <Input
@@ -344,13 +344,13 @@ export function ARPeriodSection({ id }: ARPeriodSectionProps) {
               className={cn(
                 'flex flex-col items-start p-4 rounded-lg border-2 transition-all text-left',
                 closeBehavior === option.value
-                  ? 'border-emerald-500 bg-emerald-50 shadow-md'
-                  : 'border-stone-200 hover:border-stone-300 hover:bg-stone-50'
+                  ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/20 shadow-md'
+                  : 'border-stone-200 dark:border-stone-700 hover:border-stone-300 dark:hover:border-stone-600 hover:bg-stone-50 dark:hover:bg-stone-800'
               )}
             >
               <span className={cn(
                 'font-medium',
-                closeBehavior === option.value ? 'text-emerald-700' : 'text-stone-900'
+                closeBehavior === option.value ? 'text-emerald-700 dark:text-emerald-400' : 'text-stone-900 dark:text-stone-100'
               )}>
                 {option.label}
               </span>

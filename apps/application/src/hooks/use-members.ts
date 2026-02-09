@@ -79,32 +79,9 @@ function transformMember(apiMember: any): Member {
   };
 }
 
-// Map API status to frontend status
+// API now returns canonical MemberStatus values — no mapping needed
 function mapApiStatus(apiStatus: string): MemberStatus {
-  const statusMap: Record<string, MemberStatus> = {
-    ACTIVE: 'ACTIVE',
-    SUSPENDED: 'SUSPENDED',
-    LAPSED: 'INACTIVE',
-    RESIGNED: 'CANCELLED',
-    TERMINATED: 'CANCELLED',
-    PROSPECT: 'PENDING',
-    LEAD: 'PENDING',
-    APPLICANT: 'PENDING',
-    REACTIVATED: 'ACTIVE',
-  };
-  return statusMap[apiStatus] || 'ACTIVE';
-}
-
-// Map frontend status to API status
-function mapFrontendStatus(frontendStatus: MemberStatus): string {
-  const statusMap: Record<MemberStatus, string> = {
-    ACTIVE: 'ACTIVE',
-    SUSPENDED: 'SUSPENDED',
-    INACTIVE: 'LAPSED',
-    CANCELLED: 'RESIGNED',
-    PENDING: 'APPLICANT',
-  };
-  return statusMap[frontendStatus] || 'ACTIVE';
+  return (apiStatus as MemberStatus) || 'ACTIVE';
 }
 
 export interface UseMembersOptions {
@@ -124,7 +101,7 @@ export function useMembers(options: UseMembersOptions = {}) {
     first: pageSize,
     skip: (page - 1) * pageSize,
     search: search || undefined,
-    status: status ? mapFrontendStatus(status) as any : undefined,
+    status: status || undefined,
     membershipTypeId: membershipTypeId || undefined,
   };
 
@@ -239,7 +216,6 @@ export function useMemberMutations() {
     }>) => {
       const input: any = { ...data };
       if (data.status) {
-        input.status = mapFrontendStatus(data.status);
         delete input.status; // Status change should use dedicated mutation
       }
       return updateMutation.mutateAsync({ id, input });

@@ -16,6 +16,8 @@ This document contains all demo user credentials for development and testing.
 
 ### Staff Application (http://localhost:3000)
 
+**Royal Bangkok Sports Club:**
+
 | Email | Password | Role | Description |
 |-------|----------|------|-------------|
 | admin@royalbangkokclub.com | Admin123! | TENANT_ADMIN | Full admin access to club |
@@ -24,6 +26,12 @@ This document contains all demo user credentials for development and testing.
 | frontdesk@royalbangkokclub.com | Admin123! | STAFF | Front desk staff |
 | membership@royalbangkokclub.com | Admin123! | STAFF | Membership staff |
 | booking@royalbangkokclub.com | Admin123! | STAFF | Booking staff |
+
+**Phuket Ocean Club:**
+
+| Email | Password | Role | Description |
+|-------|----------|------|-------------|
+| admin@phuketoceanclub.com | Admin123! | TENANT_ADMIN | Full admin access (Starter tier, no golf) |
 
 ### Platform Manager (http://localhost:3002)
 
@@ -41,9 +49,21 @@ This document contains all demo user credentials for development and testing.
 
 ### Member Portal (http://localhost:3004)
 
-| Email | Password | Role | Member |
-|-------|----------|------|--------|
-| member@demo.com | Member123! | MEMBER | Somchai Tanaka (M-0001) |
+**Royal Bangkok Sports Club:**
+
+| Email | Password | Member | Membership Type | Notes |
+|-------|----------|--------|----------------|-------|
+| member@demo.com | Member123! | Somchai Tanaka (M-0001) | Full | Primary demo member — has tee times, facility bookings, event registrations, household, dependents |
+| nattaya@demo.com | Member123! | Nattaya Wong (M-0002) | Full | |
+| thaksin@demo.com | Member123! | Thaksin Yamamoto (M-0006) | Golf | Golf-only membership |
+| chaiwat@demo.com | Member123! | Chaiwat Sato (M-0010) | Social | No golf access |
+| corporate@demo.com | Member123! | Tanawat Srivichai (M-0021) | Corporate | Corporate member (Siam Cement Group) |
+
+**Phuket Ocean Club:**
+
+| Email | Password | Member | Membership Type | Notes |
+|-------|----------|--------|----------------|-------|
+| phuket@demo.com | Member123! | Anan Kittikhun (P-0001) | Full | Starter tier club — facilities only, no golf module |
 
 ## Role Hierarchy
 
@@ -62,7 +82,9 @@ SUPER_ADMIN         <- Full platform access (no clubId)
 - **Tenant users** (TENANT_ADMIN, MANAGER, STAFF): Have a `clubId`, can only access their club
 - **Members**: Have a `clubId` and linked `memberId`, can only access member portal
 
-## Demo Club
+## Demo Clubs
+
+### Royal Bangkok Sports Club
 
 | Field | Value |
 |-------|-------|
@@ -72,6 +94,25 @@ SUPER_ADMIN         <- Full platform access (no clubId)
 | Timezone | Asia/Bangkok |
 | Currency | THB |
 | Tax Rate | 7% VAT |
+| Tier | PROFESSIONAL |
+| Features | Golf, Facility, Billing, Leads, Reports |
+| Members | 23 (20 base + 3 corporate) |
+| Membership Types | FULL, SOCIAL, GOLF, JUNIOR, CORPORATE |
+
+### Phuket Ocean Club
+
+| Field | Value |
+|-------|-------|
+| Name | Phuket Ocean Club |
+| Slug | phuket-ocean-club |
+| Region | Thailand (TH) |
+| Timezone | Asia/Bangkok |
+| Currency | THB |
+| Tax Rate | 7% VAT |
+| Tier | STARTER |
+| Features | Facility, Billing (no golf, no leads, no reports) |
+| Members | 6 |
+| Membership Types | FULL, SOCIAL |
 
 ## Resetting Demo Data
 
@@ -82,6 +123,16 @@ cd database
 pnpm prisma db push --force-reset
 pnpm prisma db seed
 ```
+
+The main seed (`seed.ts`) automatically calls the multi-tenancy seed at the end.
+To run the multi-tenancy seed standalone (e.g. after a partial reset):
+
+```bash
+cd database
+npx tsx prisma/seed-multitenancy.ts
+```
+
+All seed scripts are idempotent — safe to re-run without duplicating data.
 
 ## Authentication Flow
 

@@ -12,24 +12,24 @@ export default function PaymentSuccessPage() {
     <div className="px-5 py-6 pb-36">
       <div className="flex flex-col items-center text-center py-12 space-y-6">
         {/* Success Icon */}
-        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50">
-          <CheckCircle2 className="h-10 w-10 text-emerald-600" />
+        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-500/20">
+          <CheckCircle2 className="h-10 w-10 text-emerald-600 dark:text-emerald-400" />
         </div>
 
         {/* Message */}
         <div>
-          <h1 className="text-2xl font-bold text-stone-900">Payment Successful</h1>
-          <p className="text-sm text-stone-500 mt-2">
+          <h1 className="text-2xl font-bold text-stone-900 dark:text-stone-100">Payment Successful</h1>
+          <p className="text-sm text-stone-500 dark:text-stone-400 mt-2">
             Your payment has been processed successfully.
           </p>
-          <p className="text-xs text-stone-400 mt-1">
+          <p className="text-xs text-stone-400 dark:text-stone-500 mt-1">
             {format(new Date(), 'MMMM d, yyyy')}
           </p>
         </div>
 
         {/* Info */}
-        <div className="rounded-xl border border-stone-100 bg-white p-4 w-full max-w-sm text-left">
-          <p className="text-xs text-stone-500">
+        <div className="rounded-xl border border-stone-100 dark:border-stone-800 bg-white dark:bg-stone-900 p-4 w-full max-w-sm text-left">
+          <p className="text-xs text-stone-500 dark:text-stone-400">
             A receipt has been sent to your email. Your account balance will be updated shortly.
           </p>
         </div>

@@ -14,6 +14,7 @@ import {
   ArrowLeft,
   AlertTriangle,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import {
   MemberStatus,
   ApplicationStatus,
@@ -31,12 +32,16 @@ const memberStatusBadgeVariants = cva(
         md: 'px-3 py-1 text-sm',
       },
       status: {
-        // Member statuses
+        // Member statuses (canonical)
+        PROSPECT: 'bg-amber-500 text-white',
+        LEAD: 'bg-amber-500 text-white',
+        APPLICANT: 'bg-amber-500 text-white',
         ACTIVE: 'bg-emerald-500 text-white',
-        PENDING: 'bg-amber-500 text-white',
         SUSPENDED: 'bg-red-500 text-white',
-        INACTIVE: 'bg-muted text-muted-foreground',
-        CANCELLED: 'bg-muted text-muted-foreground',
+        LAPSED: 'bg-stone-100 text-stone-600',
+        RESIGNED: 'bg-stone-100 text-stone-500',
+        TERMINATED: 'bg-stone-100 text-stone-500',
+        REACTIVATED: 'bg-emerald-500 text-white',
 
         // Application statuses
         SUBMITTED: 'bg-blue-500 text-white',
@@ -78,12 +83,16 @@ export interface MemberStatusBadgeProps
 }
 
 const statusLabels: Record<AllStatuses, string> = {
-  // Member statuses
+  // Member statuses (canonical)
+  PROSPECT: 'Prospect',
+  LEAD: 'Lead',
+  APPLICANT: 'Applicant',
   ACTIVE: 'Active',
-  PENDING: 'Pending',
   SUSPENDED: 'Suspended',
-  INACTIVE: 'Inactive',
-  CANCELLED: 'Cancelled',
+  LAPSED: 'Lapsed',
+  RESIGNED: 'Resigned',
+  TERMINATED: 'Terminated',
+  REACTIVATED: 'Reactivated',
   // Application statuses
   SUBMITTED: 'Submitted',
   UNDER_REVIEW: 'Under Review',
@@ -100,11 +109,15 @@ const statusLabels: Record<AllStatuses, string> = {
 };
 
 const statusIcons: Partial<Record<AllStatuses, React.ComponentType<{ className?: string }>>> = {
+  PROSPECT: Clock,
+  LEAD: Clock,
+  APPLICANT: Clock,
   ACTIVE: Check,
-  PENDING: Clock,
   SUSPENDED: Pause,
-  INACTIVE: Minus,
-  CANCELLED: X,
+  LAPSED: Minus,
+  RESIGNED: ArrowLeft,
+  TERMINATED: X,
+  REACTIVATED: Check,
   SUBMITTED: ArrowUp,
   UNDER_REVIEW: Eye,
   PENDING_BOARD: Users,
@@ -116,19 +129,31 @@ const statusIcons: Partial<Record<AllStatuses, React.ComponentType<{ className?:
   ENDED: Minus,
 };
 
+/**
+ * Checks if a status value is a MemberStatus (for i18n lookup).
+ * MemberStatus values match the keys in the 'memberStatus' i18n namespace.
+ */
+function isMemberStatus(status: string): status is MemberStatus {
+  return status in MemberStatus;
+}
+
 export function MemberStatusBadge({
   status,
   size = 'sm',
   showIcon = false,
   className,
 }: MemberStatusBadgeProps) {
+  const t = useTranslations('memberStatus');
   const Icon = statusIcons[status];
   const iconSize = size === 'sm' ? 'h-3 w-3' : 'h-3.5 w-3.5';
+
+  // Use i18n translation for MemberStatus values, fallback to hardcoded labels for others
+  const label = isMemberStatus(status) ? t(status) : statusLabels[status];
 
   return (
     <span className={cn(memberStatusBadgeVariants({ status, size }), className)}>
       {showIcon && Icon && <Icon className={iconSize} />}
-      {statusLabels[status]}
+      {label}
     </span>
   );
 }

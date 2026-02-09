@@ -63,7 +63,7 @@ export function PlayerBlockPopover({
     setShowRemoveConfirm(false)
   }
 
-  const canViewMember = player.type === 'member' || player.type === 'dependent'
+  const canViewMember = player.type === 'MEMBER' || player.type === 'DEPENDENT'
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -194,14 +194,14 @@ export function BookedPlayerBlock({
 }: BookedPlayerBlockProps) {
   // Map PlayerType to PlayerBlockType
   const blockType: PlayerBlockType =
-    player.type === 'member' ? 'M' :
-    player.type === 'guest' ? 'G' :
-    player.type === 'dependent' ? 'D' : 'W'
+    player.type === 'MEMBER' ? 'M' :
+    player.type === 'GUEST' ? 'G' :
+    player.type === 'DEPENDENT' ? 'D' : 'W'
 
   return (
     <PlayerBlockPopover
       player={player}
-      blockStatus="booked"
+      blockStatus="BOOKED"
       blockType={blockType}
       onEdit={onEdit}
       onViewMember={onViewMember}
@@ -209,7 +209,7 @@ export function BookedPlayerBlock({
       disabled={disabled}
     >
       <PlayerBlock
-        status="booked"
+        status="BOOKED"
         playerType={blockType}
         isHighlighted={isHighlighted}
         asDiv

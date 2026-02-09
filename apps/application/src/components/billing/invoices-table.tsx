@@ -22,6 +22,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@clubvantage/ui';
+import type { InvoiceStatus } from '@clubvantage/types';
 
 interface Invoice {
   id: string;
@@ -32,7 +33,7 @@ interface Invoice {
   dueDate: string;
   amount: number;
   paidAmount: number;
-  status: 'draft' | 'sent' | 'paid' | 'partial' | 'overdue' | 'cancelled';
+  status: InvoiceStatus;
   items: number;
 }
 
@@ -47,7 +48,7 @@ const mockInvoices: Invoice[] = [
     dueDate: '2024-03-15',
     amount: 25000,
     paidAmount: 25000,
-    status: 'paid',
+    status: 'PAID',
     items: 3,
   },
   {
@@ -59,7 +60,7 @@ const mockInvoices: Invoice[] = [
     dueDate: '2024-03-15',
     amount: 45000,
     paidAmount: 0,
-    status: 'overdue',
+    status: 'OVERDUE',
     items: 5,
   },
   {
@@ -71,7 +72,7 @@ const mockInvoices: Invoice[] = [
     dueDate: '2024-03-20',
     amount: 18500,
     paidAmount: 10000,
-    status: 'partial',
+    status: 'PARTIALLY_PAID',
     items: 2,
   },
   {
@@ -83,7 +84,7 @@ const mockInvoices: Invoice[] = [
     dueDate: '2024-03-25',
     amount: 32000,
     paidAmount: 0,
-    status: 'sent',
+    status: 'SENT',
     items: 4,
   },
   {
@@ -95,7 +96,7 @@ const mockInvoices: Invoice[] = [
     dueDate: '2024-03-27',
     amount: 15000,
     paidAmount: 0,
-    status: 'draft',
+    status: 'DRAFT',
     items: 1,
   },
 ];
@@ -116,19 +117,30 @@ function formatDate(dateString: string) {
   });
 }
 
+const statusLabels: Record<InvoiceStatus, string> = {
+  DRAFT: 'Draft',
+  SENT: 'Sent',
+  PAID: 'Paid',
+  PARTIALLY_PAID: 'Partial',
+  OVERDUE: 'Overdue',
+  VOID: 'Void',
+  CANCELLED: 'Cancelled',
+};
+
 function getStatusColor(status: Invoice['status']) {
   switch (status) {
-    case 'paid':
+    case 'PAID':
       return 'default';
-    case 'sent':
+    case 'SENT':
       return 'secondary';
-    case 'partial':
+    case 'PARTIALLY_PAID':
       return 'outline';
-    case 'overdue':
+    case 'OVERDUE':
       return 'destructive';
-    case 'draft':
+    case 'DRAFT':
       return 'outline';
-    case 'cancelled':
+    case 'CANCELLED':
+    case 'VOID':
       return 'secondary';
     default:
       return 'secondary';
@@ -287,7 +299,7 @@ export function InvoicesTable() {
                 <td className="p-4 text-sm">{formatDate(invoice.dueDate)}</td>
                 <td className="p-4 text-right">
                   <p className="font-medium">{formatCurrency(invoice.amount)}</p>
-                  {invoice.status === 'partial' && (
+                  {invoice.status === 'PARTIALLY_PAID' && (
                     <p className="text-sm text-muted-foreground">
                       Paid: {formatCurrency(invoice.paidAmount)}
                     </p>
@@ -295,7 +307,7 @@ export function InvoicesTable() {
                 </td>
                 <td className="p-4 text-center">
                   <Badge variant={getStatusColor(invoice.status)}>
-                    {invoice.status}
+                    {statusLabels[invoice.status]}
                   </Badge>
                 </td>
                 <td className="p-4">
@@ -321,7 +333,7 @@ export function InvoicesTable() {
                         Send Email
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      {invoice.status !== 'paid' && invoice.status !== 'cancelled' && (
+                      {invoice.status !== 'PAID' && invoice.status !== 'CANCELLED' && (
                         <DropdownMenuItem>
                           <CreditCard className="mr-2 h-4 w-4" />
                           Record Payment

@@ -13,14 +13,14 @@ interface CartsTabProps {
   onScheduleMaintenance: (cart: Cart) => void
 }
 
-type FilterStatus = 'all' | 'available' | 'in-use' | 'maintenance'
+type FilterStatus = 'all' | 'AVAILABLE' | 'IN_USE' | 'MAINTENANCE'
 
 function CartStatusBadge({ status }: { status: Cart['status'] }) {
   const config = {
-    available: { bg: 'bg-emerald-50 dark:bg-emerald-500/20 border-emerald-200/60 dark:border-emerald-500/30', text: 'text-emerald-700 dark:text-emerald-400', label: 'Available' },
-    'in-use': { bg: 'bg-blue-50 dark:bg-blue-500/20 border-blue-200/60 dark:border-blue-500/30', text: 'text-blue-700 dark:text-blue-400', label: 'In Use' },
-    maintenance: { bg: 'bg-amber-50 dark:bg-amber-500/20 border-amber-200/60 dark:border-amber-500/30', text: 'text-amber-700 dark:text-amber-400', label: 'Maintenance' },
-    'out-of-service': { bg: 'bg-red-50 dark:bg-red-500/20 border-red-200/60 dark:border-red-500/30', text: 'text-red-700 dark:text-red-400', label: 'Out of Service' },
+    AVAILABLE: { bg: 'bg-emerald-50 dark:bg-emerald-500/20 border-emerald-200/60 dark:border-emerald-500/30', text: 'text-emerald-700 dark:text-emerald-400', label: 'Available' },
+    IN_USE: { bg: 'bg-blue-50 dark:bg-blue-500/20 border-blue-200/60 dark:border-blue-500/30', text: 'text-blue-700 dark:text-blue-400', label: 'In Use' },
+    MAINTENANCE: { bg: 'bg-amber-50 dark:bg-amber-500/20 border-amber-200/60 dark:border-amber-500/30', text: 'text-amber-700 dark:text-amber-400', label: 'Maintenance' },
+    OUT_OF_SERVICE: { bg: 'bg-red-50 dark:bg-red-500/20 border-red-200/60 dark:border-red-500/30', text: 'text-red-700 dark:text-red-400', label: 'Out of Service' },
   }[status]
 
   return (
@@ -47,10 +47,10 @@ function CartCard({
       {/* Accent line - color based on status */}
       <div className={cn(
         'absolute left-0 top-0 h-1 w-full',
-        cart.status === 'available' && 'bg-gradient-to-r from-emerald-300 via-emerald-500 to-emerald-300',
-        cart.status === 'in-use' && 'bg-gradient-to-r from-blue-300 via-blue-500 to-blue-300',
-        cart.status === 'maintenance' && 'bg-gradient-to-r from-amber-300 via-amber-500 to-amber-300',
-        cart.status === 'out-of-service' && 'bg-gradient-to-r from-red-300 via-red-500 to-red-300'
+        cart.status === 'AVAILABLE' && 'bg-gradient-to-r from-emerald-300 via-emerald-500 to-emerald-300',
+        cart.status === 'IN_USE' && 'bg-gradient-to-r from-blue-300 via-blue-500 to-blue-300',
+        cart.status === 'MAINTENANCE' && 'bg-gradient-to-r from-amber-300 via-amber-500 to-amber-300',
+        cart.status === 'OUT_OF_SERVICE' && 'bg-gradient-to-r from-red-300 via-red-500 to-red-300'
       )} />
 
       <div className="relative p-4 sm:p-5">
@@ -59,17 +59,17 @@ function CartCard({
           <div className="flex items-center gap-3">
             <div className={cn(
               'flex h-10 w-10 items-center justify-center rounded-xl shadow-inner',
-              cart.status === 'available' && 'bg-gradient-to-br from-emerald-100 to-emerald-200/50',
-              cart.status === 'in-use' && 'bg-gradient-to-br from-blue-100 to-blue-200/50',
-              cart.status === 'maintenance' && 'bg-gradient-to-br from-amber-100 to-amber-200/50',
-              cart.status === 'out-of-service' && 'bg-gradient-to-br from-red-100 to-red-200/50'
+              cart.status === 'AVAILABLE' && 'bg-gradient-to-br from-emerald-100 to-emerald-200/50',
+              cart.status === 'IN_USE' && 'bg-gradient-to-br from-blue-100 to-blue-200/50',
+              cart.status === 'MAINTENANCE' && 'bg-gradient-to-br from-amber-100 to-amber-200/50',
+              cart.status === 'OUT_OF_SERVICE' && 'bg-gradient-to-br from-red-100 to-red-200/50'
             )}>
               <Car className={cn(
                 'h-5 w-5',
-                cart.status === 'available' && 'text-emerald-600',
-                cart.status === 'in-use' && 'text-blue-600',
-                cart.status === 'maintenance' && 'text-amber-600',
-                cart.status === 'out-of-service' && 'text-red-600'
+                cart.status === 'AVAILABLE' && 'text-emerald-600',
+                cart.status === 'IN_USE' && 'text-blue-600',
+                cart.status === 'MAINTENANCE' && 'text-amber-600',
+                cart.status === 'OUT_OF_SERVICE' && 'text-red-600'
               )} />
             </div>
             <h3 className="text-lg font-bold tracking-tight text-foreground">Cart #{cart.number}</h3>
@@ -84,7 +84,7 @@ function CartCard({
             {cart.type}
           </div>
 
-          {cart.status === 'in-use' && cart.currentAssignment && (
+          {cart.status === 'IN_USE' && cart.currentAssignment && (
             <p className="text-sm text-blue-600 dark:text-blue-400 font-medium bg-blue-50/80 dark:bg-blue-500/10 px-3 py-2 rounded-lg border border-blue-100 dark:border-blue-500/30">
               Flight: {cart.currentAssignment}
             </p>
@@ -149,19 +149,19 @@ export function CartsTab({
     return cart.status === filter
   })
 
-  const availableCount = carts.filter((c) => c.status === 'available').length
+  const availableCount = carts.filter((c) => c.status === 'AVAILABLE').length
   const statusCounts = {
     all: carts.length,
-    available: carts.filter((c) => c.status === 'available').length,
-    'in-use': carts.filter((c) => c.status === 'in-use').length,
-    maintenance: carts.filter((c) => c.status === 'maintenance').length,
+    AVAILABLE: carts.filter((c) => c.status === 'AVAILABLE').length,
+    IN_USE: carts.filter((c) => c.status === 'IN_USE').length,
+    MAINTENANCE: carts.filter((c) => c.status === 'MAINTENANCE').length,
   }
 
   const filters: { id: FilterStatus; label: string }[] = [
     { id: 'all', label: 'All' },
-    { id: 'available', label: 'Available' },
-    { id: 'in-use', label: 'In Use' },
-    { id: 'maintenance', label: 'Maintenance' },
+    { id: 'AVAILABLE', label: 'Available' },
+    { id: 'IN_USE', label: 'In Use' },
+    { id: 'MAINTENANCE', label: 'Maintenance' },
   ]
 
   return (

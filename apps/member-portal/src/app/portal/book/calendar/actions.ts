@@ -10,8 +10,9 @@ interface TimeSlotResult {
 const DAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const
 
 export async function getAvailableSlots(facilityId: string, dateStr: string): Promise<TimeSlotResult[]> {
-  const facility = await prisma.facility.findUnique({
-    where: { id: facilityId },
+  const clubId = await getClubId()
+  const facility = await prisma.facility.findFirst({
+    where: { id: facilityId, clubId },
     include: {
       resources: {
         where: { isActive: true, isBookable: true },

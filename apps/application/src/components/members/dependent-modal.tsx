@@ -153,7 +153,7 @@ export function DependentModal({
                 handleInputChange('relationship', e.target.value as DependentRelationship)
               }
               required
-              className="flex h-10 w-full rounded-md border border-border bg-card px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-950 focus-visible:ring-offset-2"
+              className="flex h-10 w-full rounded-md border border-border bg-card px-3 py-2 text-sm ring-offset-white dark:ring-offset-stone-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-950 focus-visible:ring-offset-2"
             >
               {relationshipOptions.map((option) => (
                 <option key={option.value} value={option.value}>

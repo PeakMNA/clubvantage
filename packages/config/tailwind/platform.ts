@@ -24,6 +24,7 @@ import type { Config } from 'tailwindcss';
  */
 
 export const platformPreset: Config = {
+  darkMode: 'class',
   content: [],
   theme: {
     extend: {

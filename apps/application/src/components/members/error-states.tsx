@@ -54,7 +54,7 @@ export function InlineBannerError({
   return (
     <div
       className={cn(
-        'flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3',
+        'flex items-center gap-3 rounded-lg border border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10 px-4 py-3',
         'border-l-4 border-l-red-500',
         className
       )}
@@ -66,7 +66,7 @@ export function InlineBannerError({
         <button
           onClick={onRetry}
           disabled={isRetrying}
-          className="flex items-center gap-1 text-sm text-red-600 hover:text-red-700 hover:underline disabled:opacity-50"
+          className="flex items-center gap-1 text-sm text-red-600 dark:text-red-400 hover:text-red-700 hover:underline disabled:opacity-50"
         >
           {isRetrying && <Loader2 className="h-3 w-3 animate-spin" />}
           Retry
@@ -115,7 +115,7 @@ export function FullPageError({
       role="alert"
     >
       {/* Large alert icon */}
-      <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-red-100">
+      <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-red-100 dark:bg-red-500/20">
         <AlertCircle className="h-12 w-12 text-red-500" />
       </div>
 
@@ -189,7 +189,7 @@ export function ToastError({
         'flex items-center gap-3 rounded-lg px-4 py-3 shadow-lg transition-all duration-200',
         isSolid
           ? 'bg-red-500 text-white'
-          : 'border border-red-200 bg-white border-l-4 border-l-red-500',
+          : 'border border-red-200 dark:border-red-500/30 bg-white dark:bg-stone-900 border-l-4 border-l-red-500',
         isExiting && 'translate-x-full opacity-0'
       )}
       role="alert"
@@ -210,7 +210,7 @@ export function ToastError({
           onClick={onRetry}
           className={cn(
             'text-sm hover:underline',
-            isSolid ? 'text-white/90 hover:text-white' : 'text-red-600 hover:text-red-700'
+            isSolid ? 'text-white/90 hover:text-white' : 'text-red-600 dark:text-red-400 hover:text-red-700'
           )}
         >
           Retry

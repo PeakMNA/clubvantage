@@ -2,67 +2,61 @@
 
 import { cn } from '@clubvantage/ui'
 import { AlertTriangle } from 'lucide-react'
+import type { TeeTimeStatus } from '@clubvantage/types'
 
-export type FlightStatus =
-  | 'available'
-  | 'booked'
-  | 'checked-in'
-  | 'on-course'
-  | 'finished'
-  | 'no-show'
-  | 'cancelled'
-  | 'blocked'
+// Backwards-compatible alias
+export type FlightStatus = TeeTimeStatus
 
 interface FlightStatusBadgeProps {
-  status: FlightStatus
+  status: TeeTimeStatus
   className?: string
   size?: 'sm' | 'md' // sm for compact views, md is default
 }
 
-const statusConfig: Record<FlightStatus, {
+const statusConfig: Record<TeeTimeStatus, {
   label: string
   bgColor: string
   textColor: string
   icon?: boolean
   strikethrough?: boolean
 }> = {
-  available: {
+  AVAILABLE: {
     label: 'Available',
     bgColor: 'bg-muted',
     textColor: 'text-muted-foreground',
   },
-  booked: {
+  BOOKED: {
     label: 'Booked',
     bgColor: 'bg-blue-500',
     textColor: 'text-white',
   },
-  'checked-in': {
+  CHECKED_IN: {
     label: 'Checked In',
     bgColor: 'bg-emerald-500',
     textColor: 'text-white',
   },
-  'on-course': {
+  STARTED: {
     label: 'On Course',
     bgColor: 'bg-amber-500',
     textColor: 'text-white',
   },
-  finished: {
+  COMPLETED: {
     label: 'Finished',
     bgColor: 'bg-muted',
     textColor: 'text-muted-foreground',
   },
-  'no-show': {
+  NO_SHOW: {
     label: 'No Show',
     bgColor: 'bg-red-500',
     textColor: 'text-white',
   },
-  cancelled: {
+  CANCELLED: {
     label: 'Cancelled',
     bgColor: 'bg-muted',
     textColor: 'text-muted-foreground',
     strikethrough: true,
   },
-  blocked: {
+  BLOCKED: {
     label: 'Blocked',
     bgColor: 'bg-muted',
     textColor: 'text-muted-foreground',
@@ -71,7 +65,11 @@ const statusConfig: Record<FlightStatus, {
 }
 
 export function FlightStatusBadge({ status, className, size = 'md' }: FlightStatusBadgeProps) {
-  const config = statusConfig[status]
+  const config = statusConfig[status] ?? {
+    label: status ?? 'Unknown',
+    bgColor: 'bg-muted',
+    textColor: 'text-muted-foreground',
+  }
 
   return (
     <span

@@ -6,7 +6,7 @@ import { cn, Button } from '@clubvantage/ui'
 interface BlockElementProps {
   block: {
     id: string
-    type: 'starter' | 'maintenance'
+    type: 'STARTER' | 'MAINTENANCE'
     reason: string
     createdBy?: string
     createdByName?: string
@@ -41,8 +41,8 @@ function formatRecurrencePattern(pattern: string): string {
 }
 
 export function BlockElement({ block, onRelease }: BlockElementProps) {
-  const isStarter = block.type === 'starter'
-  const isMaintenance = block.type === 'maintenance'
+  const isStarter = block.type === 'STARTER'
+  const isMaintenance = block.type === 'MAINTENANCE'
 
   const Icon = isStarter ? Lock : Wrench
 

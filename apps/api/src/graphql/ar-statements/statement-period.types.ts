@@ -35,6 +35,9 @@ export class StatementPeriodGQLType {
   @Field()
   cutoffDate: Date;
 
+  @Field({ description: 'Whether this is a catch-up period for historical data' })
+  isCatchUp: boolean;
+
   @Field(() => PeriodStatusEnum)
   status: PeriodStatusEnum;
 

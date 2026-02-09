@@ -167,7 +167,7 @@ export function ApplicationTimeline(props: ApplicationTimelineProps) {
                   step.status === 'completed' && 'text-foreground',
                   step.status === 'active' && 'font-semibold text-foreground',
                   step.status === 'pending' && 'text-muted-foreground',
-                  step.status === 'rejected' && 'text-red-600'
+                  step.status === 'rejected' && 'text-red-600 dark:text-red-400'
                 )}
               >
                 {step.label}

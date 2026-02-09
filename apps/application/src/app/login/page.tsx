@@ -1,14 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { Button, Input, Label, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@clubvantage/ui';
-import { useAuth } from '@clubvantage/api-client';
+// Direct import to avoid pulling entire api-client bundle
+import { useAuth } from '@clubvantage/api-client/auth';
 
 export default function LoginPage() {
-  const router = useRouter();
   const { signIn } = useAuth();
 
   const [email, setEmail] = useState('');
@@ -36,21 +35,9 @@ export default function LoginPage() {
         return;
       }
 
-      // After sleep/wake cycles, the Next.js router can become stale.
-      // Refresh router state first, then navigate.
-      router.refresh();
-
-      // Small delay to ensure router state is refreshed before navigation
-      await new Promise(resolve => setTimeout(resolve, 50));
-
-      router.push('/');
-
-      // Fallback: if still on login page after 500ms, force hard navigation
-      setTimeout(() => {
-        if (window.location.pathname === '/login') {
-          window.location.href = '/';
-        }
-      }, 500);
+      // Full navigation to ensure middleware runs with fresh cookies
+      // and all server components load from scratch
+      window.location.href = '/';
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Invalid credentials');
     } finally {

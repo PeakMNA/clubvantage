@@ -6,7 +6,7 @@ import { ChevronLeft, ChevronRight, User, Star, Calendar, ExternalLink } from 'l
 import { Modal } from './modal'
 import type { Caddy } from './types'
 
-type AssignmentStatus = 'scheduled' | 'completed' | 'cancelled'
+type AssignmentStatus = 'SCHEDULED' | 'COMPLETED' | 'CANCELLED'
 
 interface CaddyAssignment {
   id: string
@@ -99,9 +99,9 @@ export function CaddyScheduleModal({
 
     return {
       total: monthAssignments.length,
-      scheduled: monthAssignments.filter((a) => a.status === 'scheduled').length,
-      completed: monthAssignments.filter((a) => a.status === 'completed').length,
-      cancelled: monthAssignments.filter((a) => a.status === 'cancelled').length,
+      scheduled: monthAssignments.filter((a) => a.status === 'SCHEDULED').length,
+      completed: monthAssignments.filter((a) => a.status === 'COMPLETED').length,
+      cancelled: monthAssignments.filter((a) => a.status === 'CANCELLED').length,
     }
   }, [assignments, currentMonth])
 
@@ -109,7 +109,7 @@ export function CaddyScheduleModal({
   const upcomingAssignments = useMemo(() => {
     const todayStr = today.toISOString().split('T')[0] as string
     return assignments
-      .filter((a) => a.date >= todayStr && a.status === 'scheduled')
+      .filter((a) => a.date >= todayStr && a.status === 'SCHEDULED')
       .sort((a, b) => {
         const dateCompare = a.date.localeCompare(b.date)
         if (dateCompare !== 0) return dateCompare
@@ -153,9 +153,9 @@ export function CaddyScheduleModal({
     const dateStr = date.toISOString().split('T')[0] as string
     const dayAssignments = assignmentsByDate.get(dateStr) || []
 
-    const scheduled = dayAssignments.filter((a) => a.status === 'scheduled').length
-    const completed = dayAssignments.filter((a) => a.status === 'completed').length
-    const cancelled = dayAssignments.filter((a) => a.status === 'cancelled').length
+    const scheduled = dayAssignments.filter((a) => a.status === 'SCHEDULED').length
+    const completed = dayAssignments.filter((a) => a.status === 'COMPLETED').length
+    const cancelled = dayAssignments.filter((a) => a.status === 'CANCELLED').length
 
     return { scheduled, completed, cancelled, total: dayAssignments.length }
   }

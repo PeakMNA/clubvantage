@@ -10,26 +10,11 @@ import { RemoveConfirmation } from './remove-confirmation'
 import type { BookingLineItemType, PaymentStatus } from '@clubvantage/api-client'
 import type { PlayerType } from './player-type-badge'
 
-// Helper to normalize player type from backend format to frontend format
-function normalizePlayerType(type: string): PlayerType {
-  const typeMap: Record<string, PlayerType> = {
-    'MEMBER': 'member',
-    'GUEST': 'guest',
-    'DEPENDENT': 'dependent',
-    'WALK_UP': 'walkup',
-    'member': 'member',
-    'guest': 'guest',
-    'dependent': 'dependent',
-    'walkup': 'walkup',
-  }
-  return typeMap[type] || 'guest'
-}
-
 // Slot cart data structure (matches GraphQL SlotCartType)
 export interface SlotCartData {
   playerId: string
   playerName: string
-  playerType: 'MEMBER' | 'GUEST' | 'DEPENDENT' | 'WALK_UP'
+  playerType: PlayerType
   memberId?: string
   memberNumber?: string
   lineItems: Array<{
@@ -180,7 +165,7 @@ export function SlotCard({
         <div className="flex-1 min-w-0 pr-6">
           <div className="flex items-center gap-2">
             <span className="font-semibold text-sm truncate">{slot.playerName}</span>
-            <PlayerTypeBadge type={normalizePlayerType(slot.playerType)} />
+            <PlayerTypeBadge type={slot.playerType} />
           </div>
           {slot.memberNumber && (
             <div className="text-xs text-muted-foreground mt-0.5">

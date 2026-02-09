@@ -562,7 +562,7 @@ export function convertSlotsToFlights(
           p ? {
             id: p.id,
             name: p.name,
-            type: p.type as 'member' | 'guest' | 'dependent' | 'walkup',
+            type: p.type as 'MEMBER' | 'GUEST' | 'DEPENDENT' | 'WALK_UP',
             memberId: p.memberId,
             memberUuid: p.memberUuid, // Member.id (UUID) for API calls
             bookingId: p.bookingId,
@@ -595,7 +595,7 @@ export function convertSlotsToFlights(
       id: `flight-${dateStr}-${slot.time.replace(':', '')}`,
       time: formatTime(slot.time),
       date: dateStr,
-      status: 'available' as FlightStatus,
+      status: 'AVAILABLE' as FlightStatus,
       players: [null, null, null, null],
       courseId,
       isPrimeTime: slot.isPrimeTime,

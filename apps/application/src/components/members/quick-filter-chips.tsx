@@ -14,9 +14,9 @@ interface QuickFilterChipsProps {
 const filterOptions: { value: QuickFilterOption; label: string }[] = [
   { value: 'ALL', label: 'All Members' },
   { value: 'ACTIVE', label: 'Active' },
-  { value: 'PENDING', label: 'Pending' },
+  { value: 'APPLICANT', label: 'Applicant' },
   { value: 'SUSPENDED', label: 'Suspended' },
-  { value: 'INACTIVE', label: 'Inactive' },
+  { value: 'LAPSED', label: 'Lapsed' },
 ];
 
 export function QuickFilterChips({

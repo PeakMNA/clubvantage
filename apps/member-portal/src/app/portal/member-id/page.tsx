@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { getMemberProfile } from '@/lib/data'
+import { getClubInfo } from '@/app/portal/contact/actions'
 
 export const metadata: Metadata = {
   title: 'Member ID | Member Portal',
@@ -7,7 +8,7 @@ export const metadata: Metadata = {
 import { MemberIdContent } from './member-id-content'
 
 export default async function MemberIdPage() {
-  const member = await getMemberProfile()
+  const [member, club] = await Promise.all([getMemberProfile(), getClubInfo()])
 
   return (
     <MemberIdContent
@@ -19,6 +20,7 @@ export default async function MemberIdPage() {
         dependentCount: member.dependentCount,
         status: member.status,
       }}
+      clubName={club.name}
     />
   )
 }

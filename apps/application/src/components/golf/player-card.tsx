@@ -7,22 +7,25 @@ import { PlayerTypeBadge } from './player-type-badge'
 import type { Player, RentalStatus } from './types'
 
 const RENTAL_STATUS_OPTIONS: { value: RentalStatus; label: string }[] = [
-  { value: 'none', label: 'None' },
-  { value: 'requested', label: 'Requested' },
-  { value: 'paid', label: 'Paid' },
-  { value: 'assigned', label: 'Assigned' },
-  { value: 'returned', label: 'Returned' },
+  { value: 'NONE', label: 'None' },
+  { value: 'REQUESTED', label: 'Requested' },
+  { value: 'PAID', label: 'Paid' },
+  { value: 'ASSIGNED', label: 'Assigned' },
+  { value: 'RETURNED', label: 'Returned' },
 ]
+
+const rentalStatusLabel = (status: RentalStatus | undefined) =>
+  RENTAL_STATUS_OPTIONS.find(o => o.value === status)?.label ?? 'None'
 
 function getRentalStatusColor(status: RentalStatus | undefined): string {
   switch (status) {
-    case 'requested':
+    case 'REQUESTED':
       return 'text-amber-600 bg-amber-50 dark:bg-amber-500/20 dark:text-amber-400'
-    case 'paid':
+    case 'PAID':
       return 'text-emerald-600 bg-emerald-50 dark:bg-emerald-500/20 dark:text-emerald-400'
-    case 'assigned':
+    case 'ASSIGNED':
       return 'text-blue-600 bg-blue-50 dark:bg-blue-500/20 dark:text-blue-400'
-    case 'returned':
+    case 'RETURNED':
       return 'text-purple-600 bg-purple-50 dark:bg-purple-500/20 dark:text-purple-400'
     default:
       return 'text-muted-foreground bg-muted'
@@ -74,7 +77,7 @@ export function PlayerCard({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const isMember = player.type === 'member' || player.type === 'dependent'
+  const isMember = player.type === 'MEMBER' || player.type === 'DEPENDENT'
 
   return (
     <div className="flex items-center gap-3 p-3 bg-muted/50 border rounded-lg hover:bg-muted transition-colors">
@@ -101,24 +104,24 @@ export function PlayerCard({
           <span className="font-medium text-sm truncate">{player.name}</span>
           <PlayerTypeBadge type={player.type} />
           {/* Rental indicators (read-only view) */}
-          {!showRentalControls && (player.cartStatus && player.cartStatus !== 'none' || player.caddyStatus && player.caddyStatus !== 'none') && (
+          {!showRentalControls && (player.cartStatus && player.cartStatus !== 'NONE' || player.caddyStatus && player.caddyStatus !== 'NONE') && (
             <div className="flex items-center gap-1 ml-1">
-              {player.cartStatus && player.cartStatus !== 'none' && (
+              {player.cartStatus && player.cartStatus !== 'NONE' && (
                 <span
-                  title={`Cart: ${player.cartStatus}${player.cartSharedWith ? ` (shared with P${player.cartSharedWith})` : ''}`}
+                  title={`Cart: ${rentalStatusLabel(player.cartStatus)}${player.cartSharedWith ? ` (shared with P${player.cartSharedWith})` : ''}`}
                   className={cn('px-1.5 py-0.5 rounded text-[10px] font-medium', getRentalStatusColor(player.cartStatus))}
                 >
                   <Car className="h-3 w-3 inline mr-0.5" />
-                  {player.cartStatus.charAt(0).toUpperCase()}
+                  {rentalStatusLabel(player.cartStatus).charAt(0)}
                 </span>
               )}
-              {player.caddyStatus && player.caddyStatus !== 'none' && (
+              {player.caddyStatus && player.caddyStatus !== 'NONE' && (
                 <span
-                  title={`Caddy: ${player.caddyStatus}`}
+                  title={`Caddy: ${rentalStatusLabel(player.caddyStatus)}`}
                   className={cn('px-1.5 py-0.5 rounded text-[10px] font-medium', getRentalStatusColor(player.caddyStatus))}
                 >
                   <Users className="h-3 w-3 inline mr-0.5" />
-                  {player.caddyStatus.charAt(0).toUpperCase()}
+                  {rentalStatusLabel(player.caddyStatus).charAt(0)}
                 </span>
               )}
             </div>
@@ -146,7 +149,7 @@ export function PlayerCard({
               )}
             >
               <Car className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">{player.cartStatus ? player.cartStatus.charAt(0).toUpperCase() + player.cartStatus.slice(1) : 'None'}</span>
+              <span className="hidden sm:inline">{rentalStatusLabel(player.cartStatus)}</span>
               <ChevronDown className="h-3 w-3" />
             </button>
             {cartDropdownOpen && (
@@ -184,7 +187,7 @@ export function PlayerCard({
               )}
             >
               <Users className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">{player.caddyStatus ? player.caddyStatus.charAt(0).toUpperCase() + player.caddyStatus.slice(1) : 'None'}</span>
+              <span className="hidden sm:inline">{rentalStatusLabel(player.caddyStatus)}</span>
               <ChevronDown className="h-3 w-3" />
             </button>
             {caddyDropdownOpen && (

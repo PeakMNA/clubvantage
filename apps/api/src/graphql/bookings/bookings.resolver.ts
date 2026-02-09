@@ -1010,7 +1010,7 @@ export class BookingsResolver {
         id: c.id,
         name: c.name,
         expiresAt: c.expiryDate ?? undefined,
-        status: !c.expiryDate ? 'valid' : c.expiryDate < now ? 'expired' : c.expiryDate < ninetyDaysFromNow ? 'expiring' : 'valid',
+        status: !c.expiryDate ? 'VALID' : c.expiryDate < now ? 'EXPIRED' : c.expiryDate < ninetyDaysFromNow ? 'EXPIRING' : 'VALID',
       })),
       workingHours: staff.workingSchedule ? JSON.parse(staff.workingSchedule as string) : undefined,
       defaultFacilityId: staff.defaultFacilityId ?? undefined,

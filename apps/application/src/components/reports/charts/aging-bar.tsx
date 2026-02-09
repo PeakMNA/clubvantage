@@ -3,7 +3,7 @@
 import { cn } from '@clubvantage/ui'
 import { Lock } from 'lucide-react'
 
-export type AgingStatus = 'current' | '30' | '60' | '90' | 'suspended'
+export type AgingStatus = 'CURRENT' | 'DAYS_30' | 'DAYS_60' | 'DAYS_90' | 'SUSPENDED'
 
 export interface AgingBarData {
   status: AgingStatus
@@ -22,27 +22,27 @@ const statusConfig: Record<
   AgingStatus,
   { color: string; label: string; textColor: string }
 > = {
-  current: {
+  CURRENT: {
     color: 'bg-emerald-500',
     label: 'Current',
     textColor: 'text-white',
   },
-  '30': {
+  DAYS_30: {
     color: 'bg-amber-500',
     label: '1-30 Days',
     textColor: 'text-white',
   },
-  '60': {
+  DAYS_60: {
     color: 'bg-orange-500',
     label: '31-60 Days',
     textColor: 'text-white',
   },
-  '90': {
+  DAYS_90: {
     color: 'bg-red-500',
     label: '61-90 Days',
     textColor: 'text-white',
   },
-  suspended: {
+  SUSPENDED: {
     color: 'bg-red-700',
     label: '91+ Suspended',
     textColor: 'text-white',
@@ -89,7 +89,7 @@ export function AgingBar({
             >
               {showLabels && item.percentage >= 10 && (
                 <span className={cn('text-xs font-medium', config.textColor)}>
-                  {item.status === 'suspended' && <Lock className="inline h-3 w-3 mr-0.5" />}
+                  {item.status === 'SUSPENDED' && <Lock className="inline h-3 w-3 mr-0.5" />}
                   {item.percentage.toFixed(0)}%
                 </span>
               )}

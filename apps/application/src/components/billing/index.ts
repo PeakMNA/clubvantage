@@ -40,6 +40,12 @@ export {
   type ReinstatedMember,
 } from './aging-dashboard-tab'
 export {
+  AgingSummaryCard,
+  AgingDistributionBar,
+  type AgingBucketSummary,
+  type AgingSummaryData,
+} from './aging-summary-card'
+export {
   WhtCertificatesTab,
   type WhtCertificateItem,
   type WhtCertificatesSummary,
@@ -112,6 +118,15 @@ export {
   StatementModal,
   type StatementFormData,
 } from './statement-modal'
+export {
+  CreatePeriodModal,
+  type CreatePeriodFormData,
+} from './create-period-modal'
+export {
+  PeriodInitWizard,
+  type PeriodInitWizardProps,
+  type InitWizardResult,
+} from './period-init-wizard'
 
 // Legacy (to be deprecated)
 export { InvoicesTable } from './invoices-table'

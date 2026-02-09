@@ -7,9 +7,11 @@ const publicRoutes = ['/login', '/forgot-password', '/reset-password'];
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Skip middleware for static files and API routes
+  // Skip middleware for static files, API routes, and dev tools
   if (
     pathname.startsWith('/_next') ||
+    pathname.startsWith('/__next') ||
+    pathname.startsWith('/__webpack_hmr') ||
     pathname.startsWith('/api') ||
     pathname.includes('.')
   ) {

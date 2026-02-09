@@ -27,7 +27,7 @@ export interface PlayerData {
   sponsoringMemberId?: string
 }
 
-type PlayerTypeOption = 'member' | 'guest' | 'dependent' | 'walkup'
+type PlayerTypeOption = 'MEMBER' | 'GUEST' | 'DEPENDENT' | 'WALK_UP'
 type AddPlayerStep = 'type-select' | 'member-search' | 'guest-form' | 'dependent-search' | 'walkup-form'
 
 // === Subcomponents ===
@@ -94,8 +94,8 @@ function MemberSearch({ onSelect, onBack, searchFn }: MemberSearchProps) {
         } else {
           await new Promise((r) => setTimeout(r, 300))
           const mockResults: PlayerData[] = [
-            { id: '1', name: 'John Smith', type: 'member' as const, memberId: 'M-0001' },
-            { id: '2', name: 'Jane Doe', type: 'member' as const, memberId: 'M-0002' },
+            { id: '1', name: 'John Smith', type: 'MEMBER' as const, memberId: 'M-0001' },
+            { id: '2', name: 'Jane Doe', type: 'MEMBER' as const, memberId: 'M-0002' },
           ].filter((p) => p.name.toLowerCase().includes(query.toLowerCase()))
           setResults(mockResults)
         }
@@ -193,7 +193,7 @@ function GuestForm({ onSubmit, onBack, bookerName, requireContact }: GuestFormPr
     onSubmit({
       id: `guest-${Date.now()}`,
       name: name.trim(),
-      type: 'guest',
+      type: 'GUEST',
       phone: phone.trim() || undefined,
       email: email.trim() || undefined,
     })
@@ -287,8 +287,8 @@ function DependentSearch({ onSelect, onBack, bookingMemberId }: DependentSearchP
   useEffect(() => {
     const timer = setTimeout(() => {
       setDependents([
-        { id: 'd1', name: 'Tommy Smith Jr.', type: 'dependent', memberId: 'D-0001' },
-        { id: 'd2', name: 'Sarah Smith', type: 'dependent', memberId: 'D-0002' },
+        { id: 'd1', name: 'Tommy Smith Jr.', type: 'DEPENDENT', memberId: 'D-0001' },
+        { id: 'd2', name: 'Sarah Smith', type: 'DEPENDENT', memberId: 'D-0002' },
       ])
       setIsLoading(false)
     }, 300)
@@ -327,7 +327,7 @@ function DependentSearch({ onSelect, onBack, bookingMemberId }: DependentSearchP
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="font-medium truncate">{person.name}</span>
-                    <PlayerTypeBadge type="dependent" size="xs" />
+                    <PlayerTypeBadge type="DEPENDENT" size="xs" />
                   </div>
                   {person.memberId && (
                     <span className="text-xs text-muted-foreground">{person.memberId}</span>
@@ -360,7 +360,7 @@ function WalkupForm({ onSubmit, onBack }: WalkupFormProps) {
     onSubmit({
       id: `walkup-${Date.now()}`,
       name: name.trim(),
-      type: 'walkup',
+      type: 'WALK_UP',
       phone: phone.trim(),
     })
   }
@@ -447,16 +447,16 @@ export function AddPlayerFlow({
   const handleTypeSelect = (type: PlayerTypeOption) => {
     setSelectedType(type)
     switch (type) {
-      case 'member':
+      case 'MEMBER':
         setStep('member-search')
         break
-      case 'guest':
+      case 'GUEST':
         setStep('guest-form')
         break
-      case 'dependent':
+      case 'DEPENDENT':
         setStep('dependent-search')
         break
-      case 'walkup':
+      case 'WALK_UP':
         setStep('walkup-form')
         break
     }
@@ -489,32 +489,32 @@ export function AddPlayerFlow({
           </div>
           <div className="grid grid-cols-4 gap-2">
             <PlayerTypeButton
-              type="member"
+              type="MEMBER"
               label="Member"
               icon={<User className="h-5 w-5 text-blue-500" />}
-              selected={selectedType === 'member'}
-              onClick={() => handleTypeSelect('member')}
+              selected={selectedType === 'MEMBER'}
+              onClick={() => handleTypeSelect('MEMBER')}
             />
             <PlayerTypeButton
-              type="guest"
+              type="GUEST"
               label="Guest"
               icon={<UserPlus className="h-5 w-5 text-amber-500" />}
-              selected={selectedType === 'guest'}
-              onClick={() => handleTypeSelect('guest')}
+              selected={selectedType === 'GUEST'}
+              onClick={() => handleTypeSelect('GUEST')}
             />
             <PlayerTypeButton
-              type="dependent"
+              type="DEPENDENT"
               label="Dependent"
               icon={<Users className="h-5 w-5 text-teal-500" />}
-              selected={selectedType === 'dependent'}
-              onClick={() => handleTypeSelect('dependent')}
+              selected={selectedType === 'DEPENDENT'}
+              onClick={() => handleTypeSelect('DEPENDENT')}
             />
             <PlayerTypeButton
-              type="walkup"
+              type="WALK_UP"
               label="Walk-up"
               icon={<User className="h-5 w-5 text-stone-500 dark:text-stone-400" />}
-              selected={selectedType === 'walkup'}
-              onClick={() => handleTypeSelect('walkup')}
+              selected={selectedType === 'WALK_UP'}
+              onClick={() => handleTypeSelect('WALK_UP')}
             />
           </div>
         </div>

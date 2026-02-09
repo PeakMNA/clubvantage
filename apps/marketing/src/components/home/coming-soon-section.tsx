@@ -1,4 +1,7 @@
-import Link from 'next/link';
+'use client';
+
+import { Link } from '@/i18n/navigation';
+import { useTranslations } from 'next-intl';
 import {
   Smartphone,
   Sparkles,
@@ -7,46 +10,49 @@ import {
   Clock
 } from 'lucide-react';
 
-const comingSoonModules = [
-  {
-    icon: Smartphone,
-    title: 'Member Portal',
-    description: 'Mobile-first self-service',
-    eta: 'Q3 2026',
-    features: [
-      'PWA for iOS & Android',
-      'Book, pay, manage accounts',
-      'Family account access',
-    ],
-    href: '/features/portal',
-  },
-  {
-    icon: Sparkles,
-    title: 'Aura AI',
-    description: 'Intelligent assistant',
-    eta: 'Q3 2026',
-    features: [
-      '24/7 member support',
-      'Natural language booking',
-      'Operational insights',
-    ],
-    href: '/features/aura',
-  },
-  {
-    icon: Megaphone,
-    title: 'AI Marketing',
-    description: 'Engagement & acquisition',
-    eta: 'Q4 2026',
-    features: [
-      'Automated campaigns',
-      'AI ad creation',
-      'ROI optimization',
-    ],
-    href: '/features/marketing',
-  },
-];
-
 export function ComingSoonSection() {
+  const t = useTranslations('comingSoon');
+  const tc = useTranslations('common');
+
+  const comingSoonModules = [
+    {
+      icon: Smartphone,
+      title: t('memberPortal'),
+      description: t('memberPortalDesc'),
+      eta: 'Q3 2026',
+      features: [
+        t('memberPortalF1'),
+        t('memberPortalF2'),
+        t('memberPortalF3'),
+      ],
+      href: '/features/portal' as const,
+    },
+    {
+      icon: Sparkles,
+      title: t('auraAi'),
+      description: t('auraAiDesc'),
+      eta: 'Q3 2026',
+      features: [
+        t('auraAiF1'),
+        t('auraAiF2'),
+        t('auraAiF3'),
+      ],
+      href: '/features/aura' as const,
+    },
+    {
+      icon: Megaphone,
+      title: t('aiMarketing'),
+      description: t('aiMarketingDesc'),
+      eta: 'Q4 2026',
+      features: [
+        t('aiMarketingF1'),
+        t('aiMarketingF2'),
+        t('aiMarketingF3'),
+      ],
+      href: '/features/marketing' as const,
+    },
+  ];
+
   return (
     <section className="py-20 md:py-28 bg-cream-200/50">
       <div className="container">
@@ -56,14 +62,14 @@ export function ComingSoonSection() {
             <Clock className="h-5 w-5 text-amber-600" />
           </div>
           <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-700 text-sm font-medium">
-            In Development
+            {tc('inDevelopment')}
           </span>
         </div>
         <h2 className="font-serif text-h1 text-charcoal-800 max-w-2xl">
-          Coming Soon
+          {t('title')}
         </h2>
         <p className="mt-4 text-body-lg text-charcoal-500 max-w-2xl">
-          These features are actively being built. Join as a founding member to influence priorities.
+          {t('subtitle')}
         </p>
 
         {/* Module Cards Grid */}
@@ -112,7 +118,7 @@ export function ComingSoonSection() {
                 {/* Learn more link */}
                 <div className="mt-6 flex items-center gap-1 text-sm font-medium text-amber-600
                               group-hover:text-amber-500 transition-colors">
-                  Learn more
+                  {tc('learnMore')}
                   <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
                 </div>
               </Link>

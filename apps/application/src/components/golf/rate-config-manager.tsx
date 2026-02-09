@@ -19,12 +19,12 @@ import {
   X,
 } from 'lucide-react'
 import { Modal } from './modal'
+import type { PlayerType } from './types'
 
 // =============================================================================
 // Types
 // =============================================================================
 
-export type PlayerType = 'MEMBER' | 'GUEST' | 'DEPENDENT' | 'WALK_UP'
 export type HoleOption = 9 | 18
 export type TimeCategory = 'PRIME' | 'STANDARD' | 'TWILIGHT' | 'SUPER_TWILIGHT'
 export type CartType = 'SINGLE' | 'SHARED' | 'PRIVATE'

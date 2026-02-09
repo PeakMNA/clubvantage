@@ -18,7 +18,7 @@ interface MemberData {
   status: string
 }
 
-export function MemberIdContent({ member }: { member: MemberData }) {
+export function MemberIdContent({ member, clubName }: { member: MemberData; clubName: string }) {
   const [isOffline, setIsOffline] = useState(false)
 
   useEffect(() => {
@@ -61,10 +61,12 @@ export function MemberIdContent({ member }: { member: MemberData }) {
           {/* Top Row */}
           <div className="flex items-center justify-between">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/15">
-              <span className="text-sm font-bold text-white">RC</span>
+              <span className="text-sm font-bold text-white">
+                {clubName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
+              </span>
             </div>
             <span className="text-[11px] font-medium text-white/60 tracking-[0.2em]">
-              ROYAL CLUB
+              {clubName.toUpperCase()}
             </span>
           </div>
 

@@ -8,18 +8,7 @@ import { PlayerTypeBadge, type PlayerType } from './player-type-badge'
 interface TransferPlayer {
   id: string
   name: string
-  type: 'MEMBER' | 'GUEST' | 'DEPENDENT' | 'WALK_UP'
-}
-
-// Helper to normalize player type from backend format to frontend format
-function normalizePlayerType(type: string): PlayerType {
-  const typeMap: Record<string, PlayerType> = {
-    'MEMBER': 'member',
-    'GUEST': 'guest',
-    'DEPENDENT': 'dependent',
-    'WALK_UP': 'walkup',
-  }
-  return typeMap[type] || 'guest'
+  type: PlayerType
 }
 
 interface TransferItemDialogProps {
@@ -97,7 +86,7 @@ export function TransferItemDialog({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="font-medium truncate">{player.name}</span>
-                    <PlayerTypeBadge type={normalizePlayerType(player.type)} />
+                    <PlayerTypeBadge type={player.type} />
                   </div>
                 </div>
                 {selectedPlayerId === player.id && (

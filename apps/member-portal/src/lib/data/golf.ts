@@ -1,5 +1,5 @@
 import { cache } from 'react'
-import { prisma, getClubId } from '@/lib/db'
+import { prisma, getClubId, getMemberId } from '@/lib/db'
 
 export const getGolfCourses = cache(async () => {
   const clubId = await getClubId()
@@ -79,11 +79,13 @@ export const getAvailableTeeTimes = cache(async (date: string) => {
 
 export const getUpcomingTeeTimes = cache(async () => {
   const clubId = await getClubId()
+  const memberId = await getMemberId()
   const teeTimes = await prisma.teeTime.findMany({
     where: {
       clubId,
       teeDate: { gte: new Date() },
       status: { in: ['CONFIRMED', 'PENDING'] },
+      players: { some: { memberId } },
     },
     include: {
       course: { select: { name: true } },
@@ -105,10 +107,12 @@ export const getUpcomingTeeTimes = cache(async () => {
 
 export const getPastTeeTimes = cache(async () => {
   const clubId = await getClubId()
+  const memberId = await getMemberId()
   const teeTimes = await prisma.teeTime.findMany({
     where: {
       clubId,
       teeDate: { lt: new Date() },
+      players: { some: { memberId } },
     },
     include: {
       course: { select: { name: true } },

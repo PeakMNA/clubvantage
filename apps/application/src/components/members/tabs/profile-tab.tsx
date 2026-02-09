@@ -28,7 +28,7 @@ function AddressCard({
   onEdit?: () => void;
 }) {
   return (
-    <div className="group relative overflow-hidden rounded-xl border border/60 bg-white/80 p-4 shadow-sm backdrop-blur-sm transition-all duration-300 hover:shadow-md sm:p-5">
+    <div className="group relative overflow-hidden rounded-xl border border/60 bg-white/80 dark:bg-stone-900/80 p-4 shadow-sm backdrop-blur-sm transition-all duration-300 hover:shadow-md sm:p-5">
       {/* Subtle gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-muted/30 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
 
@@ -110,17 +110,17 @@ export function ProfileTab({
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Personal Information */}
-      <div className="relative overflow-hidden rounded-2xl border border/60 bg-white/80 shadow-lg shadow-slate-200/30 backdrop-blur-sm">
+      <div className="relative overflow-hidden rounded-2xl border border/60 bg-white/80 dark:bg-stone-900/80 shadow-lg shadow-slate-200/30 dark:shadow-stone-900/30 backdrop-blur-sm">
         <div className="absolute inset-0 bg-gradient-to-br from-muted/50 to-transparent" />
 
         {/* Header */}
-        <div className="relative flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+        <div className="relative flex flex-col gap-3 border-b border-slate-100 dark:border-stone-700 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
           <h2 className="text-lg font-semibold tracking-tight text-foreground">Personal Information</h2>
           <Button
             variant="outline"
             size="sm"
             onClick={onEditPersonalInfo}
-            className="w-fit border bg-white/80 shadow-sm backdrop-blur-sm transition-all hover:bg-card hover:shadow-md"
+            className="w-fit border bg-white/80 dark:bg-stone-900/80 shadow-sm backdrop-blur-sm transition-all hover:bg-card hover:shadow-md"
           >
             <Edit className="mr-1.5 h-3.5 w-3.5" />
             Edit
@@ -139,17 +139,17 @@ export function ProfileTab({
       </div>
 
       {/* Addresses */}
-      <div className="relative overflow-hidden rounded-2xl border border/60 bg-white/80 shadow-lg shadow-slate-200/30 backdrop-blur-sm">
+      <div className="relative overflow-hidden rounded-2xl border border/60 bg-white/80 dark:bg-stone-900/80 shadow-lg shadow-slate-200/30 dark:shadow-stone-900/30 backdrop-blur-sm">
         <div className="absolute inset-0 bg-gradient-to-br from-muted/50 to-transparent" />
 
         {/* Header */}
-        <div className="relative flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+        <div className="relative flex flex-col gap-3 border-b border-slate-100 dark:border-stone-700 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
           <h2 className="text-lg font-semibold tracking-tight text-foreground">Addresses</h2>
           <Button
             variant="outline"
             size="sm"
             onClick={onAddAddress}
-            className="w-fit border bg-white/80 shadow-sm backdrop-blur-sm transition-all hover:bg-card hover:shadow-md"
+            className="w-fit border bg-white/80 dark:bg-stone-900/80 shadow-sm backdrop-blur-sm transition-all hover:bg-card hover:shadow-md"
           >
             <Plus className="mr-1.5 h-3.5 w-3.5" />
             <span className="hidden sm:inline">Add Address</span>
@@ -191,11 +191,11 @@ export function ProfileTab({
       </div>
 
       {/* Membership Info */}
-      <div className="relative overflow-hidden rounded-2xl border border/60 bg-white/80 shadow-lg shadow-slate-200/30 backdrop-blur-sm">
+      <div className="relative overflow-hidden rounded-2xl border border/60 bg-white/80 dark:bg-stone-900/80 shadow-lg shadow-slate-200/30 dark:shadow-stone-900/30 backdrop-blur-sm">
         <div className="absolute inset-0 bg-gradient-to-br from-muted/50 to-transparent" />
 
         {/* Header */}
-        <div className="relative border-b border-slate-100 p-4 sm:p-6">
+        <div className="relative border-b border-slate-100 dark:border-stone-700 p-4 sm:p-6">
           <h2 className="text-lg font-semibold tracking-tight text-foreground">Membership Information</h2>
         </div>
 
@@ -219,7 +219,7 @@ export function ProfileTab({
                 <div className="mt-1 flex items-center gap-2">
                   <div className={cn(
                     'h-2 w-2 rounded-full',
-                    member.autoPay ? 'bg-emerald-500' : 'bg-slate-300'
+                    member.autoPay ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-stone-600'
                   )} />
                   <p className="text-sm font-medium text-foreground">
                     {member.autoPay ? 'Enabled' : 'Disabled'}

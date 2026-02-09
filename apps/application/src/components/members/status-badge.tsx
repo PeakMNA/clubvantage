@@ -23,12 +23,16 @@ const statusBadgeVariants = cva(
         md: 'h-6 px-3 text-sm gap-1.5',
       },
       status: {
-        // Member/General statuses
+        // Member/General statuses (canonical)
         active: 'bg-emerald-500 text-white',
-        pending: 'bg-amber-500 text-white',
+        prospect: 'bg-amber-500 text-white',
+        lead: 'bg-amber-500 text-white',
+        applicant: 'bg-amber-500 text-white',
         suspended: 'bg-red-500 text-white',
-        inactive: 'bg-muted text-muted-foreground',
-        cancelled: 'bg-muted text-muted-foreground',
+        lapsed: 'bg-stone-100 text-stone-600',
+        resigned: 'bg-stone-100 text-stone-500',
+        terminated: 'bg-stone-100 text-stone-500',
+        reactivated: 'bg-emerald-500 text-white',
         // Application-specific statuses
         submitted: 'bg-blue-500 text-white',
         under_review: 'bg-amber-500 text-white',
@@ -61,10 +65,14 @@ export interface StatusBadgeProps
 
 const statusLabels: Record<StatusType, string> = {
   active: 'Active',
-  pending: 'Pending',
+  prospect: 'Prospect',
+  lead: 'Lead',
+  applicant: 'Applicant',
   suspended: 'Suspended',
-  inactive: 'Inactive',
-  cancelled: 'Cancelled',
+  lapsed: 'Lapsed',
+  resigned: 'Resigned',
+  terminated: 'Terminated',
+  reactivated: 'Reactivated',
   submitted: 'Submitted',
   under_review: 'Under Review',
   pending_board: 'Pending Board',
@@ -77,10 +85,14 @@ const statusLabels: Record<StatusType, string> = {
 
 const statusIcons: Partial<Record<StatusType, React.ComponentType<{ className?: string }>>> = {
   active: Check,
-  pending: Clock,
+  prospect: Clock,
+  lead: Clock,
+  applicant: Clock,
   suspended: Pause,
-  inactive: Minus,
-  cancelled: X,
+  lapsed: Minus,
+  resigned: ArrowLeft,
+  terminated: X,
+  reactivated: Check,
   submitted: ArrowUp,
   under_review: Eye,
   pending_board: Users,

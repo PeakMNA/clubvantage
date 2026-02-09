@@ -30,7 +30,7 @@ const getMockInvoice = (id: string) => ({
   id,
   invoiceNumber: `INV-2024-000${id}`,
   status: 'sent' as InvoiceStatus,
-  agingStatus: 'current' as AgingStatus,
+  agingStatus: 'CURRENT' as AgingStatus,
   member: {
     id: 'M001',
     memberNumber: 'M001',

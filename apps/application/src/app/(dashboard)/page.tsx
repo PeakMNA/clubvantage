@@ -16,11 +16,12 @@ import { KPICard } from '@/components/dashboard/kpi-card';
 import { QuickActions } from '@/components/dashboard/quick-actions';
 import { TodayActivity } from '@/components/dashboard/today-activity';
 import { AuraInsights } from '@/components/dashboard/aura-insights';
+// Direct import to avoid pulling entire api-client bundle
 import {
   useGetMemberStatsQuery,
   useGetBookingStatsQuery,
   useGetBillingStatsQuery,
-} from '@clubvantage/api-client';
+} from '@clubvantage/api-client/hooks';
 
 // Format number with Thai currency symbol
 function formatCurrency(amount: number): string {

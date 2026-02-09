@@ -1,6 +1,7 @@
 import type { Config } from 'tailwindcss';
 
 export const clubvantagePreset: Config = {
+  darkMode: 'class',
   content: [],
   theme: {
     extend: {

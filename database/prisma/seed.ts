@@ -8,6 +8,7 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import * as bcrypt from 'bcrypt';
 import 'dotenv/config';
 import { seedLookups } from './seed-lookups';
+import { seedMultitenancy } from './seed-multitenancy';
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
@@ -3928,13 +3929,19 @@ async function main() {
 
   console.log('✅ Created scorecards');
 
+  // ============================================================================
+  // MULTI-TENANCY SEED
+  // ============================================================================
+  await seedMultitenancy(prisma);
+
   console.log('');
   console.log('🎉 Database seed completed successfully!');
   console.log('');
   console.log('Demo credentials:');
   console.log('');
   console.log('  Staff Application (http://localhost:3000):');
-  console.log('    admin@royalbangkokclub.com / Admin123!');
+  console.log('    admin@royalbangkokclub.com / Admin123!  (Royal Bangkok)');
+  console.log('    admin@phuketoceanclub.com / Admin123!   (Phuket Ocean)');
   console.log('');
   console.log('  Platform Manager (http://localhost:3002):');
   console.log('    superadmin@vantage.com / Admin123!');
@@ -3944,7 +3951,12 @@ async function main() {
   console.log('    admin@royalbangkokclub.com / Admin123!');
   console.log('');
   console.log('  Member Portal (http://localhost:3004):');
-  console.log('    member@demo.com / Member123!');
+  console.log('    member@demo.com / Member123!       (Full Member, Royal Bangkok)');
+  console.log('    nattaya@demo.com / Member123!      (Full Member, Royal Bangkok)');
+  console.log('    thaksin@demo.com / Member123!      (Golf Member, Royal Bangkok)');
+  console.log('    chaiwat@demo.com / Member123!      (Social Member, Royal Bangkok)');
+  console.log('    corporate@demo.com / Member123!    (Corporate Member, Royal Bangkok)');
+  console.log('    phuket@demo.com / Member123!       (Full Member, Phuket Ocean)');
 }
 
 main()

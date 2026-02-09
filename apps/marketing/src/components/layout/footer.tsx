@@ -1,31 +1,13 @@
 'use client';
 
 import * as React from 'react';
-import Link from 'next/link';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Linkedin, Twitter, ArrowRight } from 'lucide-react';
-
-const footerNavigation = {
-  product: [
-    { name: 'Features', href: '/features' },
-    { name: 'Roadmap', href: '/roadmap' },
-    { name: 'Join Waitlist', href: '/waitlist' },
-  ],
-  company: [
-    { name: 'About', href: '/about' },
-    { name: 'Contact', href: '/contact' },
-    { name: 'Blog', href: '/resources/blog' },
-  ],
-  resources: [
-    { name: 'Solutions', href: '/solutions' },
-    { name: 'Help Center', href: '/resources/help' },
-  ],
-  legal: [
-    { name: 'Privacy', href: '/privacy' },
-    { name: 'Terms', href: '/terms' },
-  ],
-};
+import { subscribeNewsletter } from '@/app/actions/newsletter';
+import { getWaitlistCount } from '@/app/actions/waitlist';
 
 const socialLinks = [
   { name: 'LinkedIn', href: '#', icon: Linkedin },
@@ -33,17 +15,53 @@ const socialLinks = [
 ];
 
 export function Footer() {
+  const t = useTranslations('footer');
+  const tCommon = useTranslations('common');
+  const tNav = useTranslations('nav');
+
   const [email, setEmail] = React.useState('');
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isSubscribed, setIsSubscribed] = React.useState(false);
+  const [waitlistCount, setWaitlistCount] = React.useState(0);
+
+  React.useEffect(() => {
+    getWaitlistCount().then(setWaitlistCount);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsSubmitting(false);
-    setIsSubscribed(true);
-    setEmail('');
+    try {
+      const result = await subscribeNewsletter(email, 'footer');
+      if (result.success) {
+        setIsSubscribed(true);
+        setEmail('');
+      }
+    } catch {
+      // Silently fail for newsletter
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const footerNavigation = {
+    product: [
+      { name: tNav('features'), href: '/features' },
+      { name: tNav('roadmap'), href: '/roadmap' },
+      { name: tCommon('joinWaitlist'), href: '/waitlist' },
+    ],
+    company: [
+      { name: t('about'), href: '/about' },
+      { name: t('contact'), href: '/contact' },
+      { name: t('blog'), href: '/resources/blog' },
+    ],
+    resources: [
+      { name: t('helpCenter'), href: '/resources/help' },
+    ],
+    legal: [
+      { name: t('privacy'), href: '/privacy' },
+      { name: t('terms'), href: '/terms' },
+    ],
   };
 
   return (
@@ -54,14 +72,13 @@ export function Footer() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <span className="text-label uppercase tracking-widest text-accent-400">
-                Founding Member Program
+                {t('foundingMemberProgram')}
               </span>
               <h3 className="mt-4 font-serif text-3xl text-cream-50">
-                Be part of something exceptional
+                {t('bePartOfSomethingExceptional')}
               </h3>
               <p className="mt-4 text-cream-200 max-w-md">
-                Shape the product, get early access, and lock in lifetime pricing
-                as one of our founding members.
+                {t('shapeTheProduct')}
               </p>
             </div>
             {isSubscribed ? (
@@ -71,13 +88,13 @@ export function Footer() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <span className="font-medium">Thanks for joining! We&apos;ll be in touch soon.</span>
+                <span className="font-medium">{t('thanksForJoining')}</span>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4">
                 <Input
                   type="email"
-                  placeholder="Enter your work email"
+                  placeholder={t('enterWorkEmail')}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -85,7 +102,7 @@ export function Footer() {
                            placeholder:text-cream-300 focus:border-accent-400 focus:ring-accent-400"
                 />
                 <Button type="submit" variant="accent" isLoading={isSubmitting}>
-                  Join Waitlist
+                  {tCommon('joinWaitlist')}
                   <ArrowRight className="h-4 w-4 ml-1" />
                 </Button>
               </form>
@@ -107,7 +124,7 @@ export function Footer() {
               <span className="text-xl font-semibold text-cream-50">ClubVantage</span>
             </Link>
             <p className="mt-6 text-cream-200 max-w-xs leading-relaxed">
-              Building the future of club management with our founding community.
+              {t('buildingTheFuture')}
             </p>
             <div className="mt-6 inline-flex items-center gap-2 px-3 py-1.5 rounded-full
                           bg-primary-700/50 border border-primary-600">
@@ -115,7 +132,7 @@ export function Footer() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-accent-400" />
               </span>
-              <span className="text-xs text-cream-100">In Development</span>
+              <span className="text-xs text-cream-100">{tCommon('inDevelopment')}</span>
             </div>
             <div className="mt-8 flex gap-4">
               {socialLinks.map((social) => (
@@ -137,11 +154,11 @@ export function Footer() {
           {/* Product Links */}
           <div>
             <h4 className="text-xs font-semibold uppercase tracking-widest text-cream-200">
-              Product
+              {t('product')}
             </h4>
             <ul className="mt-6 space-y-4">
               {footerNavigation.product.map((item) => (
-                <li key={item.name}>
+                <li key={item.href}>
                   <Link
                     href={item.href}
                     className="text-sm text-cream-200 hover:text-white transition-colors"
@@ -156,11 +173,11 @@ export function Footer() {
           {/* Company Links */}
           <div>
             <h4 className="text-xs font-semibold uppercase tracking-widest text-cream-200">
-              Company
+              {t('company')}
             </h4>
             <ul className="mt-6 space-y-4">
               {footerNavigation.company.map((item) => (
-                <li key={item.name}>
+                <li key={item.href}>
                   <Link
                     href={item.href}
                     className="text-sm text-cream-200 hover:text-white transition-colors"
@@ -175,11 +192,11 @@ export function Footer() {
           {/* Resources Links */}
           <div>
             <h4 className="text-xs font-semibold uppercase tracking-widest text-cream-200">
-              Resources
+              {t('resources')}
             </h4>
             <ul className="mt-6 space-y-4">
               {footerNavigation.resources.map((item) => (
-                <li key={item.name}>
+                <li key={item.href}>
                   <Link
                     href={item.href}
                     className="text-sm text-cream-200 hover:text-white transition-colors"
@@ -196,7 +213,7 @@ export function Footer() {
       {/* Founding Members */}
       <div className="text-center py-4 border-t border-primary-700/50">
         <p className="text-sm text-cream-300">
-          Join <span className="font-semibold text-accent-400">12</span> founding members shaping the future of club management
+          {t('joinFoundingMembers', { count: waitlistCount })}
         </p>
       </div>
 
@@ -205,12 +222,12 @@ export function Footer() {
         <div className="container py-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-sm text-cream-300">
-              &copy; {new Date().getFullYear()} ClubVantage. All rights reserved.
+              &copy; {new Date().getFullYear()} ClubVantage. {tCommon('allRightsReserved')}
             </p>
             <div className="flex gap-8">
               {footerNavigation.legal.map((item) => (
                 <Link
-                  key={item.name}
+                  key={item.href}
                   href={item.href}
                   className="text-sm text-cream-300 hover:text-white transition-colors"
                 >

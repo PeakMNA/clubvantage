@@ -20,7 +20,7 @@ interface TimeSlotRowProps {
   capacity: number
   block?: {
     id: string
-    type: 'starter' | 'maintenance'
+    type: 'STARTER' | 'MAINTENANCE'
     reason: string
     createdByName?: string
     createdAt?: string

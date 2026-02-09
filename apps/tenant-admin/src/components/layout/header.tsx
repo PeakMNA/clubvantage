@@ -64,7 +64,7 @@ export function Header({ tenant, user, onLogout, className }: HeaderProps) {
             <img
               src={tenantConfig.logoUrl}
               alt={tenantConfig.name}
-              className="h-8 w-auto object-contain"
+              className="h-10 w-auto object-contain"
             />
           ) : (
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100">

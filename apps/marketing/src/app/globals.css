@@ -31,6 +31,8 @@
     /* Typography */
     --font-serif: 'Playfair Display', Georgia, serif;
     --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+    --font-serif-thai: 'Noto Serif Thai', serif;
+    --font-sans-thai: 'Noto Sans Thai', sans-serif;
   }
 
   html {

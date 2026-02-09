@@ -20,12 +20,12 @@ interface BookingsFiltersProps {
 type DatePreset = 'today' | 'this-week' | 'this-month' | 'custom'
 
 const STATUS_OPTIONS: { value: BookingStatus; label: string }[] = [
-  { value: 'booked', label: 'Booked' },
-  { value: 'checked-in', label: 'Checked-in' },
-  { value: 'on-course', label: 'On-course' },
-  { value: 'completed', label: 'Completed' },
-  { value: 'cancelled', label: 'Cancelled' },
-  { value: 'no-show', label: 'No-show' },
+  { value: 'BOOKED', label: 'Booked' },
+  { value: 'CHECKED_IN', label: 'Checked In' },
+  { value: 'STARTED', label: 'On Course' },
+  { value: 'COMPLETED', label: 'Completed' },
+  { value: 'CANCELLED', label: 'Cancelled' },
+  { value: 'NO_SHOW', label: 'No Show' },
 ]
 
 // Helper to format date as "Jan 28"

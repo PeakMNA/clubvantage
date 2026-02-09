@@ -1,6 +1,7 @@
 import type { Config } from 'tailwindcss';
 
 const config: Config = {
+  darkMode: 'class',
   content: ['./src/**/*.{js,ts,jsx,tsx,mdx}'],
   theme: {
     extend: {
@@ -87,28 +88,28 @@ const config: Config = {
       },
 
       fontFamily: {
-        // Elegant serif for headlines
-        serif: ['Playfair Display', 'Georgia', 'Times New Roman', 'serif'],
-        // Modern refined sans for body
-        sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
+        // Elegant serif for headlines (with Thai fallback)
+        serif: ['var(--font-serif)', 'var(--font-serif-thai)', 'Georgia', 'Times New Roman', 'serif'],
+        // Modern refined sans for body (with Thai fallback)
+        sans: ['var(--font-sans)', 'var(--font-sans-thai)', 'system-ui', 'sans-serif'],
         // Monospace for technical elements
         mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
       },
 
       fontSize: {
-        // Display - Editorial Statement
-        'display-xl': ['5rem', { lineHeight: '1', letterSpacing: '-0.03em', fontWeight: '500' }],
-        display: ['3.75rem', { lineHeight: '1.1', letterSpacing: '-0.02em', fontWeight: '500' }],
-        // Headings
-        h1: ['3rem', { lineHeight: '1.15', letterSpacing: '-0.02em', fontWeight: '500' }],
-        h2: ['2.25rem', { lineHeight: '1.2', letterSpacing: '-0.01em', fontWeight: '500' }],
-        h3: ['1.5rem', { lineHeight: '1.3', fontWeight: '600' }],
+        // Display - Editorial Statement (responsive with clamp)
+        'display-xl': ['clamp(2.75rem, 5vw + 1rem, 5rem)', { lineHeight: '1.05', letterSpacing: '-0.03em', fontWeight: '500' }],
+        display: ['clamp(2.25rem, 4vw + 0.75rem, 3.75rem)', { lineHeight: '1.1', letterSpacing: '-0.02em', fontWeight: '500' }],
+        // Headings (responsive with clamp)
+        h1: ['clamp(1.875rem, 2.5vw + 0.75rem, 3rem)', { lineHeight: '1.2', letterSpacing: '-0.02em', fontWeight: '500' }],
+        h2: ['clamp(1.5rem, 2vw + 0.5rem, 2.25rem)', { lineHeight: '1.25', letterSpacing: '-0.01em', fontWeight: '500' }],
+        h3: ['clamp(1.25rem, 1.5vw + 0.375rem, 1.5rem)', { lineHeight: '1.3', fontWeight: '600' }],
         h4: ['1.25rem', { lineHeight: '1.4', fontWeight: '600' }],
-        // Body
-        'body-xl': ['1.25rem', { lineHeight: '1.7' }],
-        'body-lg': ['1.125rem', { lineHeight: '1.7' }],
-        body: ['1rem', { lineHeight: '1.6' }],
-        'body-sm': ['0.875rem', { lineHeight: '1.5' }],
+        // Body (slightly larger for Thai readability)
+        'body-xl': ['clamp(1.125rem, 1vw + 0.5rem, 1.25rem)', { lineHeight: '1.75' }],
+        'body-lg': ['clamp(1rem, 0.75vw + 0.5rem, 1.125rem)', { lineHeight: '1.75' }],
+        body: ['1rem', { lineHeight: '1.7' }],
+        'body-sm': ['0.875rem', { lineHeight: '1.6' }],
         // Labels & Captions
         label: ['0.8125rem', { lineHeight: '1', letterSpacing: '0.1em', fontWeight: '500' }],
         caption: ['0.75rem', { lineHeight: '1.4' }],

@@ -383,8 +383,10 @@ const GET_SCHEDULE_CONFIG_QUERY = `
       courseId
       weekdayFirstTee
       weekdayLastTee
+      weekdayBookingMode
       weekendFirstTee
       weekendLastTee
+      weekendBookingMode
       twilightMode
       twilightMinutesBeforeSunset
       twilightFixedDefault
@@ -415,6 +417,8 @@ const GET_SCHEDULE_CONFIG_QUERY = `
         overrideBookingWindow
         overrideTwilightTime
         overrideTimePeriods
+        weekdayBookingMode
+        weekendBookingMode
         timePeriods {
           id
           name
@@ -436,6 +440,7 @@ const GET_SCHEDULE_CONFIG_QUERY = `
         customFirstTee
         customLastTee
         customTimePeriods
+        bookingMode
         timePeriods {
           id
           name
@@ -660,7 +665,7 @@ export function usePrefetchWeekView() {
 // Fetches summary availability data for calendar month view
 // ============================================================================
 
-export type AvailabilityLevel = 'open' | 'limited' | 'full' | 'blocked';
+export type AvailabilityLevel = 'OPEN' | 'LIMITED' | 'FULL' | 'BLOCKED';
 
 export interface DayAvailability {
   date: string;
@@ -739,7 +744,7 @@ export function useMonthAvailability(options: UseMonthAvailabilityOptions) {
           // No data yet
           result.push({
             date: dateStr,
-            level: 'open',
+            level: 'OPEN',
             availableSlots: 0,
             totalSlots: 0,
             bookedSlots: 0,
@@ -772,13 +777,13 @@ export function useMonthAvailability(options: UseMonthAvailabilityOptions) {
         const bookedRatio = totalSlots > 0 ? bookedSlots / totalSlots : 0;
 
         // Determine availability level based on booked percentage
-        let level: AvailabilityLevel = 'open';
+        let level: AvailabilityLevel = 'OPEN';
         if (blockedSlots === totalSlots) {
-          level = 'blocked';
+          level = 'BLOCKED';
         } else if (bookedRatio >= 0.85) {
-          level = 'full';
+          level = 'FULL';
         } else if (bookedRatio >= 0.5) {
-          level = 'limited';
+          level = 'LIMITED';
         }
 
         result.push({

@@ -40,7 +40,7 @@ const statusConfig: Record<PeriodStatus, {
 }
 
 export function PeriodStatusBadge({ status, className, showIcon = true }: PeriodStatusBadgeProps) {
-  const config = statusConfig[status]
+  const config = statusConfig[status] ?? statusConfig.OPEN
   const { Icon } = config
 
   return (
@@ -52,7 +52,7 @@ export function PeriodStatusBadge({ status, className, showIcon = true }: Period
         className
       )}
     >
-      {showIcon && <Icon className="h-3 w-3" />}
+      {showIcon && Icon && <Icon className="h-3 w-3" />}
       {config.label}
       <span className="sr-only">Period status: {config.label}</span>
     </span>

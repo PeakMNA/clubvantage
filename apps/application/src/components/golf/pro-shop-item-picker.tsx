@@ -8,7 +8,7 @@ import {
   useGetProShopCategoriesQuery,
   useGetProShopProductsQuery,
 } from '@clubvantage/api-client'
-import { PlayerTypeBadge } from './player-type-badge'
+import { PlayerTypeBadge, type PlayerType } from './player-type-badge'
 
 // Use partial types for what we get from queries
 interface ProductForPicker {
@@ -32,23 +32,8 @@ interface VariantForPicker {
 export interface SlotPickerPlayer {
   id: string
   name: string
-  type: 'MEMBER' | 'GUEST' | 'DEPENDENT' | 'WALK_UP' | 'member' | 'guest' | 'dependent' | 'walkup'
+  type: PlayerType
   position?: 1 | 2 | 3 | 4
-}
-
-// Helper to normalize player type to lowercase form
-function normalizePlayerType(type: string): 'member' | 'guest' | 'dependent' | 'walkup' {
-  const typeMap: Record<string, 'member' | 'guest' | 'dependent' | 'walkup'> = {
-    'MEMBER': 'member',
-    'GUEST': 'guest',
-    'DEPENDENT': 'dependent',
-    'WALK_UP': 'walkup',
-    'member': 'member',
-    'guest': 'guest',
-    'dependent': 'dependent',
-    'walkup': 'walkup',
-  }
-  return typeMap[type] || 'guest'
 }
 
 export interface ProShopItemPickerProps {
@@ -193,7 +178,7 @@ export function ProShopItemPicker({
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="font-medium">{selectedPlayer.name}</span>
-                        <PlayerTypeBadge type={normalizePlayerType(selectedPlayer.type)} />
+                        <PlayerTypeBadge type={selectedPlayer.type} />
                       </div>
                     </div>
                   ) : (
@@ -232,7 +217,7 @@ export function ProShopItemPicker({
                         </div>
                         <div className="flex items-center gap-2 flex-1">
                           <span className="font-medium">{player.name}</span>
-                          <PlayerTypeBadge type={normalizePlayerType(player.type)} />
+                          <PlayerTypeBadge type={player.type} />
                         </div>
                         {player.id === selectedPlayerId && (
                           <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">

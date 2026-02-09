@@ -26,7 +26,7 @@ export function CartModal({
   const [formData, setFormData] = useState({
     number: '',
     type: '2-seater' as Cart['type'],
-    status: 'available' as Cart['status'],
+    status: 'AVAILABLE' as Cart['status'],
     conditionNotes: '',
     lastMaintenance: '',
     currentAssignment: undefined as string | undefined,
@@ -50,7 +50,7 @@ export function CartModal({
       setFormData({
         number: '',
         type: '2-seater',
-        status: 'available',
+        status: 'AVAILABLE',
         conditionNotes: '',
         lastMaintenance: '',
         currentAssignment: undefined,
@@ -80,7 +80,7 @@ export function CartModal({
   const handleDelete = async () => {
     if (!onDelete) return
 
-    if (cart?.status === 'in-use') {
+    if (cart?.status === 'IN_USE') {
       setError('Cannot delete a cart that is currently in use')
       setShowDeleteConfirm(false)
       return
@@ -220,10 +220,10 @@ export function CartModal({
               }
               className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
             >
-              <option value="available">Available</option>
-              <option value="in-use">In Use</option>
-              <option value="maintenance">Maintenance</option>
-              <option value="out-of-service">Out of Service</option>
+              <option value="AVAILABLE">Available</option>
+              <option value="IN_USE">In Use</option>
+              <option value="MAINTENANCE">Maintenance</option>
+              <option value="OUT_OF_SERVICE">Out of Service</option>
             </select>
           </div>
         </div>

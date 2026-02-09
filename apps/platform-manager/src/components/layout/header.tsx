@@ -15,6 +15,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { LogoIcon } from '@/components/brand';
 
 /**
  * Platform Manager Header
@@ -89,9 +90,7 @@ export function Header({ onMobileMenuClick, user, onLogout }: HeaderProps) {
 
           {/* Logo */}
           <Link href="/dashboard" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
-              <span className="text-sm font-bold text-white">CV</span>
-            </div>
+            <LogoIcon size={36} />
             <span className="hidden sm:block text-lg font-semibold text-slate-900">
               Platform Manager
             </span>

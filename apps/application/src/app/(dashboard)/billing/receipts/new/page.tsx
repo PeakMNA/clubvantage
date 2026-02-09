@@ -18,7 +18,7 @@ const mockMembers: MemberSearchResult[] = [
     memberNumber: 'M001',
     name: 'John Smith',
     membershipType: 'Golf Premium',
-    agingStatus: 'current',
+    agingStatus: 'CURRENT',
     creditBalance: 0,
   },
   {
@@ -26,7 +26,7 @@ const mockMembers: MemberSearchResult[] = [
     memberNumber: 'M002',
     name: 'Sarah Johnson',
     membershipType: 'Golf Standard',
-    agingStatus: '30',
+    agingStatus: 'DAYS_30',
     creditBalance: 0,
   },
   {
@@ -34,7 +34,7 @@ const mockMembers: MemberSearchResult[] = [
     memberNumber: 'M003',
     name: 'Michael Chen',
     membershipType: 'Golf Standard',
-    agingStatus: '90',
+    agingStatus: 'DAYS_90',
     creditBalance: 0,
   },
   {
@@ -42,7 +42,7 @@ const mockMembers: MemberSearchResult[] = [
     memberNumber: 'M005',
     name: 'Robert Wilson',
     membershipType: 'Golf Premium',
-    agingStatus: 'suspended',
+    agingStatus: 'SUSPENDED',
     creditBalance: 0,
   },
 ]
@@ -58,7 +58,7 @@ const getMockInvoices = (memberId: string): AllocationInvoice[] => {
         dueDate: new Date('2024-02-15'),
         amount: 45000,
         balance: 45000,
-        agingStatus: 'current',
+        agingStatus: 'CURRENT',
       },
     ],
     M002: [
@@ -69,7 +69,7 @@ const getMockInvoices = (memberId: string): AllocationInvoice[] => {
         dueDate: new Date('2024-02-10'),
         amount: 32000,
         balance: 12000,
-        agingStatus: '30',
+        agingStatus: 'DAYS_30',
       },
     ],
     M003: [
@@ -80,7 +80,7 @@ const getMockInvoices = (memberId: string): AllocationInvoice[] => {
         dueDate: new Date('2023-12-01'),
         amount: 55000,
         balance: 55000,
-        agingStatus: '90',
+        agingStatus: 'DAYS_90',
       },
     ],
     M005: [
@@ -91,7 +91,7 @@ const getMockInvoices = (memberId: string): AllocationInvoice[] => {
         dueDate: new Date('2023-10-15'),
         amount: 120000,
         balance: 120000,
-        agingStatus: 'suspended',
+        agingStatus: 'SUSPENDED',
       },
     ],
   }
@@ -195,7 +195,7 @@ export default function NewReceiptPage() {
     ? Object.values(pendingData.allocations).reduce((sum, amount) => sum + amount, 0)
     : 0
   const memberOutstanding = selectedMember ? getOutstandingBalance(selectedMember.id) : 0
-  const isSuspended = selectedMember?.agingStatus === 'suspended'
+  const isSuspended = selectedMember?.agingStatus === 'SUSPENDED'
   const willReinstate = isSuspended && totalAllocated >= memberOutstanding
   const remainsSuspended = isSuspended && !willReinstate
   const outstandingAfter = memberOutstanding - totalAllocated

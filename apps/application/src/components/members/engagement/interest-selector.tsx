@@ -57,10 +57,10 @@ function getLevelLabel(level: number): string {
 }
 
 function getLevelColor(level: number): string {
-  if (level === 0) return 'bg-stone-100 text-stone-500';
-  if (level <= 25) return 'bg-stone-200 text-stone-700';
-  if (level <= 50) return 'bg-amber-100 text-amber-700';
-  if (level <= 75) return 'bg-emerald-100 text-emerald-700';
+  if (level === 0) return 'bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400';
+  if (level <= 25) return 'bg-stone-200 dark:bg-stone-700 text-stone-700 dark:text-stone-300';
+  if (level <= 50) return 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400';
+  if (level <= 75) return 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400';
   return 'bg-emerald-500 text-white';
 }
 
@@ -118,7 +118,7 @@ function InterestCard({ category, currentLevel, onChange, hasChange }: InterestC
             )}
 
             {/* Level indicator bar */}
-            <div className="h-2 bg-stone-100 rounded-full overflow-hidden mb-2">
+            <div className="h-2 bg-stone-100 dark:bg-stone-800 rounded-full overflow-hidden mb-2">
               <div
                 className="h-full transition-all duration-300 rounded-full"
                 style={{
@@ -239,9 +239,9 @@ export function InterestSelector({
     <div className={className}>
       {/* Header with action buttons */}
       {hasChanges && (
-        <div className="flex items-center justify-between mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+        <div className="flex items-center justify-between mb-4 p-3 bg-amber-50 dark:bg-amber-500/20 border border-amber-200 dark:border-amber-500/30 rounded-lg">
           <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="bg-amber-100 text-amber-800">
+            <Badge variant="secondary" className="bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300">
               {changedCategories.size} unsaved change{changedCategories.size !== 1 ? 's' : ''}
             </Badge>
           </div>

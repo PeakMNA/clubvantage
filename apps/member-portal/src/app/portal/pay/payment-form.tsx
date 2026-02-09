@@ -47,7 +47,7 @@ function CheckoutForm({ amount }: { amount: number }) {
       <PaymentElement />
 
       {error && (
-        <div className="rounded-xl bg-red-50 p-3 text-sm text-red-700">
+        <div className="rounded-xl bg-red-50 dark:bg-red-500/20 p-3 text-sm text-red-700 dark:text-red-400">
           {error}
         </div>
       )}
@@ -58,7 +58,7 @@ function CheckoutForm({ amount }: { amount: number }) {
         className={cn(
           'w-full rounded-xl px-5 py-3.5 text-sm font-semibold text-white transition-colors',
           isProcessing
-            ? 'bg-stone-400 cursor-not-allowed'
+            ? 'bg-stone-400 dark:bg-stone-600 cursor-not-allowed'
             : 'bg-amber-600 active:bg-amber-700'
         )}
       >
@@ -72,7 +72,7 @@ function CheckoutForm({ amount }: { amount: number }) {
         )}
       </button>
 
-      <div className="flex items-center justify-center gap-1.5 text-xs text-stone-400">
+      <div className="flex items-center justify-center gap-1.5 text-xs text-stone-400 dark:text-stone-500">
         <Lock className="h-3 w-3" />
         <span>Secured by Stripe</span>
       </div>
@@ -113,17 +113,17 @@ export function PaymentForm({ outstandingBalance, defaultAmount }: PaymentFormPr
       <div className="flex items-center gap-3">
         <Link
           href="/portal/statements"
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-stone-100 active:bg-stone-200 transition-colors"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-stone-100 dark:bg-stone-800 active:bg-stone-200 dark:active:bg-stone-700 transition-colors"
         >
-          <ArrowLeft className="h-5 w-5 text-stone-600" />
+          <ArrowLeft className="h-5 w-5 text-stone-600 dark:text-stone-400" />
         </Link>
-        <h1 className="text-[22px] font-semibold text-stone-900">Make Payment</h1>
+        <h1 className="text-[22px] font-semibold text-stone-900 dark:text-stone-100">Make Payment</h1>
       </div>
 
       {/* Balance Summary */}
-      <div className="rounded-xl border border-stone-100 bg-white p-4">
-        <p className="text-xs text-stone-500 font-medium">Outstanding Balance</p>
-        <p className="text-2xl font-bold text-stone-900 mt-1">
+      <div className="rounded-xl border border-stone-100 dark:border-stone-800 bg-white dark:bg-stone-900 p-4">
+        <p className="text-xs text-stone-500 dark:text-stone-400 font-medium">Outstanding Balance</p>
+        <p className="text-2xl font-bold text-stone-900 dark:text-stone-100 mt-1">
           ฿{outstandingBalance.toLocaleString()}
         </p>
       </div>
@@ -132,9 +132,9 @@ export function PaymentForm({ outstandingBalance, defaultAmount }: PaymentFormPr
         <>
           {/* Amount Input */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-stone-700">Payment Amount</label>
+            <label className="text-sm font-medium text-stone-700 dark:text-stone-300">Payment Amount</label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-medium text-stone-500">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-medium text-stone-500 dark:text-stone-400">
                 ฿
               </span>
               <input
@@ -144,10 +144,10 @@ export function PaymentForm({ outstandingBalance, defaultAmount }: PaymentFormPr
                 min={1}
                 max={outstandingBalance}
                 step={0.01}
-                className="w-full rounded-xl border border-stone-200 bg-white py-3.5 pl-8 pr-4 text-lg font-semibold text-stone-900 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                className="w-full rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 py-3.5 pl-8 pr-4 text-lg font-semibold text-stone-900 dark:text-stone-100 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
               />
             </div>
-            <p className="text-xs text-stone-400">
+            <p className="text-xs text-stone-400 dark:text-stone-500">
               You can make a partial payment or pay the full balance.
             </p>
           </div>
@@ -161,8 +161,8 @@ export function PaymentForm({ outstandingBalance, defaultAmount }: PaymentFormPr
                 className={cn(
                   'flex-1 rounded-lg py-2.5 text-sm font-medium border transition-colors',
                   amount === outstandingBalance
-                    ? 'border-amber-500 bg-amber-50 text-amber-700'
-                    : 'border-stone-200 bg-white text-stone-600 active:bg-stone-50'
+                    ? 'border-amber-500 bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400'
+                    : 'border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-600 dark:text-stone-400 active:bg-stone-50 dark:active:bg-stone-800'
                 )}
               >
                 Full Balance
@@ -174,8 +174,8 @@ export function PaymentForm({ outstandingBalance, defaultAmount }: PaymentFormPr
                   className={cn(
                     'flex-1 rounded-lg py-2.5 text-sm font-medium border transition-colors',
                     amount === Math.round(outstandingBalance / 2)
-                      ? 'border-amber-500 bg-amber-50 text-amber-700'
-                      : 'border-stone-200 bg-white text-stone-600 active:bg-stone-50'
+                      ? 'border-amber-500 bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400'
+                      : 'border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-600 dark:text-stone-400 active:bg-stone-50 dark:active:bg-stone-800'
                   )}
                 >
                   Half
@@ -192,7 +192,7 @@ export function PaymentForm({ outstandingBalance, defaultAmount }: PaymentFormPr
             className={cn(
               'w-full rounded-xl px-5 py-3.5 text-sm font-semibold text-white transition-colors',
               amount <= 0 || isCreating
-                ? 'bg-stone-300 cursor-not-allowed'
+                ? 'bg-stone-300 dark:bg-stone-600 cursor-not-allowed'
                 : 'bg-amber-600 active:bg-amber-700'
             )}
           >
@@ -226,7 +226,7 @@ export function PaymentForm({ outstandingBalance, defaultAmount }: PaymentFormPr
           <CheckoutForm amount={amount} />
         </Elements>
       ) : (
-        <div className="rounded-xl bg-amber-50 p-4 text-sm text-amber-700">
+        <div className="rounded-xl bg-amber-50 dark:bg-amber-500/20 p-4 text-sm text-amber-700 dark:text-amber-400">
           Online payments are not configured. Please contact the club office.
         </div>
       )}

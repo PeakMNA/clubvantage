@@ -26,7 +26,7 @@ interface TeeTime {
   id: string;
   time: string;
   players: Player[];
-  status: 'open' | 'partial' | 'full' | 'blocked';
+  status: 'OPEN' | 'PARTIAL' | 'FULL' | 'BLOCKED';
   notes?: string;
 }
 
@@ -52,7 +52,7 @@ function generateTeeTimes(): TeeTime[] {
         id: `tt-${id++}`,
         time,
         players: [],
-        status: 'open',
+        status: 'OPEN',
       });
     }
   }
@@ -66,7 +66,7 @@ const mockTeeTimes = generateTeeTimes().map((tt) => {
   if (tt.time === '07:00') {
     return {
       ...tt,
-      status: 'full' as const,
+      status: 'FULL' as const,
       players: [
         { id: 'p1', name: 'Somchai W.', memberId: 'M-0001', handicap: 12 },
         { id: 'p2', name: 'Prasert C.', memberId: 'M-0003', handicap: 8 },
@@ -78,7 +78,7 @@ const mockTeeTimes = generateTeeTimes().map((tt) => {
   if (tt.time === '07:08') {
     return {
       ...tt,
-      status: 'partial' as const,
+      status: 'PARTIAL' as const,
       players: [
         { id: 'p5', name: 'Apinya S.', memberId: 'M-0005', handicap: 18 },
         { id: 'p6', name: 'Guest - John', isGuest: true, handicap: 20 },
@@ -88,7 +88,7 @@ const mockTeeTimes = generateTeeTimes().map((tt) => {
   if (tt.time === '08:00') {
     return {
       ...tt,
-      status: 'full' as const,
+      status: 'FULL' as const,
       players: [
         { id: 'p7', name: 'Nisa W.', memberId: 'M-0002', handicap: 24 },
         { id: 'p8', name: 'Corporate Group', isGuest: true },
@@ -101,7 +101,7 @@ const mockTeeTimes = generateTeeTimes().map((tt) => {
   if (tt.time === '09:00') {
     return {
       ...tt,
-      status: 'partial' as const,
+      status: 'PARTIAL' as const,
       players: [
         { id: 'p11', name: 'Sompong K.', memberId: 'M-0015', handicap: 6 },
       ],
@@ -110,14 +110,14 @@ const mockTeeTimes = generateTeeTimes().map((tt) => {
   if (tt.time === '12:00') {
     return {
       ...tt,
-      status: 'blocked' as const,
+      status: 'BLOCKED' as const,
       notes: 'Course maintenance',
     };
   }
   if (tt.time === '12:08') {
     return {
       ...tt,
-      status: 'blocked' as const,
+      status: 'BLOCKED' as const,
       notes: 'Course maintenance',
     };
   }
@@ -134,13 +134,13 @@ function formatTime(time: string) {
 
 function getStatusColor(status: TeeTime['status']) {
   switch (status) {
-    case 'full':
+    case 'FULL':
       return 'bg-primary/10 border-primary/30';
-    case 'partial':
+    case 'PARTIAL':
       return 'bg-amber-50 border-amber-200';
-    case 'blocked':
+    case 'BLOCKED':
       return 'bg-muted border-muted';
-    case 'open':
+    case 'OPEN':
     default:
       return 'bg-background hover:bg-muted/50';
   }
@@ -212,7 +212,7 @@ function TeeTimeRow({ teeTime }: { teeTime: TeeTime }) {
       <div className="flex items-center">
         <div className="text-center">
           <p className="text-sm font-medium">{formatTime(teeTime.time)}</p>
-          {teeTime.status === 'blocked' && (
+          {teeTime.status === 'BLOCKED' && (
             <Badge variant="secondary" className="text-[10px] mt-1">
               Blocked
             </Badge>
@@ -221,7 +221,7 @@ function TeeTimeRow({ teeTime }: { teeTime: TeeTime }) {
       </div>
 
       {/* Player slots */}
-      {teeTime.status === 'blocked' ? (
+      {teeTime.status === 'BLOCKED' ? (
         <div className="col-span-4 flex items-center justify-center text-sm text-muted-foreground">
           {teeTime.notes || 'Not available'}
         </div>
@@ -233,7 +233,7 @@ function TeeTimeRow({ teeTime }: { teeTime: TeeTime }) {
 
       {/* Actions */}
       <div className="flex items-center justify-center">
-        {teeTime.status !== 'blocked' && (
+        {teeTime.status !== 'BLOCKED' && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -262,17 +262,17 @@ function TeeTimeRow({ teeTime }: { teeTime: TeeTime }) {
 }
 
 export function TeeSheet({ date, course }: TeeSheetProps) {
-  const [filter, setFilter] = useState<'all' | 'available' | 'booked'>('all');
+  const [filter, setFilter] = useState<'all' | 'AVAILABLE' | 'BOOKED'>('all');
 
   const filteredTeeTimes = useMemo(() => {
     switch (filter) {
-      case 'available':
+      case 'AVAILABLE':
         return mockTeeTimes.filter(
-          (tt) => tt.status === 'open' || tt.status === 'partial'
+          (tt) => tt.status === 'OPEN' || tt.status === 'PARTIAL'
         );
-      case 'booked':
+      case 'BOOKED':
         return mockTeeTimes.filter(
-          (tt) => tt.status === 'full' || tt.status === 'partial'
+          (tt) => tt.status === 'FULL' || tt.status === 'PARTIAL'
         );
       default:
         return mockTeeTimes;
@@ -294,9 +294,9 @@ export function TeeSheet({ date, course }: TeeSheetProps) {
 
   // Summary stats
   const stats = useMemo(() => {
-    const total = mockTeeTimes.filter((tt) => tt.status !== 'blocked').length;
+    const total = mockTeeTimes.filter((tt) => tt.status !== 'BLOCKED').length;
     const booked = mockTeeTimes.filter(
-      (tt) => tt.status === 'full' || tt.status === 'partial'
+      (tt) => tt.status === 'FULL' || tt.status === 'PARTIAL'
     ).length;
     const players = mockTeeTimes.reduce(
       (acc, tt) => acc + tt.players.length,
@@ -332,11 +332,11 @@ export function TeeSheet({ date, course }: TeeSheetProps) {
           <select
             className="h-8 rounded-md border border-input bg-background px-2 text-sm"
             value={filter}
-            onChange={(e) => setFilter(e.target.value as 'all' | 'available' | 'booked')}
+            onChange={(e) => setFilter(e.target.value as 'all' | 'AVAILABLE' | 'BOOKED')}
           >
             <option value="all">All Times</option>
-            <option value="available">Available</option>
-            <option value="booked">Booked</option>
+            <option value="AVAILABLE">Available</option>
+            <option value="BOOKED">Booked</option>
           </select>
         </div>
       </div>

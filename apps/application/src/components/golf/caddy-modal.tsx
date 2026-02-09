@@ -33,7 +33,7 @@ export function CaddyModal({
   const [formData, setFormData] = useState({
     name: '',
     skillLevel: 'intermediate' as Caddy['skillLevel'],
-    status: 'available' as Caddy['status'],
+    status: 'AVAILABLE' as Caddy['status'],
     experience: 0,
     currentAssignment: undefined as string | undefined,
     notes: '',
@@ -57,7 +57,7 @@ export function CaddyModal({
       setFormData({
         name: '',
         skillLevel: 'intermediate',
-        status: 'available',
+        status: 'AVAILABLE',
         experience: 0,
         currentAssignment: undefined,
         notes: '',
@@ -92,7 +92,7 @@ export function CaddyModal({
   const handleDelete = async () => {
     if (!onDelete) return
 
-    if (caddy?.status === 'assigned') {
+    if (caddy?.status === 'ASSIGNED') {
       setError('Cannot delete a caddy that is currently assigned')
       setShowDeleteConfirm(false)
       return
@@ -249,9 +249,9 @@ export function CaddyModal({
               }
               className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
             >
-              <option value="available">Available</option>
-              <option value="assigned">Assigned</option>
-              <option value="off-duty">Off Duty</option>
+              <option value="AVAILABLE">Available</option>
+              <option value="ASSIGNED">Assigned</option>
+              <option value="OFF_DUTY">Off Duty</option>
             </select>
           </div>
 

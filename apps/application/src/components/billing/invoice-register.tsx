@@ -50,7 +50,7 @@ export interface InvoiceRegisterSummary {
   days91Plus: number
 }
 
-type QuickFilter = 'all' | 'draft' | 'sent' | 'overdue' | 'paid'
+type QuickFilter = 'all' | 'DRAFT' | 'SENT' | 'OVERDUE' | 'PAID'
 
 export interface InvoiceRegisterProps {
   /** Invoice data to display */
@@ -85,10 +85,10 @@ export interface InvoiceRegisterProps {
 
 const quickFilters: { id: QuickFilter; label: string }[] = [
   { id: 'all', label: 'All' },
-  { id: 'draft', label: 'Draft' },
-  { id: 'sent', label: 'Sent' },
-  { id: 'overdue', label: 'Overdue' },
-  { id: 'paid', label: 'Paid' },
+  { id: 'DRAFT', label: 'Draft' },
+  { id: 'SENT', label: 'Sent' },
+  { id: 'OVERDUE', label: 'Overdue' },
+  { id: 'PAID', label: 'Paid' },
 ]
 
 function formatDate(date: Date | string): string {

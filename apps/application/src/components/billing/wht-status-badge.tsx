@@ -34,7 +34,7 @@ const statusConfig: Record<WhtStatus, {
 }
 
 export function WhtStatusBadge({ status, className }: WhtStatusBadgeProps) {
-  const config = statusConfig[status]
+  const config = statusConfig[status] ?? statusConfig.pending
 
   return (
     <span

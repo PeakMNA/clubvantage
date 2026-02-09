@@ -5,6 +5,7 @@ import {
   IsDateString,
   IsOptional,
   IsEnum,
+  IsBoolean,
   MaxLength,
   Min,
   Max,
@@ -41,6 +42,35 @@ export class CreateStatementPeriodInput {
   @Field()
   @IsDateString()
   cutoffDate: string;
+
+  @Field({ nullable: true, defaultValue: false, description: 'Mark as catch-up period to consolidate historical data' })
+  @IsOptional()
+  @IsBoolean()
+  isCatchUp?: boolean;
+}
+
+@InputType()
+export class UpdateStatementPeriodInput {
+  @Field({ nullable: true, description: 'Period label/name' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  periodLabel?: string;
+
+  @Field({ nullable: true, description: 'Start date of the period (YYYY-MM-DD)' })
+  @IsOptional()
+  @IsDateString()
+  periodStart?: string;
+
+  @Field({ nullable: true, description: 'End date of the period (YYYY-MM-DD)' })
+  @IsOptional()
+  @IsDateString()
+  periodEnd?: string;
+
+  @Field({ nullable: true, description: 'Cutoff date for including transactions (YYYY-MM-DD)' })
+  @IsOptional()
+  @IsDateString()
+  cutoffDate?: string;
 }
 
 @InputType()

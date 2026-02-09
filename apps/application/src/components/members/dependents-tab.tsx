@@ -71,7 +71,7 @@ export function DependentsTab({
 
       {/* Info Banner */}
       {maxDependents > 0 && (
-        <div className="flex items-center gap-2 rounded-lg bg-blue-50 p-3 text-sm text-blue-700">
+        <div className="flex items-center gap-2 rounded-lg bg-blue-50 dark:bg-blue-500/20 p-3 text-sm text-blue-700 dark:text-blue-400">
           <Info className="h-4 w-4 flex-shrink-0" />
           <span>
             This membership type allows up to {maxDependents} dependent

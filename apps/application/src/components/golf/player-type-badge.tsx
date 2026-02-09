@@ -1,8 +1,9 @@
 'use client'
 
 import { cn } from '@clubvantage/ui'
+import type { PlayerType } from '@clubvantage/types'
 
-export type PlayerType = 'member' | 'guest' | 'dependent' | 'walkup'
+export type { PlayerType }
 
 interface PlayerTypeBadgeProps {
   type: PlayerType
@@ -17,25 +18,25 @@ const typeConfig: Record<PlayerType, {
   bgColor: string
   textColor: string
 }> = {
-  member: {
+  MEMBER: {
     letter: 'M',
     label: 'Member',
     bgColor: 'bg-blue-500',
     textColor: 'text-white',
   },
-  guest: {
+  GUEST: {
     letter: 'G',
     label: 'Guest',
     bgColor: 'bg-amber-500',
     textColor: 'text-white',
   },
-  dependent: {
+  DEPENDENT: {
     letter: 'D',
     label: 'Dependent',
     bgColor: 'bg-teal-500',
     textColor: 'text-white',
   },
-  walkup: {
+  WALK_UP: {
     letter: 'W',
     label: 'Walk-up',
     bgColor: 'bg-muted',
@@ -44,9 +45,7 @@ const typeConfig: Record<PlayerType, {
 }
 
 export function PlayerTypeBadge({ type, className, showLabel = false, size = 'md' }: PlayerTypeBadgeProps) {
-  // Normalize type to lowercase and handle WALK_UP -> walkup
-  const normalizedType = (type?.toLowerCase().replace('_', '') || 'member') as PlayerType
-  const config = typeConfig[normalizedType] || typeConfig.member
+  const config = typeConfig[type] || typeConfig.MEMBER
 
   const sizeClasses = {
     xs: showLabel ? 'px-1 py-0 h-3.5 text-[8px]' : 'w-3.5 h-3.5 text-[8px]',

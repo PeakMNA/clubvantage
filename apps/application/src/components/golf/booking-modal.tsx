@@ -11,7 +11,7 @@ import {
   MapPin,
 } from 'lucide-react'
 import { Modal } from './modal'
-import { FlightStatusBadge, type FlightStatus } from './flight-status-badge'
+import { FlightStatusBadge } from './flight-status-badge'
 import { PlayerSlot, type CaddyValue, type CartValue, type RentalValue } from './player-slot'
 import { type CaddyPickerCaddy } from './caddy-picker'
 import { AddPlayerFlow, type PlayerData } from './add-player-flow'
@@ -131,21 +131,12 @@ function formatTimestamp(timestamp: string): string {
   })
 }
 
-function playerTypeToPayloadType(type: PlayerType): 'MEMBER' | 'GUEST' | 'DEPENDENT' | 'WALK_UP' {
-  switch (type) {
-    case 'member': return 'MEMBER'
-    case 'guest': return 'GUEST'
-    case 'dependent': return 'DEPENDENT'
-    case 'walkup': return 'WALK_UP'
-  }
-}
-
 function bookingPlayerToSlotData(player: BookingPlayer, clubSettings: ClubSettings): PlayerSlotData {
   return {
     player: {
       id: player.memberUuid || player.playerId || '',
       name: player.name || 'Unknown',
-      type: (player.playerType?.toLowerCase() as PlayerType) || 'member',
+      type: (player.playerType as PlayerType) || 'MEMBER',
       memberId: player.memberId,
     },
     caddyRequest: (player.caddyRequest as CaddyValue) || 'NONE',
@@ -179,17 +170,6 @@ function getInitialSlots(booking: Booking | null | undefined, clubSettings: Club
   return Array(4).fill(null).map(() => getEmptySlot(clubSettings))
 }
 
-function mapBookingStatusToFlightStatus(status: BookingStatus): FlightStatus {
-  switch (status) {
-    case 'booked': return 'booked'
-    case 'checked-in': return 'checked-in'
-    case 'on-course': return 'on-course'
-    case 'completed': return 'finished'
-    case 'no-show': return 'no-show'
-    case 'cancelled': return 'cancelled'
-    default: return 'booked'
-  }
-}
 
 // ============================================================================
 // Booked By Section
@@ -263,14 +243,14 @@ function WorkflowActions({
 }: WorkflowActionsProps) {
   const isProcessingThis = (action: string) => isProcessing && processingAction === action
 
-  if (status === 'cancelled') {
+  if (status === 'CANCELLED') {
     return null
   }
 
   return (
     <div className="flex items-center gap-2">
       {/* Cancel - always visible, red, pushed left */}
-      {onCancel && status !== 'completed' && (
+      {onCancel && status !== 'COMPLETED' && (
         <button
           type="button"
           onClick={onCancel}
@@ -283,7 +263,7 @@ function WorkflowActions({
       )}
 
       {/* Status-dependent actions */}
-      {status === 'booked' && (
+      {status === 'BOOKED' && (
         <>
           {onCheckIn && (
             <button
@@ -322,7 +302,7 @@ function WorkflowActions({
         </>
       )}
 
-      {status === 'checked-in' && (
+      {status === 'CHECKED_IN' && (
         <>
           {onMarkOnCourse && (
             <button
@@ -350,7 +330,7 @@ function WorkflowActions({
         </>
       )}
 
-      {status === 'on-course' && (
+      {status === 'STARTED' && (
         <>
           {onMarkFinished && (
             <button
@@ -378,7 +358,7 @@ function WorkflowActions({
         </>
       )}
 
-      {status === 'completed' && onSettle && (
+      {status === 'COMPLETED' && onSettle && (
         <button
           type="button"
           onClick={onSettle}
@@ -410,7 +390,7 @@ function HeaderSubtitle({ mode, booking, time, courseName, date, startingHole }:
   return (
     <div className="flex items-center gap-3 mt-2 flex-wrap">
       {mode === 'existing' && booking && (
-        <FlightStatusBadge status={mapBookingStatusToFlightStatus(booking.status)} size="sm" />
+        <FlightStatusBadge status={booking.status} size="sm" />
       )}
       <div className="flex items-center gap-1.5 text-sm text-stone-600">
         <Clock className="h-3.5 w-3.5 text-stone-400" />
@@ -617,16 +597,16 @@ export function BookingModal({
         if (slot.player) {
           players.push({
             position: i + 1,
-            playerType: playerTypeToPayloadType(slot.player.type),
-            memberId: slot.player.type === 'member' || slot.player.type === 'dependent'
+            playerType: slot.player.type as 'MEMBER' | 'GUEST' | 'DEPENDENT' | 'WALK_UP',
+            memberId: slot.player.type === 'MEMBER' || slot.player.type === 'DEPENDENT'
               ? slot.player.id
               : undefined,
-            guestName: slot.player.type === 'guest' || slot.player.type === 'walkup'
+            guestName: slot.player.type === 'GUEST' || slot.player.type === 'WALK_UP'
               ? slot.player.name
               : undefined,
             guestPhone: slot.player.phone,
             guestEmail: slot.player.email,
-            sponsoringMemberId: slot.player.type === 'guest' ? slot.player.sponsoringMemberId || bookingMemberId : undefined,
+            sponsoringMemberId: slot.player.type === 'GUEST' ? slot.player.sponsoringMemberId || bookingMemberId : undefined,
             caddyRequest: slot.caddyRequest,
             cartRequest: slot.cartRequest,
             rentalRequest: slot.rentalRequest,

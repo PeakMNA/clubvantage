@@ -14,9 +14,9 @@ interface CoursesTabProps {
 
 function CourseStatusBadge({ status }: { status: Course['status'] }) {
   const config = {
-    active: { bg: 'bg-emerald-50 dark:bg-emerald-500/20 border-emerald-200/60 dark:border-emerald-500/30', text: 'text-emerald-700 dark:text-emerald-400', label: 'Active' },
-    maintenance: { bg: 'bg-amber-50 dark:bg-amber-500/20 border-amber-200/60 dark:border-amber-500/30', text: 'text-amber-700 dark:text-amber-400', label: 'Maintenance' },
-    closed: { bg: 'bg-red-50 dark:bg-red-500/20 border-red-200/60 dark:border-red-500/30', text: 'text-red-700 dark:text-red-400', label: 'Closed' },
+    ACTIVE: { bg: 'bg-emerald-50 dark:bg-emerald-500/20 border-emerald-200/60 dark:border-emerald-500/30', text: 'text-emerald-700 dark:text-emerald-400', label: 'Active' },
+    MAINTENANCE: { bg: 'bg-amber-50 dark:bg-amber-500/20 border-amber-200/60 dark:border-amber-500/30', text: 'text-amber-700 dark:text-amber-400', label: 'Maintenance' },
+    CLOSED: { bg: 'bg-red-50 dark:bg-red-500/20 border-red-200/60 dark:border-red-500/30', text: 'text-red-700 dark:text-red-400', label: 'Closed' },
   }[status]
 
   return (
@@ -43,9 +43,9 @@ function CourseCard({
       {/* Accent line - color based on status */}
       <div className={cn(
         'absolute left-0 top-0 h-1 w-full',
-        course.status === 'active' && 'bg-gradient-to-r from-emerald-300 via-emerald-500 to-emerald-300',
-        course.status === 'maintenance' && 'bg-gradient-to-r from-amber-300 via-amber-500 to-amber-300',
-        course.status === 'closed' && 'bg-gradient-to-r from-red-300 via-red-500 to-red-300'
+        course.status === 'ACTIVE' && 'bg-gradient-to-r from-emerald-300 via-emerald-500 to-emerald-300',
+        course.status === 'MAINTENANCE' && 'bg-gradient-to-r from-amber-300 via-amber-500 to-amber-300',
+        course.status === 'CLOSED' && 'bg-gradient-to-r from-red-300 via-red-500 to-red-300'
       )} />
 
       <div className="relative p-4 sm:p-5">

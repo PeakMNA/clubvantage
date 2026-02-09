@@ -38,22 +38,22 @@ function formatCurrency(amount: number): string {
 }
 
 function getBalanceColor(member: Member): string {
-  if (member.balance <= 0) return 'text-emerald-600';
-  if (member.status === 'SUSPENDED') return 'text-red-600';
-  if (member.agingBucket === '91+') return 'text-red-600';
-  return 'text-amber-600';
+  if (member.balance <= 0) return 'text-emerald-600 dark:text-emerald-400';
+  if (member.status === 'SUSPENDED') return 'text-red-600 dark:text-red-400';
+  if (member.agingBucket === 'DAYS_91_PLUS') return 'text-red-600 dark:text-red-400';
+  return 'text-amber-600 dark:text-amber-400';
 }
 
 function getAgingText(member: Member): string | null {
   if (member.balance <= 0) return null;
   switch (member.agingBucket) {
-    case '30':
+    case 'DAYS_30':
       return '30 days overdue';
-    case '60':
+    case 'DAYS_60':
       return '60 days overdue';
-    case '90':
+    case 'DAYS_90':
       return '90 days overdue';
-    case '91+':
+    case 'DAYS_91_PLUS':
       return '91+ days overdue';
     default:
       return null;
@@ -62,10 +62,10 @@ function getAgingText(member: Member): string | null {
 
 const statusOptions: MemberStatus[] = [
   'ACTIVE',
-  'PENDING',
   'SUSPENDED',
-  'INACTIVE',
-  'CANCELLED',
+  'LAPSED',
+  'RESIGNED',
+  'TERMINATED',
 ];
 
 export function MemberDetailHeader({
@@ -77,7 +77,7 @@ export function MemberDetailHeader({
   className,
 }: MemberDetailHeaderProps) {
   const [copied, setCopied] = useState(false);
-  const isReadOnly = member.status === 'CANCELLED';
+  const isReadOnly = member.status === 'TERMINATED' || member.status === 'RESIGNED';
   const isSuspended = member.status === 'SUSPENDED';
   const agingText = getAgingText(member);
 
@@ -87,12 +87,16 @@ export function MemberDetailHeader({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const statusMap: Record<MemberStatus, 'active' | 'pending' | 'suspended' | 'inactive' | 'cancelled'> = {
+  const statusMap: Record<MemberStatus, string> = {
+    PROSPECT: 'prospect',
+    LEAD: 'lead',
+    APPLICANT: 'applicant',
     ACTIVE: 'active',
-    PENDING: 'pending',
     SUSPENDED: 'suspended',
-    INACTIVE: 'inactive',
-    CANCELLED: 'cancelled',
+    LAPSED: 'lapsed',
+    RESIGNED: 'resigned',
+    TERMINATED: 'terminated',
+    REACTIVATED: 'reactivated',
   };
 
   return (
@@ -230,7 +234,7 @@ export function MemberDetailHeader({
                       onClick={() => onChangeStatus?.(status)}
                       className={cn(
                         'cursor-pointer',
-                        (status === 'SUSPENDED' || status === 'CANCELLED') && 'text-red-600'
+                        (status === 'SUSPENDED' || status === 'TERMINATED') && 'text-red-600 dark:text-red-400'
                       )}
                     >
                       {status.charAt(0) + status.slice(1).toLowerCase()}

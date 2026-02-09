@@ -118,7 +118,7 @@ export function PaymentRecordModal({
     ? Object.values(pendingData.allocations).reduce((sum, amount) => sum + amount, 0)
     : 0;
   const memberOutstanding = pendingInvoices.reduce((sum, inv) => sum + inv.balance, 0);
-  const isSuspended = selectedMember?.agingStatus === 'suspended';
+  const isSuspended = selectedMember?.agingStatus === 'SUSPENDED';
   const willReinstate = isSuspended && totalAllocated >= memberOutstanding;
   const remainsSuspended = isSuspended && !willReinstate;
   const outstandingAfter = memberOutstanding - totalAllocated;

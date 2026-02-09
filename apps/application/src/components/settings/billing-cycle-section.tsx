@@ -119,7 +119,7 @@ export function BillingCycleSection({ id }: BillingCycleSectionProps) {
 
   if (isLoading) {
     return (
-      <section id={id} className="border rounded-xl p-6 space-y-6 scroll-mt-24 shadow-lg shadow-stone-200/30">
+      <section id={id} className="border rounded-xl p-6 space-y-6 scroll-mt-24 shadow-lg shadow-stone-200/30 dark:shadow-none">
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-6 w-6 animate-spin text-amber-500" />
           <span className="ml-2 text-muted-foreground">Loading billing settings...</span>
@@ -129,7 +129,7 @@ export function BillingCycleSection({ id }: BillingCycleSectionProps) {
   }
 
   return (
-    <section id={id} className="border rounded-xl p-6 space-y-6 scroll-mt-24 shadow-lg shadow-stone-200/30">
+    <section id={id} className="border rounded-xl p-6 space-y-6 scroll-mt-24 shadow-lg shadow-stone-200/30 dark:shadow-none">
       {/* Header */}
       <div>
         <h2 className="text-xl font-semibold flex items-center gap-2">
@@ -144,7 +144,7 @@ export function BillingCycleSection({ id }: BillingCycleSectionProps) {
       {/* Billing Frequency */}
       <div className="space-y-4">
         <h3 className="font-medium flex items-center gap-2">
-          <Clock className="h-4 w-4 text-stone-500" />
+          <Clock className="h-4 w-4 text-stone-500 dark:text-stone-400" />
           Billing Frequency
         </h3>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -156,13 +156,13 @@ export function BillingCycleSection({ id }: BillingCycleSectionProps) {
               className={cn(
                 'flex flex-col items-start p-4 rounded-lg border-2 transition-all text-left',
                 frequency === option.value
-                  ? 'border-amber-500 bg-amber-50 shadow-md'
-                  : 'border-stone-200 hover:border-stone-300 hover:bg-stone-50'
+                  ? 'border-amber-500 bg-amber-50 dark:bg-amber-500/20 shadow-md'
+                  : 'border-stone-200 dark:border-stone-700 hover:border-stone-300 dark:hover:border-stone-600 hover:bg-stone-50 dark:hover:bg-stone-800'
               )}
             >
               <span className={cn(
                 'font-medium',
-                frequency === option.value ? 'text-amber-700' : 'text-stone-900'
+                frequency === option.value ? 'text-amber-700 dark:text-amber-400' : 'text-stone-900 dark:text-stone-100'
               )}>
                 {option.label}
               </span>
@@ -184,13 +184,13 @@ export function BillingCycleSection({ id }: BillingCycleSectionProps) {
               className={cn(
                 'flex flex-col items-start p-4 rounded-lg border-2 transition-all text-left',
                 timing === option.value
-                  ? 'border-emerald-500 bg-emerald-50 shadow-md'
-                  : 'border-stone-200 hover:border-stone-300 hover:bg-stone-50'
+                  ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/20 shadow-md'
+                  : 'border-stone-200 dark:border-stone-700 hover:border-stone-300 dark:hover:border-stone-600 hover:bg-stone-50 dark:hover:bg-stone-800'
               )}
             >
               <span className={cn(
                 'font-medium',
-                timing === option.value ? 'text-emerald-700' : 'text-stone-900'
+                timing === option.value ? 'text-emerald-700 dark:text-emerald-400' : 'text-stone-900 dark:text-stone-100'
               )}>
                 {option.label}
               </span>
@@ -212,13 +212,13 @@ export function BillingCycleSection({ id }: BillingCycleSectionProps) {
               className={cn(
                 'flex flex-col items-start p-4 rounded-lg border-2 transition-all text-left',
                 alignment === option.value
-                  ? 'border-amber-500 bg-amber-50 shadow-md'
-                  : 'border-stone-200 hover:border-stone-300 hover:bg-stone-50'
+                  ? 'border-amber-500 bg-amber-50 dark:bg-amber-500/20 shadow-md'
+                  : 'border-stone-200 dark:border-stone-700 hover:border-stone-300 dark:hover:border-stone-600 hover:bg-stone-50 dark:hover:bg-stone-800'
               )}
             >
               <span className={cn(
                 'font-medium',
-                alignment === option.value ? 'text-amber-700' : 'text-stone-900'
+                alignment === option.value ? 'text-amber-700 dark:text-amber-400' : 'text-stone-900 dark:text-stone-100'
               )}>
                 {option.label}
               </span>
@@ -229,7 +229,7 @@ export function BillingCycleSection({ id }: BillingCycleSectionProps) {
 
         {/* Custom Billing Day - only show when alignment is CUSTOM */}
         {alignment === 'CUSTOM' && (
-          <div className="ml-4 p-4 bg-stone-50 rounded-lg border border-stone-200">
+          <div className="ml-4 p-4 bg-stone-50 dark:bg-stone-800 rounded-lg border border-stone-200 dark:border-stone-700">
             <Label className="text-sm font-medium">Custom Billing Day</Label>
             <div className="flex items-center gap-2 mt-2">
               <Input
@@ -253,7 +253,7 @@ export function BillingCycleSection({ id }: BillingCycleSectionProps) {
       {/* Invoice Generation Settings */}
       <div className="space-y-4 pt-4 border-t">
         <h3 className="font-medium flex items-center gap-2">
-          <Receipt className="h-4 w-4 text-stone-500" />
+          <Receipt className="h-4 w-4 text-stone-500 dark:text-stone-400" />
           Invoice Generation
         </h3>
         <div className="grid gap-4 md:grid-cols-3">
@@ -308,7 +308,7 @@ export function BillingCycleSection({ id }: BillingCycleSectionProps) {
       {/* Late Fee Configuration */}
       <div className="space-y-4 pt-4 border-t">
         <h3 className="font-medium flex items-center gap-2">
-          <AlertCircle className="h-4 w-4 text-stone-500" />
+          <AlertCircle className="h-4 w-4 text-stone-500 dark:text-stone-400" />
           Late Fees
         </h3>
         <label className="flex items-center gap-2">
@@ -320,7 +320,7 @@ export function BillingCycleSection({ id }: BillingCycleSectionProps) {
         </label>
 
         {autoApplyLateFee && (
-          <div className="ml-6 space-y-4 p-4 bg-stone-50 rounded-lg border border-stone-200">
+          <div className="ml-6 space-y-4 p-4 bg-stone-50 dark:bg-stone-800 rounded-lg border border-stone-200 dark:border-stone-700">
             {/* Fee Type Selection */}
             <div className="flex gap-4">
               {LATE_FEE_TYPE_OPTIONS.map((option) => (
@@ -437,13 +437,13 @@ export function BillingCycleSection({ id }: BillingCycleSectionProps) {
                   className={cn(
                     'flex flex-col items-start p-3 rounded-lg border transition-all text-left',
                     prorationMethod === option.value
-                      ? 'border-amber-500 bg-amber-50'
-                      : 'border-stone-200 hover:border-stone-300 hover:bg-stone-50'
+                      ? 'border-amber-500 bg-amber-50 dark:bg-amber-500/20'
+                      : 'border-stone-200 dark:border-stone-700 hover:border-stone-300 dark:hover:border-stone-600 hover:bg-stone-50 dark:hover:bg-stone-800'
                   )}
                 >
                   <span className={cn(
                     'text-sm font-medium',
-                    prorationMethod === option.value ? 'text-amber-700' : 'text-stone-900'
+                    prorationMethod === option.value ? 'text-amber-700 dark:text-amber-400' : 'text-stone-900 dark:text-stone-100'
                   )}>
                     {option.label}
                   </span>

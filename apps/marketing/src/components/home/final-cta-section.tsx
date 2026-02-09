@@ -1,24 +1,40 @@
 'use client';
 
 import * as React from 'react';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Check, Users } from 'lucide-react';
+import { subscribeNewsletter } from '@/app/actions/newsletter';
+import { getWaitlistCount } from '@/app/actions/waitlist';
 
 export function FinalCtaSection() {
+  const t = useTranslations('finalCta');
+  const tc = useTranslations('common');
   const [email, setEmail] = React.useState('');
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isSubmitted, setIsSubmitted] = React.useState(false);
+  const [waitlistCount, setWaitlistCount] = React.useState(0);
+
+  React.useEffect(() => {
+    getWaitlistCount().then(setWaitlistCount);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
 
     setIsSubmitting(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsSubmitting(false);
-    setIsSubmitted(true);
+    try {
+      const result = await subscribeNewsletter(email, 'cta');
+      if (result.success) {
+        setIsSubmitted(true);
+      }
+    } catch {
+      // Silently fail
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -44,15 +60,15 @@ export function FinalCtaSection() {
           <div className="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-full bg-cream-100/10">
             <Users className="h-4 w-4 text-accent-400" />
             <span className="text-sm text-cream-100">
-              Join <span className="font-semibold text-accent-400">12</span> founding members shaping the future
+              {t('joinFoundingMembers', { count: waitlistCount })}
             </span>
           </div>
 
           <h2 className="font-serif text-h1 text-cream-50">
-            Ready to Transform Your Club?
+            {t('readyToTransform')}
           </h2>
           <p className="mt-4 text-body-lg text-cream-200">
-            Be among the first to experience ClubVantage. Founding members get lifetime pricing and direct influence on what we build.
+            {t('subtitle')}
           </p>
 
           {/* Inline form or success message */}
@@ -63,8 +79,8 @@ export function FinalCtaSection() {
                   <Check className="h-5 w-5 text-primary-900" />
                 </div>
                 <div className="text-left">
-                  <p className="font-semibold text-cream-50">You&apos;re on the list!</p>
-                  <p className="text-sm text-cream-200">Check your email for next steps.</p>
+                  <p className="font-semibold text-cream-50">{t('youreOnTheList')}</p>
+                  <p className="text-sm text-cream-200">{t('checkYourEmail')}</p>
                 </div>
               </div>
             </div>
@@ -73,7 +89,7 @@ export function FinalCtaSection() {
               <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
                 <input
                   type="email"
-                  placeholder="Enter your email"
+                  placeholder={t('enterYourEmail')}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -81,12 +97,12 @@ export function FinalCtaSection() {
                            focus:outline-none focus:border-accent-400 focus:ring-2 focus:ring-accent-400/20 transition-all"
                 />
                 <Button type="submit" variant="accent" isLoading={isSubmitting}>
-                  Join Waitlist
+                  {tc('joinWaitlist')}
                   <ArrowRight className="h-4 w-4 ml-1" />
                 </Button>
               </div>
               <p className="mt-4 text-xs text-cream-300">
-                We&apos;ll send you updates about ClubVantage. Unsubscribe anytime.
+                {t('weWillSendUpdates')}
               </p>
             </form>
           )}
@@ -97,7 +113,7 @@ export function FinalCtaSection() {
               href="/waitlist"
               className="text-sm text-cream-200 hover:text-cream-100 transition-colors underline underline-offset-4"
             >
-              Want to tell us more about your club? Fill out the full form →
+              {t('fullFormLink')}
             </Link>
           </div>
         </div>

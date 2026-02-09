@@ -161,7 +161,7 @@ export function TeeSheetMonthView({
 
           const dateKey = formatDateKey(date)
           const data = availabilityMap.get(dateKey)
-          const isBlockedDay = data?.level === 'blocked'
+          const isBlockedDay = data?.level === 'BLOCKED'
           const bookedSlots = data?.bookedSlots || 0
           const totalSlots = data?.totalSlots || 0
           const playerCount = data?.playerCount || 0

@@ -23,13 +23,13 @@ import type { Flight, Player, RentalStatus } from './types'
 
 function getRentalStatusColor(status: RentalStatus | undefined): string {
   switch (status) {
-    case 'requested':
+    case 'REQUESTED':
       return 'text-amber-600 bg-amber-50 dark:bg-amber-500/20 dark:text-amber-400'
-    case 'paid':
+    case 'PAID':
       return 'text-emerald-600 bg-emerald-50 dark:bg-emerald-500/20 dark:text-emerald-400'
-    case 'assigned':
+    case 'ASSIGNED':
       return 'text-blue-600 bg-blue-50 dark:bg-blue-500/20 dark:text-blue-400'
-    case 'returned':
+    case 'RETURNED':
       return 'text-purple-600 bg-purple-50 dark:bg-purple-500/20 dark:text-purple-400'
     default:
       return ''
@@ -115,22 +115,22 @@ const PlayerCell = memo(function PlayerCell({ player, position, onBookClick, onP
             {player.name}
           </span>
           {/* Rental status badges */}
-          {player.cartStatus && player.cartStatus !== 'none' && (
+          {player.cartStatus && player.cartStatus !== 'NONE' && (
             <span
               title={`Cart: ${player.cartStatus}${player.cartSharedWith ? ` (shared with P${player.cartSharedWith})` : ''}`}
               className={cn('px-1 py-0.5 rounded text-[10px] font-medium flex items-center gap-0.5 flex-shrink-0', getRentalStatusColor(player.cartStatus))}
             >
               <Car className="h-2.5 w-2.5" />
-              {player.cartStatus.charAt(0).toUpperCase()}
+              {player.cartStatus.charAt(0)}
             </span>
           )}
-          {player.caddyStatus && player.caddyStatus !== 'none' && (
+          {player.caddyStatus && player.caddyStatus !== 'NONE' && (
             <span
               title={`Caddy: ${player.caddyStatus}`}
               className={cn('px-1 py-0.5 rounded text-[10px] font-medium flex items-center gap-0.5 flex-shrink-0', getRentalStatusColor(player.caddyStatus))}
             >
               <Users className="h-2.5 w-2.5" />
-              {player.caddyStatus.charAt(0).toUpperCase()}
+              {player.caddyStatus.charAt(0)}
             </span>
           )}
           {/* Fallback to legacy boolean icons if no status set */}
@@ -182,9 +182,9 @@ const RowActionsMenu = memo(function RowActionsMenu({
   const buttonRef = useRef<HTMLButtonElement>(null)
 
   const hasPlayers = flight.players.some(Boolean)
-  const isBlocked = flight.status === 'blocked'
-  const isCheckedIn = flight.status === 'checked-in'
-  const isNoShow = flight.status === 'no-show'
+  const isBlocked = flight.status === 'BLOCKED'
+  const isCheckedIn = flight.status === 'CHECKED_IN'
+  const isNoShow = flight.status === 'NO_SHOW'
   const hasEmptySlot = flight.players.some(p => p === null)
 
   useEffect(() => {
@@ -338,8 +338,8 @@ export const TeeSheetRow = memo(function TeeSheetRow({
   onMoveFlight,
   onCancelFlight
 }: TeeSheetRowProps) {
-  const isBlocked = flight.status === 'blocked'
-  const isNoShow = flight.status === 'no-show'
+  const isBlocked = flight.status === 'BLOCKED'
+  const isNoShow = flight.status === 'NO_SHOW'
   const filledSlots = flight.players.filter(Boolean).length
   const isPartial = filledSlots > 0 && filledSlots < 4 && !isBlocked
   const hasLinkedSlot = !!flight.linkedSlot
