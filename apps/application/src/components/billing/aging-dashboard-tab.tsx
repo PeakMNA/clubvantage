@@ -50,7 +50,7 @@ export interface ReinstatedMember {
   receiptNumber: string
 }
 
-type AgingFilter = 'all' | '30+' | '60+' | '90+' | 'suspended'
+type AgingFilter = 'all' | 'DAYS_30+' | 'DAYS_60+' | 'DAYS_90+' | 'SUSPENDED'
 type SortOption = 'balance-desc' | 'days-desc' | 'name-asc'
 
 export interface AgingDashboardTabProps {
@@ -72,6 +72,8 @@ export interface AgingDashboardTabProps {
   isLoading?: boolean
   /** Whether user has suspension override permission */
   canOverrideSuspension?: boolean
+  /** Whether billing uses member-cycle mode */
+  isMemberCycle?: boolean
   /** Callback when filter changes */
   onFilterChange?: (filter: AgingFilter) => void
   /** Callback when sort changes */
@@ -85,27 +87,27 @@ export interface AgingDashboardTabProps {
 }
 
 const bucketColors: Record<AgingStatus, { border: string; bg: string; text: string }> = {
-  current: {
+  CURRENT: {
     border: 'border-l-emerald-500',
     bg: 'bg-emerald-500',
     text: 'text-emerald-700',
   },
-  '30': {
+  DAYS_30: {
     border: 'border-l-amber-500',
     bg: 'bg-amber-500',
     text: 'text-amber-700',
   },
-  '60': {
+  DAYS_60: {
     border: 'border-l-orange-500',
     bg: 'bg-orange-500',
     text: 'text-orange-700',
   },
-  '90': {
+  DAYS_90: {
     border: 'border-l-red-500',
     bg: 'bg-red-500',
     text: 'text-red-700',
   },
-  suspended: {
+  SUSPENDED: {
     border: 'border-l-red-600',
     bg: 'bg-red-600',
     text: 'text-red-700',
@@ -114,10 +116,10 @@ const bucketColors: Record<AgingStatus, { border: string; bg: string; text: stri
 
 const agingFilters: { id: AgingFilter; label: string }[] = [
   { id: 'all', label: 'All' },
-  { id: '30+', label: '30+' },
-  { id: '60+', label: '60+' },
-  { id: '90+', label: '90+' },
-  { id: 'suspended', label: 'Suspended Only' },
+  { id: 'DAYS_30+', label: '30+' },
+  { id: 'DAYS_60+', label: '60+' },
+  { id: 'DAYS_90+', label: '90+' },
+  { id: 'SUSPENDED', label: 'Suspended Only' },
 ]
 
 const sortOptions: { id: SortOption; label: string }[] = [
@@ -152,7 +154,7 @@ function BucketCard({
   onClick: () => void
 }) {
   const colors = bucketColors[bucket.id]
-  const isSuspended = bucket.id === 'suspended'
+  const isSuspended = bucket.id === 'SUSPENDED'
 
   return (
     <button
@@ -229,6 +231,7 @@ export function AgingDashboardTab({
   pageSize,
   isLoading = false,
   canOverrideSuspension = false,
+  isMemberCycle = false,
   onFilterChange,
   onSortChange,
   onPageChange,
@@ -248,11 +251,11 @@ export function AgingDashboardTab({
       setSelectedBucket(bucketId)
       // Map bucket to filter
       const filterMap: Record<AgingStatus, AgingFilter> = {
-        current: 'all',
-        '30': '30+',
-        '60': '60+',
-        '90': '90+',
-        suspended: 'suspended',
+        CURRENT: 'all',
+        DAYS_30: 'DAYS_30+',
+        DAYS_60: 'DAYS_60+',
+        DAYS_90: 'DAYS_90+',
+        SUSPENDED: 'SUSPENDED',
       }
       onFilterChange?.(filterMap[bucketId])
     }
@@ -288,6 +291,13 @@ export function AgingDashboardTab({
         </div>
         <DistributionBar buckets={buckets} />
       </section>
+
+      {/* Member Cycle note */}
+      {isMemberCycle && (
+        <p className="text-xs text-muted-foreground px-1">
+          Aging is based on individual invoice due dates, not member cycle dates.
+        </p>
+      )}
 
       {/* Member Aging List */}
       <section className="space-y-4">
@@ -360,7 +370,7 @@ export function AgingDashboardTab({
               </thead>
               <tbody className="divide-y divide-stone-100">
                 {members.map((member) => {
-                  const isSuspended = member.status === 'suspended'
+                  const isSuspended = member.status === 'SUSPENDED'
                   return (
                     <tr
                       key={member.id}

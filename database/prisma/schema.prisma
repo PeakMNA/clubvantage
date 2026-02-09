@@ -70,6 +70,7 @@ model Club {
   cashDrawers            CashDrawer[]
   productCategories      ProductCategory[]
   products               Product[]
+  closeChecklists        CloseChecklist[]
   modifierGroups         ModifierGroup[]
   dailySettlements       DailySettlement[]
   posTemplates           POSTemplate[]
@@ -371,10 +372,59 @@ model StatementPeriod {
   reopenedByUser       User?          @relation("PeriodReopenedBy", fields: [reopenedBy], references: [id])
   reopenApprovedByUser User?          @relation("PeriodReopenApprovedBy", fields: [reopenApprovedBy], references: [id])
   statementRuns        StatementRun[]
+  closeChecklist       CloseChecklist?
 
   @@unique([clubId, periodYear, periodNumber])
   @@index([clubId, status])
   @@map("statement_periods")
+}
+
+/// Close Checklist - workflow checklist for AR period close
+model CloseChecklist {
+  id            String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId        String               @db.Uuid
+  periodId      String               @unique @db.Uuid
+  status        CloseChecklistStatus @default(NOT_STARTED)
+  startedAt     DateTime?
+  completedAt   DateTime?
+  completedById String?              @db.Uuid
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+
+  club        Club                 @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  period      StatementPeriod      @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  completedBy User?                @relation("ChecklistCompletedBy", fields: [completedById], references: [id])
+  steps       CloseChecklistStep[]
+
+  @@index([clubId])
+  @@map("close_checklists")
+}
+
+/// Close Checklist Step - individual step in an AR close checklist
+model CloseChecklistStep {
+  id              String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  checklistId     String           @db.Uuid
+  stepKey         String           @db.VarChar(100)
+  phase           CloseChecklistPhase
+  label           String           @db.VarChar(255)
+  description     String?
+  enforcement     StepEnforcement  @default(REQUIRED)
+  verification    StepVerification @default(MANUAL)
+  status          StepStatus       @default(PENDING)
+  autoCheckResult Json?
+  signedOffById   String?          @db.Uuid
+  signedOffAt     DateTime?
+  notes           String?
+  sortOrder       Int              @default(0)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  checklist   CloseChecklist @relation(fields: [checklistId], references: [id], onDelete: Cascade)
+  signedOffBy User?          @relation("StepSignedOffBy", fields: [signedOffById], references: [id])
+
+  @@unique([checklistId, stepKey])
+  @@index([checklistId])
+  @@map("close_checklist_steps")
 }
 
 /// Statement Run - tracks a batch statement generation process
@@ -2070,6 +2120,10 @@ model User {
 
   // Statement run audit relations
   statementRunsCreated StatementRun[] @relation("StatementRunCreatedBy")
+
+  // Close checklist audit relations
+  checklistsCompleted     CloseChecklist[]     @relation("ChecklistCompletedBy")
+  checklistStepsSignedOff CloseChecklistStep[] @relation("StepSignedOffBy")
 
   @@unique([clubId, email])
   @@index([clubId])
@@ -4356,6 +4410,47 @@ enum DeliveryStatus {
   DELIVERED // Confirmed delivered (email opened, etc)
   FAILED // Delivery failed
   NOT_APPLICABLE // Delivery method doesn't apply (e.g., portal only)
+}
+
+/// Status of an AR close checklist
+enum CloseChecklistStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+/// Phases in the AR close checklist
+enum CloseChecklistPhase {
+  PRE_CLOSE
+  CUT_OFF
+  RECEIVABLES
+  TAX
+  RECONCILIATION
+  REPORTING
+  CLOSE
+  STATEMENTS
+}
+
+/// Whether a checklist step is required or optional
+enum StepEnforcement {
+  REQUIRED
+  OPTIONAL
+}
+
+/// How a checklist step is verified
+enum StepVerification {
+  AUTO
+  MANUAL
+  SYSTEM_ACTION
+}
+
+/// Status of an individual checklist step
+enum StepStatus {
+  PENDING
+  PASSED
+  FAILED
+  SKIPPED
+  SIGNED_OFF
 }
 
 // ============================================================================
