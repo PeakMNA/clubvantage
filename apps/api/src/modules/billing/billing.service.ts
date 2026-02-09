@@ -431,14 +431,23 @@ export class BillingService {
     tenantId: string,
     options?: {
       memberId?: string;
+      method?: string;
+      startDate?: string;
+      endDate?: string;
       page?: number;
       limit?: number;
     },
   ) {
-    const { memberId, page = 1, limit = 20 } = options || {};
+    const { memberId, method, startDate, endDate, page = 1, limit = 20 } = options || {};
 
     const where: any = { clubId: tenantId };
     if (memberId) where.memberId = memberId;
+    if (method) where.method = method;
+    if (startDate || endDate) {
+      where.paymentDate = {};
+      if (startDate) where.paymentDate.gte = new Date(startDate);
+      if (endDate) where.paymentDate.lte = new Date(endDate);
+    }
 
     const skip = (page - 1) * limit;
 

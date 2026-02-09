@@ -1,10 +1,14 @@
-import { ObjectType, Field, ID, registerEnumType } from '@nestjs/graphql';
+import { ObjectType, Field, ID, Int, registerEnumType } from '@nestjs/graphql';
 import { Paginated } from '../common/pagination';
 import { InvoiceStatus } from '@/modules/billing/dto/invoice-query.dto';
 import { PaymentMethod } from '@/modules/billing/dto/create-payment.dto';
+import {
+  ARCycleType,
+  ARCloseBehavior,
+} from '@/modules/billing/dto/club-billing-settings.dto';
 
 // Re-export and register enums for GraphQL
-export { InvoiceStatus, PaymentMethod };
+export { InvoiceStatus, PaymentMethod, ARCycleType, ARCloseBehavior };
 
 // City Ledger enums
 export enum CityLedgerTypeEnum {
@@ -50,6 +54,16 @@ registerEnumType(InvoiceStatus, {
 registerEnumType(PaymentMethod, {
   name: 'PaymentMethod',
   description: 'Payment method options',
+});
+
+registerEnumType(ARCycleType, {
+  name: 'ARCycleType',
+  description: 'AR billing cycle type for period generation',
+});
+
+registerEnumType(ARCloseBehavior, {
+  name: 'ARCloseBehavior',
+  description: 'How AR periods are closed',
 });
 
 @ObjectType()
@@ -224,6 +238,24 @@ export class InvoiceType {
 export class InvoiceConnection extends Paginated(InvoiceType) {}
 
 @ObjectType()
+export class PaymentAllocationType {
+  @Field(() => ID)
+  id: string;
+
+  @Field(() => ID)
+  invoiceId: string;
+
+  @Field()
+  invoiceNumber: string;
+
+  @Field()
+  amount: string;
+
+  @Field()
+  balanceAfter: string;
+}
+
+@ObjectType()
 export class PaymentType {
   @Field(() => ID)
   id: string;
@@ -252,11 +284,17 @@ export class PaymentType {
   @Field({ nullable: true })
   notes?: string;
 
+  @Field({ nullable: true })
+  status?: string;
+
   @Field()
   createdAt: Date;
 
   @Field(() => MemberSummaryBillingType, { nullable: true })
   member?: MemberSummaryBillingType;
+
+  @Field(() => [PaymentAllocationType], { nullable: true })
+  allocations?: PaymentAllocationType[];
 }
 
 @ObjectType()
@@ -321,7 +359,7 @@ export class MemberTransactionsType {
 @ObjectType()
 export class AgingBucketType {
   @Field()
-  id: string; // 'current' | '30' | '60' | '90' | 'suspended'
+  id: string; // 'CURRENT' | 'DAYS_30' | 'DAYS_60' | 'DAYS_90' | 'SUSPENDED'
 
   @Field()
   label: string;
@@ -363,7 +401,7 @@ export class AgingMemberType {
   daysOutstanding: number;
 
   @Field()
-  status: string; // 'current' | '30' | '60' | '90' | 'suspended'
+  status: string; // 'CURRENT' | 'DAYS_30' | 'DAYS_60' | 'DAYS_90' | 'SUSPENDED'
 }
 
 @ObjectType()
@@ -652,7 +690,7 @@ export class ArAccountSearchResult {
   invoiceCount: number;
 
   @Field({ nullable: true })
-  agingStatus?: string; // 'current' | '30' | '60' | '90' | 'suspended'
+  agingStatus?: string; // 'CURRENT' | 'DAYS_30' | 'DAYS_60' | 'DAYS_90' | 'SUSPENDED'
 
   @Field({ nullable: true })
   photoUrl?: string;
@@ -779,4 +817,23 @@ export class StatementType {
 
   @Field(() => [MemberTransactionType])
   transactions: MemberTransactionType[];
+}
+
+// AR Period Settings Type
+@ObjectType()
+export class ARPeriodSettingsType {
+  @Field(() => ARCycleType)
+  arCycleType: ARCycleType;
+
+  @Field(() => Int)
+  arCustomCycleStartDay: number;
+
+  @Field(() => Int)
+  arCutoffDays: number;
+
+  @Field(() => ARCloseBehavior)
+  arCloseBehavior: ARCloseBehavior;
+
+  @Field()
+  arAutoGenerateNext: boolean;
 }

@@ -15,12 +15,17 @@ import {
   useGenerateStatementQuery,
   queryKeys,
 } from '@clubvantage/api-client';
+import { useGetPaymentsQuery } from '@clubvantage/api-client/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 // Direct imports to optimize bundle size (avoid barrel imports)
 import type {
   InvoiceRegisterItem,
   InvoiceRegisterSummary,
 } from '@/components/billing/invoice-register';
+import type {
+  ReceiptRegisterItem,
+  ReceiptRegisterSummary,
+} from '@/components/billing/receipt-register';
 
 // Map API invoice status to frontend status
 function mapInvoiceStatus(apiStatus: string): InvoiceRegisterItem['status'] {
@@ -38,16 +43,16 @@ function mapInvoiceStatus(apiStatus: string): InvoiceRegisterItem['status'] {
 
 // Calculate aging status based on due date
 function calculateAgingStatus(dueDate: Date, balance: number): InvoiceRegisterItem['agingStatus'] {
-  if (balance === 0) return 'current';
+  if (balance === 0) return 'CURRENT';
 
   const now = new Date();
   const daysDue = Math.floor((now.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
 
-  if (daysDue <= 0) return 'current';
-  if (daysDue <= 30) return '30';
-  if (daysDue <= 60) return '60';
-  if (daysDue <= 90) return '90';
-  return 'suspended';
+  if (daysDue <= 0) return 'CURRENT';
+  if (daysDue <= 30) return 'DAYS_30';
+  if (daysDue <= 60) return 'DAYS_60';
+  if (daysDue <= 90) return 'DAYS_90';
+  return 'SUSPENDED';
 }
 
 // Transform API invoice to frontend InvoiceRegisterItem type
@@ -131,17 +136,17 @@ export function useInvoices(options: UseInvoicesOptions = {}) {
       totals.outstanding += inv.balance;
 
       switch (inv.agingStatus) {
-        case 'current':
+        case 'CURRENT':
           totals.current += inv.balance;
           break;
-        case '30':
+        case 'DAYS_30':
           totals.days30to60 += inv.balance;
           break;
-        case '60':
-        case '90':
+        case 'DAYS_60':
+        case 'DAYS_90':
           totals.days61to90 += inv.balance;
           break;
-        case 'suspended':
+        case 'SUSPENDED':
           totals.days91Plus += inv.balance;
           break;
       }
@@ -280,6 +285,91 @@ export function useBillingMutations() {
     isSending: sendMutation.isPending,
     isVoiding: voidMutation.isPending,
     isRecordingPayment: paymentMutation.isPending,
+  };
+}
+
+// ==================== Payments / Receipts ====================
+
+function mapPaymentMethod(apiMethod: string): ReceiptRegisterItem['method'] {
+  const methodMap: Record<string, ReceiptRegisterItem['method']> = {
+    CASH: 'cash',
+    CREDIT_CARD: 'card',
+    BANK_TRANSFER: 'transfer',
+    CHECK: 'check',
+    QR_PROMPTPAY: 'transfer',
+    DIRECT_DEBIT: 'transfer',
+  };
+  return methodMap[apiMethod] || 'cash';
+}
+
+function transformPaymentToReceipt(apiPayment: any): ReceiptRegisterItem {
+  return {
+    id: apiPayment.id,
+    receiptNumber: apiPayment.receiptNumber || '',
+    memberId: apiPayment.member?.memberId || '',
+    memberName: apiPayment.member
+      ? `${apiPayment.member.firstName} ${apiPayment.member.lastName}`
+      : '',
+    date: new Date(apiPayment.paymentDate),
+    amount: parseFloat(apiPayment.amount || '0'),
+    method: mapPaymentMethod(apiPayment.method),
+    outlet: 'Main Office',
+    status: (apiPayment.status || 'completed') as ReceiptRegisterItem['status'],
+    allocations: (apiPayment.allocations || []).map((a: any) => ({
+      invoiceId: a.invoiceId,
+      invoiceNumber: a.invoiceNumber,
+      amountAllocated: parseFloat(a.amount || '0'),
+      balanceAfter: parseFloat(a.balanceAfter || '0'),
+    })),
+  };
+}
+
+export interface UsePaymentsOptions {
+  page?: number;
+  pageSize?: number;
+  memberId?: string;
+  method?: string;
+  startDate?: Date;
+  endDate?: Date;
+  enabled?: boolean;
+}
+
+export function usePayments(options: UsePaymentsOptions = {}) {
+  const { page = 1, pageSize = 20, memberId, method, startDate, endDate, enabled = true } = options;
+
+  const { data, isLoading, error, refetch } = useGetPaymentsQuery(
+    {
+      first: pageSize,
+      skip: (page - 1) * pageSize,
+      memberId: memberId || undefined,
+      method: method as any,
+      startDate: startDate?.toISOString(),
+      endDate: endDate?.toISOString(),
+    },
+    { enabled }
+  );
+
+  const receipts = useMemo(() => {
+    if (!data?.payments?.edges) return [];
+    return data.payments.edges.map((edge: any) => transformPaymentToReceipt(edge.node));
+  }, [data]);
+
+  const totalCount = data?.payments?.totalCount || 0;
+
+  const summary = useMemo((): ReceiptRegisterSummary => {
+    const totals = { totalReceipts: totalCount, cashReceived: 0, whtReceived: 0, invoicesSettled: 0, depositsToCredit: 0 };
+    receipts.forEach((r) => { totals.cashReceived += r.amount; });
+    return totals;
+  }, [receipts, totalCount]);
+
+  return {
+    receipts,
+    summary,
+    totalCount,
+    totalPages: Math.ceil(totalCount / pageSize),
+    isLoading,
+    error,
+    refetch,
   };
 }
 

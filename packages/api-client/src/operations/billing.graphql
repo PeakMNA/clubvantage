@@ -276,6 +276,87 @@ mutation RecordPayment($input: CreatePaymentInput!) {
   }
 }
 
+query GetPayment($id: ID!) {
+  payment(id: $id) {
+    id
+    receiptNumber
+    amount
+    method
+    paymentDate
+    referenceNumber
+    bankName
+    accountLast4
+    notes
+    status
+    createdAt
+    member {
+      id
+      memberId
+      firstName
+      lastName
+    }
+    allocations {
+      id
+      invoiceId
+      invoiceNumber
+      amount
+      balanceAfter
+    }
+  }
+}
+
+query GetPayments(
+  $first: Int
+  $skip: Int
+  $memberId: ID
+  $method: PaymentMethod
+  $startDate: DateTime
+  $endDate: DateTime
+) {
+  payments(
+    first: $first
+    skip: $skip
+    memberId: $memberId
+    method: $method
+    startDate: $startDate
+    endDate: $endDate
+  ) {
+    edges {
+      node {
+        id
+        receiptNumber
+        amount
+        method
+        paymentDate
+        referenceNumber
+        status
+        createdAt
+        member {
+          id
+          memberId
+          firstName
+          lastName
+        }
+        allocations {
+          id
+          invoiceId
+          invoiceNumber
+          amount
+          balanceAfter
+        }
+      }
+      cursor
+    }
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      startCursor
+      endCursor
+    }
+    totalCount
+  }
+}
+
 # Credit Note Queries
 
 query GetCreditNotes(

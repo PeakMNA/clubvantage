@@ -384,6 +384,7 @@ export type AutoPayResult = {
 
 /** Auto-pay schedule type */
 export type AutoPaySchedule =
+  | 'CYCLE_CLOSE'
   | 'INVOICE_DUE'
   | 'MONTHLY_FIXED'
   | 'STATEMENT_DATE';
@@ -492,6 +493,11 @@ export type BatchTotalType = {
   taxTotal: Scalars['Float']['output'];
 };
 
+/** Billing cycle mode (CLUB_CYCLE, MEMBER_CYCLE) */
+export type BillingCycleMode =
+  | 'CLUB_CYCLE'
+  | 'MEMBER_CYCLE';
+
 /** Billing frequency options */
 export type BillingFrequency =
   | 'ANNUAL'
@@ -513,6 +519,15 @@ export type BillingPeriodPreview = {
   /** Start date of the billing period */
   periodStart: Scalars['DateTime']['output'];
 };
+
+/** Statement delivery method (EMAIL, PRINT, PORTAL, SMS, EMAIL_AND_PRINT, ALL) */
+export type BillingStatementDelivery =
+  | 'ALL'
+  | 'EMAIL'
+  | 'EMAIL_AND_PRINT'
+  | 'PORTAL'
+  | 'PRINT'
+  | 'SMS';
 
 export type BillingStatsType = {
   __typename?: 'BillingStatsType';
@@ -764,6 +779,14 @@ export type CalendarResourceType = {
   name: Scalars['String']['output'];
   subtitle?: Maybe<Scalars['String']['output']>;
   type: ResourceTypeEnum;
+};
+
+export type CanClosePeriodResultType = {
+  __typename?: 'CanClosePeriodResultType';
+  blockingSteps: Array<Scalars['String']['output']>;
+  canClose: Scalars['Boolean']['output'];
+  completedRequired: Scalars['Int']['output'];
+  totalRequired: Scalars['Int']['output'];
 };
 
 export type CancelBookingInput = {
@@ -1135,6 +1158,53 @@ export type CloseArProfileInput = {
   reason: Scalars['String']['input'];
 };
 
+export type CloseChecklistGqlType = {
+  __typename?: 'CloseChecklistGQLType';
+  completedAt?: Maybe<Scalars['DateTime']['output']>;
+  completedById?: Maybe<Scalars['ID']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  periodId: Scalars['ID']['output'];
+  startedAt?: Maybe<Scalars['DateTime']['output']>;
+  status: CloseChecklistStatus;
+  steps: Array<CloseChecklistStepGqlType>;
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+/** Phase in the AR close process */
+export type CloseChecklistPhase =
+  | 'CLOSE'
+  | 'CUT_OFF'
+  | 'PRE_CLOSE'
+  | 'RECEIVABLES'
+  | 'RECONCILIATION'
+  | 'REPORTING'
+  | 'STATEMENTS'
+  | 'TAX';
+
+/** Status of the AR close checklist */
+export type CloseChecklistStatus =
+  | 'COMPLETED'
+  | 'IN_PROGRESS'
+  | 'NOT_STARTED';
+
+export type CloseChecklistStepGqlType = {
+  __typename?: 'CloseChecklistStepGQLType';
+  autoCheckResult?: Maybe<Scalars['JSON']['output']>;
+  description?: Maybe<Scalars['String']['output']>;
+  enforcement: StepEnforcement;
+  id: Scalars['ID']['output'];
+  label: Scalars['String']['output'];
+  notes?: Maybe<Scalars['String']['output']>;
+  phase: CloseChecklistPhase;
+  signedOffAt?: Maybe<Scalars['DateTime']['output']>;
+  signedOffById?: Maybe<Scalars['ID']['output']>;
+  sortOrder: Scalars['Int']['output'];
+  status: StepStatus;
+  stepKey: Scalars['String']['output'];
+  verification: StepVerification;
+};
+
 export type ClosePeriodInput = {
   periodEnd: Scalars['DateTime']['input'];
 };
@@ -1155,26 +1225,70 @@ export type CloseShiftInput = {
 /** Club billing configuration settings */
 export type ClubBillingSettingsType = {
   __typename?: 'ClubBillingSettingsType';
+  /** AR account number format pattern */
+  accountNumberFormat: Scalars['String']['output'];
+  /** AR account number prefix */
+  accountNumberPrefix: Scalars['String']['output'];
+  /** Allow manager to override credit limit block */
+  allowManagerCreditOverride: Scalars['Boolean']['output'];
   /** Whether to automatically apply late fees when due */
   autoApplyLateFee: Scalars['Boolean']['output'];
+  /** Auto-create AR profile on member activation */
+  autoCreateProfileOnActivation: Scalars['Boolean']['output'];
+  /** Days overdue before auto-suspension */
+  autoSuspendDays: Scalars['Int']['output'];
+  /** Whether auto-suspension is enabled for overdue balances */
+  autoSuspendEnabled: Scalars['Boolean']['output'];
+  /** Auto-suspend AR when credit exceeded 30+ days */
+  autoSuspendOnCreditExceeded: Scalars['Boolean']['output'];
+  /** Billing cycle mode (Club or Member) */
+  billingCycleMode: BillingCycleMode;
+  /** Close checklist step template */
+  closeChecklistTemplate: Scalars['JSON']['output'];
+  /** Closing day for Club Cycle mode (1-28) */
+  clubCycleClosingDay: Scalars['Int']['output'];
   clubId: Scalars['ID']['output'];
   /** When the settings were created */
   createdAt: Scalars['DateTime']['output'];
+  /** Credit alert threshold percentage */
+  creditAlertThreshold: Scalars['Int']['output'];
+  /** Credit block threshold percentage */
+  creditBlockThreshold: Scalars['Int']['output'];
+  /** Credit limits per membership type */
+  creditLimitByMembershipType: Scalars['JSON']['output'];
+  /** Max temporary credit override amount */
+  creditOverrideMaxAmount?: Maybe<Scalars['Float']['output']>;
   /** Billing cycle alignment (calendar or anniversary) */
   defaultAlignment: CycleAlignment;
   /** Default day of month for billing (1-28) */
   defaultBillingDay: Scalars['Int']['output'];
+  /** Default credit limit (null = unlimited) */
+  defaultCreditLimit?: Maybe<Scalars['Float']['output']>;
   /** Default billing frequency for new members */
   defaultFrequency: BillingFrequency;
+  /** Default payment terms in days from statement date */
+  defaultPaymentTermsDays: Scalars['Int']['output'];
+  /** Default statement delivery method */
+  defaultStatementDelivery: BillingStatementDelivery;
   /** Whether to bill in advance or arrears */
   defaultTiming: BillingTiming;
+  /** Default VAT rate percentage */
+  defaultVatRate: Scalars['Float']['output'];
+  /** Financial period type for Member Cycle mode */
+  financialPeriodType: FinancialPeriodType;
   /** Grace period days after due date before late fees */
   gracePeriodDays: Scalars['Int']['output'];
   id: Scalars['ID']['output'];
+  /** Day of month for auto-generation (1-28) */
+  invoiceAutoGenerationDay: Scalars['Int']['output'];
   /** Days after invoice date when payment is due */
   invoiceDueDays: Scalars['Int']['output'];
   /** Days before billing cycle to generate invoices */
   invoiceGenerationLead: Scalars['Int']['output'];
+  /** Invoice number prefix */
+  invoicePrefix: Scalars['String']['output'];
+  /** Invoice starting number */
+  invoiceStartNumber: Scalars['Int']['output'];
   /** Fixed late fee amount (in cents) */
   lateFeeAmount: Scalars['Float']['output'];
   /** Late fee percentage (0-100) */
@@ -1189,8 +1303,22 @@ export type ClubBillingSettingsType = {
   prorateNewMembers: Scalars['Boolean']['output'];
   /** Method used for calculating prorated amounts */
   prorationMethod: ProrationMethod;
+  /** Require zero balance before closing AR profile */
+  requireZeroBalanceForClosure: Scalars['Boolean']['output'];
+  /** Send credit alert to member */
+  sendCreditAlertToMember: Scalars['Boolean']['output'];
+  /** Send credit alert to staff */
+  sendCreditAlertToStaff: Scalars['Boolean']['output'];
+  /** Statement number prefix */
+  statementNumberPrefix: Scalars['String']['output'];
+  /** Tax calculation method */
+  taxMethod: TaxMethod;
   /** When the settings were last updated */
   updatedAt: Scalars['DateTime']['output'];
+  /** Whether WHT is enabled for applicable members */
+  whtEnabled: Scalars['Boolean']['output'];
+  /** Applicable WHT rates as JSON array */
+  whtRates: Scalars['JSON']['output'];
 };
 
 export type ClubGolfSettingsType = {
@@ -1479,6 +1607,20 @@ export type CreateLotteryRequestInput = {
 };
 
 export type CreateMemberBillingProfileInput = {
+  /** Auto-charge AR balance to member */
+  arAutoChargeToMember?: InputMaybe<Scalars['Boolean']['input']>;
+  /** AR billing contact override */
+  arBillingContact?: InputMaybe<Scalars['String']['input']>;
+  /** Member-specific credit limit */
+  arCreditLimit?: InputMaybe<Scalars['Float']['input']>;
+  /** Enable AR for this member */
+  arEnabled?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Payment terms override in days */
+  arPaymentTermsDays?: InputMaybe<Scalars['Int']['input']>;
+  /** Generate separate statement */
+  arSeparateStatement?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Statement delivery method override */
+  arStatementDelivery?: InputMaybe<BillingStatementDelivery>;
   billingAlignment?: InputMaybe<CycleAlignment>;
   billingFrequency?: InputMaybe<BillingFrequency>;
   billingTiming?: InputMaybe<BillingTiming>;
@@ -2480,6 +2622,11 @@ export type FifoAllocationPreview = {
   totalAllocated: Scalars['String']['output'];
 };
 
+/** Financial period type (CALENDAR_MONTH, CUSTOM) */
+export type FinancialPeriodType =
+  | 'CALENDAR_MONTH'
+  | 'CUSTOM';
+
 export type FlightAssignment = {
   __typename?: 'FlightAssignment';
   flightNumber: Scalars['Int']['output'];
@@ -3104,6 +3251,20 @@ export type MemberAtRiskType = {
 /** Member-specific billing profile with optional overrides */
 export type MemberBillingProfileType = {
   __typename?: 'MemberBillingProfileType';
+  /** Auto-charge AR balance to member payment method */
+  arAutoChargeToMember: Scalars['Boolean']['output'];
+  /** AR billing contact override */
+  arBillingContact?: Maybe<Scalars['String']['output']>;
+  /** Member-specific credit limit */
+  arCreditLimit?: Maybe<Scalars['Float']['output']>;
+  /** Whether AR is enabled for this member */
+  arEnabled: Scalars['Boolean']['output'];
+  /** Override payment terms in days */
+  arPaymentTermsDays?: Maybe<Scalars['Int']['output']>;
+  /** Generate separate statement for this member */
+  arSeparateStatement: Scalars['Boolean']['output'];
+  /** Override statement delivery method */
+  arStatementDelivery?: Maybe<BillingStatementDelivery>;
   /** Override cycle alignment for this member */
   billingAlignment?: Maybe<CycleAlignment>;
   /** Override billing frequency for this member */
@@ -3604,6 +3765,7 @@ export type Mutation = {
   createCashDrawer: CashDrawerGraphQlType;
   /** Create a new payment method for check-in */
   createCheckInPaymentMethod: CheckInPaymentMethodType;
+  createCloseChecklist: CloseChecklistGqlType;
   /** Create a course schedule */
   createCourseSchedule: ScheduleMutationResponse;
   /** Create a new credit note */
@@ -3827,6 +3989,8 @@ export type Mutation = {
   returnEquipment: EquipmentAssignmentResponse;
   /** Revert a credit limit override */
   revertCreditOverride: Scalars['Boolean']['output'];
+  runAllAutoChecks: CloseChecklistGqlType;
+  runAutoVerification: CloseChecklistStepGqlType;
   /** Save cart draft for a tee time */
   saveCartDraft: CartDraftType;
   /** Send an invoice */
@@ -3843,6 +4007,8 @@ export type Mutation = {
   setPOSRoleOverrides: SetRoleOverridesMutationResponse;
   /** Settle all players in a flight at once */
   settleAllPlayers: SettlementResultType;
+  signOffChecklistStep: CloseChecklistStepGqlType;
+  skipChecklistStep: CloseChecklistStepGqlType;
   startStatementRun: StatementRunGqlType;
   /** Submit a lottery request (member) */
   submitLotteryRequest: LotteryRequestMutationResponse;
@@ -4248,6 +4414,11 @@ export type MutationCreateCashDrawerArgs = {
 
 export type MutationCreateCheckInPaymentMethodArgs = {
   input: CreatePaymentMethodInput;
+};
+
+
+export type MutationCreateCloseChecklistArgs = {
+  periodId: Scalars['ID']['input'];
 };
 
 
@@ -4861,6 +5032,16 @@ export type MutationRevertCreditOverrideArgs = {
 };
 
 
+export type MutationRunAllAutoChecksArgs = {
+  checklistId: Scalars['ID']['input'];
+};
+
+
+export type MutationRunAutoVerificationArgs = {
+  stepId: Scalars['ID']['input'];
+};
+
+
 export type MutationSaveCartDraftArgs = {
   input: SaveCartDraftInput;
 };
@@ -4899,6 +5080,16 @@ export type MutationSetPosRoleOverridesArgs = {
 
 export type MutationSettleAllPlayersArgs = {
   input: SettleAllPlayersInput;
+};
+
+
+export type MutationSignOffChecklistStepArgs = {
+  input: SignOffStepInput;
+};
+
+
+export type MutationSkipChecklistStepArgs = {
+  input: SkipStepInput;
 };
 
 
@@ -5532,6 +5723,22 @@ export type PaymentAllocationSummaryType = {
   payment: PaymentSummaryType;
 };
 
+export type PaymentAllocationType = {
+  __typename?: 'PaymentAllocationType';
+  amount: Scalars['String']['output'];
+  balanceAfter: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  invoiceId: Scalars['ID']['output'];
+  invoiceNumber: Scalars['String']['output'];
+};
+
+export type PaymentConnection = {
+  __typename?: 'PaymentConnection';
+  edges: Array<PaymentTypeEdge>;
+  pageInfo: PageInfo;
+  totalCount: Scalars['Int']['output'];
+};
+
 /** Payment method options */
 export type PaymentMethod =
   | 'BANK_TRANSFER'
@@ -5596,6 +5803,7 @@ export type PaymentTransactionType = {
 export type PaymentType = {
   __typename?: 'PaymentType';
   accountLast4?: Maybe<Scalars['String']['output']>;
+  allocations?: Maybe<Array<PaymentAllocationType>>;
   amount: Scalars['String']['output'];
   bankName?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['DateTime']['output'];
@@ -5606,6 +5814,7 @@ export type PaymentType = {
   paymentDate: Scalars['DateTime']['output'];
   receiptNumber: Scalars['String']['output'];
   referenceNumber?: Maybe<Scalars['String']['output']>;
+  status?: Maybe<Scalars['String']['output']>;
 };
 
 export type PaymentTypeEdge = {
@@ -5954,6 +6163,7 @@ export type Query = {
   bookings: BookingConnection;
   /** Get calendar data for a specific day */
   calendarDay: CalendarDayType;
+  canClosePeriod: CanClosePeriodResultType;
   /** Get cart draft for a tee time */
   cartDraft?: Maybe<CartDraftType>;
   /** Get a single cash drawer by ID */
@@ -5975,6 +6185,7 @@ export type Query = {
   /** Check if a sub-account can make a transaction */
   checkSubAccountLimit: SubAccountLimitCheck;
   cityLedgerStatements: Array<StatementGqlType>;
+  closeChecklist?: Maybe<CloseChecklistGqlType>;
   /** Get club-wide billing configuration settings */
   clubBillingSettings: ClubBillingSettingsType;
   /** Get club golf settings including cart, rental, and caddy policies */
@@ -6124,8 +6335,12 @@ export type Query = {
   outletGridConfig?: Maybe<OutletGridConfig>;
   outletProductConfigs: Array<OutletProductConfig>;
   outletProductPanel: OutletProductPanel;
+  /** Get a single payment/receipt by ID */
+  payment: PaymentType;
   /** Get a single stored payment method */
   paymentMethod?: Maybe<StoredPaymentMethod>;
+  /** Get paginated list of payments/receipts */
+  payments: PaymentConnection;
   /** Get detailed payment info for a single player */
   playerPaymentInfo: PlayerPaymentInfoType;
   /** Get the button registry for the current club */
@@ -6337,6 +6552,11 @@ export type QueryCalendarDayArgs = {
 };
 
 
+export type QueryCanClosePeriodArgs = {
+  checklistId: Scalars['ID']['input'];
+};
+
+
 export type QueryCartDraftArgs = {
   teeTimeId: Scalars['ID']['input'];
 };
@@ -6379,6 +6599,11 @@ export type QueryCheckSubAccountLimitArgs = {
 
 export type QueryCityLedgerStatementsArgs = {
   cityLedgerId: Scalars['ID']['input'];
+};
+
+
+export type QueryCloseChecklistArgs = {
+  periodId: Scalars['ID']['input'];
 };
 
 
@@ -6778,8 +7003,24 @@ export type QueryOutletProductPanelArgs = {
 };
 
 
+export type QueryPaymentArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type QueryPaymentMethodArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type QueryPaymentsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  endDate?: InputMaybe<Scalars['DateTime']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  memberId?: InputMaybe<Scalars['ID']['input']>;
+  method?: InputMaybe<PaymentMethod>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  startDate?: InputMaybe<Scalars['DateTime']['input']>;
 };
 
 
@@ -7455,6 +7696,16 @@ export type ShortfallAction =
   | 'CREDIT_BALANCE'
   | 'WAIVE';
 
+export type SignOffStepInput = {
+  notes?: InputMaybe<Scalars['String']['input']>;
+  stepId: Scalars['ID']['input'];
+};
+
+export type SkipStepInput = {
+  notes?: InputMaybe<Scalars['String']['input']>;
+  stepId: Scalars['ID']['input'];
+};
+
 export type SlotCartType = {
   __typename?: 'SlotCartType';
   balanceDue: Scalars['Float']['output'];
@@ -7767,6 +8018,25 @@ export type StatementType = {
   transactions: Array<MemberTransactionType>;
 };
 
+/** Whether a step is required or optional */
+export type StepEnforcement =
+  | 'OPTIONAL'
+  | 'REQUIRED';
+
+/** Status of a checklist step */
+export type StepStatus =
+  | 'FAILED'
+  | 'PASSED'
+  | 'PENDING'
+  | 'SIGNED_OFF'
+  | 'SKIPPED';
+
+/** How a step is verified */
+export type StepVerification =
+  | 'AUTO'
+  | 'MANUAL'
+  | 'SYSTEM_ACTION';
+
 export type StoredPaymentMethod = {
   __typename?: 'StoredPaymentMethod';
   brand: Scalars['String']['output'];
@@ -7939,6 +8209,12 @@ export type TaxConfigType = {
   showTypeIndicator: Scalars['Boolean']['output'];
   taxLabel: Scalars['String']['output'];
 };
+
+/** Tax calculation method (ADDON, INCLUDED, EXEMPT) */
+export type TaxMethod =
+  | 'ADDON'
+  | 'EXEMPT'
+  | 'INCLUDED';
 
 export type TaxOverrideInput = {
   itemType: LineItemType;
@@ -8338,19 +8614,63 @@ export type UpdateCashDrawerInput = {
 };
 
 export type UpdateClubBillingSettingsInput = {
+  /** AR account number format pattern */
+  accountNumberFormat?: InputMaybe<Scalars['String']['input']>;
+  /** AR account number prefix */
+  accountNumberPrefix?: InputMaybe<Scalars['String']['input']>;
+  /** Allow manager to override credit limit block */
+  allowManagerCreditOverride?: InputMaybe<Scalars['Boolean']['input']>;
   /** Automatically apply late fees when due */
   autoApplyLateFee?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Auto-create AR profile on member activation */
+  autoCreateProfileOnActivation?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Days overdue before auto-suspension */
+  autoSuspendDays?: InputMaybe<Scalars['Int']['input']>;
+  /** Enable auto-suspension for overdue balances */
+  autoSuspendEnabled?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Auto-suspend AR when credit exceeded 30+ days */
+  autoSuspendOnCreditExceeded?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Billing cycle mode */
+  billingCycleMode?: InputMaybe<BillingCycleMode>;
+  /** Close checklist step template */
+  closeChecklistTemplate?: InputMaybe<Scalars['JSON']['input']>;
+  /** Closing day for Club Cycle mode (1-28) */
+  clubCycleClosingDay?: InputMaybe<Scalars['Int']['input']>;
+  /** Credit alert threshold percentage */
+  creditAlertThreshold?: InputMaybe<Scalars['Int']['input']>;
+  /** Credit block threshold percentage */
+  creditBlockThreshold?: InputMaybe<Scalars['Int']['input']>;
+  /** Credit limits per membership type */
+  creditLimitByMembershipType?: InputMaybe<Scalars['JSON']['input']>;
+  /** Max temporary credit override amount */
+  creditOverrideMaxAmount?: InputMaybe<Scalars['Float']['input']>;
   defaultAlignment?: InputMaybe<CycleAlignment>;
   /** Default billing day (1-28) */
   defaultBillingDay?: InputMaybe<Scalars['Int']['input']>;
+  /** Default credit limit (null = unlimited) */
+  defaultCreditLimit?: InputMaybe<Scalars['Float']['input']>;
   defaultFrequency?: InputMaybe<BillingFrequency>;
+  /** Default payment terms in days */
+  defaultPaymentTermsDays?: InputMaybe<Scalars['Int']['input']>;
+  /** Default statement delivery method */
+  defaultStatementDelivery?: InputMaybe<BillingStatementDelivery>;
   defaultTiming?: InputMaybe<BillingTiming>;
+  /** Default VAT rate percentage */
+  defaultVatRate?: InputMaybe<Scalars['Float']['input']>;
+  /** Financial period type */
+  financialPeriodType?: InputMaybe<FinancialPeriodType>;
   /** Grace period days after due date (0-60) */
   gracePeriodDays?: InputMaybe<Scalars['Int']['input']>;
+  /** Day of month for auto-generation (1-28) */
+  invoiceAutoGenerationDay?: InputMaybe<Scalars['Int']['input']>;
   /** Days after invoice for payment due (1-60) */
   invoiceDueDays?: InputMaybe<Scalars['Int']['input']>;
   /** Days before billing to generate invoices (0-30) */
   invoiceGenerationLead?: InputMaybe<Scalars['Int']['input']>;
+  /** Invoice number prefix */
+  invoicePrefix?: InputMaybe<Scalars['String']['input']>;
+  /** Invoice starting number */
+  invoiceStartNumber?: InputMaybe<Scalars['Int']['input']>;
   /** Fixed late fee amount */
   lateFeeAmount?: InputMaybe<Scalars['Float']['input']>;
   /** Late fee percentage (0-100) */
@@ -8363,6 +8683,20 @@ export type UpdateClubBillingSettingsInput = {
   /** Prorate charges for new members mid-cycle */
   prorateNewMembers?: InputMaybe<Scalars['Boolean']['input']>;
   prorationMethod?: InputMaybe<ProrationMethod>;
+  /** Require zero balance before closing AR profile */
+  requireZeroBalanceForClosure?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Send credit alert to member */
+  sendCreditAlertToMember?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Send credit alert to staff */
+  sendCreditAlertToStaff?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Statement number prefix */
+  statementNumberPrefix?: InputMaybe<Scalars['String']['input']>;
+  /** Tax calculation method */
+  taxMethod?: InputMaybe<TaxMethod>;
+  /** Enable WHT for applicable members */
+  whtEnabled?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Applicable WHT rates */
+  whtRates?: InputMaybe<Scalars['JSON']['input']>;
 };
 
 /** Input for updating communication preferences */
@@ -8519,6 +8853,20 @@ export type UpdateLotteryInput = {
 };
 
 export type UpdateMemberBillingProfileInput = {
+  /** Auto-charge AR balance to member */
+  arAutoChargeToMember?: InputMaybe<Scalars['Boolean']['input']>;
+  /** AR billing contact override */
+  arBillingContact?: InputMaybe<Scalars['String']['input']>;
+  /** Member-specific credit limit */
+  arCreditLimit?: InputMaybe<Scalars['Float']['input']>;
+  /** Enable AR for this member */
+  arEnabled?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Payment terms override in days */
+  arPaymentTermsDays?: InputMaybe<Scalars['Int']['input']>;
+  /** Generate separate statement */
+  arSeparateStatement?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Statement delivery method override */
+  arStatementDelivery?: InputMaybe<BillingStatementDelivery>;
   billingAlignment?: InputMaybe<CycleAlignment>;
   billingFrequency?: InputMaybe<BillingFrequency>;
   /** Put billing on hold */
@@ -9170,7 +9518,7 @@ export type GetStatementQueryVariables = Exact<{
 }>;
 
 
-export type GetStatementQuery = { __typename?: 'Query', statement: { __typename?: 'StatementGQLType', id: string, arProfileId: string, openingBalance: number, closingBalance: number, periodStart: string, periodEnd: string, dueDate: string, deliveryMethod: StatementDelivery, emailStatus: DeliveryStatus, emailSentAt?: string | null | undefined, emailDeliveredAt?: string | null | undefined, emailError?: string | null | undefined, smsStatus: DeliveryStatus, smsSentAt?: string | null | undefined, smsDeliveredAt?: string | null | undefined, smsError?: string | null | undefined, printStatus: DeliveryStatus, printedAt?: string | null | undefined, printBatchId?: string | null | undefined, portalStatus: DeliveryStatus, portalPublishedAt?: string | null | undefined, portalViewedAt?: string | null | undefined, pdfUrl?: string | null | undefined, pdfGeneratedAt?: string | null | undefined, agingCurrent: number, aging1to30: number, aging31to60: number, aging61to90: number, aging90Plus: number, profileSnapshot: any, createdAt: string, updatedAt: string } };
+export type GetStatementQuery = { __typename?: 'Query', statement: { __typename?: 'StatementGQLType', id: string, arProfileId: string, openingBalance: number, totalDebits: number, totalCredits: number, closingBalance: number, periodStart: string, periodEnd: string, dueDate: string, deliveryMethod: StatementDelivery, emailStatus: DeliveryStatus, emailSentAt?: string | null | undefined, emailDeliveredAt?: string | null | undefined, emailError?: string | null | undefined, smsStatus: DeliveryStatus, smsSentAt?: string | null | undefined, smsDeliveredAt?: string | null | undefined, smsError?: string | null | undefined, printStatus: DeliveryStatus, printedAt?: string | null | undefined, printBatchId?: string | null | undefined, portalStatus: DeliveryStatus, portalPublishedAt?: string | null | undefined, portalViewedAt?: string | null | undefined, pdfUrl?: string | null | undefined, pdfGeneratedAt?: string | null | undefined, agingCurrent: number, aging1to30: number, aging31to60: number, aging61to90: number, aging90Plus: number, profileSnapshot: any, transactionCount: number, transactions?: any | null | undefined, createdAt: string, updatedAt: string } };
 
 export type GetProfileStatementsQueryVariables = Exact<{
   arProfileId: Scalars['ID']['input'];
@@ -9178,7 +9526,7 @@ export type GetProfileStatementsQueryVariables = Exact<{
 }>;
 
 
-export type GetProfileStatementsQuery = { __typename?: 'Query', profileStatements: Array<{ __typename?: 'StatementGQLType', id: string, arProfileId: string, openingBalance: number, closingBalance: number, periodStart: string, periodEnd: string, dueDate: string, deliveryMethod: StatementDelivery, emailStatus: DeliveryStatus, printStatus: DeliveryStatus, portalStatus: DeliveryStatus, smsStatus: DeliveryStatus, pdfUrl?: string | null | undefined, createdAt: string }> };
+export type GetProfileStatementsQuery = { __typename?: 'Query', profileStatements: Array<{ __typename?: 'StatementGQLType', id: string, arProfileId: string, openingBalance: number, totalDebits: number, totalCredits: number, closingBalance: number, periodStart: string, periodEnd: string, dueDate: string, deliveryMethod: StatementDelivery, emailStatus: DeliveryStatus, printStatus: DeliveryStatus, portalStatus: DeliveryStatus, smsStatus: DeliveryStatus, pdfUrl?: string | null | undefined, agingCurrent: number, aging1to30: number, aging31to60: number, aging61to90: number, aging90Plus: number, transactionCount: number, createdAt: string, updatedAt: string }> };
 
 export type CreateArProfileMutationVariables = Exact<{
   input: CreateArProfileInput;
@@ -9406,6 +9754,25 @@ export type RecordPaymentMutationVariables = Exact<{
 
 
 export type RecordPaymentMutation = { __typename?: 'Mutation', recordPayment: { __typename?: 'PaymentType', id: string, receiptNumber: string, amount: string, method: PaymentMethod, paymentDate: string, member?: { __typename?: 'MemberSummaryBillingType', id: string, memberId: string, firstName: string, lastName: string } | null | undefined } };
+
+export type GetPaymentQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetPaymentQuery = { __typename?: 'Query', payment: { __typename?: 'PaymentType', id: string, receiptNumber: string, amount: string, method: PaymentMethod, paymentDate: string, referenceNumber?: string | null | undefined, bankName?: string | null | undefined, accountLast4?: string | null | undefined, notes?: string | null | undefined, status?: string | null | undefined, createdAt: string, member?: { __typename?: 'MemberSummaryBillingType', id: string, memberId: string, firstName: string, lastName: string } | null | undefined, allocations?: Array<{ __typename?: 'PaymentAllocationType', id: string, invoiceId: string, invoiceNumber: string, amount: string, balanceAfter: string }> | null | undefined } };
+
+export type GetPaymentsQueryVariables = Exact<{
+  first?: InputMaybe<Scalars['Int']['input']>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  memberId?: InputMaybe<Scalars['ID']['input']>;
+  method?: InputMaybe<PaymentMethod>;
+  startDate?: InputMaybe<Scalars['DateTime']['input']>;
+  endDate?: InputMaybe<Scalars['DateTime']['input']>;
+}>;
+
+
+export type GetPaymentsQuery = { __typename?: 'Query', payments: { __typename?: 'PaymentConnection', totalCount: number, edges: Array<{ __typename?: 'PaymentTypeEdge', cursor: string, node: { __typename?: 'PaymentType', id: string, receiptNumber: string, amount: string, method: PaymentMethod, paymentDate: string, referenceNumber?: string | null | undefined, status?: string | null | undefined, createdAt: string, member?: { __typename?: 'MemberSummaryBillingType', id: string, memberId: string, firstName: string, lastName: string } | null | undefined, allocations?: Array<{ __typename?: 'PaymentAllocationType', id: string, invoiceId: string, invoiceNumber: string, amount: string, balanceAfter: string }> | null | undefined } }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean, startCursor?: string | null | undefined, endCursor?: string | null | undefined } } };
 
 export type GetCreditNotesQueryVariables = Exact<{
   first?: InputMaybe<Scalars['Int']['input']>;

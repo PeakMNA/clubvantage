@@ -3,6 +3,7 @@ import { UseGuards } from '@nestjs/common';
 import { BillingService } from '@/modules/billing/billing.service';
 import { CityLedgerService } from '@/modules/billing/city-ledger.service';
 import { AllocationService } from '@/modules/billing/allocation.service';
+import { BillingCycleSettingsService } from '@/modules/billing/billing-cycle-settings.service';
 import { PrismaService } from '@/shared/prisma/prisma.service';
 import { GqlAuthGuard } from '../guards/gql-auth.guard';
 import { GqlCurrentUser } from '../common/decorators/gql-current-user.decorator';
@@ -11,6 +12,8 @@ import {
   InvoiceType,
   InvoiceConnection,
   PaymentType,
+  PaymentConnection,
+  PaymentAllocationType,
   BillingStatsType,
   MemberTransactionsType,
   MemberTransactionType,
@@ -32,11 +35,13 @@ import {
   FifoAllocationItem,
   BatchSettlementResult,
   StatementType,
+  ARPeriodSettingsType,
 } from './billing.types';
 import {
   CreateInvoiceInput,
   CreatePaymentInput,
   InvoicesQueryArgs,
+  PaymentsQueryArgs,
   VoidInvoiceInput,
   CreateCreditNoteInput,
   CreditNotesQueryArgs,
@@ -44,6 +49,7 @@ import {
   VoidCreditNoteInput,
   BatchSettlementInput,
   GenerateStatementInput,
+  UpdateARSettingsInput,
 } from './billing.input';
 import { encodeCursor } from '../common/pagination';
 
@@ -54,6 +60,7 @@ export class BillingResolver {
     private readonly billingService: BillingService,
     private readonly cityLedgerService: CityLedgerService,
     private readonly allocationService: AllocationService,
+    private readonly billingCycleSettingsService: BillingCycleSettingsService,
     private readonly prisma: PrismaService,
   ) {}
 
@@ -268,11 +275,11 @@ export class BillingResolver {
     // Calculate aging bucket for each invoice
     const getAgingStatus = (dueDate: Date): string => {
       const diffDays = Math.floor((now.getTime() - dueDate.getTime()) / (24 * 60 * 60 * 1000));
-      if (diffDays < 0) return 'current';
-      if (diffDays < 30) return 'current';
-      if (diffDays < 60) return '30';
-      if (diffDays < 90) return '60';
-      return '90';
+      if (diffDays < 0) return 'CURRENT';
+      if (diffDays < 30) return 'CURRENT';
+      if (diffDays < 60) return 'DAYS_30';
+      if (diffDays < 90) return 'DAYS_60';
+      return 'DAYS_90';
     };
 
     // Group by member and calculate totals
@@ -297,13 +304,13 @@ export class BillingResolver {
           existing.oldestDueDate = invoice.dueDate;
         }
         // Determine worst status
-        const statusOrder = ['current', '30', '60', '90', 'suspended'];
-        const memberStatus = invoice.member.status === 'SUSPENDED' ? 'suspended' : agingStatus;
+        const statusOrder = ['CURRENT', 'DAYS_30', 'DAYS_60', 'DAYS_90', 'SUSPENDED'];
+        const memberStatus = invoice.member.status === 'SUSPENDED' ? 'SUSPENDED' : agingStatus;
         if (statusOrder.indexOf(memberStatus) > statusOrder.indexOf(existing.worstStatus)) {
           existing.worstStatus = memberStatus;
         }
       } else {
-        const memberStatus = invoice.member.status === 'SUSPENDED' ? 'suspended' : agingStatus;
+        const memberStatus = invoice.member.status === 'SUSPENDED' ? 'SUSPENDED' : agingStatus;
         memberAging.set(invoice.memberId, {
           member: invoice.member,
           balance,
@@ -315,11 +322,11 @@ export class BillingResolver {
 
     // Calculate buckets
     const bucketTotals = {
-      current: { amount: 0, count: 0 },
-      '30': { amount: 0, count: 0 },
-      '60': { amount: 0, count: 0 },
-      '90': { amount: 0, count: 0 },
-      suspended: { amount: 0, count: 0 },
+      CURRENT: { amount: 0, count: 0 },
+      DAYS_30: { amount: 0, count: 0 },
+      DAYS_60: { amount: 0, count: 0 },
+      DAYS_90: { amount: 0, count: 0 },
+      SUSPENDED: { amount: 0, count: 0 },
     };
 
     const membersArray = Array.from(memberAging.values());
@@ -337,53 +344,53 @@ export class BillingResolver {
     // Build bucket response
     const buckets: AgingBucketType[] = [
       {
-        id: 'current',
+        id: 'CURRENT',
         label: 'Current',
-        memberCount: bucketTotals.current.count,
-        totalAmount: bucketTotals.current.amount.toString(),
-        percentage: totalAmount > 0 ? (bucketTotals.current.amount / totalAmount) * 100 : 0,
+        memberCount: bucketTotals.CURRENT.count,
+        totalAmount: bucketTotals.CURRENT.amount.toString(),
+        percentage: totalAmount > 0 ? (bucketTotals.CURRENT.amount / totalAmount) * 100 : 0,
       },
       {
-        id: '30',
+        id: 'DAYS_30',
         label: '1-30 Days',
-        memberCount: bucketTotals['30'].count,
-        totalAmount: bucketTotals['30'].amount.toString(),
-        percentage: totalAmount > 0 ? (bucketTotals['30'].amount / totalAmount) * 100 : 0,
+        memberCount: bucketTotals.DAYS_30.count,
+        totalAmount: bucketTotals.DAYS_30.amount.toString(),
+        percentage: totalAmount > 0 ? (bucketTotals.DAYS_30.amount / totalAmount) * 100 : 0,
       },
       {
-        id: '60',
+        id: 'DAYS_60',
         label: '31-60 Days',
-        memberCount: bucketTotals['60'].count,
-        totalAmount: bucketTotals['60'].amount.toString(),
-        percentage: totalAmount > 0 ? (bucketTotals['60'].amount / totalAmount) * 100 : 0,
+        memberCount: bucketTotals.DAYS_60.count,
+        totalAmount: bucketTotals.DAYS_60.amount.toString(),
+        percentage: totalAmount > 0 ? (bucketTotals.DAYS_60.amount / totalAmount) * 100 : 0,
       },
       {
-        id: '90',
+        id: 'DAYS_90',
         label: '61-90 Days',
-        memberCount: bucketTotals['90'].count,
-        totalAmount: bucketTotals['90'].amount.toString(),
-        percentage: totalAmount > 0 ? (bucketTotals['90'].amount / totalAmount) * 100 : 0,
+        memberCount: bucketTotals.DAYS_90.count,
+        totalAmount: bucketTotals.DAYS_90.amount.toString(),
+        percentage: totalAmount > 0 ? (bucketTotals.DAYS_90.amount / totalAmount) * 100 : 0,
       },
       {
-        id: 'suspended',
+        id: 'SUSPENDED',
         label: 'Suspended',
-        memberCount: bucketTotals.suspended.count,
-        totalAmount: bucketTotals.suspended.amount.toString(),
-        percentage: totalAmount > 0 ? (bucketTotals.suspended.amount / totalAmount) * 100 : 0,
+        memberCount: bucketTotals.SUSPENDED.count,
+        totalAmount: bucketTotals.SUSPENDED.amount.toString(),
+        percentage: totalAmount > 0 ? (bucketTotals.SUSPENDED.amount / totalAmount) * 100 : 0,
       },
     ];
 
     // Filter members based on filter parameter
     let filteredMembers = membersArray;
     if (filter && filter !== 'all') {
-      if (filter === '30+') {
-        filteredMembers = membersArray.filter((m) => ['30', '60', '90', 'suspended'].includes(m.worstStatus));
-      } else if (filter === '60+') {
-        filteredMembers = membersArray.filter((m) => ['60', '90', 'suspended'].includes(m.worstStatus));
-      } else if (filter === '90+') {
-        filteredMembers = membersArray.filter((m) => ['90', 'suspended'].includes(m.worstStatus));
-      } else if (filter === 'suspended') {
-        filteredMembers = membersArray.filter((m) => m.worstStatus === 'suspended');
+      if (filter === 'DAYS_30+') {
+        filteredMembers = membersArray.filter((m) => ['DAYS_30', 'DAYS_60', 'DAYS_90', 'SUSPENDED'].includes(m.worstStatus));
+      } else if (filter === 'DAYS_60+') {
+        filteredMembers = membersArray.filter((m) => ['DAYS_60', 'DAYS_90', 'SUSPENDED'].includes(m.worstStatus));
+      } else if (filter === 'DAYS_90+') {
+        filteredMembers = membersArray.filter((m) => ['DAYS_90', 'SUSPENDED'].includes(m.worstStatus));
+      } else if (filter === 'SUSPENDED') {
+        filteredMembers = membersArray.filter((m) => m.worstStatus === 'SUSPENDED');
       }
     }
 
@@ -535,15 +542,15 @@ export class BillingResolver {
 
       for (const member of members) {
         // Calculate aging status
-        let agingStatus = 'current';
+        let agingStatus = 'CURRENT';
         if (member.status === 'SUSPENDED') {
-          agingStatus = 'suspended';
+          agingStatus = 'SUSPENDED';
         } else if (member.invoices.length > 0) {
           const oldestInvoice = member.invoices[0];
           const diffDays = Math.floor((now.getTime() - oldestInvoice.dueDate.getTime()) / (24 * 60 * 60 * 1000));
-          if (diffDays >= 90) agingStatus = '90';
-          else if (diffDays >= 60) agingStatus = '60';
-          else if (diffDays >= 30) agingStatus = '30';
+          if (diffDays >= 90) agingStatus = 'DAYS_90';
+          else if (diffDays >= 60) agingStatus = 'DAYS_60';
+          else if (diffDays >= 30) agingStatus = 'DAYS_30';
         }
 
         results.push({
@@ -586,14 +593,14 @@ export class BillingResolver {
           orderBy: { dueDate: 'asc' },
         });
 
-        let agingStatus = 'current';
+        let agingStatus = 'CURRENT';
         if (cl.status === 'SUSPENDED') {
-          agingStatus = 'suspended';
+          agingStatus = 'SUSPENDED';
         } else if (oldestInvoice) {
           const diffDays = Math.floor((now.getTime() - oldestInvoice.dueDate.getTime()) / (24 * 60 * 60 * 1000));
-          if (diffDays >= 90) agingStatus = '90';
-          else if (diffDays >= 60) agingStatus = '60';
-          else if (diffDays >= 30) agingStatus = '30';
+          if (diffDays >= 90) agingStatus = 'DAYS_90';
+          else if (diffDays >= 60) agingStatus = 'DAYS_60';
+          else if (diffDays >= 30) agingStatus = 'DAYS_30';
         }
 
         results.push({
@@ -757,6 +764,50 @@ export class BillingResolver {
     return this.transformPayment(payment);
   }
 
+  @Query(() => PaymentType, { name: 'payment', description: 'Get a single payment/receipt by ID' })
+  async getPayment(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('id', { type: () => ID }) id: string,
+  ): Promise<PaymentType> {
+    const payment = await this.billingService.findPayment(user.tenantId, id);
+    return this.transformPaymentWithAllocations(payment);
+  }
+
+  @Query(() => PaymentConnection, { name: 'payments', description: 'Get paginated list of payments/receipts' })
+  async getPayments(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args() args: PaymentsQueryArgs,
+  ): Promise<PaymentConnection> {
+    const { first, skip, memberId, method, startDate, endDate } = args;
+    const page = skip ? Math.floor(skip / (first || 20)) + 1 : 1;
+    const limit = first || 20;
+
+    const result = await this.billingService.findAllPayments(user.tenantId, {
+      memberId,
+      method,
+      startDate: startDate?.toISOString(),
+      endDate: endDate?.toISOString(),
+      page,
+      limit,
+    });
+
+    const edges = result.data.map((payment: any) => ({
+      node: this.transformPaymentWithAllocations(payment),
+      cursor: encodeCursor(payment.id),
+    }));
+
+    return {
+      edges,
+      pageInfo: {
+        hasNextPage: page < result.meta.totalPages,
+        hasPreviousPage: page > 1,
+        startCursor: edges.length > 0 ? edges[0].cursor : null,
+        endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
+      },
+      totalCount: result.meta.total,
+    };
+  }
+
   @Mutation(() => BatchSettlementResult, { name: 'batchSettleInvoices', description: 'Batch settle invoices using FIFO allocation' })
   async batchSettleInvoices(
     @GqlCurrentUser() user: JwtPayload,
@@ -888,6 +939,20 @@ export class BillingResolver {
         firstName: payment.member.firstName,
         lastName: payment.member.lastName,
       } : undefined,
+    };
+  }
+
+  private transformPaymentWithAllocations(payment: any): PaymentType {
+    return {
+      ...this.transformPayment(payment),
+      status: payment.status || 'completed',
+      allocations: payment.allocations?.map((a: any) => ({
+        id: a.id,
+        invoiceId: a.invoiceId,
+        invoiceNumber: a.invoice?.invoiceNumber || '',
+        amount: a.amount?.toString() || '0',
+        balanceAfter: a.invoice?.balanceDue?.toString() || '0',
+      })) || [],
     };
   }
 
@@ -1262,6 +1327,41 @@ export class BillingResolver {
     });
 
     return this.transformCreditNote(updated);
+  }
+
+  // AR Period Settings Query and Mutation
+  @Query(() => ARPeriodSettingsType, { name: 'arPeriodSettings', description: 'Get AR period settings for the club' })
+  async getARPeriodSettings(
+    @GqlCurrentUser() user: JwtPayload,
+  ): Promise<ARPeriodSettingsType> {
+    const settings = await this.billingCycleSettingsService.getClubBillingSettings(user.tenantId);
+    return {
+      arCycleType: settings.arCycleType as any,
+      arCustomCycleStartDay: settings.arCustomCycleStartDay,
+      arCutoffDays: settings.arCutoffDays,
+      arCloseBehavior: settings.arCloseBehavior as any,
+      arAutoGenerateNext: settings.arAutoGenerateNext,
+    };
+  }
+
+  @Mutation(() => ARPeriodSettingsType, { name: 'updateARSettings', description: 'Update AR period settings for the club' })
+  async updateARSettings(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('input') input: UpdateARSettingsInput,
+  ): Promise<ARPeriodSettingsType> {
+    const settings = await this.billingCycleSettingsService.updateClubBillingSettings(
+      user.tenantId,
+      input,
+      user.sub,
+      user.email,
+    );
+    return {
+      arCycleType: settings.arCycleType as any,
+      arCustomCycleStartDay: settings.arCustomCycleStartDay,
+      arCutoffDays: settings.arCutoffDays,
+      arCloseBehavior: settings.arCloseBehavior as any,
+      arAutoGenerateNext: settings.arAutoGenerateNext,
+    };
   }
 
   private transformCreditNote(creditNote: any): CreditNoteGraphQLType {

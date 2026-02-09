@@ -37,6 +37,9 @@ export {
   useSendInvoiceMutation,
   useVoidInvoiceMutation,
   useRecordPaymentMutation,
+  useGetPaymentQuery,
+  useGetPaymentsQuery,
+  useInfiniteGetPaymentsQuery,
   // Booking hooks
   useGetBookingsQuery,
   useInfiniteGetBookingsQuery,

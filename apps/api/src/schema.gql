@@ -2,6 +2,104 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+"""How AR periods are closed"""
+enum ARCloseBehavior {
+  AUTO_AFTER_FINAL_RUN
+  AUTO_ON_CUTOFF
+  MANUAL
+}
+
+"""AR billing cycle type for period generation"""
+enum ARCycleType {
+  CALENDAR_MONTH
+  CUSTOM
+  ROLLING_30
+}
+
+type ARPeriodSettingsType {
+  arAutoGenerateNext: Boolean!
+  arCloseBehavior: ARCloseBehavior!
+  arCustomCycleStartDay: Int!
+  arCutoffDays: Int!
+  arCycleType: ARCycleType!
+}
+
+input ARProfileFilterInput {
+  """Maximum balance filter"""
+  maxBalance: Float
+
+  """Minimum balance filter"""
+  minBalance: Float
+  profileType: ARProfileType
+  search: String
+  status: ARProfileStatus
+}
+
+type ARProfileGQLType {
+  """Account name for standalone city ledger profiles"""
+  accountName: String
+  accountNumber: String!
+
+  """Billing address for standalone profiles"""
+  billingAddress: String
+
+  """Branch code (e.g., 00000 for head office)"""
+  branchCode: String
+
+  """Branch name (e.g., Head Office, Bangkok Branch)"""
+  branchName: String
+
+  """Business registration number"""
+  businessRegistrationId: String
+  cityLedgerId: ID
+  closedAt: DateTime
+  closedReason: String
+
+  """Contact email for standalone profiles"""
+  contactEmail: String
+
+  """Contact phone for standalone profiles"""
+  contactPhone: String
+  createdAt: DateTime!
+  creditLimit: Float
+  currentBalance: Float!
+  id: ID!
+  lastPaymentAmount: Float
+  lastPaymentDate: DateTime
+  lastStatementBalance: Float
+  lastStatementDate: DateTime
+  memberId: ID
+  paymentTermsDays: Int!
+  profileType: ARProfileType!
+  statementDelivery: StatementDelivery!
+  status: ARProfileStatus!
+  suspendedAt: DateTime
+  suspendedReason: String
+
+  """Tax ID for corporate accounts"""
+  taxId: String
+  updatedAt: DateTime!
+}
+
+"""Status of AR profile"""
+enum ARProfileStatus {
+  ACTIVE
+  CLOSED
+  SUSPENDED
+}
+
+type ARProfileSyncResultType {
+  created: Int!
+  errors: [String!]!
+  skipped: Int!
+}
+
+"""Type of AR profile - member or city ledger"""
+enum ARProfileType {
+  CITY_LEDGER
+  MEMBER
+}
+
 type ActiveSeasonInfo {
   id: ID!
   name: String!
@@ -268,6 +366,7 @@ type AutoPayResult {
 
 """Auto-pay schedule type"""
 enum AutoPaySchedule {
+  CYCLE_CLOSE
   INVOICE_DUE
   MONTHLY_FIXED
   STATEMENT_DATE
@@ -372,6 +471,12 @@ type BatchTotalType {
   taxTotal: Float!
 }
 
+"""Billing cycle mode (CLUB_CYCLE, MEMBER_CYCLE)"""
+enum BillingCycleMode {
+  CLUB_CYCLE
+  MEMBER_CYCLE
+}
+
 """Billing frequency options"""
 enum BillingFrequency {
   ANNUAL
@@ -396,6 +501,18 @@ type BillingPeriodPreview {
 
   """Start date of the billing period"""
   periodStart: DateTime!
+}
+
+"""
+Statement delivery method (EMAIL, PRINT, PORTAL, SMS, EMAIL_AND_PRINT, ALL)
+"""
+enum BillingStatementDelivery {
+  ALL
+  EMAIL
+  EMAIL_AND_PRINT
+  PORTAL
+  PRINT
+  SMS
 }
 
 type BillingStatsType {
@@ -636,6 +753,13 @@ type CalendarResourceType {
   name: String!
   subtitle: String
   type: ResourceTypeEnum!
+}
+
+type CanClosePeriodResultType {
+  blockingSteps: [String!]!
+  canClose: Boolean!
+  completedRequired: Int!
+  totalRequired: Int!
 }
 
 input CancelBookingInput {
@@ -994,6 +1118,57 @@ type CloneTemplateMutationResponse {
   template: POSTemplateGraphQLType
 }
 
+input CloseARProfileInput {
+  reason: String!
+}
+
+type CloseChecklistGQLType {
+  completedAt: DateTime
+  completedById: ID
+  createdAt: DateTime!
+  id: ID!
+  periodId: ID!
+  startedAt: DateTime
+  status: CloseChecklistStatus!
+  steps: [CloseChecklistStepGQLType!]!
+  updatedAt: DateTime!
+}
+
+"""Phase in the AR close process"""
+enum CloseChecklistPhase {
+  CLOSE
+  CUT_OFF
+  PRE_CLOSE
+  RECEIVABLES
+  RECONCILIATION
+  REPORTING
+  STATEMENTS
+  TAX
+}
+
+"""Status of the AR close checklist"""
+enum CloseChecklistStatus {
+  COMPLETED
+  IN_PROGRESS
+  NOT_STARTED
+}
+
+type CloseChecklistStepGQLType {
+  autoCheckResult: JSON
+  description: String
+  enforcement: StepEnforcement!
+  id: ID!
+  label: String!
+  notes: String
+  phase: CloseChecklistPhase!
+  signedOffAt: DateTime
+  signedOffById: ID
+  sortOrder: Int!
+  status: StepStatus!
+  stepKey: String!
+  verification: StepVerification!
+}
+
 input ClosePeriodInput {
   periodEnd: DateTime!
 }
@@ -1014,12 +1189,54 @@ input CloseShiftInput {
 
 """Club billing configuration settings"""
 type ClubBillingSettingsType {
+  """AR account number format pattern"""
+  accountNumberFormat: String!
+
+  """AR account number prefix"""
+  accountNumberPrefix: String!
+
+  """Allow manager to override credit limit block"""
+  allowManagerCreditOverride: Boolean!
+
   """Whether to automatically apply late fees when due"""
   autoApplyLateFee: Boolean!
+
+  """Auto-create AR profile on member activation"""
+  autoCreateProfileOnActivation: Boolean!
+
+  """Days overdue before auto-suspension"""
+  autoSuspendDays: Int!
+
+  """Whether auto-suspension is enabled for overdue balances"""
+  autoSuspendEnabled: Boolean!
+
+  """Auto-suspend AR when credit exceeded 30+ days"""
+  autoSuspendOnCreditExceeded: Boolean!
+
+  """Billing cycle mode (Club or Member)"""
+  billingCycleMode: BillingCycleMode!
+
+  """Close checklist step template"""
+  closeChecklistTemplate: JSON!
+
+  """Closing day for Club Cycle mode (1-28)"""
+  clubCycleClosingDay: Int!
   clubId: ID!
 
   """When the settings were created"""
   createdAt: DateTime!
+
+  """Credit alert threshold percentage"""
+  creditAlertThreshold: Int!
+
+  """Credit block threshold percentage"""
+  creditBlockThreshold: Int!
+
+  """Credit limits per membership type"""
+  creditLimitByMembershipType: JSON!
+
+  """Max temporary credit override amount"""
+  creditOverrideMaxAmount: Float
 
   """Billing cycle alignment (calendar or anniversary)"""
   defaultAlignment: CycleAlignment!
@@ -1027,21 +1244,45 @@ type ClubBillingSettingsType {
   """Default day of month for billing (1-28)"""
   defaultBillingDay: Int!
 
+  """Default credit limit (null = unlimited)"""
+  defaultCreditLimit: Float
+
   """Default billing frequency for new members"""
   defaultFrequency: BillingFrequency!
+
+  """Default payment terms in days from statement date"""
+  defaultPaymentTermsDays: Int!
+
+  """Default statement delivery method"""
+  defaultStatementDelivery: BillingStatementDelivery!
 
   """Whether to bill in advance or arrears"""
   defaultTiming: BillingTiming!
 
+  """Default VAT rate percentage"""
+  defaultVatRate: Float!
+
+  """Financial period type for Member Cycle mode"""
+  financialPeriodType: FinancialPeriodType!
+
   """Grace period days after due date before late fees"""
   gracePeriodDays: Int!
   id: ID!
+
+  """Day of month for auto-generation (1-28)"""
+  invoiceAutoGenerationDay: Int!
 
   """Days after invoice date when payment is due"""
   invoiceDueDays: Int!
 
   """Days before billing cycle to generate invoices"""
   invoiceGenerationLead: Int!
+
+  """Invoice number prefix"""
+  invoicePrefix: String!
+
+  """Invoice starting number"""
+  invoiceStartNumber: Int!
 
   """Fixed late fee amount (in cents)"""
   lateFeeAmount: Float!
@@ -1064,8 +1305,29 @@ type ClubBillingSettingsType {
   """Method used for calculating prorated amounts"""
   prorationMethod: ProrationMethod!
 
+  """Require zero balance before closing AR profile"""
+  requireZeroBalanceForClosure: Boolean!
+
+  """Send credit alert to member"""
+  sendCreditAlertToMember: Boolean!
+
+  """Send credit alert to staff"""
+  sendCreditAlertToStaff: Boolean!
+
+  """Statement number prefix"""
+  statementNumberPrefix: String!
+
+  """Tax calculation method"""
+  taxMethod: TaxMethod!
+
   """When the settings were last updated"""
   updatedAt: DateTime!
+
+  """Whether WHT is enabled for applicable members"""
+  whtEnabled: Boolean!
+
+  """Applicable WHT rates as JSON array"""
+  whtRates: JSON!
 }
 
 type ClubGolfSettingsType {
@@ -1083,6 +1345,38 @@ input CourseIntervalInput {
   isPrimeTime: Boolean! = false
   timeEnd: String!
   timeStart: String!
+}
+
+input CreateARProfileInput {
+  """Account name for standalone city ledger profiles"""
+  accountName: String
+
+  """Billing address for standalone profiles"""
+  billingAddress: String
+
+  """Branch code (e.g., 00000 for head office)"""
+  branchCode: String
+
+  """Branch name (e.g., Head Office, Bangkok Branch)"""
+  branchName: String
+
+  """Business registration number"""
+  businessRegistrationId: String
+  cityLedgerId: ID
+
+  """Contact email for standalone profiles"""
+  contactEmail: String
+
+  """Contact phone for standalone profiles"""
+  contactPhone: String
+  creditLimit: Float
+  memberId: ID
+  paymentTermsDays: Int
+  profileType: ARProfileType!
+  statementDelivery: StatementDelivery
+
+  """Tax ID for corporate accounts"""
+  taxId: String
 }
 
 input CreateAddressInput {
@@ -1327,6 +1621,26 @@ input CreateLotteryRequestInput {
 }
 
 input CreateMemberBillingProfileInput {
+  """Auto-charge AR balance to member"""
+  arAutoChargeToMember: Boolean
+
+  """AR billing contact override"""
+  arBillingContact: String
+
+  """Member-specific credit limit"""
+  arCreditLimit: Float
+
+  """Enable AR for this member"""
+  arEnabled: Boolean
+
+  """Payment terms override in days"""
+  arPaymentTermsDays: Int
+
+  """Generate separate statement"""
+  arSeparateStatement: Boolean
+
+  """Statement delivery method override"""
+  arStatementDelivery: BillingStatementDelivery
   billingAlignment: CycleAlignment
   billingFrequency: BillingFrequency
   billingTiming: BillingTiming
@@ -1575,6 +1889,27 @@ input CreateStaffMemberInput {
   phone: String
   userId: ID
   workingHours: [DayHoursInput!]
+}
+
+input CreateStatementPeriodInput {
+  cutoffDate: String!
+
+  """Mark as catch-up period to consolidate historical data"""
+  isCatchUp: Boolean = false
+  periodEnd: String!
+  periodLabel: String!
+  periodNumber: Int!
+  periodStart: String!
+  periodYear: Int!
+}
+
+input CreateStatementRunInput {
+  """
+  Optional list of AR profile IDs to include. If empty, includes all active profiles.
+  """
+  profileIds: [ID!]
+  runType: StatementRunType!
+  statementPeriodId: ID!
 }
 
 input CreateSubAccountInput {
@@ -1897,6 +2232,15 @@ type DeleteResponseType {
 type DeleteTemplateMutationResponse {
   message: String
   success: Boolean!
+}
+
+"""Delivery status for statement channel"""
+enum DeliveryStatus {
+  DELIVERED
+  FAILED
+  NOT_APPLICABLE
+  PENDING
+  SENT
 }
 
 """Single interest entry for a dependent"""
@@ -2280,6 +2624,12 @@ type FifoAllocationPreview {
   creditToAdd: String!
   remainingPayment: String!
   totalAllocated: String!
+}
+
+"""Financial period type (CALENDAR_MONTH, CUSTOM)"""
+enum FinancialPeriodType {
+  CALENDAR_MONTH
+  CUSTOM
 }
 
 type FlightAssignment {
@@ -2886,6 +3236,27 @@ type MemberAtRiskType {
 
 """Member-specific billing profile with optional overrides"""
 type MemberBillingProfileType {
+  """Auto-charge AR balance to member payment method"""
+  arAutoChargeToMember: Boolean!
+
+  """AR billing contact override"""
+  arBillingContact: String
+
+  """Member-specific credit limit"""
+  arCreditLimit: Float
+
+  """Whether AR is enabled for this member"""
+  arEnabled: Boolean!
+
+  """Override payment terms in days"""
+  arPaymentTermsDays: Int
+
+  """Generate separate statement for this member"""
+  arSeparateStatement: Boolean!
+
+  """Override statement delivery method"""
+  arStatementDelivery: BillingStatementDelivery
+
   """Override cycle alignment for this member"""
   billingAlignment: CycleAlignment
 
@@ -3164,6 +3535,15 @@ type MemberTypeEdge {
   node: MemberType!
 }
 
+type MemberWithoutARProfileType {
+  email: String
+  firstName: String!
+  id: ID!
+  lastName: String!
+  memberId: String!
+  membershipTypeName: String
+}
+
 type MembershipApplicationType {
   applicationNumber: String!
   approvedAt: DateTime
@@ -3341,6 +3721,7 @@ type Mutation {
 
   """Cancel a lottery request"""
   cancelLotteryRequest(id: ID!): LotteryRequestMutationResponse!
+  cancelStatementRun(id: ID!): StatementRunGQLType!
 
   """Cancel a tee time"""
   cancelTeeTime(id: ID!, reason: String): CancelResponseType!
@@ -3377,6 +3758,7 @@ type Mutation {
 
   """Clone a POS template with a new name"""
   clonePOSTemplate(id: ID!, newName: String!): CloneTemplateMutationResponse!
+  closeARProfile(id: ID!, input: CloseARProfileInput!): ARProfileGQLType!
 
   """Close a lottery to new requests"""
   closeLottery(id: ID!): LotteryMutationResponse!
@@ -3389,12 +3771,14 @@ type Mutation {
 
   """Close a shift"""
   closeShift(input: CloseShiftInput!): CashDrawerShiftGraphQLType!
+  closeStatementPeriod(id: ID!): StatementPeriodGQLType!
 
   """Confirm group booking and create tee times"""
   confirmGroupBooking(id: ID!): GroupBookingMutationResponse!
 
   """Convert a waitlist entry to a booking"""
   convertWaitlistToBooking(id: ID!, teeTimeId: ID!): WaitlistMutationResponse!
+  createARProfile(input: CreateARProfileInput!): ARProfileGQLType!
 
   """Create a new membership application"""
   createApplication(input: CreateApplicationInput!): MembershipApplicationType!
@@ -3413,6 +3797,7 @@ type Mutation {
 
   """Create a new payment method for check-in"""
   createCheckInPaymentMethod(input: CreatePaymentMethodInput!): CheckInPaymentMethodType!
+  createCloseChecklist(periodId: ID!): CloseChecklistGQLType!
 
   """Create a course schedule"""
   createCourseSchedule(input: CreateScheduleInput!): ScheduleMutationResponse!
@@ -3491,6 +3876,7 @@ type Mutation {
 
   """Create a new staff member"""
   createStaffMember(input: CreateStaffMemberInput!): StaffResponseType!
+  createStatementPeriod(input: CreateStatementPeriodInput!): StatementPeriodGQLType!
 
   """Create a new sub-account"""
   createSubAccount(input: CreateSubAccountInput!): SubAccount!
@@ -3586,6 +3972,7 @@ type Mutation {
 
   """Delete a staff member"""
   deleteStaffMember(id: ID!): DeleteResponseType!
+  deleteStatementPeriod(id: ID!): Boolean!
 
   """Delete (revoke) a sub-account"""
   deleteSubAccount(id: ID!): SubAccount!
@@ -3619,6 +4006,7 @@ type Mutation {
 
   """Join a waitlist"""
   joinWaitlist(input: JoinWaitlistInput!): WaitlistResponseType!
+  markStatementPortalViewed(id: ID!): StatementGQLType!
 
   """Move a tee time to a different slot"""
   moveTeeTime(id: ID!, input: MoveTeeTimeInput!): TeeTimeType!
@@ -3652,6 +4040,7 @@ type Mutation {
 
   """Publish lottery results and create tee times"""
   publishLotteryResults(id: ID!): LotteryMutationResponse!
+  reactivateARProfile(id: ID!): ARProfileGQLType!
 
   """Recalculate member spend from transactions"""
   recalculateMemberSpend(memberSpendId: ID!): MemberMinimumSpend!
@@ -3704,6 +4093,7 @@ type Mutation {
 
   """Reopen a closed settlement"""
   reopenSettlement(input: ReopenSettlementInput!): DailySettlementGraphQLType!
+  reopenStatementPeriod(id: ID!, input: ReopenStatementPeriodInput!): StatementPeriodGQLType!
 
   """Reorder payment methods by providing ordered IDs"""
   reorderCheckInPaymentMethods(orderedIds: [ID!]!): [CheckInPaymentMethodType!]!
@@ -3735,6 +4125,8 @@ type Mutation {
 
   """Revert a credit limit override"""
   revertCreditOverride(overrideId: ID!): Boolean!
+  runAllAutoChecks(checklistId: ID!): CloseChecklistGQLType!
+  runAutoVerification(stepId: ID!): CloseChecklistStepGQLType!
 
   """Save cart draft for a tee time"""
   saveCartDraft(input: SaveCartDraftInput!): CartDraftType!
@@ -3759,15 +4151,25 @@ type Mutation {
 
   """Settle all players in a flight at once"""
   settleAllPlayers(input: SettleAllPlayersInput!): SettlementResultType!
+  signOffChecklistStep(input: SignOffStepInput!): CloseChecklistStepGQLType!
+  skipChecklistStep(input: SkipStepInput!): CloseChecklistStepGQLType!
+  startStatementRun(input: CreateStatementRunInput!): StatementRunGQLType!
 
   """Submit a lottery request (member)"""
   submitLotteryRequest(input: CreateLotteryRequestInput!): LotteryRequestMutationResponse!
 
   """Submit settlement for review"""
   submitSettlementForReview(settlementId: ID!): DailySettlementGraphQLType!
+  suspendARProfile(id: ID!, input: SuspendARProfileInput!): ARProfileGQLType!
 
   """Suspend a shift temporarily"""
   suspendShift(shiftId: ID!): CashDrawerShiftGraphQLType!
+
+  """Create AR profiles for all active city ledgers who do not have one"""
+  syncCityLedgersToARProfiles(input: SyncARProfilesInput): ARProfileSyncResultType!
+
+  """Create AR profiles for all active members who do not have one"""
+  syncMembersToARProfiles(input: SyncARProfilesInput): ARProfileSyncResultType!
 
   """Enable or disable a payment method"""
   toggleCheckInPaymentMethod(id: ID!, isEnabled: Boolean!): CheckInPaymentMethodType!
@@ -3786,6 +4188,10 @@ type Mutation {
 
   """Unlock a locked sub-account PIN"""
   unlockSubAccountPin(subAccountId: ID!): SubAccount!
+  updateARProfile(id: ID!, input: UpdateARProfileInput!): ARProfileGQLType!
+
+  """Update AR period settings for the club"""
+  updateARSettings(input: UpdateARSettingsInput!): ARPeriodSettingsType!
 
   """Update an existing membership application"""
   updateApplication(id: ID!, input: UpdateApplicationInput!): MembershipApplicationType!
@@ -3910,6 +4316,12 @@ type Mutation {
 
   """Update starter ticket configuration"""
   updateStarterTicketConfig(input: StarterTicketConfigInput!): CheckInSettingsType!
+  updateStatementDeliveryStatus(channel: String!, error: String, id: ID!, status: String!): StatementGQLType!
+
+  """
+  Update statement period dates and label (only for OPEN or REOPENED periods)
+  """
+  updateStatementPeriod(id: ID!, input: UpdateStatementPeriodInput!): StatementPeriodGQLType!
 
   """Update a sub-account"""
   updateSubAccount(input: UpdateSubAccountInput!): SubAccount!
@@ -4137,6 +4549,20 @@ type PaymentAllocationSummaryType {
   payment: PaymentSummaryType!
 }
 
+type PaymentAllocationType {
+  amount: String!
+  balanceAfter: String!
+  id: ID!
+  invoiceId: ID!
+  invoiceNumber: String!
+}
+
+type PaymentConnection {
+  edges: [PaymentTypeEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
 """Payment method options"""
 enum PaymentMethod {
   BANK_TRANSFER
@@ -4201,6 +4627,7 @@ type PaymentTransactionType {
 
 type PaymentType {
   accountLast4: String
+  allocations: [PaymentAllocationType!]
   amount: String!
   bankName: String
   createdAt: DateTime!
@@ -4211,11 +4638,19 @@ type PaymentType {
   paymentDate: DateTime!
   receiptNumber: String!
   referenceNumber: String
+  status: String
 }
 
 type PaymentTypeEdge {
   cursor: String!
   node: PaymentType!
+}
+
+"""Status of statement period"""
+enum PeriodStatus {
+  CLOSED
+  OPEN
+  REOPENED
 }
 
 type PinVerificationResult {
@@ -4532,6 +4967,13 @@ type Query {
   """Get AR aging report with buckets and member details"""
   arAgingReport(filter: String, limit: Float = 20, page: Float = 1): ArAgingReportType!
 
+  """Get AR period settings for the club"""
+  arPeriodSettings: ARPeriodSettingsType!
+  arProfile(id: ID!): ARProfileGQLType!
+  arProfileByCityLedger(cityLedgerId: ID!): ARProfileGQLType
+  arProfileByMember(memberId: ID!): ARProfileGQLType
+  arProfiles(filter: ARProfileFilterInput): [ARProfileGQLType!]!
+
   """Calculate totals for multiple players (for batch payment)"""
   batchTotal(playerIds: [ID!]!): BatchTotalType!
 
@@ -4552,6 +4994,7 @@ type Query {
 
   """Get calendar data for a specific day"""
   calendarDay(date: String!, facilityId: ID, resourceIds: [ID!], statuses: [BookingStatus!]): CalendarDayType!
+  canClosePeriod(checklistId: ID!): CanClosePeriodResultType!
 
   """Get cart draft for a tee time"""
   cartDraft(teeTimeId: ID!): CartDraftType
@@ -4582,6 +5025,8 @@ type Query {
 
   """Check if a sub-account can make a transaction"""
   checkSubAccountLimit(input: CheckLimitInput!): SubAccountLimitCheck!
+  cityLedgerStatements(cityLedgerId: ID!): [StatementGQLType!]!
+  closeChecklist(periodId: ID!): CloseChecklistGQLType
 
   """Get club-wide billing configuration settings"""
   clubBillingSettings: ClubBillingSettingsType!
@@ -4606,6 +5051,7 @@ type Query {
 
   """Get the current open shift for a drawer"""
   currentShift(cashDrawerId: ID!): CashDrawerShiftGraphQLType
+  currentStatementPeriod: StatementPeriodGQLType
 
   """Get daily check-in report for a course"""
   dailyCheckInReport(input: DailyReportInput!): DailyCheckInReportType!
@@ -4754,6 +5200,7 @@ type Query {
 
   """Get all stored payment methods for a member"""
   memberPaymentMethods(activeOnly: Boolean = true, memberId: ID!): [StoredPaymentMethod!]!
+  memberStatements(memberId: ID!): [StatementGQLType!]!
 
   """Get member statistics"""
   memberStats: MemberStatsType!
@@ -4769,6 +5216,12 @@ type Query {
 
   """Get members approaching or exceeding their credit limits"""
   membersAtCreditRisk: [MemberAtRiskType!]!
+
+  """List of active members without AR profiles"""
+  membersWithoutARProfiles: [MemberWithoutARProfileType!]!
+
+  """Count of active members without AR profiles"""
+  membersWithoutARProfilesCount: Int!
 
   """Get all membership types"""
   membershipTypes: [MembershipTypeType!]!
@@ -4798,8 +5251,14 @@ type Query {
   outletProductConfigs(outletId: ID!): [OutletProductConfig!]!
   outletProductPanel(outletId: ID!): OutletProductPanel!
 
+  """Get a single payment/receipt by ID"""
+  payment(id: ID!): PaymentType!
+
   """Get a single stored payment method"""
   paymentMethod(id: ID!): StoredPaymentMethod
+
+  """Get paginated list of payments/receipts"""
+  payments(after: String, endDate: DateTime, first: Int = 10, memberId: ID, method: PaymentMethod, skip: Int, startDate: DateTime): PaymentConnection!
 
   """Get detailed payment info for a single player"""
   playerPaymentInfo(playerId: ID!): PlayerPaymentInfoType!
@@ -4855,6 +5314,7 @@ type Query {
 
   """Get products with filtering and pagination"""
   products(filter: ProductFilterInput): ProductConnection!
+  profileStatements(arProfileId: ID!, onlyFinal: Boolean! = true): [StatementGQLType!]!
 
   """Get products marked as quick add for check-in"""
   quickAddProducts: [ProShopProductType!]!
@@ -4909,6 +5369,13 @@ type Query {
 
   """Get starter ticket for a tee time"""
   starterTicketByTeeTime(teeTimeId: ID!): StarterTicketResponseType
+  statement(id: ID!): StatementGQLType!
+  statementPeriod(id: ID!): StatementPeriodGQLType!
+  statementPeriods(filter: StatementPeriodFilterInput): [StatementPeriodGQLType!]!
+  statementRun(id: ID!): StatementRunGQLType!
+  statementRuns(filter: StatementRunFilterInput): [StatementRunGQLType!]!
+  statementRunsByPeriod(periodId: ID!): [StatementRunGQLType!]!
+  statements(maxBalance: Float, minBalance: Float, runId: ID!): [StatementGQLType!]!
 
   """Get a sub-account by ID"""
   subAccount(id: ID!): SubAccount
@@ -5078,6 +5545,10 @@ enum RentalStatus {
 input ReopenSettlementInput {
   reason: String!
   settlementId: ID!
+}
+
+input ReopenStatementPeriodInput {
+  reason: String!
 }
 
 input RescheduleBookingInput {
@@ -5292,6 +5763,16 @@ enum ShortfallAction {
   WAIVE
 }
 
+input SignOffStepInput {
+  notes: String
+  stepId: ID!
+}
+
+input SkipStepInput {
+  notes: String
+  stepId: ID!
+}
+
 type SlotCartType {
   balanceDue: Float!
   checkedInAt: DateTime
@@ -5456,6 +5937,134 @@ type StarterTicketResponseType {
   ticketNumber: String!
 }
 
+"""Statement delivery method preference"""
+enum StatementDelivery {
+  ALL
+  EMAIL
+  EMAIL_AND_PRINT
+  PORTAL
+  PRINT
+  SMS
+}
+
+type StatementGQLType {
+  aging1to30: Float!
+  aging31to60: Float!
+  aging61to90: Float!
+  aging90Plus: Float!
+  agingCurrent: Float!
+  arProfileId: ID!
+  closingBalance: Float!
+  createdAt: DateTime!
+  deliveryMethod: StatementDelivery!
+  dueDate: DateTime!
+  emailDeliveredAt: DateTime
+  emailError: String
+  emailSentAt: DateTime
+  emailStatus: DeliveryStatus!
+  id: ID!
+  openingBalance: Float!
+  pdfGeneratedAt: DateTime
+  pdfUrl: String
+  periodEnd: DateTime!
+  periodStart: DateTime!
+  portalPublishedAt: DateTime
+  portalStatus: DeliveryStatus!
+  portalViewedAt: DateTime
+  printBatchId: ID
+  printStatus: DeliveryStatus!
+  printedAt: DateTime
+  profileSnapshot: JSON!
+  smsDeliveredAt: DateTime
+  smsError: String
+  smsSentAt: DateTime
+  smsStatus: DeliveryStatus!
+  statementNumber: String
+  statementRunId: ID!
+  totalCredits: Float!
+  totalDebits: Float!
+  transactionCount: Int!
+  transactions: JSON
+  updatedAt: DateTime!
+}
+
+input StatementPeriodFilterInput {
+  periodYear: Int
+  status: PeriodStatus
+}
+
+type StatementPeriodGQLType {
+  closedAt: DateTime
+  closedBy: ID
+  createdAt: DateTime!
+  cutoffDate: DateTime!
+  id: ID!
+
+  """Whether this is a catch-up period for historical data"""
+  isCatchUp: Boolean!
+  periodEnd: DateTime!
+  periodLabel: String!
+  periodNumber: Int!
+  periodStart: DateTime!
+  periodYear: Int!
+  reopenApprovedBy: ID
+  reopenReason: String
+  reopenedAt: DateTime
+  reopenedBy: ID
+  status: PeriodStatus!
+  totalClosingBalance: Float
+  totalCredits: Float
+  totalDebits: Float
+  totalOpeningBalance: Float
+  totalProfiles: Int
+  totalStatements: Int
+  updatedAt: DateTime!
+}
+
+input StatementRunFilterInput {
+  runType: StatementRunType
+  statementPeriodId: ID
+  status: StatementRunStatus
+}
+
+type StatementRunGQLType {
+  completedAt: DateTime
+  createdAt: DateTime!
+  createdBy: ID
+  errorCount: Int!
+  errorLog: JSON
+  generatedCount: Int!
+  id: ID!
+  processedCount: Int!
+  runNumber: Int!
+  runType: StatementRunType!
+  skippedCount: Int!
+  startedAt: DateTime
+  statementPeriodId: ID!
+  status: StatementRunStatus!
+  totalClosingBalance: Float!
+  totalCredits: Float!
+  totalDebits: Float!
+  totalOpeningBalance: Float!
+  totalProfiles: Int!
+  updatedAt: DateTime!
+}
+
+"""Status of statement generation run"""
+enum StatementRunStatus {
+  CANCELLED
+  COMPLETED
+  FAILED
+  IN_PROGRESS
+  PENDING
+}
+
+"""Type of statement run - preview or final"""
+enum StatementRunType {
+  FINAL
+  PREVIEW
+}
+
 type StatementType {
   closingBalance: String!
   member: MemberStatementInfoType!
@@ -5463,6 +6072,28 @@ type StatementType {
   periodEnd: DateTime!
   periodStart: DateTime!
   transactions: [MemberTransactionType!]!
+}
+
+"""Whether a step is required or optional"""
+enum StepEnforcement {
+  OPTIONAL
+  REQUIRED
+}
+
+"""Status of a checklist step"""
+enum StepStatus {
+  FAILED
+  PASSED
+  PENDING
+  SIGNED_OFF
+  SKIPPED
+}
+
+"""How a step is verified"""
+enum StepVerification {
+  AUTO
+  MANUAL
+  SYSTEM_ACTION
 }
 
 type StoredPaymentMethod {
@@ -5600,6 +6231,18 @@ enum SuggestionPosition {
   TOP_ROW
 }
 
+input SuspendARProfileInput {
+  reason: String!
+}
+
+input SyncARProfilesInput {
+  """Default payment terms in days"""
+  paymentTermsDays: Int
+
+  """Default delivery method for new profiles"""
+  statementDelivery: StatementDelivery
+}
+
 input TaxConfigInput {
   defaultRate: Float
   defaultType: TaxType
@@ -5616,6 +6259,13 @@ type TaxConfigType {
   showBreakdown: Boolean!
   showTypeIndicator: Boolean!
   taxLabel: String!
+}
+
+"""Tax calculation method (ADDON, INCLUDED, EXEMPT)"""
+enum TaxMethod {
+  ADDON
+  EXEMPT
+  INCLUDED
 }
 
 input TaxOverrideInput {
@@ -5911,6 +6561,44 @@ input UndoTransferInput {
   lineItemId: ID!
 }
 
+input UpdateARProfileInput {
+  """Account name for standalone city ledger profiles"""
+  accountName: String
+
+  """Billing address for standalone profiles"""
+  billingAddress: String
+
+  """Branch code (e.g., 00000 for head office)"""
+  branchCode: String
+
+  """Branch name (e.g., Head Office, Bangkok Branch)"""
+  branchName: String
+
+  """Business registration number"""
+  businessRegistrationId: String
+
+  """Contact email for standalone profiles"""
+  contactEmail: String
+
+  """Contact phone for standalone profiles"""
+  contactPhone: String
+  creditLimit: Float
+  paymentTermsDays: Int
+  statementDelivery: StatementDelivery
+  status: ARProfileStatus
+
+  """Tax ID for corporate accounts"""
+  taxId: String
+}
+
+input UpdateARSettingsInput {
+  arAutoGenerateNext: Boolean
+  arCloseBehavior: ARCloseBehavior
+  arCustomCycleStartDay: Int
+  arCutoffDays: Int
+  arCycleType: ARCycleType
+}
+
 input UpdateAddressInput {
   addressLine1: String
   addressLine2: String
@@ -5975,23 +6663,89 @@ input UpdateCashDrawerInput {
 }
 
 input UpdateClubBillingSettingsInput {
+  """AR account number format pattern"""
+  accountNumberFormat: String
+
+  """AR account number prefix"""
+  accountNumberPrefix: String
+
+  """Allow manager to override credit limit block"""
+  allowManagerCreditOverride: Boolean
+
   """Automatically apply late fees when due"""
   autoApplyLateFee: Boolean
+
+  """Auto-create AR profile on member activation"""
+  autoCreateProfileOnActivation: Boolean
+
+  """Days overdue before auto-suspension"""
+  autoSuspendDays: Int
+
+  """Enable auto-suspension for overdue balances"""
+  autoSuspendEnabled: Boolean
+
+  """Auto-suspend AR when credit exceeded 30+ days"""
+  autoSuspendOnCreditExceeded: Boolean
+
+  """Billing cycle mode"""
+  billingCycleMode: BillingCycleMode
+
+  """Close checklist step template"""
+  closeChecklistTemplate: JSON
+
+  """Closing day for Club Cycle mode (1-28)"""
+  clubCycleClosingDay: Int
+
+  """Credit alert threshold percentage"""
+  creditAlertThreshold: Int
+
+  """Credit block threshold percentage"""
+  creditBlockThreshold: Int
+
+  """Credit limits per membership type"""
+  creditLimitByMembershipType: JSON
+
+  """Max temporary credit override amount"""
+  creditOverrideMaxAmount: Float
   defaultAlignment: CycleAlignment
 
   """Default billing day (1-28)"""
   defaultBillingDay: Int
+
+  """Default credit limit (null = unlimited)"""
+  defaultCreditLimit: Float
   defaultFrequency: BillingFrequency
+
+  """Default payment terms in days"""
+  defaultPaymentTermsDays: Int
+
+  """Default statement delivery method"""
+  defaultStatementDelivery: BillingStatementDelivery
   defaultTiming: BillingTiming
+
+  """Default VAT rate percentage"""
+  defaultVatRate: Float
+
+  """Financial period type"""
+  financialPeriodType: FinancialPeriodType
 
   """Grace period days after due date (0-60)"""
   gracePeriodDays: Int
+
+  """Day of month for auto-generation (1-28)"""
+  invoiceAutoGenerationDay: Int
 
   """Days after invoice for payment due (1-60)"""
   invoiceDueDays: Int
 
   """Days before billing to generate invoices (0-30)"""
   invoiceGenerationLead: Int
+
+  """Invoice number prefix"""
+  invoicePrefix: String
+
+  """Invoice starting number"""
+  invoiceStartNumber: Int
 
   """Fixed late fee amount"""
   lateFeeAmount: Float
@@ -6009,6 +6763,27 @@ input UpdateClubBillingSettingsInput {
   """Prorate charges for new members mid-cycle"""
   prorateNewMembers: Boolean
   prorationMethod: ProrationMethod
+
+  """Require zero balance before closing AR profile"""
+  requireZeroBalanceForClosure: Boolean
+
+  """Send credit alert to member"""
+  sendCreditAlertToMember: Boolean
+
+  """Send credit alert to staff"""
+  sendCreditAlertToStaff: Boolean
+
+  """Statement number prefix"""
+  statementNumberPrefix: String
+
+  """Tax calculation method"""
+  taxMethod: TaxMethod
+
+  """Enable WHT for applicable members"""
+  whtEnabled: Boolean
+
+  """Applicable WHT rates"""
+  whtRates: JSON
 }
 
 """Input for updating communication preferences"""
@@ -6165,6 +6940,26 @@ input UpdateLotteryInput {
 }
 
 input UpdateMemberBillingProfileInput {
+  """Auto-charge AR balance to member"""
+  arAutoChargeToMember: Boolean
+
+  """AR billing contact override"""
+  arBillingContact: String
+
+  """Member-specific credit limit"""
+  arCreditLimit: Float
+
+  """Enable AR for this member"""
+  arEnabled: Boolean
+
+  """Payment terms override in days"""
+  arPaymentTermsDays: Int
+
+  """Generate separate statement"""
+  arSeparateStatement: Boolean
+
+  """Statement delivery method override"""
+  arStatementDelivery: BillingStatementDelivery
   billingAlignment: CycleAlignment
   billingFrequency: BillingFrequency
 
@@ -6481,6 +7276,20 @@ input UpdateStaffMemberInput {
   phone: String
   userId: ID
   workingHours: [DayHoursInput!]
+}
+
+input UpdateStatementPeriodInput {
+  """Cutoff date for including transactions (YYYY-MM-DD)"""
+  cutoffDate: String
+
+  """End date of the period (YYYY-MM-DD)"""
+  periodEnd: String
+
+  """Period label/name"""
+  periodLabel: String
+
+  """Start date of the period (YYYY-MM-DD)"""
+  periodStart: String
 }
 
 input UpdateStoredPaymentInput {

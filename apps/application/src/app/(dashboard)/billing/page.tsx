@@ -16,6 +16,7 @@ import {
   DynamicWhtCertificatesTab as WhtCertificatesTab,
   DynamicAgingDashboardTab as AgingDashboardTab,
   DynamicCreditNoteList as CreditNoteList,
+  DynamicStatementRegister as StatementRegister,
 } from '@/components/billing/dynamic-tabs'
 
 // Modal imports
@@ -35,10 +36,6 @@ import type {
   InvoiceRegisterSummary,
 } from '@/components/billing/invoice-register'
 import type {
-  ReceiptRegisterItem,
-  ReceiptRegisterSummary,
-} from '@/components/billing/receipt-register'
-import type {
   WhtCertificateItem,
   WhtCertificatesSummary,
 } from '@/components/billing/wht-certificates-tab'
@@ -54,7 +51,7 @@ import type {
   CreditNoteType as ListCreditNoteType,
 } from '@/components/billing/credit-note-list'
 
-import { useInvoices, useGenerateStatement } from '@/hooks/use-billing'
+import { useInvoices, usePayments, useGenerateStatement } from '@/hooks/use-billing'
 import { type MemberOption } from '@clubvantage/ui'
 
 // Fallback mock invoice data (used when API unavailable)
@@ -69,7 +66,7 @@ const mockInvoices: InvoiceRegisterItem[] = [
     amount: 45000,
     balance: 45000,
     status: 'sent',
-    agingStatus: 'current',
+    agingStatus: 'CURRENT',
   },
   {
     id: '2',
@@ -81,7 +78,7 @@ const mockInvoices: InvoiceRegisterItem[] = [
     amount: 32000,
     balance: 12000,
     status: 'partial',
-    agingStatus: '30',
+    agingStatus: 'DAYS_30',
   },
   {
     id: '3',
@@ -93,7 +90,7 @@ const mockInvoices: InvoiceRegisterItem[] = [
     amount: 55000,
     balance: 55000,
     status: 'overdue',
-    agingStatus: '90',
+    agingStatus: 'DAYS_90',
   },
   {
     id: '4',
@@ -105,7 +102,7 @@ const mockInvoices: InvoiceRegisterItem[] = [
     amount: 28000,
     balance: 0,
     status: 'paid',
-    agingStatus: 'current',
+    agingStatus: 'CURRENT',
   },
   {
     id: '5',
@@ -117,7 +114,7 @@ const mockInvoices: InvoiceRegisterItem[] = [
     amount: 120000,
     balance: 120000,
     status: 'overdue',
-    agingStatus: 'suspended',
+    agingStatus: 'SUSPENDED',
   },
 ]
 
@@ -128,57 +125,6 @@ const mockInvoiceSummary: InvoiceRegisterSummary = {
   days30to60: 250000,
   days61to90: 80000,
   days91Plus: 120000,
-}
-
-// Mock receipt data
-const mockReceipts: ReceiptRegisterItem[] = [
-  {
-    id: '1',
-    receiptNumber: 'RCP-2024-0001',
-    memberId: 'M002',
-    memberName: 'Sarah Johnson',
-    date: new Date('2024-01-18'),
-    amount: 20000,
-    method: 'transfer',
-    outlet: 'Main Office',
-    whtAmount: 600,
-    status: 'completed',
-    allocations: [
-      {
-        invoiceId: '2',
-        invoiceNumber: 'INV-2024-0002',
-        amountAllocated: 20000,
-        balanceAfter: 12000,
-      },
-    ],
-  },
-  {
-    id: '2',
-    receiptNumber: 'RCP-2024-0002',
-    memberId: 'M004',
-    memberName: 'Emily Davis',
-    date: new Date('2024-01-20'),
-    amount: 28000,
-    method: 'card',
-    outlet: 'Pro Shop',
-    status: 'completed',
-    allocations: [
-      {
-        invoiceId: '4',
-        invoiceNumber: 'INV-2024-0004',
-        amountAllocated: 28000,
-        balanceAfter: 0,
-      },
-    ],
-  },
-]
-
-const mockReceiptSummary: ReceiptRegisterSummary = {
-  totalReceipts: 89,
-  cashReceived: 1850000,
-  whtReceived: 55500,
-  invoicesSettled: 67,
-  depositsToCredit: 12500,
 }
 
 // Mock WHT data
@@ -295,9 +241,9 @@ const mockMemberOptions: MemberOption[] = [
 
 // Mock member search results
 const mockMemberSearchResults: MemberSearchResult[] = [
-  { id: 'M001', name: 'John Smith', memberNumber: 'M001', membershipType: 'Golf Premium', agingStatus: 'current', creditBalance: 0 },
-  { id: 'M002', name: 'Sarah Johnson', memberNumber: 'M002', membershipType: 'Golf Standard', agingStatus: '30', creditBalance: 0 },
-  { id: 'M003', name: 'Michael Chen', memberNumber: 'M003', membershipType: 'Golf Premium', agingStatus: '90', creditBalance: 0 },
+  { id: 'M001', name: 'John Smith', memberNumber: 'M001', membershipType: 'Golf Premium', agingStatus: 'CURRENT', creditBalance: 0 },
+  { id: 'M002', name: 'Sarah Johnson', memberNumber: 'M002', membershipType: 'Golf Standard', agingStatus: 'DAYS_30', creditBalance: 0 },
+  { id: 'M003', name: 'Michael Chen', memberNumber: 'M003', membershipType: 'Golf Premium', agingStatus: 'DAYS_90', creditBalance: 0 },
 ]
 
 // Mock outlets for payment
@@ -312,6 +258,7 @@ export default function BillingPage() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<BillingTab>('invoices')
   const [currentPage, setCurrentPage] = useState(1)
+  const [receiptPage, setReceiptPage] = useState(1)
 
   // Modal states
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false)
@@ -329,6 +276,15 @@ export default function BillingPage() {
     isLoading: isInvoicesLoading,
   } = useInvoices({ page: currentPage, pageSize: 20 })
 
+  // Fetch receipts/payments from API
+  const {
+    receipts,
+    summary: receiptSummary,
+    totalCount: receiptTotalCount,
+    totalPages: receiptTotalPages,
+    isLoading: isReceiptsLoading,
+  } = usePayments({ page: receiptPage, pageSize: 20 })
+
   // Statement generation hook
   const { generateStatement, isLoading: statementLoading } = useGenerateStatement()
 
@@ -341,7 +297,7 @@ export default function BillingPage() {
   // Calculate aging members from invoices
   const agingMembers = useMemo((): AgingMember[] => {
     const overdueInvoices = invoices.filter(
-      (inv) => inv.agingStatus === '90' || inv.agingStatus === 'suspended'
+      (inv) => inv.agingStatus === 'DAYS_90' || inv.agingStatus === 'SUSPENDED'
     )
     return overdueInvoices.map((inv) => {
       const dueDate = inv.dueDate instanceof Date ? inv.dueDate : new Date(inv.dueDate)
@@ -362,11 +318,11 @@ export default function BillingPage() {
   // Calculate aging buckets from invoices
   const agingBuckets = useMemo((): AgingBucket[] => {
     const buckets = {
-      current: { count: 0, amount: 0 },
-      '30': { count: 0, amount: 0 },
-      '60': { count: 0, amount: 0 },
-      '90': { count: 0, amount: 0 },
-      suspended: { count: 0, amount: 0 },
+      CURRENT: { count: 0, amount: 0 },
+      DAYS_30: { count: 0, amount: 0 },
+      DAYS_60: { count: 0, amount: 0 },
+      DAYS_90: { count: 0, amount: 0 },
+      SUSPENDED: { count: 0, amount: 0 },
     }
 
     invoices.forEach((inv) => {
@@ -382,17 +338,17 @@ export default function BillingPage() {
     const totalAmount = Object.values(buckets).reduce((sum, b) => sum + b.amount, 0)
 
     return [
-      { id: 'current', label: 'Current', memberCount: buckets.current.count, totalAmount: buckets.current.amount, percentage: totalAmount > 0 ? Math.round((buckets.current.amount / totalAmount) * 100) : 0 },
-      { id: '30', label: '1-30 Days', memberCount: buckets['30'].count, totalAmount: buckets['30'].amount, percentage: totalAmount > 0 ? Math.round((buckets['30'].amount / totalAmount) * 100) : 0 },
-      { id: '60', label: '31-60 Days', memberCount: buckets['60'].count, totalAmount: buckets['60'].amount, percentage: totalAmount > 0 ? Math.round((buckets['60'].amount / totalAmount) * 100) : 0 },
-      { id: '90', label: '61-90 Days', memberCount: buckets['90'].count, totalAmount: buckets['90'].amount, percentage: totalAmount > 0 ? Math.round((buckets['90'].amount / totalAmount) * 100) : 0 },
-      { id: 'suspended', label: '91+ Days', memberCount: buckets.suspended.count, totalAmount: buckets.suspended.amount, percentage: totalAmount > 0 ? Math.round((buckets.suspended.amount / totalAmount) * 100) : 0 },
+      { id: 'CURRENT', label: 'Current', memberCount: buckets.CURRENT.count, totalAmount: buckets.CURRENT.amount, percentage: totalAmount > 0 ? Math.round((buckets.CURRENT.amount / totalAmount) * 100) : 0 },
+      { id: 'DAYS_30', label: '1-30 Days', memberCount: buckets.DAYS_30.count, totalAmount: buckets.DAYS_30.amount, percentage: totalAmount > 0 ? Math.round((buckets.DAYS_30.amount / totalAmount) * 100) : 0 },
+      { id: 'DAYS_60', label: '31-60 Days', memberCount: buckets.DAYS_60.count, totalAmount: buckets.DAYS_60.amount, percentage: totalAmount > 0 ? Math.round((buckets.DAYS_60.amount / totalAmount) * 100) : 0 },
+      { id: 'DAYS_90', label: '61-90 Days', memberCount: buckets.DAYS_90.count, totalAmount: buckets.DAYS_90.amount, percentage: totalAmount > 0 ? Math.round((buckets.DAYS_90.amount / totalAmount) * 100) : 0 },
+      { id: 'SUSPENDED', label: '91+ Days', memberCount: buckets.SUSPENDED.count, totalAmount: buckets.SUSPENDED.amount, percentage: totalAmount > 0 ? Math.round((buckets.SUSPENDED.amount / totalAmount) * 100) : 0 },
     ]
   }, [invoices])
 
   const tabBadges: Partial<Record<BillingTab, number>> = {
     invoices: invoiceTotalCount,
-    receipts: mockReceipts.length,
+    receipts: receiptTotalCount,
     'credit-notes': mockCreditNotes.filter((c) => c.status === 'pending_approval').length,
     'wht-certificates': mockWhtCertificates.filter((c) => c.status === 'pending').length,
     aging: agingMembers.length,
@@ -509,7 +465,7 @@ export default function BillingPage() {
         agingStatus: inv.agingStatus,
       }))
 
-    const agingStatus = memberInvoices[0]?.agingStatus || 'current'
+    const agingStatus = memberInvoices[0]?.agingStatus || 'CURRENT'
 
     return {
       member: {
@@ -548,14 +504,14 @@ export default function BillingPage() {
       case 'receipts':
         return (
           <ReceiptRegister
-            receipts={mockReceipts}
-            summary={mockReceiptSummary}
+            receipts={receipts}
+            summary={receiptSummary}
             outlets={['Main Office', 'Pro Shop', 'Restaurant', 'Fitness Center']}
-            currentPage={1}
-            totalPages={5}
-            totalCount={89}
+            currentPage={receiptPage}
+            totalPages={receiptTotalPages}
+            totalCount={receiptTotalCount}
             pageSize={20}
-            isLoading={false}
+            isLoading={isReceiptsLoading}
             onCreateReceipt={handleNewReceipt}
             onRowAction={(action, id) => {
               if (action === 'view') {
@@ -566,6 +522,7 @@ export default function BillingPage() {
                 console.log('Void receipt:', id)
               }
             }}
+            onPageChange={setReceiptPage}
           />
         )
       case 'credit-notes':
@@ -596,21 +553,9 @@ export default function BillingPage() {
         )
       case 'statements':
         return (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <FileText className="h-16 w-16 text-muted-foreground/50 mb-4" />
-            <h3 className="text-lg font-medium text-foreground mb-2">Member Statements</h3>
-            <p className="text-sm text-muted-foreground max-w-md mb-6">
-              Generate account statements for members showing their transaction history,
-              invoices, payments, and running balance for any date range.
-            </p>
-            <Button
-              onClick={handleGenerateStatement}
-              className="bg-gradient-to-br from-amber-500 to-amber-600 text-white"
-            >
-              <FileText className="mr-2 h-4 w-4" />
-              Generate Statement
-            </Button>
-          </div>
+          <StatementRegister
+            onGenerateStatement={handleGenerateStatement}
+          />
         )
       case 'wht-certificates':
         return (
