@@ -15,8 +15,10 @@ Statement periods are configured once in Club Settings and auto-managed thereaft
 - **GraphQL API**: Not yet implemented (queries and mutations specified in design)
 - **AR Period Settings**: Designed (settings to be added to `club_billing_settings` table)
 - **Billing Cycle Mode**: Redesigned — supports Club Cycle (shared AR period) and Member Cycle (per-member cycle based on join date, checklist on financial period). See `docs/plans/2026-02-09-ar-period-close-redesign.md`.
-- **AR Close Checklist**: Designed — multi-phase checklist with configurable enforcement (required/optional per step), auto-verification where possible, manual sign-off for the rest. See `docs/plans/2026-02-09-ar-period-close-redesign.md`.
-- **Member Portal**: Member portal statement viewing and payment designed (see `docs/plans/2026-02-06-member-portal-pwa-design.md`). Portal shows last closed statement, unbilled activity summary (grouped by category with expand), 3-month rolling history, and pay online.
+- **AR Close Checklist**: Designed — multi-phase checklist with configurable enforcement (required/optional per step), auto-verification where possible, manual sign-off for the rest. See `docs/plans/2026-02-09-ar-period-close-redesign.md` and `docs/plans/2026-02-09-billing-staff-ar-close-implementation.md`.
+- **Member Portal**: Member portal statement viewing and payment designed (see `docs/plans/2026-02-09-member-portal-billing-implementation.md`). Portal shows last closed statement, unbilled activity summary (grouped by category with expand), 3-month rolling history, and pay online.
+- **Member Detail Billing History**: AR history tab cycle mode updates, credit limit display, billing hold, unbilled activity. See `docs/plans/2026-02-09-member-detail-billing-history-implementation.md`.
+- **Settings configuration**: Billing cycle mode, close checklist configuration, statement numbering, credit limit management settings planned. See `docs/plans/2026-02-09-billing-settings-implementation.md`.
 
 ## Capabilities
 

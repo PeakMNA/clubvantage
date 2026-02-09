@@ -17,6 +17,8 @@ The system supports Monthly, Quarterly, Semi-Annual, and Annual billing frequenc
 - **Frontend components**: Planned (`billing-cycle-section.tsx` for settings, `member-billing-profile-modal.tsx` for overrides, `billing-preview-card.tsx` for inline preview)
 - **Settings page integration**: Not yet integrated into `/settings` page
 - **AR Cycle Mode**: Redesigned — two modes: Club Cycle (shared AR period with configurable closing day) and Member Cycle (per-member cycle from join date, close checklist on financial period). See `docs/plans/2026-02-09-ar-period-close-redesign.md`.
+- **Billing Defaults backend**: Billing Defaults section currently uses mock data. Backend persistence and settings migration planned. See `docs/plans/2026-02-09-billing-settings-implementation.md`.
+- **Billing Cycle Mode settings**: Club Cycle / Member Cycle toggle and closing day configuration planned for AR Period settings section. See `docs/plans/2026-02-09-billing-settings-implementation.md` Task 10.
 
 ## Capabilities
 
