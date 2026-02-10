@@ -1,6 +1,8 @@
 'use server';
 
+import { cache } from 'react';
 import { cookies } from 'next/headers';
+import { jwtVerify } from 'jose';
 
 /**
  * Session data returned from authentication
@@ -9,9 +11,9 @@ export interface Session {
   user: {
     id: string;
     email: string;
-    name: string;
-    role: 'admin' | 'staff' | 'member';
+    role: string;
     permissions: string[];
+    tenantId: string;
   };
   expiresAt: Date;
 }
@@ -23,88 +25,69 @@ export type AuthResult =
   | { authenticated: true; session: Session }
   | { authenticated: false; error: string };
 
+interface JwtPayload {
+  sub?: string;
+  email?: string;
+  tenantId?: string;
+  roles?: string[];
+  permissions?: string[];
+}
+
+// Encode secret once at module load (reused across requests)
+const JWT_SECRET = new TextEncoder().encode(
+  process.env.JWT_SECRET || 'clubvantage-super-secret-jwt-token-for-local-dev-only-min-32-chars'
+);
+
 /**
- * Verify the current request has a valid session
- * Checks for JWT token in cookies and validates it
- *
- * @returns AuthResult indicating if user is authenticated
+ * Verify the current request has a valid session.
+ * Uses jose for HS256 JWT signature verification (Edge-compatible).
+ * Wrapped in React.cache() for per-request deduplication — multiple server
+ * components calling getSession() in the same render only verify the JWT once.
  */
-export async function getSession(): Promise<AuthResult> {
+export const getSession = cache(async (): Promise<AuthResult> => {
   const cookieStore = await cookies();
-  const token = cookieStore.get('auth_token')?.value;
+  const token = cookieStore.get('sb-access-token')?.value;
 
   if (!token) {
     return { authenticated: false, error: 'No authentication token found' };
   }
 
   try {
-    // TODO: Replace with actual JWT verification
-    // For now, decode the token without verification for development
-    // In production, this should verify the signature with the same secret as the API
-    const payload = parseJwtPayload(token);
+    // jose verifies signature + expiration automatically
+    const { payload } = await jwtVerify(token, JWT_SECRET, {
+      algorithms: ['HS256'],
+    });
 
-    if (!payload) {
-      return { authenticated: false, error: 'Invalid token format' };
-    }
-
-    // Check token expiration
-    if (payload.exp && payload.exp * 1000 < Date.now()) {
-      return { authenticated: false, error: 'Token expired' };
-    }
+    const claims = payload as unknown as JwtPayload;
+    const role = claims.roles?.[0] || 'staff';
 
     return {
       authenticated: true,
       session: {
         user: {
-          id: payload.sub || '',
-          email: payload.email || '',
-          name: payload.name || '',
-          role: payload.role || 'staff',
-          permissions: payload.permissions || [],
+          id: claims.sub || '',
+          email: claims.email || '',
+          role,
+          permissions: claims.permissions || [],
+          tenantId: claims.tenantId || '',
         },
         expiresAt: new Date(payload.exp ? payload.exp * 1000 : Date.now() + 3600000),
       },
     };
   } catch (error) {
+    // jose throws specific errors for expired/invalid tokens
+    const message = error instanceof Error ? error.message : 'Unknown error';
+
+    if (message.includes('expired')) {
+      return { authenticated: false, error: 'Token expired' };
+    }
+
     return {
       authenticated: false,
       error: 'Failed to verify authentication token',
     };
   }
-}
-
-/**
- * Parse JWT payload without verification (for development)
- * In production, use a proper JWT library with signature verification
- */
-function parseJwtPayload(token: string): JwtPayload | null {
-  try {
-    const parts = token.split('.');
-    if (parts.length !== 3) {
-      return null;
-    }
-
-    const payload = parts[1];
-    if (!payload) {
-      return null;
-    }
-
-    const decoded = Buffer.from(payload, 'base64').toString('utf-8');
-    return JSON.parse(decoded) as JwtPayload;
-  } catch {
-    return null;
-  }
-}
-
-interface JwtPayload {
-  sub?: string;
-  email?: string;
-  name?: string;
-  role?: 'admin' | 'staff' | 'member';
-  permissions?: string[];
-  exp?: number;
-  iat?: number;
-}
+});
 
 /**
  * Require authentication for a server action

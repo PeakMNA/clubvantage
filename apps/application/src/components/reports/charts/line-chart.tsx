@@ -39,6 +39,12 @@ export interface LineChartProps {
   className?: string
 }
 
+// Hoisted constants to avoid re-creating objects on every render (rerender-memo-with-default-value)
+const CHART_MARGIN = { top: 10, right: 30, left: 10, bottom: 10 }
+const LEGEND_WRAPPER_STYLE = { paddingTop: 16 }
+const VALUE_DOT = { fill: '#f59e0b', strokeWidth: 0, r: 4 }
+const VALUE_ACTIVE_DOT = { fill: '#f59e0b', strokeWidth: 2, stroke: 'white', r: 6 }
+
 const defaultValueFormatter = (value: number) =>
   new Intl.NumberFormat('th-TH', {
     style: 'currency',
@@ -92,7 +98,7 @@ export function LineChart({
       <ResponsiveContainer width="100%" height="100%">
         <ChartComponent
           data={chartData}
-          margin={{ top: 10, right: 30, left: 10, bottom: 10 }}
+          margin={CHART_MARGIN}
           onClick={(e: any) => {
             if (e?.activePayload?.[0]?.payload && onPointClick) {
               onPointClick(e.activePayload[0].payload)
@@ -139,7 +145,7 @@ export function LineChart({
           {showComparison && (
             <>
               <Legend
-                wrapperStyle={{ paddingTop: 16 }}
+                wrapperStyle={LEGEND_WRAPPER_STYLE}
                 formatter={(value) => (
                   <span className="text-sm text-stone-600">{value}</span>
                 )}
@@ -177,8 +183,8 @@ export function LineChart({
               stroke="#f59e0b"
               fill="#fef3c7"
               strokeWidth={2}
-              dot={{ fill: '#f59e0b', strokeWidth: 0, r: 4 }}
-              activeDot={{ fill: '#f59e0b', strokeWidth: 2, stroke: 'white', r: 6 }}
+              dot={VALUE_DOT}
+              activeDot={VALUE_ACTIVE_DOT}
               style={{ cursor: onPointClick ? 'pointer' : 'default' }}
             />
           ) : (
@@ -188,8 +194,8 @@ export function LineChart({
               name={showComparison ? 'Current Period' : 'Value'}
               stroke="#f59e0b"
               strokeWidth={2}
-              dot={{ fill: '#f59e0b', strokeWidth: 0, r: 4 }}
-              activeDot={{ fill: '#f59e0b', strokeWidth: 2, stroke: 'white', r: 6 }}
+              dot={VALUE_DOT}
+              activeDot={VALUE_ACTIVE_DOT}
               style={{ cursor: onPointClick ? 'pointer' : 'default' }}
             />
           )}

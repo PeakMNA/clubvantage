@@ -1,6 +1,6 @@
 'use client'
 
-import { EquipmentTab } from '@/components/bookings'
+import { EquipmentTab } from '@/components/bookings/tabs'
 
 export default function BookingsEquipmentPage() {
   return (

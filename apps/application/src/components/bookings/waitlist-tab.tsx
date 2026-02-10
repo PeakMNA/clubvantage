@@ -419,14 +419,6 @@ export function WaitlistTab({
   onRemove,
   className,
 }: WaitlistTabProps) {
-  if (isLoading) {
-    return (
-      <div className="flex h-full items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<FilterStatus>('all');
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
@@ -464,6 +456,14 @@ export function WaitlistTab({
       converted: localEntries.filter((e) => e.status === 'converted').length,
     };
   }, [localEntries]);
+
+  if (isLoading) {
+    return (
+      <div className="flex h-full items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   const handleNotify = async (entryId: string) => {
     if (onNotify) await onNotify(entryId);

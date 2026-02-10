@@ -26,6 +26,7 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: [
       'lucide-react',
+      'date-fns',
       '@clubvantage/ui',
       '@clubvantage/api-client',
     ],

@@ -581,12 +581,6 @@ export default function GolfPage() {
   // selectedCourse: empty until API courses load - ensures we never query with mock IDs
   const [selectedCourse, setSelectedCourse] = useState<string>('')
 
-  // Debug logging for courses loading
-  useEffect(() => {
-    console.log('[Golf Page] apiCourses:', apiCourses)
-    console.log('[Golf Page] isCoursesLoading:', isCoursesLoading)
-  }, [apiCourses, isCoursesLoading])
-
   // Sync courses and selected course when API data loads
   useEffect(() => {
     if (apiCourses.length > 0) {
@@ -604,7 +598,6 @@ export default function GolfPage() {
         lastTeeTime: c.lastTeeTime,
         enable18HoleBooking: c.holes === 18,
       }))
-      console.log('[Golf Page] Setting courses from API:', transformedCourses)
       setCourses(transformedCourses)
       // Only set selectedCourse if not already set (preserve user selection)
       if (!selectedCourse) {
@@ -745,13 +738,6 @@ export default function GolfPage() {
 
   // Generate flights from schedule config when config or date changes
   useEffect(() => {
-    console.log('[Golf Page] useEffect triggered:', {
-      hasScheduleConfig: !!scheduleConfig,
-      selectedCourse,
-      currentDate: currentDate.toISOString(),
-      apiTeeSheetLength: apiTeeSheet?.length,
-    })
-
     try {
     // Priority: API schedule config > Settings tab config > Default config
     let effectiveConfig: ScheduleConfig
@@ -765,21 +751,7 @@ export default function GolfPage() {
     }
 
     // Generate tee time slots from schedule config
-    console.log('[Golf Page] effectiveConfig:', {
-      firstTee: effectiveConfig.weekdayFirstTee,
-      lastTee: effectiveConfig.weekdayLastTee,
-      timePeriodsCount: effectiveConfig.timePeriods?.length,
-      source: scheduleConfig ? 'API' : 'Settings',
-    })
-
     const previewData = generateTeeTimeSlots(effectiveConfig, currentDate)
-
-    console.log('[Golf Page] Generated slots:', {
-      totalSlots: previewData.teeTimeSlots.length,
-      isClosed: previewData.isClosed,
-      firstSlot: previewData.teeTimeSlots[0]?.time,
-      lastSlot: previewData.teeTimeSlots[previewData.teeTimeSlots.length - 1]?.time,
-    })
 
     // Transform API tee sheet bookings to the format expected by convertSlotsToFlights
     const existingBookings = apiTeeSheet
@@ -860,11 +832,6 @@ export default function GolfPage() {
         }
       })
 
-    console.log('[Golf Page] Existing bookings:', {
-      count: existingBookings?.length || 0,
-      times: existingBookings?.map(b => b.teeTime),
-    })
-
     // Convert to Flight objects with existing bookings from API
     const generatedFlights = convertSlotsToFlights(
       previewData.teeTimeSlots,
@@ -872,13 +839,6 @@ export default function GolfPage() {
       selectedCourse,
       existingBookings,
     )
-
-    console.log('[Golf Page] Generated flights:', {
-      total: generatedFlights.length,
-      withBookings: generatedFlights.filter(f => f.status !== 'AVAILABLE').length,
-      first: generatedFlights[0]?.time,
-      last: generatedFlights[generatedFlights.length - 1]?.time,
-    })
 
     setFlights(generatedFlights)
     } catch (error) {

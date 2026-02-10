@@ -148,11 +148,26 @@ export function AuthProvider({
         try {
           await authApi.refreshSession();
           refreshFailCountRef.current = 0; // Reset on success
-        } catch {
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : '';
+          const isDefinitive = msg.includes('No refresh token') || msg.includes('Session expired');
+
+          if (isDefinitive) {
+            // Token is gone or revoked — logout immediately
+            setState({
+              user: null,
+              isLoading: false,
+              isAuthenticated: false,
+              error: new Error('Session expired'),
+            });
+            onAuthStateChange?.(null);
+            return;
+          }
+
+          // Transient error (timeout, network, HMR) — retry tolerance
           refreshFailCountRef.current += 1;
           console.warn(`[Auth] Refresh failed (${refreshFailCountRef.current}/${MAX_REFRESH_FAILURES})`);
 
-          // Only logout after consecutive failures (tolerates transient timeouts / dev HMR)
           if (refreshFailCountRef.current >= MAX_REFRESH_FAILURES) {
             setState({
               user: null,
@@ -185,11 +200,27 @@ export function AuthProvider({
           // Silently refresh session when returning to tab
           await authApi.refreshSession();
           refreshFailCountRef.current = 0;
-        } catch {
-          // If refresh fails, check if we still have a valid session
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : '';
+          const isDefinitive = msg.includes('No refresh token') || msg.includes('Session expired');
+
+          if (isDefinitive) {
+            setState({
+              user: null,
+              isLoading: false,
+              isAuthenticated: false,
+              error: new Error('Session expired'),
+            });
+            onAuthStateChange?.(null);
+            return;
+          }
+
+          // Transient error — check if session is still valid
           try {
             const user = await authApi.getSession();
-            if (!user) {
+            if (user) {
+              refreshFailCountRef.current = 0;
+            } else {
               refreshFailCountRef.current += 1;
               if (refreshFailCountRef.current >= MAX_REFRESH_FAILURES) {
                 setState({
@@ -200,11 +231,9 @@ export function AuthProvider({
                 });
                 onAuthStateChange?.(null);
               }
-            } else {
-              refreshFailCountRef.current = 0;
             }
           } catch {
-            // Both refresh and getSession failed — likely network/HMR issue, don't logout
+            // Both failed — likely network/HMR issue, don't logout
             console.warn('[Auth] Both refresh and session check failed, will retry');
           }
         }

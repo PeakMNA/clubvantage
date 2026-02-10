@@ -58,34 +58,34 @@ export interface EquipmentTabProps {
 // Mock data is no longer used - equipment is fetched from the API via useEquipment hook
 
 const categoryConfig: Record<EquipmentCategory, { label: string; icon: typeof Package }> = {
-  cart: { label: 'Cart', icon: Car },
-  bike: { label: 'Bike', icon: Bike },
-  sports: { label: 'Sports', icon: Gamepad2 },
-  fitness: { label: 'Fitness', icon: Dumbbell },
-  apparel: { label: 'Apparel', icon: Shirt },
-  other: { label: 'Other', icon: Package },
+  CART: { label: 'Cart', icon: Car },
+  BIKE: { label: 'Bike', icon: Bike },
+  SPORTS: { label: 'Sports', icon: Gamepad2 },
+  FITNESS: { label: 'Fitness', icon: Dumbbell },
+  APPAREL: { label: 'Apparel', icon: Shirt },
+  OTHER: { label: 'Other', icon: Package },
 };
 
 const statusConfig: Record<EquipmentStatus, { label: string; bg: string; text: string; icon: typeof CheckCircle2 }> = {
-  available: {
+  AVAILABLE: {
     label: 'Available',
     bg: 'bg-emerald-100 dark:bg-emerald-500/20',
     text: 'text-emerald-700 dark:text-emerald-400',
     icon: CheckCircle2,
   },
-  in_use: {
+  IN_USE: {
     label: 'In Use',
     bg: 'bg-blue-100 dark:bg-blue-500/20',
     text: 'text-blue-700 dark:text-blue-400',
     icon: UserCircle,
   },
-  reserved: {
+  RESERVED: {
     label: 'Reserved',
     bg: 'bg-amber-100 dark:bg-amber-500/20',
     text: 'text-amber-700 dark:text-amber-400',
     icon: CalendarClock,
   },
-  maintenance: {
+  MAINTENANCE: {
     label: 'Maintenance',
     bg: 'bg-red-100 dark:bg-red-500/20',
     text: 'text-red-700 dark:text-red-400',
@@ -94,10 +94,10 @@ const statusConfig: Record<EquipmentStatus, { label: string; bg: string; text: s
 };
 
 const conditionConfig: Record<Equipment['condition'], { label: string; color: string }> = {
-  excellent: { label: 'Excellent', color: 'text-emerald-600 dark:text-emerald-400' },
-  good: { label: 'Good', color: 'text-blue-600 dark:text-blue-400' },
-  fair: { label: 'Fair', color: 'text-amber-600 dark:text-amber-400' },
-  needs_repair: { label: 'Needs Repair', color: 'text-red-600 dark:text-red-400' },
+  EXCELLENT: { label: 'Excellent', color: 'text-emerald-600 dark:text-emerald-400' },
+  GOOD: { label: 'Good', color: 'text-blue-600 dark:text-blue-400' },
+  FAIR: { label: 'Fair', color: 'text-amber-600 dark:text-amber-400' },
+  NEEDS_REPAIR: { label: 'Needs Repair', color: 'text-red-600 dark:text-red-400' },
 };
 
 function formatCurrency(amount: number): string {
@@ -147,14 +147,14 @@ function EquipmentCard({
   const conditionStyle = conditionConfig[equipment.condition];
 
   const isGrid = viewMode === 'grid';
-  const isAvailable = equipment.status === 'available';
-  const isInUse = equipment.status === 'in_use' || equipment.status === 'reserved';
+  const isAvailable = equipment.status === 'AVAILABLE';
+  const isInUse = equipment.status === 'IN_USE' || equipment.status === 'RESERVED';
 
   return (
     <div
       className={cn(
         'group relative rounded-lg border bg-card transition-all',
-        equipment.status === 'maintenance'
+        equipment.status === 'MAINTENANCE'
           ? 'border-red-200 dark:border-red-500/30'
           : 'border-border hover:border-amber-300 hover:shadow-sm dark:hover:border-amber-500/50',
         isGrid ? 'p-4' : 'p-4'
@@ -165,7 +165,7 @@ function EquipmentCard({
         <div
           className={cn(
             'flex shrink-0 items-center justify-center rounded-lg',
-            equipment.status === 'maintenance'
+            equipment.status === 'MAINTENANCE'
               ? 'bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400'
               : isInUse
                 ? 'bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400'
@@ -243,7 +243,7 @@ function EquipmentCard({
                     className="flex w-full items-center gap-2 px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted"
                   >
                     <Wrench className="h-4 w-4" />
-                    {equipment.status === 'maintenance' ? 'End Maintenance' : 'Set Maintenance'}
+                    {equipment.status === 'MAINTENANCE' ? 'End Maintenance' : 'Set Maintenance'}
                   </button>
                 </div>
               )}
@@ -263,7 +263,7 @@ function EquipmentCard({
           </div>
 
           {/* Maintenance Note */}
-          {equipment.status === 'maintenance' && equipment.maintenanceNote && (
+          {equipment.status === 'MAINTENANCE' && equipment.maintenanceNote && (
             <p className="mb-2 text-xs italic text-red-600 dark:text-red-400">
               {equipment.maintenanceNote}
             </p>
@@ -411,7 +411,7 @@ export function EquipmentTab({
     const item = equipment.find(e => e.id === equipmentId);
     if (!item) return;
 
-    const isMaintenance = item.status === 'maintenance';
+    const isMaintenance = item.status === 'MAINTENANCE';
     await setMaintenance(equipmentId, !isMaintenance);
     refetch();
     onSetMaintenance?.(equipmentId);
@@ -493,20 +493,20 @@ export function EquipmentTab({
 
   const categoryOptions: { value: FilterCategory; label: string }[] = [
     { value: 'all', label: 'All Categories' },
-    { value: 'cart', label: 'Carts' },
-    { value: 'bike', label: 'Bikes' },
-    { value: 'sports', label: 'Sports' },
-    { value: 'fitness', label: 'Fitness' },
-    { value: 'apparel', label: 'Apparel' },
-    { value: 'other', label: 'Other' },
+    { value: 'CART', label: 'Carts' },
+    { value: 'BIKE', label: 'Bikes' },
+    { value: 'SPORTS', label: 'Sports' },
+    { value: 'FITNESS', label: 'Fitness' },
+    { value: 'APPAREL', label: 'Apparel' },
+    { value: 'OTHER', label: 'Other' },
   ];
 
   const statusOptions: { value: FilterStatus; label: string }[] = [
     { value: 'all', label: 'All Status' },
-    { value: 'available', label: 'Available' },
-    { value: 'in_use', label: 'In Use' },
-    { value: 'reserved', label: 'Reserved' },
-    { value: 'maintenance', label: 'Maintenance' },
+    { value: 'AVAILABLE', label: 'Available' },
+    { value: 'IN_USE', label: 'In Use' },
+    { value: 'RESERVED', label: 'Reserved' },
+    { value: 'MAINTENANCE', label: 'Maintenance' },
   ];
 
   // Loading state

@@ -1,6 +1,7 @@
 'use server';
 
 import { cache } from 'react';
+import { after } from 'next/server';
 import { requireAuth, requirePermission } from '@/lib/auth/server-auth';
 import {
   bookingService,
@@ -383,7 +384,7 @@ const getMemberContext = cache(async (memberId: string): Promise<MemberContext> 
       noShowCount: 0,
     };
   } catch (error) {
-    console.error('Failed to fetch member context:', error);
+    after(() => console.error('Failed to fetch member context:', error));
     return { id: memberId, status: 'ACTIVE', membershipType: 'Standard', balance: 0, credits: 0, noShowCount: 0 };
   }
 });
@@ -406,7 +407,7 @@ const getServiceContext = cache(async (serviceId: string): Promise<ServiceContex
       bufferMinutes: service.bufferMinutes || 0,
     };
   } catch (error) {
-    console.error('Failed to fetch service context:', error);
+    after(() => console.error('Failed to fetch service context:', error));
     return undefined;
   }
 });
@@ -443,7 +444,7 @@ const getStaffContext = cache(async (staffId: string): Promise<StaffContext | un
       workingSchedule,
     };
   } catch (error) {
-    console.error('Failed to fetch staff context:', error);
+    after(() => console.error('Failed to fetch staff context:', error));
     return undefined;
   }
 });
@@ -470,7 +471,7 @@ const getFacilityContext = cache(async (facilityId: string): Promise<FacilityCon
       capacity: facility.capacity || 1,
     };
   } catch (error) {
-    console.error('Failed to fetch facility context:', error);
+    after(() => console.error('Failed to fetch facility context:', error));
     return undefined;
   }
 });
@@ -536,7 +537,7 @@ async function fetchExistingBookings(
       facilityId: e.node.facilityId,
     }));
   } catch (error) {
-    console.error('Failed to fetch existing bookings:', error);
+    after(() => console.error('Failed to fetch existing bookings:', error));
     return [];
   }
 }
@@ -581,7 +582,7 @@ export async function validateBooking(
       existingBookings
     );
   } catch (error) {
-    console.error('Validation error:', error);
+    after(() => console.error('Validation error:', error));
     return {
       valid: false,
       errors: ['An error occurred while validating the booking'],
@@ -613,7 +614,7 @@ export async function calculateBookingPrice(
       input.selectedVariationIds || []
     );
   } catch (error) {
-    console.error('Price calculation error:', error);
+    after(() => console.error('Price calculation error:', error));
     return null;
   }
 }
@@ -646,7 +647,7 @@ export async function getAvailableSlots(
       facility?.operatingHours
     );
   } catch (error) {
-    console.error('Availability check error:', error);
+    after(() => console.error('Availability check error:', error));
     return null;
   }
 }
@@ -714,7 +715,7 @@ export async function prepareQuickBooking(
       warnings: validation.warnings,
     };
   } catch (error) {
-    console.error('Quick booking preparation error:', error);
+    after(() => console.error('Quick booking preparation error:', error));
     return {
       valid: false,
       errors: ['An error occurred while preparing the booking'],
@@ -747,7 +748,7 @@ export async function checkPaymentEligibility(
 
     return { allowed: true };
   } catch (error) {
-    console.error('Payment eligibility check error:', error);
+    after(() => console.error('Payment eligibility check error:', error));
     return { allowed: false, reason: 'Unable to verify payment eligibility' };
   }
 }
@@ -817,7 +818,7 @@ export async function searchMembers(
       status: statusMap[e.node.status] || 'active',
     }));
   } catch (error) {
-    console.error('Failed to search members:', error);
+    after(() => console.error('Failed to search members:', error));
     return [];
   }
 }
@@ -854,7 +855,7 @@ export async function getServicesForStaff(
         category: s.category,
       }));
   } catch (error) {
-    console.error('Failed to fetch services for staff:', error);
+    after(() => console.error('Failed to fetch services for staff:', error));
     return [];
   }
 }
@@ -914,7 +915,7 @@ export async function createFacility(
       error: result.createFacility.error || 'Failed to create facility',
     };
   } catch (error) {
-    console.error('Create facility error:', error);
+    after(() => console.error('Create facility error:', error));
     return {
       success: false,
       error: error instanceof Error ? error.message : 'An error occurred while creating the facility',
@@ -959,7 +960,7 @@ export async function updateFacility(
       error: result.updateFacility.error || 'Failed to update facility',
     };
   } catch (error) {
-    console.error('Update facility error:', error);
+    after(() => console.error('Update facility error:', error));
     return {
       success: false,
       error: error instanceof Error ? error.message : 'An error occurred while updating the facility',
@@ -995,7 +996,7 @@ export async function deleteFacility(id: string): Promise<{ success: boolean; me
       error: result.deleteFacility.error || 'Failed to delete facility',
     };
   } catch (error) {
-    console.error('Delete facility error:', error);
+    after(() => console.error('Delete facility error:', error));
     return {
       success: false,
       error: error instanceof Error ? error.message : 'An error occurred while deleting the facility',
@@ -1063,7 +1064,7 @@ export async function createService(
       error: result.createService.error || 'Failed to create service',
     };
   } catch (error) {
-    console.error('Create service error:', error);
+    after(() => console.error('Create service error:', error));
     return {
       success: false,
       error: error instanceof Error ? error.message : 'An error occurred while creating the service',
@@ -1111,7 +1112,7 @@ export async function updateService(
       error: result.updateService.error || 'Failed to update service',
     };
   } catch (error) {
-    console.error('Update service error:', error);
+    after(() => console.error('Update service error:', error));
     return {
       success: false,
       error: error instanceof Error ? error.message : 'An error occurred while updating the service',
@@ -1147,7 +1148,7 @@ export async function deleteService(id: string): Promise<{ success: boolean; mes
       error: result.deleteService.error || 'Failed to delete service',
     };
   } catch (error) {
-    console.error('Delete service error:', error);
+    after(() => console.error('Delete service error:', error));
     return {
       success: false,
       error: error instanceof Error ? error.message : 'An error occurred while deleting the service',
@@ -1213,7 +1214,7 @@ export async function createStaffMember(
       error: result.createStaffMember.error || 'Failed to create staff member',
     };
   } catch (error) {
-    console.error('Create staff member error:', error);
+    after(() => console.error('Create staff member error:', error));
     return {
       success: false,
       error: error instanceof Error ? error.message : 'An error occurred while creating the staff member',
@@ -1260,7 +1261,7 @@ export async function updateStaffMember(
       error: result.updateStaffMember.error || 'Failed to update staff member',
     };
   } catch (error) {
-    console.error('Update staff member error:', error);
+    after(() => console.error('Update staff member error:', error));
     return {
       success: false,
       error: error instanceof Error ? error.message : 'An error occurred while updating the staff member',
@@ -1296,7 +1297,7 @@ export async function deleteStaffMember(id: string): Promise<{ success: boolean;
       error: result.deleteStaffMember.error || 'Failed to delete staff member',
     };
   } catch (error) {
-    console.error('Delete staff member error:', error);
+    after(() => console.error('Delete staff member error:', error));
     return {
       success: false,
       error: error instanceof Error ? error.message : 'An error occurred while deleting the staff member',

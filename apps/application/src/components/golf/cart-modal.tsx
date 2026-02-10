@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { cn } from '@clubvantage/ui'
 import { Loader2, AlertCircle, Trash2 } from 'lucide-react'
 import { Modal } from './modal'
@@ -14,6 +14,27 @@ export interface CartModalProps {
   onDelete?: () => Promise<void>
 }
 
+function getInitialCartForm(cart?: Cart | null) {
+  if (cart) {
+    return {
+      number: cart.number,
+      type: cart.type,
+      status: cart.status,
+      conditionNotes: cart.conditionNotes || '',
+      lastMaintenance: cart.lastMaintenance || '',
+      currentAssignment: cart.currentAssignment,
+    }
+  }
+  return {
+    number: '',
+    type: '2-seater' as Cart['type'],
+    status: 'AVAILABLE' as Cart['status'],
+    conditionNotes: '',
+    lastMaintenance: '',
+    currentAssignment: undefined as string | undefined,
+  }
+}
+
 export function CartModal({
   isOpen,
   onClose,
@@ -23,40 +44,20 @@ export function CartModal({
 }: CartModalProps) {
   const isEditMode = !!cart
 
-  const [formData, setFormData] = useState({
-    number: '',
-    type: '2-seater' as Cart['type'],
-    status: 'AVAILABLE' as Cart['status'],
-    conditionNotes: '',
-    lastMaintenance: '',
-    currentAssignment: undefined as string | undefined,
-  })
+  const formKey = `${isOpen}-${cart?.id ?? 'new'}`
+  const [prevFormKey, setPrevFormKey] = useState(formKey)
+  const [formData, setFormData] = useState(() => getInitialCartForm(cart))
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
-  useEffect(() => {
-    if (cart) {
-      setFormData({
-        number: cart.number,
-        type: cart.type,
-        status: cart.status,
-        conditionNotes: cart.conditionNotes || '',
-        lastMaintenance: cart.lastMaintenance || '',
-        currentAssignment: cart.currentAssignment,
-      })
-    } else {
-      setFormData({
-        number: '',
-        type: '2-seater',
-        status: 'AVAILABLE',
-        conditionNotes: '',
-        lastMaintenance: '',
-        currentAssignment: undefined,
-      })
-    }
-  }, [cart, isOpen])
+  if (formKey !== prevFormKey) {
+    setPrevFormKey(formKey)
+    setFormData(getInitialCartForm(cart))
+    setError(null)
+    setShowDeleteConfirm(false)
+  }
 
   const handleSave = async () => {
     if (!formData.number.trim()) {

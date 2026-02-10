@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import { cn } from '@clubvantage/ui'
 import { Link2, AlertTriangle, Clock, Users, Car } from 'lucide-react'
 import { FlightStatusBadge } from './flight-status-badge'
@@ -14,8 +15,8 @@ interface TeeSheetSideBySideProps {
   onPlayerClick?: (flight: Flight, groupId?: 1 | 2) => void
 }
 
-// Mini slot view for the side-by-side layout
-function MiniFlightSlot({
+// Mini slot view for the side-by-side layout (memoized to avoid re-renders on parent selection changes)
+const MiniFlightSlot = memo(function MiniFlightSlot({
   flight,
   nineHole,
   linkedFlightId,
@@ -128,10 +129,10 @@ function MiniFlightSlot({
       )}
     </div>
   )
-}
+})
 
-// Column header for each nine
-function NineHeader({
+// Column header for each nine (memoized)
+const NineHeader = memo(function NineHeader({
   title,
   subtitle,
   stats,
@@ -156,10 +157,10 @@ function NineHeader({
       </div>
     </div>
   )
-}
+})
 
-// Visual connector line between linked slots
-function LinkedSlotConnector({
+// Visual connector line between linked slots (memoized)
+const LinkedSlotConnector = memo(function LinkedSlotConnector({
   isVisible,
 }: {
   isVisible: boolean
@@ -188,7 +189,7 @@ function LinkedSlotConnector({
       </svg>
     </div>
   )
-}
+})
 
 export function TeeSheetSideBySideView({
   data,

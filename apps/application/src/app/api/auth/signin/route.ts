@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 
 const API_BASE_URL = process.env.API_URL || 'http://localhost:3001'
+
+const SignInSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(1, 'Password is required'),
+})
 
 /**
  * Auth Sign In Route Handler
@@ -8,25 +14,22 @@ const API_BASE_URL = process.env.API_URL || 'http://localhost:3001'
  * Proxies authentication to the backend API and sets cookies on the frontend domain.
  * This solves the cross-origin cookie problem where API (port 3001) and app (port 3000)
  * are different origins and cookies don't transfer between them.
- *
- * Vercel Best Practice: Set cookies from the same origin as the frontend app.
  */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { email, password } = body
 
-    console.log('[Auth Route] Sign in attempt for:', email)
-
-    if (!email || !password) {
+    const parsed = SignInSchema.safeParse(body)
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Email and password are required' },
+        { error: parsed.error.errors[0]?.message || 'Invalid input' },
         { status: 400 }
       )
     }
 
+    const { email, password } = parsed.data
+
     // Forward login request to the backend API
-    console.log('[Auth Route] Forwarding to backend:', `${API_BASE_URL}/api/v1/auth/login`)
     const loginController = new AbortController()
     const loginTimeout = setTimeout(() => loginController.abort(), 10000)
     let loginResponse: Response
@@ -43,11 +46,8 @@ export async function POST(request: NextRequest) {
       clearTimeout(loginTimeout)
     }
 
-    console.log('[Auth Route] Backend response status:', loginResponse.status)
-
     if (!loginResponse.ok) {
       const errorData = await loginResponse.json().catch(() => ({}))
-      console.log('[Auth Route] Backend error:', errorData)
       return NextResponse.json(
         { error: errorData.message || 'Invalid credentials' },
         { status: loginResponse.status }
@@ -55,12 +55,11 @@ export async function POST(request: NextRequest) {
     }
 
     const loginData = await loginResponse.json()
-    console.log('[Auth Route] Backend login successful')
 
     // Handle both wrapped { success, data } and direct response formats
     const data = loginData.data || loginData
 
-    // Create response with cookies set via headers (more compatible approach)
+    // Create response with cookies set via headers
     const response = NextResponse.json({
       success: true,
       data: {
@@ -86,12 +85,11 @@ export async function POST(request: NextRequest) {
       `sb-refresh-token=${data.refreshToken}; Max-Age=${7 * 24 * 60 * 60}; ${cookieOptions}`
     )
 
-    console.log('[Auth Route] Cookies set, returning response')
     return response
   } catch (error) {
     console.error('[Auth Route] Sign in error:', error)
     return NextResponse.json(
-      { error: 'Authentication failed', details: error instanceof Error ? error.message : 'Unknown error' },
+      { error: 'Authentication failed' },
       { status: 500 }
     )
   }

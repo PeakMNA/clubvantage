@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { cn } from '@clubvantage/ui'
 import { Loader2, AlertCircle, Trash2, Star } from 'lucide-react'
 import { Modal } from './modal'
@@ -21,6 +21,27 @@ const SKILL_LEVELS: { id: Caddy['skillLevel']; label: string; stars: number }[] 
   { id: 'expert', label: 'Expert', stars: 4 },
 ]
 
+function getInitialCaddyForm(caddy?: Caddy | null) {
+  if (caddy) {
+    return {
+      name: caddy.name,
+      skillLevel: caddy.skillLevel,
+      status: caddy.status,
+      experience: caddy.experience,
+      currentAssignment: caddy.currentAssignment,
+      notes: caddy.notes || '',
+    }
+  }
+  return {
+    name: '',
+    skillLevel: 'intermediate' as Caddy['skillLevel'],
+    status: 'AVAILABLE' as Caddy['status'],
+    experience: 0,
+    currentAssignment: undefined as string | undefined,
+    notes: '',
+  }
+}
+
 export function CaddyModal({
   isOpen,
   onClose,
@@ -30,40 +51,20 @@ export function CaddyModal({
 }: CaddyModalProps) {
   const isEditMode = !!caddy
 
-  const [formData, setFormData] = useState({
-    name: '',
-    skillLevel: 'intermediate' as Caddy['skillLevel'],
-    status: 'AVAILABLE' as Caddy['status'],
-    experience: 0,
-    currentAssignment: undefined as string | undefined,
-    notes: '',
-  })
+  const formKey = `${isOpen}-${caddy?.id ?? 'new'}`
+  const [prevFormKey, setPrevFormKey] = useState(formKey)
+  const [formData, setFormData] = useState(() => getInitialCaddyForm(caddy))
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
-  useEffect(() => {
-    if (caddy) {
-      setFormData({
-        name: caddy.name,
-        skillLevel: caddy.skillLevel,
-        status: caddy.status,
-        experience: caddy.experience,
-        currentAssignment: caddy.currentAssignment,
-        notes: caddy.notes || '',
-      })
-    } else {
-      setFormData({
-        name: '',
-        skillLevel: 'intermediate',
-        status: 'AVAILABLE',
-        experience: 0,
-        currentAssignment: undefined,
-        notes: '',
-      })
-    }
-  }, [caddy, isOpen])
+  if (formKey !== prevFormKey) {
+    setPrevFormKey(formKey)
+    setFormData(getInitialCaddyForm(caddy))
+    setError(null)
+    setShowDeleteConfirm(false)
+  }
 
   const handleSave = async () => {
     if (!formData.name.trim()) {

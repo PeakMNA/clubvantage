@@ -29,6 +29,10 @@ export interface BarChartProps {
   className?: string
 }
 
+// Hoisted constants to avoid re-creating objects on every render (rerender-memo-with-default-value)
+const CHART_MARGIN = { top: 10, right: 30, left: 10, bottom: 10 }
+const LEGEND_WRAPPER_STYLE = { paddingTop: 16 }
+
 const defaultFormatter = (value: number) =>
   new Intl.NumberFormat('th-TH', {
     style: 'currency',
@@ -72,7 +76,7 @@ export function BarChart({
         <RechartsBarChart
           data={sortedData}
           layout={isHorizontal ? 'vertical' : 'horizontal'}
-          margin={{ top: 10, right: 30, left: 10, bottom: 10 }}
+          margin={CHART_MARGIN}
         >
           <CartesianGrid
             strokeDasharray="3 3"
@@ -103,7 +107,7 @@ export function BarChart({
           {showComparison && (
             <>
               <Legend
-                wrapperStyle={{ paddingTop: 16 }}
+                wrapperStyle={LEGEND_WRAPPER_STYLE}
                 formatter={(value) => (
                   <span className="text-sm text-stone-600">{value}</span>
                 )}

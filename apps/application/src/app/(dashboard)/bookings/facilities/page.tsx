@@ -3,7 +3,7 @@
 import { useMemo } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { FacilitiesTab } from '@/components/bookings'
+import { FacilitiesTab } from '@/components/bookings/tabs'
 import {
   createFacility,
   updateFacility,

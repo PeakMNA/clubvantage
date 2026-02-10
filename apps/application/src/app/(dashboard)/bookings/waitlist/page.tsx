@@ -3,7 +3,7 @@
 import { useMemo } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { WaitlistTab } from '@/components/bookings'
+import { WaitlistTab } from '@/components/bookings/tabs'
 import {
   useGetWaitlistQuery,
   useSendWaitlistOfferMutation,

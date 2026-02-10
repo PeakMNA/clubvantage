@@ -37,16 +37,19 @@ export async function POST(request: NextRequest) {
     }
 
     if (!refreshResponse.ok) {
-      // Clear invalid cookies
       const response = NextResponse.json(
         { error: 'Session expired' },
         { status: 401 }
       )
 
-      const isProduction = process.env.NODE_ENV === 'production'
-      const clearCookieOptions = `HttpOnly; Path=/; SameSite=Lax; Max-Age=0${isProduction ? '; Secure' : ''}`
-      response.headers.append('Set-Cookie', `sb-access-token=; ${clearCookieOptions}`)
-      response.headers.append('Set-Cookie', `sb-refresh-token=; ${clearCookieOptions}`)
+      // Only clear cookies on definitive auth rejection (401/403)
+      // Don't clear on transient errors (500, 502, 503) so retries can work
+      if (refreshResponse.status === 401 || refreshResponse.status === 403) {
+        const isProduction = process.env.NODE_ENV === 'production'
+        const clearCookieOptions = `HttpOnly; Path=/; SameSite=Lax; Max-Age=0${isProduction ? '; Secure' : ''}`
+        response.headers.append('Set-Cookie', `sb-access-token=; ${clearCookieOptions}`)
+        response.headers.append('Set-Cookie', `sb-refresh-token=; ${clearCookieOptions}`)
+      }
 
       return response
     }

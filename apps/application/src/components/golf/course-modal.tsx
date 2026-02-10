@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { cn } from '@clubvantage/ui'
 import { Loader2, AlertCircle, Trash2, Settings2 } from 'lucide-react'
 import { Modal } from './modal'
@@ -16,6 +16,29 @@ export interface CourseModalProps {
 
 const HOLE_OPTIONS: Course['holes'][] = [9, 18, 27, 36]
 
+function getInitialCourseForm(course?: Course | null) {
+  if (course) {
+    return {
+      name: course.name,
+      holes: course.holes,
+      par: course.par,
+      rating: course.rating,
+      slope: course.slope,
+      status: course.status,
+      condition: course.condition || '',
+    }
+  }
+  return {
+    name: '',
+    holes: 18 as Course['holes'],
+    par: 72,
+    rating: 72.0,
+    slope: 113,
+    status: 'ACTIVE' as Course['status'],
+    condition: '',
+  }
+}
+
 export function CourseModal({
   isOpen,
   onClose,
@@ -25,44 +48,21 @@ export function CourseModal({
 }: CourseModalProps) {
   const isEditMode = !!course
 
-  const [formData, setFormData] = useState({
-    name: '',
-    holes: 18 as Course['holes'],
-    par: 72,
-    rating: 72.0,
-    slope: 113,
-    status: 'ACTIVE' as Course['status'],
-    condition: '',
-  })
+  // Derive form data during render instead of useEffect (rerender-derived-state-no-effect)
+  const formKey = `${isOpen}-${course?.id ?? 'new'}`
+  const [prevFormKey, setPrevFormKey] = useState(formKey)
+  const [formData, setFormData] = useState(() => getInitialCourseForm(course))
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
-  // Populate form when editing
-  useEffect(() => {
-    if (course) {
-      setFormData({
-        name: course.name,
-        holes: course.holes,
-        par: course.par,
-        rating: course.rating,
-        slope: course.slope,
-        status: course.status,
-        condition: course.condition || '',
-      })
-    } else {
-      setFormData({
-        name: '',
-        holes: 18,
-        par: 72,
-        rating: 72.0,
-        slope: 113,
-        status: 'ACTIVE',
-        condition: '',
-      })
-    }
-  }, [course, isOpen])
+  if (formKey !== prevFormKey) {
+    setPrevFormKey(formKey)
+    setFormData(getInitialCourseForm(course))
+    setError(null)
+    setShowDeleteConfirm(false)
+  }
 
   const handleSave = async () => {
     if (!formData.name.trim()) {

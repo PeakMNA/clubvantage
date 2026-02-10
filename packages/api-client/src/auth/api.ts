@@ -39,7 +39,7 @@ interface ApiResponse<T> {
 async function fetchSameOrigin<T>(
   endpoint: string,
   options: RequestInit = {},
-  timeoutMs: number = 5000
+  timeoutMs: number = 15000
 ): Promise<T> {
   // Use same-origin routes (no cross-origin cookie issues)
   const url = `/api/auth${endpoint}`;
@@ -102,7 +102,7 @@ async function fetchSameOrigin<T>(
 async function fetchWithCredentials<T>(
   endpoint: string,
   options: RequestInit = {},
-  timeoutMs: number = 5000
+  timeoutMs: number = 15000
 ): Promise<T> {
   const url = `${apiBaseUrl}/api/v1/auth${endpoint}`;
 
@@ -180,7 +180,7 @@ export async function signIn(credentials: LoginCredentials): Promise<SignInRespo
   }>('/signin', {
     method: 'POST',
     body: JSON.stringify(credentials),
-  });
+  }, 30000);
 
   console.log('[Auth API] Sign in successful, cookies set by route handler');
 
