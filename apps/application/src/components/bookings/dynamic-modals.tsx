@@ -16,11 +16,6 @@ function ModalLoadingFallback() {
 }
 
 // Dynamic imports for booking modals - only load when needed
-export const DynamicCreateBookingModal = dynamic(
-  () => import('./create-booking-modal').then((mod) => mod.CreateBookingModal),
-  { loading: () => <ModalLoadingFallback />, ssr: false }
-)
-
 export const DynamicStaffModal = dynamic(
   () => import('./staff-modal').then((mod) => mod.StaffModal),
   { loading: () => <ModalLoadingFallback />, ssr: false }

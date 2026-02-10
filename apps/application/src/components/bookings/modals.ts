@@ -1,6 +1,5 @@
 // Sub-barrel for modal and editor components
 
-export { CreateBookingModal } from './create-booking-modal';
 export {
   FacilityModal,
   type FacilityModalProps,

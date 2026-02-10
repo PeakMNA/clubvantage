@@ -29,7 +29,6 @@ export { BookingStatusBadge, BookingStatusDot } from './booking-status-badge';
 export { BookingsTabsLayout, useBookingsTab } from './bookings-tabs-layout';
 export { BookingsSubheader } from './bookings-subheader';
 export { BookingsPageShell } from './bookings-page-shell';
-export { CreateBookingModal } from './create-booking-modal';
 export {
   BookingBlock,
   BookingBlockPlaceholder,
@@ -68,32 +67,6 @@ export type {
   BookingPayment,
   BookingNote,
 } from './booking-detail-panel';
-export {
-  CreateBookingTypeSelection,
-  StepIndicator,
-  useCreateBookingWizard,
-  type BookingType,
-  type WizardStep,
-  type CreateBookingTypeSelectionProps,
-} from './create-booking-wizard';
-export {
-  BookingPickerStep,
-  type Facility,
-  type Service,
-  type BookingPickerStepProps,
-} from './booking-picker-step';
-export {
-  BookingTimeStep,
-  type BookingTimeStepProps,
-} from './booking-time-step';
-export {
-  BookingAddonsStep,
-  type BookingAddonsStepProps,
-} from './booking-addons-step';
-export {
-  BookingConfirmationStep,
-  type BookingConfirmationStepProps,
-} from './booking-confirmation-step';
 export {
   CheckInInterface,
   type CheckInInterfaceProps,
@@ -247,23 +220,27 @@ export {
   type CalendarGridProps,
   type CalendarGridResource,
   type CalendarGridBooking,
-  // Quick booking popover
-  QuickBookingPopover,
-  QuickBookingPopoverSkeleton,
-  type QuickBookingPopoverProps,
-  type QuickBookingContext,
-  type QuickBookingMember,
-  type QuickBookingService,
-  type QuickBookingResult,
-  // Quick booking hook
-  useQuickBooking,
-  buildQuickBookingContext,
-  buildStaffQuickBookingContext,
-  buildFacilityQuickBookingContext,
-  type UseQuickBookingOptions,
-  type UseQuickBookingReturn,
-  // Empty slot with quick book
-  EmptySlotWithQuickBook,
-  EmptySlotWithQuickBookSkeleton,
-  type EmptySlotWithQuickBookProps,
 } from './calendar';
+
+// Shared booking components
+export {
+  BookingCreationSheet,
+  type BookingCreationSheetProps,
+} from './shared/booking-creation-sheet';
+export {
+  BookingSearchBar,
+  type BookingSearchBarProps,
+} from './shared/booking-search-bar';
+export {
+  StaffSchedule,
+  StaffScheduleSkeleton,
+  type StaffScheduleProps,
+  type SlotStatus,
+  type StaffTimelineSlot,
+} from './shared/staff-schedule';
+export {
+  ServicePosPanel,
+  ServicePosPanelSkeleton,
+  type ServiceCard,
+  type ServicePosPanelProps,
+} from './shared/service-pos-panel';

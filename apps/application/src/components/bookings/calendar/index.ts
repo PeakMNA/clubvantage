@@ -108,31 +108,3 @@ export {
   type UseCalendarKeyboardNavOptions,
   type UseCalendarKeyboardNavReturn,
 } from './use-calendar-keyboard-nav';
-
-// Quick Booking Popover - Inline booking from calendar slots
-export {
-  QuickBookingPopover,
-  QuickBookingPopoverSkeleton,
-  type QuickBookingPopoverProps,
-  type QuickBookingContext,
-  type QuickBookingMember,
-  type QuickBookingService,
-  type QuickBookingResult,
-} from './quick-booking-popover';
-
-// Quick Booking Hook - State management for quick booking
-export {
-  useQuickBooking,
-  buildQuickBookingContext,
-  buildStaffQuickBookingContext,
-  buildFacilityQuickBookingContext,
-  type UseQuickBookingOptions,
-  type UseQuickBookingReturn,
-} from './use-quick-booking';
-
-// Empty Slot with Quick Book - Integrated slot + popover
-export {
-  EmptySlotWithQuickBook,
-  EmptySlotWithQuickBookSkeleton,
-  type EmptySlotWithQuickBookProps,
-} from './empty-slot-with-quick-book';

@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { cn } from '@clubvantage/ui';
-import { Plus, Star } from 'lucide-react';
+import { Plus, Sparkles } from 'lucide-react';
 import { useGetBookingStaffQuery } from '@clubvantage/api-client';
 
 // ============================================================================
@@ -149,7 +149,7 @@ export function StaffSchedule({
     <div className={cn('overflow-auto rounded-lg border border-border bg-card', className)}>
       {/* Hours header */}
       <div className="sticky top-0 z-10 flex border-b border-border bg-card">
-        <div className="w-[180px] shrink-0 border-r border-border px-3 py-2">
+        <div className="w-[220px] shrink-0 border-r border-border px-3 py-2">
           <span className="text-xs font-medium text-muted-foreground">Staff</span>
         </div>
         <div className="flex flex-1">
@@ -177,10 +177,13 @@ export function StaffSchedule({
         return (
           <div
             key={staff.id}
-            className="flex border-b border-border last:border-b-0 hover:bg-muted/30"
+            className={cn(
+              'flex border-b border-border last:border-b-0 hover:bg-muted/30',
+              isSuggested && 'bg-emerald-50/30 dark:bg-emerald-500/5'
+            )}
           >
             {/* Staff info */}
-            <div className="flex w-[180px] shrink-0 items-center gap-2.5 border-r border-border px-3 py-3">
+            <div className="flex w-[220px] shrink-0 items-center gap-2.5 border-r border-border px-3 py-3">
               <div
                 className={cn(
                   'flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white',
@@ -195,13 +198,28 @@ export function StaffSchedule({
                     {staff.firstName} {staff.lastName.charAt(0)}.
                   </span>
                   {isSuggested && (
-                    <Star className="h-3 w-3 shrink-0 fill-amber-400 text-amber-400" />
+                    <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
+                      <Sparkles className="h-2.5 w-2.5" />
+                      Suggested
+                    </span>
                   )}
                 </div>
                 {staff.capabilities && staff.capabilities.length > 0 && (
-                  <p className="truncate text-xs text-muted-foreground">
-                    {staff.capabilities.slice(0, 2).join(', ')}
-                  </p>
+                  <div className="mt-0.5 flex flex-wrap gap-1">
+                    {staff.capabilities.slice(0, 2).map((cap) => (
+                      <span
+                        key={cap}
+                        className="rounded bg-stone-100 px-1.5 py-0.5 text-[10px] text-stone-600 dark:bg-stone-800 dark:text-stone-400"
+                      >
+                        {cap}
+                      </span>
+                    ))}
+                    {staff.capabilities.length > 2 && (
+                      <span className="text-[10px] text-muted-foreground">
+                        +{staff.capabilities.length - 2}
+                      </span>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
@@ -236,7 +254,7 @@ export function StaffSchedule({
                   return (
                     <div
                       key={slot.hour}
-                      className="flex w-[80px] shrink-0 flex-col items-center justify-center border-r border-border bg-amber-50 last:border-r-0 dark:bg-amber-500/10"
+                      className="flex w-[80px] shrink-0 flex-col items-center justify-center border-r border-border bg-amber-100 last:border-r-0 dark:bg-amber-500/10"
                     >
                       <span className="truncate text-[10px] font-medium text-amber-700 dark:text-amber-300">
                         {slot.bookingLabel}
@@ -256,7 +274,7 @@ export function StaffSchedule({
                     key={slot.hour}
                     className="flex w-[80px] shrink-0 items-center justify-center border-r border-border bg-stone-100 last:border-r-0 dark:bg-stone-800"
                   >
-                    <span className="text-[10px] text-stone-400">-</span>
+                    <span className="text-[10px] text-stone-400">&mdash;</span>
                   </div>
                 );
               })}
@@ -287,7 +305,7 @@ export function StaffScheduleSkeleton({
     <div className={cn('overflow-hidden rounded-lg border border-border bg-card', className)}>
       {/* Header */}
       <div className="flex border-b border-border">
-        <div className="w-[180px] shrink-0 border-r border-border px-3 py-2">
+        <div className="w-[220px] shrink-0 border-r border-border px-3 py-2">
           <div className="h-3 w-10 animate-pulse rounded bg-muted" />
         </div>
         <div className="flex flex-1">
@@ -305,11 +323,15 @@ export function StaffScheduleSkeleton({
       {/* Rows */}
       {Array.from({ length: staffCount }).map((_, i) => (
         <div key={i} className="flex border-b border-border last:border-b-0">
-          <div className="flex w-[180px] shrink-0 items-center gap-2.5 border-r border-border px-3 py-3">
+          <div className="flex w-[220px] shrink-0 items-center gap-2.5 border-r border-border px-3 py-3">
             <div className="h-9 w-9 shrink-0 animate-pulse rounded-full bg-muted" />
             <div className="space-y-1.5">
               <div className="h-3.5 w-20 animate-pulse rounded bg-muted" />
               <div className="h-2.5 w-16 animate-pulse rounded bg-muted" />
+              <div className="flex gap-1">
+                <div className="h-3 w-10 animate-pulse rounded bg-muted/60" />
+                <div className="h-3 w-12 animate-pulse rounded bg-muted/60" />
+              </div>
             </div>
           </div>
           <div className="flex flex-1">

@@ -6,7 +6,6 @@ import { PageHeader, Button } from '@clubvantage/ui';
 import {
   useGetCalendarDayQuery,
   useGetBookingQuery,
-  useGetFacilitiesQuery,
   useCheckInBookingMutation,
   useCancelBookingMutation,
   queryKeys,
@@ -21,7 +20,6 @@ import {
   CalendarDayView,
   CalendarDayViewSkeleton,
   BookingDetailPanel,
-  CreateBookingModal,
   BookingEmptyState,
   BookingErrorState,
   EquipmentTab,
@@ -47,15 +45,15 @@ function formatDateForApi(date: Date): string {
 // Helper to map API status to component status
 function mapStatus(status: string): BookingStatus {
   const statusMap: Record<string, BookingStatus> = {
-    PENDING: 'confirmed',
-    CONFIRMED: 'confirmed',
-    CHECKED_IN: 'checked_in',
-    IN_PROGRESS: 'in_progress',
-    COMPLETED: 'completed',
-    CANCELLED: 'cancelled',
-    NO_SHOW: 'no_show',
+    PENDING: 'CONFIRMED',
+    CONFIRMED: 'CONFIRMED',
+    CHECKED_IN: 'CHECKED_IN',
+    IN_PROGRESS: 'IN_PROGRESS',
+    COMPLETED: 'COMPLETED',
+    CANCELLED: 'CANCELLED',
+    NO_SHOW: 'NO_SHOW',
   };
-  return statusMap[status] || 'confirmed';
+  return statusMap[status] || 'CONFIRMED';
 }
 
 // Helper to map resource type
@@ -75,7 +73,7 @@ function mapResourceType(type: string): 'court' | 'spa' | 'studio' | 'pool' | 'r
 // ============================================================================
 
 function FacilityPageContent() {
-  const { openWizard } = useBooking();
+  const { openBookingSheet } = useBooking();
   const queryClient = useQueryClient();
 
   const [activeTab, setActiveTab] = useState<BookingsTab>('calendar');
@@ -249,10 +247,10 @@ function FacilityPageContent() {
   }, []);
 
   const handleSlotClick = useCallback(
-    (_resourceId: string, _time: Date) => {
-      openWizard(true);
+    (resourceId: string, time: Date) => {
+      openBookingSheet({ facilityId: resourceId, date: time });
     },
-    [openWizard]
+    [openBookingSheet]
   );
 
   const handleCloseDetail = useCallback(() => {
@@ -273,7 +271,7 @@ function FacilityPageContent() {
   }, [selectedBookingId, cancelMutation]);
 
   const handleNewBooking = () => {
-    openWizard(true);
+    openBookingSheet({});
   };
 
   // Render tab content
@@ -419,8 +417,6 @@ function FacilityPageContent() {
         onEdit={() => console.log('Edit')}
       />
 
-      {/* Create Booking Modal */}
-      <CreateBookingModal />
     </div>
   );
 }
