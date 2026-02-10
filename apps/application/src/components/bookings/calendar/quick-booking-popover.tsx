@@ -6,10 +6,11 @@ import { Button } from '@clubvantage/ui/primitives/button';
 import { Input } from '@clubvantage/ui/primitives/input';
 import { Label } from '@clubvantage/ui/primitives/label';
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@clubvantage/ui/primitives/popover';
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetDescription,
+} from '@clubvantage/ui/primitives/sheet';
 import {
   Select,
   SelectContent,
@@ -93,12 +94,6 @@ export interface QuickBookingPopoverProps {
   onCheckAvailability?: (serviceId: string, duration: number) => Promise<string[]>;
   /** Whether booking is being submitted */
   isSubmitting?: boolean;
-  /** Trigger element (typically EmptySlot) */
-  children: React.ReactNode;
-  /** Side of the popover */
-  side?: 'top' | 'right' | 'bottom' | 'left';
-  /** Alignment of the popover */
-  align?: 'start' | 'center' | 'end';
 }
 
 // ============================================================================
@@ -166,9 +161,6 @@ export function QuickBookingPopover({
   onSearchMembers,
   onCheckAvailability,
   isSubmitting = false,
-  children,
-  side = 'right',
-  align = 'start',
 }: QuickBookingPopoverProps) {
   // State
   const [memberQuery, setMemberQuery] = useState('');
@@ -268,30 +260,18 @@ export function QuickBookingPopover({
   }, [onClose]);
 
   return (
-    <Popover open={open} onOpenChange={handleOpenChange}>
-      <PopoverTrigger asChild>{children}</PopoverTrigger>
-      <PopoverContent
-        side={side}
-        align={align}
-        sideOffset={8}
-        className="w-80 p-0"
-      >
+    <Sheet open={open} onOpenChange={handleOpenChange}>
+      <SheetContent side="right" className="w-80 p-0 sm:max-w-sm">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-stone-200 px-4 py-3 dark:border-stone-700">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-amber-500" />
-            <h3 className="font-semibold text-stone-900 dark:text-stone-50">
-              Quick Book
-            </h3>
-          </div>
-          <button
-            type="button"
-            onClick={() => handleOpenChange(false)}
-            className="rounded-md p-1 text-stone-400 hover:bg-stone-100 hover:text-stone-600 dark:hover:bg-stone-800"
-          >
-            <X className="h-4 w-4" />
-          </button>
+        <div className="flex items-center gap-2 border-b border-stone-200 px-4 py-3 dark:border-stone-700">
+          <Sparkles className="h-4 w-4 text-amber-500" />
+          <SheetTitle className="text-base font-semibold text-stone-900 dark:text-stone-50">
+            Quick Book
+          </SheetTitle>
         </div>
+        <SheetDescription className="sr-only">
+          Book a facility slot quickly
+        </SheetDescription>
 
         {/* Context Banner */}
         <div className="bg-amber-50/50 px-4 py-2 dark:bg-amber-500/10">
@@ -517,8 +497,8 @@ export function QuickBookingPopover({
             )}
           </Button>
         </div>
-      </PopoverContent>
-    </Popover>
+      </SheetContent>
+    </Sheet>
   );
 }
 

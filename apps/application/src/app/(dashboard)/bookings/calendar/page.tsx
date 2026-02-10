@@ -582,6 +582,7 @@ export default function BookingsCalendarPage() {
             onBookingClick={handleBookingClick}
             onSlotClick={handleSlotClick}
             enableDragDrop={!rescheduleBookingId}
+            className="max-h-[calc(100vh-220px)]"
             onBookingReschedule={(bookingId, newResourceId, newStartTime) => {
               rescheduleMutation.mutate(
                 { input: { id: bookingId, newStartTime, newResourceId } },
@@ -642,11 +643,7 @@ export default function BookingsCalendarPage() {
             return []
           }}
           isSubmitting={createBookingMutation.isPending}
-          side="right"
-          align="start"
-        >
-          <div className="fixed -left-[9999px] top-0 h-0 w-0" aria-hidden="true" />
-        </QuickBookingPopover>
+        />
       )}
     </>
   )
