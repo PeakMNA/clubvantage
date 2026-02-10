@@ -39,7 +39,9 @@ export function AuthProvider({
   const lastActivityRef = useRef<number>(Date.now());
   const warningShownRef = useRef<boolean>(false);
   const refreshFailCountRef = useRef<number>(0);
+  const sessionEstablishedAtRef = useRef<number>(0); // Track when session was established
   const MAX_REFRESH_FAILURES = 3; // Only logout after 3 consecutive failures
+  const SESSION_GRACE_PERIOD_MS = 10_000; // Skip refresh for 10s after session established
 
   // Configure API base URL
   useEffect(() => {
@@ -86,6 +88,9 @@ export function AuthProvider({
     const initAuth = async () => {
       try {
         const user = await authApi.checkSession();
+        if (user) {
+          sessionEstablishedAtRef.current = Date.now();
+        }
         setState({
           user,
           isLoading: false,
@@ -145,6 +150,13 @@ export function AuthProvider({
       // Refresh session if there's been recent activity
       // Only refresh if activity happened in the last 20 minutes
       if (timeSinceLastActivity < 20 * 60 * 1000) {
+        // Skip refresh during grace period after session was just established
+        // (cookies may not be fully persisted yet after login/page reload)
+        const timeSinceEstablished = now - sessionEstablishedAtRef.current;
+        if (timeSinceEstablished < SESSION_GRACE_PERIOD_MS) {
+          return;
+        }
+
         try {
           await authApi.refreshSession();
           refreshFailCountRef.current = 0; // Reset on success
@@ -153,7 +165,19 @@ export function AuthProvider({
           const isDefinitive = msg.includes('No refresh token') || msg.includes('Session expired');
 
           if (isDefinitive) {
-            // Token is gone or revoked — logout immediately
+            // Before logging out, verify the session is actually gone
+            // (refresh can fail due to cookie timing while session is still valid)
+            try {
+              const user = await authApi.getSession();
+              if (user) {
+                // Session is still valid — treat as transient refresh failure
+                refreshFailCountRef.current = 0;
+                return;
+              }
+            } catch {
+              // getSession also failed — session is truly gone
+            }
+
             setState({
               user: null,
               isLoading: false,
@@ -184,10 +208,13 @@ export function AuthProvider({
     // Check activity and refresh every minute
     const activityCheckInterval = setInterval(checkActivityAndRefresh, ACTIVITY_CHECK_INTERVAL_MS);
 
-    // Also do an initial refresh
-    checkActivityAndRefresh();
+    // Delay the initial refresh to let cookies settle after login/page reload
+    const initialRefreshTimeout = setTimeout(checkActivityAndRefresh, SESSION_GRACE_PERIOD_MS);
 
-    return () => clearInterval(activityCheckInterval);
+    return () => {
+      clearInterval(activityCheckInterval);
+      clearTimeout(initialRefreshTimeout);
+    };
   }, [state.isAuthenticated, onAuthStateChange, onSessionWarning, onSessionTimeout]);
 
   // Refresh session when tab becomes visible again
@@ -196,6 +223,11 @@ export function AuthProvider({
 
     const handleVisibilityChange = async () => {
       if (document.visibilityState === 'visible') {
+        // Skip if session was just established (cookie timing)
+        if (Date.now() - sessionEstablishedAtRef.current < SESSION_GRACE_PERIOD_MS) {
+          return;
+        }
+
         try {
           // Silently refresh session when returning to tab
           await authApi.refreshSession();
@@ -203,6 +235,17 @@ export function AuthProvider({
         } catch (err) {
           const msg = err instanceof Error ? err.message : '';
           const isDefinitive = msg.includes('No refresh token') || msg.includes('Session expired');
+
+          // Always verify with getSession before logging out
+          try {
+            const user = await authApi.getSession();
+            if (user) {
+              refreshFailCountRef.current = 0;
+              return; // Session still valid, don't logout
+            }
+          } catch {
+            // getSession also failed
+          }
 
           if (isDefinitive) {
             setState({
@@ -215,26 +258,18 @@ export function AuthProvider({
             return;
           }
 
-          // Transient error — check if session is still valid
-          try {
-            const user = await authApi.getSession();
-            if (user) {
-              refreshFailCountRef.current = 0;
-            } else {
-              refreshFailCountRef.current += 1;
-              if (refreshFailCountRef.current >= MAX_REFRESH_FAILURES) {
-                setState({
-                  user: null,
-                  isLoading: false,
-                  isAuthenticated: false,
-                  error: new Error('Session expired'),
-                });
-                onAuthStateChange?.(null);
-              }
-            }
-          } catch {
-            // Both failed — likely network/HMR issue, don't logout
-            console.warn('[Auth] Both refresh and session check failed, will retry');
+          // Transient error
+          refreshFailCountRef.current += 1;
+          if (refreshFailCountRef.current >= MAX_REFRESH_FAILURES) {
+            setState({
+              user: null,
+              isLoading: false,
+              isAuthenticated: false,
+              error: new Error('Session expired'),
+            });
+            onAuthStateChange?.(null);
+          } else {
+            console.warn('[Auth] Refresh failed, will retry');
           }
         }
       }
@@ -252,6 +287,7 @@ export function AuthProvider({
         const response = await authApi.signIn(credentials);
         const user = response.user;
 
+        sessionEstablishedAtRef.current = Date.now();
         setState({
           user,
           isLoading: false,
