@@ -22,7 +22,7 @@ export {
 } from './booking-status-utils';
 
 // Provider
-export { BookingProvider, useBooking } from './booking-provider';
+export { BookingProvider, useBooking, type BookingSheetPrefill } from './booking-provider';
 
 // Components
 export { BookingStatusBadge, BookingStatusDot } from './booking-status-badge';

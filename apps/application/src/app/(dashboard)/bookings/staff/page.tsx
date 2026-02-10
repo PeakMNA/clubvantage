@@ -1,138 +1,37 @@
 'use client'
 
-import { useMemo } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
-import { toast } from 'sonner'
-import { StaffTab } from '@/components/bookings/tabs'
-import {
-  createStaffMember,
-  updateStaffMember,
-  deleteStaffMember,
-} from '../actions'
-import { useGetBookingStaffQuery } from '@clubvantage/api-client'
-import type { CreateStaffMemberInput, UpdateStaffMemberInput } from '@clubvantage/api-client'
-
+/**
+ * Staff Tab — staff schedule view for booking.
+ * See all staff with their day schedule, click open slot to book.
+ * Flow: Pick staff + time → pick service → pick facility → confirm.
+ * TODO: Wire staff schedule, service picker, booking creation sheet.
+ */
 export default function BookingsStaffPage() {
-  const queryClient = useQueryClient()
-
-  const { data, isLoading } = useGetBookingStaffQuery()
-
-  const staff = useMemo(() => {
-    if (!data?.bookingStaff) return undefined
-
-    const roleMap: Record<string, 'therapist' | 'trainer' | 'instructor' | 'coach'> = {
-      THERAPIST: 'therapist',
-      TRAINER: 'trainer',
-      INSTRUCTOR: 'instructor',
-      COACH: 'coach',
-    }
-
-    return data.bookingStaff.map((s) => ({
-      id: s.id,
-      name: `${s.firstName} ${s.lastName}`,
-      photoUrl: s.photoUrl ?? undefined,
-      role: roleMap[s.role?.toUpperCase() ?? ''] || 'therapist',
-      status: s.isActive ? ('available' as const) : ('off_duty' as const),
-      specialties: s.capabilities ?? [],
-      services: [] as string[],
-      schedule: {
-        startTime: '9:00 AM',
-        endTime: '6:00 PM',
-        bookingsToday: 0,
-        hoursBooked: 0,
-        hoursAvailable: 8,
-      },
-    }))
-  }, [data])
-
   return (
-    <div className="p-4 sm:p-6">
-      <StaffTab
-        staff={staff}
-        isLoading={isLoading}
-        onViewSchedule={(id) => console.log('View staff schedule:', id)}
-        onSetAvailability={(id) => console.log('Set availability:', id)}
-        onCreateStaff={async (data) => {
-          const input: CreateStaffMemberInput = {
-            firstName: data.firstName,
-            lastName: data.lastName,
-            email: data.email || undefined,
-            phone: data.phone || undefined,
-            avatarUrl: data.avatarUrl || undefined,
-            userId: data.userId || undefined,
-            defaultFacilityId: data.defaultFacilityId || undefined,
-            isActive: data.isActive,
-            capabilities: data.capabilities.length > 0 ? data.capabilities.map((c) => ({
-              capability: c.capability,
-              level: c.level,
-            })) : undefined,
-            certifications: data.certifications.length > 0 ? data.certifications.map((c) => ({
-              name: c.name,
-              expiresAt: c.expiresAt,
-            })) : undefined,
-            workingHours: data.workingHours.map((h) => ({
-              dayOfWeek: h.dayOfWeek,
-              isOpen: h.isOpen,
-              openTime: h.openTime || undefined,
-              closeTime: h.closeTime || undefined,
-            })),
-          }
-          const result = await createStaffMember(input)
-          if (result.success) {
-            toast.success('Staff member created successfully')
-            queryClient.invalidateQueries({ queryKey: ['GetBookingStaff'] })
-          } else {
-            toast.error(result.error || 'Failed to create staff member')
-            throw new Error(result.error)
-          }
-        }}
-        onUpdateStaff={async (data) => {
-          if (!data.id) return
-          const input: UpdateStaffMemberInput = {
-            id: data.id,
-            firstName: data.firstName || undefined,
-            lastName: data.lastName || undefined,
-            email: data.email || undefined,
-            phone: data.phone || undefined,
-            avatarUrl: data.avatarUrl || undefined,
-            userId: data.userId || undefined,
-            defaultFacilityId: data.defaultFacilityId || undefined,
-            isActive: data.isActive,
-            capabilities: data.capabilities.length > 0 ? data.capabilities.map((c) => ({
-              capability: c.capability,
-              level: c.level,
-            })) : undefined,
-            certifications: data.certifications.length > 0 ? data.certifications.map((c) => ({
-              name: c.name,
-              expiresAt: c.expiresAt,
-            })) : undefined,
-            workingHours: data.workingHours.map((h) => ({
-              dayOfWeek: h.dayOfWeek,
-              isOpen: h.isOpen,
-              openTime: h.openTime || undefined,
-              closeTime: h.closeTime || undefined,
-            })),
-          }
-          const result = await updateStaffMember(input)
-          if (result.success) {
-            toast.success('Staff member updated successfully')
-            queryClient.invalidateQueries({ queryKey: ['GetBookingStaff'] })
-          } else {
-            toast.error(result.error || 'Failed to update staff member')
-            throw new Error(result.error)
-          }
-        }}
-        onDeleteStaff={async (id) => {
-          const result = await deleteStaffMember(id)
-          if (result.success) {
-            toast.success('Staff member deleted successfully')
-            queryClient.invalidateQueries({ queryKey: ['GetBookingStaff'] })
-          } else {
-            toast.error(result.error || 'Failed to delete staff member')
-            throw new Error(result.error)
-          }
-        }}
-      />
+    <div className="flex h-full flex-col gap-4 p-4 sm:p-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-foreground">Staff Schedule</h2>
+        <p className="text-sm text-muted-foreground">Staff schedule with booking — coming next</p>
+      </div>
+      <div className="space-y-3">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div
+            key={i}
+            className="flex animate-pulse items-start gap-4 rounded-lg border border-border bg-card p-4"
+          >
+            <div className="h-12 w-12 shrink-0 rounded-full bg-muted" />
+            <div className="flex-1 space-y-2">
+              <div className="h-4 w-32 rounded bg-muted" />
+              <div className="h-3 w-24 rounded bg-muted" />
+              <div className="mt-2 flex gap-1">
+                {Array.from({ length: 8 }).map((_, j) => (
+                  <div key={j} className="h-8 w-16 rounded bg-muted/50" />
+                ))}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

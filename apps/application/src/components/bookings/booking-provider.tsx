@@ -88,6 +88,32 @@ interface BookingDetailState {
   booking: CalendarBooking | null;
 }
 
+// ============================================================================
+// BOOKING CREATION SHEET (new tab-based flow)
+// ============================================================================
+
+export interface BookingSheetPrefill {
+  facilityId?: string;
+  facilityName?: string;
+  serviceId?: string;
+  serviceName?: string;
+  staffId?: string;
+  staffName?: string;
+  date?: Date;
+  startTime?: string;
+  endTime?: string;
+}
+
+interface BookingSheetState {
+  isOpen: boolean;
+  prefilled: BookingSheetPrefill;
+}
+
+const initialSheetState: BookingSheetState = {
+  isOpen: false,
+  prefilled: {},
+};
+
 interface BookingContextValue {
   // Active tab
   activeTab: string;
@@ -99,7 +125,12 @@ interface BookingContextValue {
   viewMode: 'day' | 'week';
   setViewMode: (mode: 'day' | 'week') => void;
 
-  // Booking wizard
+  // Booking creation sheet (new flow)
+  bookingSheet: BookingSheetState;
+  openBookingSheet: (prefilled: BookingSheetPrefill) => void;
+  closeBookingSheet: () => void;
+
+  // Booking wizard (deprecated — kept for backward compatibility during migration)
   wizard: BookingWizardState;
   openWizard: (isStaffFlow?: boolean) => void;
   closeWizard: () => void;
@@ -221,6 +252,9 @@ export function BookingProvider({ children, defaultTab = 'calendar' }: BookingPr
   // Wizard state
   const [wizard, setWizard] = useState<BookingWizardState>(initialWizardState);
 
+  // Booking creation sheet state (new flow)
+  const [bookingSheet, setBookingSheet] = useState<BookingSheetState>(initialSheetState);
+
   // Detail panel state
   const [detail, setDetail] = useState<BookingDetailState>(initialDetailState);
 
@@ -332,6 +366,18 @@ export function BookingProvider({ children, defaultTab = 'calendar' }: BookingPr
   }, []);
 
   // ============================================================================
+  // BOOKING SHEET ACTIONS (new flow)
+  // ============================================================================
+
+  const openBookingSheet = useCallback((prefilled: BookingSheetPrefill) => {
+    setBookingSheet({ isOpen: true, prefilled });
+  }, []);
+
+  const closeBookingSheet = useCallback(() => {
+    setBookingSheet(initialSheetState);
+  }, []);
+
+  // ============================================================================
   // DETAIL PANEL ACTIONS
   // ============================================================================
 
@@ -371,6 +417,9 @@ export function BookingProvider({ children, defaultTab = 'calendar' }: BookingPr
       setSelectedDate,
       viewMode,
       setViewMode,
+      bookingSheet,
+      openBookingSheet,
+      closeBookingSheet,
       wizard,
       openWizard,
       closeWizard,
@@ -399,6 +448,9 @@ export function BookingProvider({ children, defaultTab = 'calendar' }: BookingPr
       activeTab,
       selectedDate,
       viewMode,
+      bookingSheet,
+      openBookingSheet,
+      closeBookingSheet,
       wizard,
       openWizard,
       closeWizard,
