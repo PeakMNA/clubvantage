@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react'
 import { Button } from '@clubvantage/ui'
 import {
   useGetCalendarDayQuery,
@@ -21,6 +22,8 @@ import {
   useBooking,
   CalendarDayView,
   CalendarDayViewSkeleton,
+  WeekViewGrid,
+  WeekViewGridSkeleton,
   BookingDetailPanel,
   BookingEmptyState,
   BookingErrorState,
@@ -28,6 +31,7 @@ import {
   type QuickBookingContext,
   type QuickBookingResult,
   type QuickBookingService,
+  type WeekViewBooking,
 } from '@/components/bookings'
 import type { CalendarResource, CalendarBooking } from '@/components/bookings'
 import type { BookingStatus } from '@/components/bookings'
@@ -35,7 +39,18 @@ import type { BookingStatus } from '@/components/bookings'
 import {
   searchMembers,
   prepareQuickBooking,
+  getAvailableSlots,
 } from '../actions'
+
+// Helper to get the Monday of the week containing the given date
+function getWeekStartDate(date: Date): Date {
+  const d = new Date(date)
+  const day = d.getDay() // 0=Sun, 1=Mon, ...
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1)
+  d.setDate(diff)
+  d.setHours(0, 0, 0, 0)
+  return d
+}
 
 // Helper to format date for API
 function formatDateForApi(date: Date): string {
@@ -78,9 +93,11 @@ export default function BookingsCalendarPage() {
     openWizard,
   } = useBooking()
 
+  const router = useRouter()
   const queryClient = useQueryClient()
   const [detailPanelOpen, setDetailPanelOpen] = useState(false)
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null)
+  const [rescheduleBookingId, setRescheduleBookingId] = useState<string | null>(null)
 
   // Quick booking state (declared early so `enabled` flag can reference it)
   const [quickBookContext, setQuickBookContext] = useState<QuickBookingContext | null>(null)
@@ -218,10 +235,33 @@ export default function BookingsCalendarPage() {
     }))
   }, [])
 
-  // Subscribe to real-time updates
+  // Subscribe to real-time updates — invalidate calendar cache on any booking event
+  const invalidateCalendar = useCallback(() => {
+    queryClient.invalidateQueries({
+      queryKey: queryKeys.bookings.calendarDay({ date: formatDateForApi(selectedDate) }),
+    })
+  }, [queryClient, selectedDate])
+
   useBookingSubscription({
     date: selectedDate,
+    onBookingCreated: invalidateCalendar,
+    onBookingUpdated: invalidateCalendar,
+    onBookingCancelled: invalidateCalendar,
+    onBookingRescheduled: invalidateCalendar,
   })
+
+  // Escape key exits reschedule mode
+  useEffect(() => {
+    if (!rescheduleBookingId) return
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setRescheduleBookingId(null)
+        toast.dismiss()
+      }
+    }
+    window.addEventListener('keydown', handleEscape)
+    return () => window.removeEventListener('keydown', handleEscape)
+  }, [rescheduleBookingId])
 
   // Transform API data to component format
   const resources: CalendarResource[] = useMemo(() => {
@@ -249,6 +289,21 @@ export default function BookingsCalendarPage() {
       bufferAfter: b.bufferAfter,
     }))
   }, [calendarData])
+
+  // Transform bookings for week view (shows current day's data on the week grid)
+  const weekViewBookings: WeekViewBooking[] = useMemo(() => {
+    if (!calendarData?.calendarDay?.bookings) return []
+    const dateStr = formatDateForApi(selectedDate)
+    return calendarData.calendarDay.bookings.map((b) => ({
+      id: b.id,
+      resourceId: b.resourceId,
+      date: dateStr,
+      status: mapStatus(b.status),
+      count: 1,
+    }))
+  }, [calendarData, selectedDate])
+
+  const weekStartDate = useMemo(() => getWeekStartDate(selectedDate), [selectedDate])
 
   // Convert API booking to detail panel format
   const bookingDetail = useMemo(() => {
@@ -335,6 +390,31 @@ export default function BookingsCalendarPage() {
   }, [])
 
   const handleSlotClick = useCallback((resourceId: string, time: Date) => {
+    // Reschedule mode: move the booking to this slot
+    if (rescheduleBookingId) {
+      rescheduleMutation.mutate(
+        {
+          input: {
+            id: rescheduleBookingId,
+            newStartTime: time.toISOString(),
+            newResourceId: resourceId,
+          },
+        },
+        {
+          onSuccess: () => {
+            toast.success('Booking rescheduled successfully')
+            setRescheduleBookingId(null)
+          },
+          onError: () => {
+            toast.error('Failed to reschedule booking')
+            setRescheduleBookingId(null)
+          },
+        }
+      )
+      return
+    }
+
+    // Normal mode: open quick booking
     const resource = resources.find((r) => r.id === resourceId)
     const timeStr = `${time.getHours().toString().padStart(2, '0')}:${time.getMinutes().toString().padStart(2, '0')}`
 
@@ -346,7 +426,7 @@ export default function BookingsCalendarPage() {
       resourceType: 'facility',
     })
     setIsQuickBookOpen(true)
-  }, [resources])
+  }, [resources, rescheduleBookingId, rescheduleMutation])
 
   const handleCloseDetail = useCallback(() => {
     setDetailPanelOpen(false)
@@ -374,6 +454,34 @@ export default function BookingsCalendarPage() {
       toast.error('Failed to cancel booking')
     }
   }, [selectedBookingId, cancelMutation])
+
+  // Modify handler: enter reschedule mode
+  const handleModify = useCallback(() => {
+    if (!selectedBookingId) return
+    setRescheduleBookingId(selectedBookingId)
+    setDetailPanelOpen(false)
+    setSelectedBookingId(null)
+    toast.info('Click a time slot on the calendar to reschedule this booking. Press Escape to cancel.', {
+      duration: 8000,
+    })
+  }, [selectedBookingId])
+
+  // Edit handler: open wizard with pre-filled data
+  const handleEdit = useCallback(() => {
+    setDetailPanelOpen(false)
+    openWizard(true)
+  }, [openWizard])
+
+  // Member history handler: navigate to members page with search
+  const handleViewMemberHistory = useCallback((memberNumber: string) => {
+    router.push(`/members?search=${encodeURIComponent(memberNumber)}`)
+  }, [router])
+
+  // Week view: click a day cell to switch to day view for that date
+  const handleWeekDayClick = useCallback((_resourceId: string, date: Date) => {
+    setSelectedDate(date)
+    setViewMode('day')
+  }, [setSelectedDate, setViewMode])
 
   return (
     <>
@@ -417,6 +525,26 @@ export default function BookingsCalendarPage() {
           </div>
         </div>
 
+        {/* Reschedule Mode Banner */}
+        {rescheduleBookingId && (
+          <div className="flex items-center justify-between rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 dark:border-amber-500/30 dark:bg-amber-500/10">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+              <span className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                Reschedule mode — click a time slot to move this booking
+              </span>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setRescheduleBookingId(null)}
+              className="text-amber-700 hover:text-amber-900 dark:text-amber-300"
+            >
+              Cancel
+            </Button>
+          </div>
+        )}
+
         {/* Calendar View */}
         {calendarError ? (
           <BookingErrorState
@@ -426,12 +554,24 @@ export default function BookingsCalendarPage() {
             onRetry={() => queryClient.invalidateQueries({ queryKey: ['GetCalendarDay'] })}
           />
         ) : isCalendarLoading ? (
-          <CalendarDayViewSkeleton resourceCount={6} />
+          viewMode === 'week' ? (
+            <WeekViewGridSkeleton resourceCount={6} />
+          ) : (
+            <CalendarDayViewSkeleton resourceCount={6} />
+          )
         ) : resources.length === 0 ? (
           <BookingEmptyState
             variant="no-data"
             title="No resources configured"
             description="No resources are configured for this facility."
+          />
+        ) : viewMode === 'week' ? (
+          <WeekViewGrid
+            startDate={weekStartDate}
+            resources={resources}
+            bookings={weekViewBookings}
+            selectedDate={selectedDate}
+            onDayClick={handleWeekDayClick}
           />
         ) : (
           <CalendarDayView
@@ -441,6 +581,20 @@ export default function BookingsCalendarPage() {
             operatingHours={{ start: '06:00', end: '22:00' }}
             onBookingClick={handleBookingClick}
             onSlotClick={handleSlotClick}
+            enableDragDrop={!rescheduleBookingId}
+            onBookingReschedule={(bookingId, newResourceId, newStartTime) => {
+              rescheduleMutation.mutate(
+                { input: { id: bookingId, newStartTime, newResourceId } },
+                {
+                  onSuccess: () => {
+                    toast.success('Booking rescheduled successfully');
+                  },
+                  onError: () => {
+                    toast.error('Could not reschedule this booking');
+                  },
+                }
+              );
+            }}
           />
         )}
       </div>
@@ -452,8 +606,9 @@ export default function BookingsCalendarPage() {
         booking={bookingDetail}
         onCheckIn={handleCheckIn}
         onCancel={handleCancel}
-        onModify={() => console.log('Modify')}
-        onEdit={() => console.log('Edit')}
+        onModify={handleModify}
+        onEdit={handleEdit}
+        onViewMemberHistory={handleViewMemberHistory}
       />
 
       {/* Quick Booking Popover */}
@@ -466,6 +621,26 @@ export default function BookingsCalendarPage() {
           onOpenFullWizard={handleOpenFullWizard}
           onClose={() => setIsQuickBookOpen(false)}
           onSearchMembers={handleMemberSearch}
+          onCheckAvailability={async (_serviceId, duration) => {
+            const availability = await getAvailableSlots({
+              clubId: 'current',
+              date: quickBookContext.date,
+              staffId: quickBookContext.staffId,
+              facilityId: quickBookContext.facilityId,
+              durationMinutes: duration,
+            })
+            if (!availability) return ['Could not check availability']
+            const selectedTime = quickBookContext.time
+            const slot = availability.slots?.find((s) => s.time === selectedTime)
+            if (!slot) return []
+            if (slot.status === 'unavailable') {
+              return [slot.unavailableReason || 'This time slot is not available']
+            }
+            if (slot.status === 'limited') {
+              return ['Limited availability — some resources may be occupied']
+            }
+            return []
+          }}
           isSubmitting={createBookingMutation.isPending}
           side="right"
           align="start"

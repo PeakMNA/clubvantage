@@ -89,6 +89,8 @@ export interface QuickBookingPopoverProps {
   open: boolean;
   /** Member search function */
   onSearchMembers?: (query: string) => Promise<QuickBookingMember[]>;
+  /** Check availability for the selected time/service — returns conflict warnings if any */
+  onCheckAvailability?: (serviceId: string, duration: number) => Promise<string[]>;
   /** Whether booking is being submitted */
   isSubmitting?: boolean;
   /** Trigger element (typically EmptySlot) */
@@ -162,6 +164,7 @@ export function QuickBookingPopover({
   onClose,
   open,
   onSearchMembers,
+  onCheckAvailability,
   isSubmitting = false,
   children,
   side = 'right',
@@ -174,6 +177,8 @@ export function QuickBookingPopover({
   const [searchResults, setSearchResults] = useState<QuickBookingMember[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
+  const [availabilityWarnings, setAvailabilityWarnings] = useState<string[]>([]);
+  const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
 
   // Derived state
   const selectedService = useMemo(
@@ -258,6 +263,7 @@ export function QuickBookingPopover({
       setMemberQuery('');
       setSearchResults([]);
       setShowSearchResults(false);
+      setAvailabilityWarnings([]);
     }
   }, [onClose]);
 
@@ -417,7 +423,17 @@ export function QuickBookingPopover({
             <Label htmlFor="service-select" className="text-xs font-medium">
               Service
             </Label>
-            <Select value={selectedServiceId} onValueChange={setSelectedServiceId}>
+            <Select value={selectedServiceId} onValueChange={(serviceId) => {
+              setSelectedServiceId(serviceId);
+              setAvailabilityWarnings([]);
+              const service = services.find((s) => s.id === serviceId);
+              if (service && onCheckAvailability) {
+                setIsCheckingAvailability(true);
+                onCheckAvailability(serviceId, service.duration)
+                  .then((warnings) => setAvailabilityWarnings(warnings))
+                  .finally(() => setIsCheckingAvailability(false));
+              }
+            }}>
               <SelectTrigger id="service-select" className="h-9 text-sm">
                 <SelectValue placeholder="Select a service..." />
               </SelectTrigger>
@@ -435,6 +451,23 @@ export function QuickBookingPopover({
               </SelectContent>
             </Select>
           </div>
+
+          {/* Availability Check */}
+          {isCheckingAvailability && (
+            <div className="flex items-center gap-2 text-xs text-stone-500">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              Checking availability...
+            </div>
+          )}
+          {availabilityWarnings.length > 0 && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-2.5 dark:border-amber-700/50 dark:bg-amber-500/10">
+              {availabilityWarnings.map((warning, i) => (
+                <p key={i} className="text-xs text-amber-700 dark:text-amber-400">
+                  {warning}
+                </p>
+              ))}
+            </div>
+          )}
 
           {/* Price Summary */}
           {selectedService && (

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { cn } from '@clubvantage/ui';
 import {
   Building2,
@@ -36,6 +36,10 @@ export interface CalendarDayViewProps {
   operatingHours: { start: string; end: string };
   onSlotClick?: (resourceId: string, time: Date) => void;
   onBookingClick?: (bookingId: string) => void;
+  /** Callback when a booking is rescheduled via drag-and-drop */
+  onBookingReschedule?: (bookingId: string, newResourceId: string, newStartTime: string) => void;
+  /** Enable drag-and-drop rescheduling */
+  enableDragDrop?: boolean;
   className?: string;
 }
 
@@ -105,10 +109,14 @@ export function CalendarDayView({
   operatingHours,
   onSlotClick,
   onBookingClick,
+  onBookingReschedule,
+  enableDragDrop = false,
   className,
 }: CalendarDayViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [draggedBookingId, setDraggedBookingId] = useState<string | null>(null);
+  const [dropTarget, setDropTarget] = useState<{ resourceId: string; slotIndex: number } | null>(null);
 
   // Update current time every minute
   useEffect(() => {
@@ -154,6 +162,38 @@ export function CalendarDayView({
     slotTime.setHours(Math.floor(totalMinutes / 60), totalMinutes % 60, 0, 0);
     onSlotClick(resourceId, slotTime);
   };
+
+  // Drag-and-drop handlers
+  const handleDragStart = useCallback((bookingId: string) => {
+    setDraggedBookingId(bookingId);
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent, resourceId: string, slotIndex: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDropTarget({ resourceId, slotIndex });
+  }, []);
+
+  const handleDragLeave = useCallback(() => {
+    setDropTarget(null);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent, resourceId: string, slotIndex: number) => {
+    e.preventDefault();
+    setDropTarget(null);
+    if (!draggedBookingId || !onBookingReschedule) return;
+
+    const totalMinutes = operatingStartMinutes + slotIndex * 15;
+    const newTime = new Date(date);
+    newTime.setHours(Math.floor(totalMinutes / 60), totalMinutes % 60, 0, 0);
+    onBookingReschedule(draggedBookingId, resourceId, newTime.toISOString());
+    setDraggedBookingId(null);
+  }, [draggedBookingId, onBookingReschedule, operatingStartMinutes, date]);
+
+  const handleDragEnd = useCallback(() => {
+    setDraggedBookingId(null);
+    setDropTarget(null);
+  }, []);
 
   return (
     <div
@@ -220,19 +260,26 @@ export function CalendarDayView({
             </div>
 
             {/* Resource cells */}
-            {resources.map((resource) => (
-              <button
-                key={resource.id}
-                type="button"
-                onClick={() => handleSlotClick(resource.id, slotIndex)}
-                className={cn(
-                  'relative border-b border-r border-border last:border-r-0 transition-colors',
-                  'hover:bg-amber-50/50 dark:hover:bg-amber-500/5',
-                  'focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-500'
-                )}
-                aria-label={`Book ${resource.name} at ${timeLabel}`}
-              />
-            ))}
+            {resources.map((resource) => {
+              const isDropHere = dropTarget?.resourceId === resource.id && dropTarget?.slotIndex === slotIndex;
+              return (
+                <button
+                  key={resource.id}
+                  type="button"
+                  onClick={() => handleSlotClick(resource.id, slotIndex)}
+                  onDragOver={enableDragDrop ? (e) => handleDragOver(e, resource.id, slotIndex) : undefined}
+                  onDragLeave={enableDragDrop ? handleDragLeave : undefined}
+                  onDrop={enableDragDrop ? (e) => handleDrop(e, resource.id, slotIndex) : undefined}
+                  className={cn(
+                    'relative border-b border-r border-border last:border-r-0 transition-colors',
+                    'hover:bg-amber-50/50 dark:hover:bg-amber-500/5',
+                    'focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber-500',
+                    isDropHere && 'bg-amber-100/60 dark:bg-amber-500/20 ring-2 ring-inset ring-amber-400'
+                  )}
+                  aria-label={`Book ${resource.name} at ${timeLabel}`}
+                />
+              );
+            })}
           </div>
         ))}
 
@@ -255,16 +302,26 @@ export function CalendarDayView({
                 ((startMinutes - operatingStartMinutes) / 15) * SLOT_HEIGHT;
               const leftOffset = resourceIndex * RESOURCE_MIN_WIDTH;
 
+              const isDragging = draggedBookingId === booking.id;
+              const canDrag = enableDragDrop && booking.status !== 'CANCELLED' && booking.status !== 'COMPLETED';
+
               return (
                 <div
                   key={booking.id}
-                  className="pointer-events-auto absolute px-1"
+                  className={cn('pointer-events-auto absolute px-1', isDragging && 'opacity-50')}
                   style={{
                     top: topOffset,
                     left: leftOffset,
                     width: RESOURCE_MIN_WIDTH,
                     height: slotCount * SLOT_HEIGHT,
                   }}
+                  draggable={canDrag}
+                  onDragStart={canDrag ? (e) => {
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('text/plain', booking.id);
+                    handleDragStart(booking.id);
+                  } : undefined}
+                  onDragEnd={canDrag ? handleDragEnd : undefined}
                 >
                   <BookingBlock
                     id={booking.id}
@@ -275,6 +332,7 @@ export function CalendarDayView({
                     status={booking.status}
                     staffName={booking.staffName}
                     slotHeight={slotCount}
+                    isDragging={isDragging}
                     onClick={() => onBookingClick?.(booking.id)}
                   />
                 </div>
