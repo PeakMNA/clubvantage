@@ -19,21 +19,52 @@
 | **Self-Serve** | Staff creates campaigns with AI assistance. AI suggests content, staff approves and schedules. | Included in subscription |
 | **Managed** | AI operates autonomously — generates campaigns, publishes on schedule, optimizes. Staff get weekly digest and override controls. | Premium add-on (~$200-500/mo) |
 
-### Module Structure
+### Hybrid Architecture — Two Frontends, One API
+
+**Frontend 1: Self-Serve Module** (inside staff dashboard)
+Club staff use this daily alongside billing, bookings, golf.
 
 ```
-apps/
-  marketing/              → Vantage's own website (keep as-is)
-  application/            → Staff dashboard
-    /marketing/           → NEW: AI Marketing Engine module
-      /campaigns          → Campaign builder + calendar
-      /audiences          → Smart segments from member data
-      /content            → AI content studio (email, social, web)
-      /channels           → Channel config (email, social, LINE, web)
-      /analytics          → Performance dashboards
-      /referrals          → Referral program management + tracking
-      /settings           → Brand voice, approval workflows, tier config
+apps/application/                → Existing staff dashboard
+  src/app/(dashboard)/marketing/ → NEW: Self-serve marketing module
+    /campaigns                   → Campaign builder + calendar
+    /audiences                   → Smart segments from member data
+    /content                     → AI content studio (email, social, web)
+    /channels                    → Channel config (email, social, LINE, web)
+    /analytics                   → Performance dashboards
+    /referrals                   → Referral program management + tracking
+    /settings                    → Brand voice, approval workflows, tier config
 ```
+
+**Frontend 2: Managed-Tier Operations Panel** (separate app)
+Vantage's marketing team operates across ALL clubs from a single dashboard.
+
+```
+apps/marketing-ops/              → NEW: Managed-tier operations app
+  src/app/(dashboard)/
+    /clubs                       → Club portfolio overview (all managed clients)
+    /clubs/[clubId]/campaigns    → Campaign management for specific club
+    /clubs/[clubId]/analytics    → Per-club performance
+    /clubs/[clubId]/content      → Content review + approval queue
+    /queue                       → Cross-club content approval queue
+    /templates                   → Shared campaign/flow templates across clubs
+    /performance                 → Portfolio-wide analytics + revenue tracking
+    /settings                    → Team management, SLA config
+```
+
+**Shared Backend:**
+
+```
+apps/api/src/modules/marketing/  → Single API module serves both frontends
+apps/api/src/graphql/marketing/  → GraphQL types, resolvers, inputs
+```
+
+**Why hybrid:**
+- Club staff get marketing tools where they already work (no new login)
+- Vantage's managed-tier team gets a multi-tenant view across all clients
+- External agencies could get scoped access to the ops panel per-club
+- One API module, two presentation layers — no logic duplication
+- `marketing-ops` can ship later (Phase 4) since managed tier is last
 
 ### Channels
 
@@ -729,7 +760,7 @@ Content generation uses Claude (already a dependency via `@anthropic-ai/sdk` in 
 
 **Why third:** Social/LINE require OAuth app review. Email + flows prove the engine works first.
 
-### Phase 4 — Landing Pages + Managed Tier (6-8 weeks)
+### Phase 4 — Landing Pages + Managed Tier Ops Panel (8-10 weeks)
 
 **Ships:**
 - Landing page builder with AI-generated content
@@ -738,10 +769,16 @@ Content generation uses Claude (already a dependency via `@anthropic-ai/sdk` in 
 - Autonomous weekly cycle
 - Weekly performance digest
 - Optimization loop
+- **`apps/marketing-ops/`** — New separate app for Vantage's managed-tier team:
+  - Multi-club portfolio dashboard
+  - Cross-club content approval queue
+  - Shared campaign/flow templates
+  - Portfolio-wide analytics + revenue tracking
+  - Per-club scoped access for external agencies
 
-**Why last:** Managed tier needs all channels working. This is the premium monetization layer.
+**Why last:** Managed tier needs all channels working. The ops panel is a separate app but reuses the same API module built in Phases 1-3. This is the premium monetization layer.
 
-**Total timeline: ~30-36 weeks across 4 phases.**
+**Total timeline: ~32-38 weeks across 4 phases.**
 
 ---
 
