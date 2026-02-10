@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { cn } from '@clubvantage/ui'
-import { Loader2, AlertCircle, Package, User, Clock, ArrowRight, AlertTriangle } from 'lucide-react'
-import * as LucideIcons from 'lucide-react'
+import { Loader2, AlertCircle, User, Clock, ArrowRight, AlertTriangle } from 'lucide-react'
+import { getEquipmentIcon } from './equipment-icon-map'
 import { Modal } from '../golf/modal'
 import {
   useReturnEquipmentMutation,
@@ -89,11 +89,8 @@ export function EquipmentReturnModal({
 
   const isSubmitting = returnMutation.isPending
 
-  // Get the icon component dynamically
-  const getIconComponent = (iconName: string): LucideIcons.LucideIcon => {
-    const icons = LucideIcons as unknown as Record<string, LucideIcons.LucideIcon>
-    return icons[iconName] || LucideIcons.Package
-  }
+  // Get the icon component from static map (avoids importing all 400+ lucide icons)
+  const getIconComponent = getEquipmentIcon
 
   // Format date for display
   const formatDateTime = (dateString: string) => {

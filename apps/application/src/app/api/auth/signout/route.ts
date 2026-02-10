@@ -12,8 +12,10 @@ export async function POST(request: NextRequest) {
     // Get access token from cookies in the request
     const accessToken = request.cookies.get('sb-access-token')?.value
 
-    // Try to notify backend (but don't fail if it errors)
+    // Try to notify backend (but don't fail if it errors, 5s timeout)
     if (accessToken) {
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 5000)
       try {
         await fetch(`${API_BASE_URL}/api/v1/auth/logout`, {
           method: 'POST',
@@ -21,9 +23,12 @@ export async function POST(request: NextRequest) {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${accessToken}`,
           },
+          signal: controller.signal,
         })
       } catch {
         // Ignore backend signout errors
+      } finally {
+        clearTimeout(timeout)
       }
     }
 

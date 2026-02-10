@@ -32,14 +32,14 @@ function getRequiredSecret(envVar: string, defaultValue: string): string {
 export default registerAs('auth', () => ({
   jwt: {
     secret: getRequiredSecret('JWT_SECRET', 'dev-only-jwt-secret-not-for-production'),
-    expiresIn: process.env.JWT_EXPIRES_IN || '15m',
+    expiresIn: process.env.JWT_EXPIRES_IN || '60m',
   },
   refresh: {
     secret: getRequiredSecret(
       'JWT_REFRESH_SECRET',
       'dev-only-refresh-secret-not-for-production',
     ),
-    expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d',
+    expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
   },
   bcryptRounds: parseInt(process.env.BCRYPT_ROUNDS || '12', 10),
   lockoutThreshold: parseInt(process.env.LOCKOUT_THRESHOLD || '5', 10),

@@ -27,13 +27,21 @@ export async function POST(request: NextRequest) {
 
     // Forward login request to the backend API
     console.log('[Auth Route] Forwarding to backend:', `${API_BASE_URL}/api/v1/auth/login`)
-    const loginResponse = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, password }),
-    })
+    const loginController = new AbortController()
+    const loginTimeout = setTimeout(() => loginController.abort(), 10000)
+    let loginResponse: Response
+    try {
+      loginResponse = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+        signal: loginController.signal,
+      })
+    } finally {
+      clearTimeout(loginTimeout)
+    }
 
     console.log('[Auth Route] Backend response status:', loginResponse.status)
 
@@ -66,16 +74,16 @@ export async function POST(request: NextRequest) {
     const isProduction = process.env.NODE_ENV === 'production'
     const cookieOptions = `HttpOnly; Path=/; SameSite=Lax${isProduction ? '; Secure' : ''}`
 
-    // Set access token cookie (7 days expiry)
+    // Set access token cookie (1 hour - matches JWT expiry)
     response.headers.append(
       'Set-Cookie',
-      `sb-access-token=${data.accessToken}; Max-Age=${7 * 24 * 60 * 60}; ${cookieOptions}`
+      `sb-access-token=${data.accessToken}; Max-Age=${60 * 60}; ${cookieOptions}`
     )
 
-    // Set refresh token cookie (30 days expiry)
+    // Set refresh token cookie (7 days - matches refresh token expiry)
     response.headers.append(
       'Set-Cookie',
-      `sb-refresh-token=${data.refreshToken}; Max-Age=${30 * 24 * 60 * 60}; ${cookieOptions}`
+      `sb-refresh-token=${data.refreshToken}; Max-Age=${7 * 24 * 60 * 60}; ${cookieOptions}`
     )
 
     console.log('[Auth Route] Cookies set, returning response')

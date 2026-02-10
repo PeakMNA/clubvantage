@@ -19,14 +19,22 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Forward request to the backend API
-    const meResponse = await fetch(`${API_BASE_URL}/api/v1/auth/me`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${accessToken}`,
-      },
-    })
+    // Forward request to the backend API (10s timeout)
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 10000)
+    let meResponse: Response
+    try {
+      meResponse = await fetch(`${API_BASE_URL}/api/v1/auth/me`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        signal: controller.signal,
+      })
+    } finally {
+      clearTimeout(timeout)
+    }
 
     if (!meResponse.ok) {
       if (meResponse.status === 401) {

@@ -1,12 +1,17 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { Plus } from 'lucide-react'
 import { PageHeader, Button } from '@clubvantage/ui'
 import {
   BookingProvider,
   useBooking,
-  CreateBookingModal,
 } from '@/components/bookings'
+
+const CreateBookingModal = dynamic(
+  () => import('@/components/bookings/create-booking-modal').then(m => m.CreateBookingModal),
+  { ssr: false }
+)
 
 function BookingsLayoutContent({ children }: { children: React.ReactNode }) {
   const { openWizard } = useBooking()

@@ -19,14 +19,22 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Forward refresh request to the backend API
-    const refreshResponse = await fetch(`${API_BASE_URL}/api/v1/auth/refresh`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ refreshToken }),
-    })
+    // Forward refresh request to the backend API (10s timeout)
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 10000)
+    let refreshResponse: Response
+    try {
+      refreshResponse = await fetch(`${API_BASE_URL}/api/v1/auth/refresh`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refreshToken }),
+        signal: controller.signal,
+      })
+    } finally {
+      clearTimeout(timeout)
+    }
 
     if (!refreshResponse.ok) {
       // Clear invalid cookies
@@ -61,13 +69,13 @@ export async function POST(request: NextRequest) {
 
     response.headers.append(
       'Set-Cookie',
-      `sb-access-token=${data.accessToken}; Max-Age=${7 * 24 * 60 * 60}; ${cookieOptions}`
+      `sb-access-token=${data.accessToken}; Max-Age=${60 * 60}; ${cookieOptions}`
     )
 
     if (data.refreshToken) {
       response.headers.append(
         'Set-Cookie',
-        `sb-refresh-token=${data.refreshToken}; Max-Age=${30 * 24 * 60 * 60}; ${cookieOptions}`
+        `sb-refresh-token=${data.refreshToken}; Max-Age=${7 * 24 * 60 * 60}; ${cookieOptions}`
       )
     }
 

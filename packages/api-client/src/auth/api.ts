@@ -224,7 +224,7 @@ export async function refreshSession(): Promise<RefreshResponse> {
     expiresAt: number;
   }>('/refresh', {
     method: 'POST',
-  }, 3000);
+  }, 15000);
 
   return {
     expiresIn: response.expiresIn,

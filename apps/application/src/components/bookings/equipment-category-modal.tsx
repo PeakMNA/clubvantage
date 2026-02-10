@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { cn } from '@clubvantage/ui'
 import { Loader2, AlertCircle, Trash2, Check } from 'lucide-react'
-import * as LucideIcons from 'lucide-react'
+import { getEquipmentIcon } from './equipment-icon-map'
 import { Modal } from '../golf/modal'
 import type { EquipmentCategory } from '@/hooks/use-equipment'
 import {
@@ -199,11 +199,8 @@ export function EquipmentCategoryModal({
     deleteMutation.mutate({ id: category.id })
   }
 
-  // Get the icon component dynamically
-  const getIconComponent = (iconName: string): LucideIcons.LucideIcon => {
-    const icons = LucideIcons as unknown as Record<string, LucideIcons.LucideIcon>
-    return icons[iconName] || LucideIcons.Package
-  }
+  // Get the icon component from static map (avoids importing all 400+ lucide icons)
+  const getIconComponent = getEquipmentIcon
 
   const SelectedIcon = getIconComponent(formData.icon)
 

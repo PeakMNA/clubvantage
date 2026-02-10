@@ -7,9 +7,9 @@ import * as authApi from './api';
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 // Inactivity timeout configuration
-const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
+const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes (must be less than JWT expiry of 60m)
 const ACTIVITY_CHECK_INTERVAL_MS = 60 * 1000; // Check every 1 minute
-const WARNING_BEFORE_LOGOUT_MS = 2 * 60 * 1000; // Show warning 2 minutes before logout
+const WARNING_BEFORE_LOGOUT_MS = 5 * 60 * 1000; // Show warning 5 minutes before logout
 
 export interface AuthProviderProps {
   children: React.ReactNode;
@@ -38,6 +38,8 @@ export function AuthProvider({
   const [state, setState] = useState<AuthState>(initialState);
   const lastActivityRef = useRef<number>(Date.now());
   const warningShownRef = useRef<boolean>(false);
+  const refreshFailCountRef = useRef<number>(0);
+  const MAX_REFRESH_FAILURES = 3; // Only logout after 3 consecutive failures
 
   // Configure API base URL
   useEffect(() => {
@@ -141,19 +143,25 @@ export function AuthProvider({
       }
 
       // Refresh session if there's been recent activity
-      // Only refresh if activity happened in the last 10 minutes
-      if (timeSinceLastActivity < 10 * 60 * 1000) {
+      // Only refresh if activity happened in the last 20 minutes
+      if (timeSinceLastActivity < 20 * 60 * 1000) {
         try {
           await authApi.refreshSession();
+          refreshFailCountRef.current = 0; // Reset on success
         } catch {
-          // If refresh fails, session is invalid
-          setState({
-            user: null,
-            isLoading: false,
-            isAuthenticated: false,
-            error: new Error('Session expired'),
-          });
-          onAuthStateChange?.(null);
+          refreshFailCountRef.current += 1;
+          console.warn(`[Auth] Refresh failed (${refreshFailCountRef.current}/${MAX_REFRESH_FAILURES})`);
+
+          // Only logout after consecutive failures (tolerates transient timeouts / dev HMR)
+          if (refreshFailCountRef.current >= MAX_REFRESH_FAILURES) {
+            setState({
+              user: null,
+              isLoading: false,
+              isAuthenticated: false,
+              error: new Error('Session expired'),
+            });
+            onAuthStateChange?.(null);
+          }
         }
       }
     };
@@ -176,17 +184,28 @@ export function AuthProvider({
         try {
           // Silently refresh session when returning to tab
           await authApi.refreshSession();
+          refreshFailCountRef.current = 0;
         } catch {
           // If refresh fails, check if we still have a valid session
-          const user = await authApi.getSession();
-          if (!user) {
-            setState({
-              user: null,
-              isLoading: false,
-              isAuthenticated: false,
-              error: new Error('Session expired'),
-            });
-            onAuthStateChange?.(null);
+          try {
+            const user = await authApi.getSession();
+            if (!user) {
+              refreshFailCountRef.current += 1;
+              if (refreshFailCountRef.current >= MAX_REFRESH_FAILURES) {
+                setState({
+                  user: null,
+                  isLoading: false,
+                  isAuthenticated: false,
+                  error: new Error('Session expired'),
+                });
+                onAuthStateChange?.(null);
+              }
+            } else {
+              refreshFailCountRef.current = 0;
+            }
+          } catch {
+            // Both refresh and getSession failed — likely network/HMR issue, don't logout
+            console.warn('[Auth] Both refresh and session check failed, will retry');
           }
         }
       }

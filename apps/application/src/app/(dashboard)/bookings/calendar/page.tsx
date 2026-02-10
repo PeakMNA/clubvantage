@@ -6,7 +6,6 @@ import { Button } from '@clubvantage/ui'
 import {
   useGetCalendarDayQuery,
   useGetBookingQuery,
-  useGetFacilitiesQuery,
   useGetServicesQuery,
   useCheckInBookingMutation,
   useCancelBookingMutation,
@@ -83,6 +82,10 @@ export default function BookingsCalendarPage() {
   const [detailPanelOpen, setDetailPanelOpen] = useState(false)
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null)
 
+  // Quick booking state (declared early so `enabled` flag can reference it)
+  const [quickBookContext, setQuickBookContext] = useState<QuickBookingContext | null>(null)
+  const [isQuickBookOpen, setIsQuickBookOpen] = useState(false)
+
   // Fetch calendar data from API
   const {
     data: calendarData,
@@ -99,11 +102,11 @@ export default function BookingsCalendarPage() {
     { enabled: !!selectedBookingId }
   )
 
-  // Fetch facilities for resource mapping
-  const { data: facilitiesData } = useGetFacilitiesQuery()
-
-  // Fetch services for quick booking
-  const { data: servicesData } = useGetServicesQuery()
+  // Fetch services for quick booking (deferred until quick booking is opened)
+  const { data: servicesData } = useGetServicesQuery(
+    undefined,
+    { enabled: isQuickBookOpen }
+  )
 
   // Derive quick booking services from real data
   const quickBookingServices: QuickBookingService[] = useMemo(() => {
@@ -150,10 +153,6 @@ export default function BookingsCalendarPage() {
       })
     },
   })
-
-  // Quick booking state
-  const [quickBookContext, setQuickBookContext] = useState<QuickBookingContext | null>(null)
-  const [isQuickBookOpen, setIsQuickBookOpen] = useState(false)
 
   // Quick booking handlers
   const handleQuickBookSubmit = useCallback(async (result: QuickBookingResult) => {
