@@ -50,9 +50,11 @@ const actionColors: Record<ActivityEntry['action'], string> = {
 
 interface ActivityTabProps {
   userIdFilter?: string
+  entries?: ActivityEntry[]
+  isLoading?: boolean
 }
 
-export function ActivityTab({ userIdFilter }: ActivityTabProps) {
+export function ActivityTab({ userIdFilter, entries: externalEntries, isLoading: externalIsLoading }: ActivityTabProps) {
   const [timeRange, setTimeRange] = useState('7d')
   const [actionFilter, setActionFilter] = useState<string>('all')
   const [userFilter, setUserFilter] = useState<string>(userIdFilter || 'all')
@@ -60,8 +62,10 @@ export function ActivityTab({ userIdFilter }: ActivityTabProps) {
   const [isRealtime, setIsRealtime] = useState(false)
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
 
+  const allEntries = externalEntries ?? mockActivityEntries
+
   const filteredEntries = useMemo(() => {
-    return mockActivityEntries.filter((entry) => {
+    return allEntries.filter((entry) => {
       // Time range filter
       const now = new Date()
       let cutoff = subDays(now, 7)
@@ -77,7 +81,7 @@ export function ActivityTab({ userIdFilter }: ActivityTabProps) {
 
       return true
     })
-  }, [timeRange, actionFilter, userFilter])
+  }, [allEntries, timeRange, actionFilter, userFilter])
 
   const toggleRow = (id: string) => {
     const newExpanded = new Set(expandedRows)
@@ -92,6 +96,31 @@ export function ActivityTab({ userIdFilter }: ActivityTabProps) {
   const handleExport = () => {
     // Mock export
     console.log('Exporting activity log...')
+  }
+
+  if (externalIsLoading) {
+    return (
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="h-10 w-36 bg-muted animate-pulse rounded-md" />
+            <div className="h-10 w-36 bg-muted animate-pulse rounded-md" />
+            <div className="h-10 w-44 bg-muted animate-pulse rounded-md" />
+          </div>
+        </div>
+        <div className="border rounded-lg">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="flex items-center gap-4 px-4 py-3 border-b last:border-b-0">
+              <div className="h-4 w-24 bg-muted animate-pulse rounded" />
+              <div className="h-4 w-32 bg-muted animate-pulse rounded" />
+              <div className="h-4 w-16 bg-muted animate-pulse rounded" />
+              <div className="h-4 w-40 bg-muted animate-pulse rounded" />
+              <div className="h-4 w-24 bg-muted animate-pulse rounded" />
+            </div>
+          ))}
+        </div>
+      </div>
+    )
   }
 
   return (

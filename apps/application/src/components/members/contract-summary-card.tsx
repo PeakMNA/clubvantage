@@ -16,12 +16,12 @@ export interface ContractSummaryCardProps {
   className?: string;
 }
 
-const contractStatusMap: Record<ContractStatus, 'active' | 'suspended' | 'cancelled' | 'expired'> = {
+const contractStatusMap = {
   ACTIVE: 'active',
   SUSPENDED: 'suspended',
   CANCELLED: 'cancelled',
   EXPIRED: 'expired',
-};
+} as const;
 
 function formatDate(dateString: string): string {
   const date = new Date(dateString);

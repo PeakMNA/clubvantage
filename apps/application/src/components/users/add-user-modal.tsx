@@ -18,7 +18,7 @@ import { mockRoles } from './mock-data'
 interface AddUserModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSubmit: (data: AddUserFormData) => void
+  onSubmit: (data: AddUserFormData) => void | Promise<void>
 }
 
 export interface AddUserFormData {
@@ -83,24 +83,26 @@ export function AddUserModal({ open, onOpenChange, onSubmit }: AddUserModalProps
   const handleSubmit = async () => {
     if (!validate()) return
     setIsSubmitting(true)
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    onSubmit(formData)
-    setIsSubmitting(false)
-    onOpenChange(false)
-    // Reset form
-    setFormData({
-      name: '',
-      email: '',
-      phone: '',
-      username: '',
-      password: '',
-      autoGeneratePassword: true,
-      requirePasswordChange: true,
-      roles: [],
-      sendWelcomeEmail: true,
-      isActive: true,
-    })
+    try {
+      await onSubmit(formData)
+      onOpenChange(false)
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        username: '',
+        password: '',
+        autoGeneratePassword: true,
+        requirePasswordChange: true,
+        roles: [],
+        sendWelcomeEmail: true,
+        isActive: true,
+      })
+    } catch {
+      // Error is handled by the parent via toast/notification
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (

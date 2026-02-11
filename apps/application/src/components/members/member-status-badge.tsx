@@ -53,11 +53,13 @@ const memberStatusBadgeVariants = cva(
 
         // Contract statuses
         EXPIRED: 'bg-muted text-muted-foreground',
+        CANCELLED: 'bg-stone-100 text-stone-500',
 
         // Charge statuses
         ENDED: 'bg-muted text-muted-foreground',
 
         // Document statuses
+        PENDING: 'bg-amber-500 text-white',
         VERIFIED: 'bg-emerald-500 text-white',
       },
     },
@@ -102,9 +104,11 @@ const statusLabels: Record<AllStatuses, string> = {
   WITHDRAWN: 'Withdrawn',
   // Contract statuses
   EXPIRED: 'Expired',
+  CANCELLED: 'Cancelled',
   // Charge statuses
   ENDED: 'Ended',
   // Document statuses
+  PENDING: 'Pending',
   VERIFIED: 'Verified',
 };
 

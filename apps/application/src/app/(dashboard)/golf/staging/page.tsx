@@ -26,7 +26,7 @@ const generateStagingData = () => {
       id: 'staging-1',
       time: `${currentHour}:${(currentMinute - 15).toString().padStart(2, '0')} AM`,
       date: now.toISOString().split('T')[0] as string,
-      status: 'checked-in',
+      status: 'CHECKED_IN',
       players: [
         { id: 'p1', name: 'Somchai W.', type: 'member' as PlayerType, memberId: 'M-0001', handicap: 12, checkedIn: true },
         { id: 'p2', name: 'Prasert C.', type: 'member' as PlayerType, memberId: 'M-0003', handicap: 8, checkedIn: true },
@@ -40,7 +40,7 @@ const generateStagingData = () => {
       id: 'staging-2',
       time: `${currentHour}:${currentMinute.toString().padStart(2, '0')} AM`,
       date: now.toISOString().split('T')[0] as string,
-      status: 'checked-in',
+      status: 'CHECKED_IN',
       players: [
         { id: 'p5', name: 'Apinya S.', type: 'member' as PlayerType, memberId: 'M-0005', handicap: 18, checkedIn: true },
         { id: 'p6', name: 'John Smith', type: 'guest' as PlayerType, handicap: 20, checkedIn: true },
@@ -53,7 +53,7 @@ const generateStagingData = () => {
       id: 'staging-3',
       time: `${currentHour}:${(currentMinute + 8).toString().padStart(2, '0')} AM`,
       date: now.toISOString().split('T')[0] as string,
-      status: 'booked',
+      status: 'BOOKED',
       players: [
         { id: 'p8', name: 'Nisa W.', type: 'member' as PlayerType, memberId: 'M-0002', handicap: 24 },
         { id: 'p9', name: 'Corporate Guest 1', type: 'guest' as PlayerType },
@@ -65,7 +65,7 @@ const generateStagingData = () => {
       id: 'staging-4',
       time: `${currentHour}:${(currentMinute + 16).toString().padStart(2, '0')} AM`,
       date: now.toISOString().split('T')[0] as string,
-      status: 'booked',
+      status: 'BOOKED',
       players: [
         { id: 'p12', name: 'Sompong K.', type: 'member' as PlayerType, memberId: 'M-0015', handicap: 6 },
         { id: 'p13', name: 'Tanawat R.', type: 'member' as PlayerType, memberId: 'M-0018', handicap: 14 },
@@ -79,16 +79,16 @@ const generateStagingData = () => {
 }
 
 const mockCarts: Cart[] = [
-  { id: 'cart-1', number: '01', type: '2-seater', status: 'in-use', currentAssignment: '7:00 AM' },
-  { id: 'cart-2', number: '02', type: '2-seater', status: 'in-use', currentAssignment: '7:08 AM' },
-  { id: 'cart-3', number: '03', type: '4-seater', status: 'available' },
-  { id: 'cart-4', number: '04', type: '4-seater', status: 'available' },
+  { id: 'cart-1', number: '01', type: '2-seater', status: 'IN_USE', currentAssignment: '7:00 AM' },
+  { id: 'cart-2', number: '02', type: '2-seater', status: 'IN_USE', currentAssignment: '7:08 AM' },
+  { id: 'cart-3', number: '03', type: '4-seater', status: 'AVAILABLE' },
+  { id: 'cart-4', number: '04', type: '4-seater', status: 'AVAILABLE' },
 ]
 
 const mockCaddies: Caddy[] = [
-  { id: 'caddy-1', name: 'Somchai Prasert', skillLevel: 'expert', status: 'assigned', experience: 12, currentAssignment: '7:00 AM' },
-  { id: 'caddy-2', name: 'Niran Wongsawat', skillLevel: 'advanced', status: 'available', experience: 8 },
-  { id: 'caddy-3', name: 'Prasit Chaiyasit', skillLevel: 'intermediate', status: 'available', experience: 3 },
+  { id: 'caddy-1', name: 'Somchai Prasert', skillLevel: 'expert', status: 'ASSIGNED', experience: 12, currentAssignment: '7:00 AM' },
+  { id: 'caddy-2', name: 'Niran Wongsawat', skillLevel: 'advanced', status: 'AVAILABLE', experience: 8 },
+  { id: 'caddy-3', name: 'Prasit Chaiyasit', skillLevel: 'intermediate', status: 'AVAILABLE', experience: 3 },
 ]
 
 export default function StagingPage() {
@@ -100,12 +100,12 @@ export default function StagingPage() {
   }, [])
 
   const readyToGo = useMemo(() =>
-    flights.filter(f => f.status === 'checked-in'),
+    flights.filter(f => f.status === 'CHECKED_IN'),
     [flights]
   )
 
   const waitingForCheckIn = useMemo(() =>
-    flights.filter(f => f.status === 'booked'),
+    flights.filter(f => f.status === 'BOOKED'),
     [flights]
   )
 
@@ -116,7 +116,7 @@ export default function StagingPage() {
 
   const handleSendOff = (flightId: string) => {
     setFlights(prev => prev.map(f =>
-      f.id === flightId ? { ...f, status: 'on-course' as FlightStatus } : f
+      f.id === flightId ? { ...f, status: 'STARTED' as FlightStatus } : f
     ))
   }
 

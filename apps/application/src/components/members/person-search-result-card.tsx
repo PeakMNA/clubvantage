@@ -70,7 +70,7 @@ export function PersonSearchResultCard({
             {person.displayName}
           </span>
           <StatusBadge
-            status={person.status.toLowerCase() as 'active' | 'inactive' | 'suspended' | 'pending'}
+            status={person.status === 'ACTIVE' ? 'active' : person.status === 'SUSPENDED' ? 'suspended' : person.status === 'PENDING' ? 'pending' : 'inactive'}
             variant="member"
             size="sm"
           />

@@ -42,8 +42,12 @@ const statusBadgeVariants = cva(
         withdrawn: 'bg-muted text-muted-foreground',
         // Contract statuses
         expired: 'bg-muted text-muted-foreground',
+        cancelled: 'bg-stone-100 text-stone-500',
         // Charge statuses
         ended: 'bg-muted text-muted-foreground',
+        // Additional statuses
+        inactive: 'bg-stone-100 text-stone-600',
+        pending: 'bg-amber-500 text-white',
       },
     },
     defaultVariants: {
@@ -80,7 +84,10 @@ const statusLabels: Record<StatusType, string> = {
   rejected: 'Rejected',
   withdrawn: 'Withdrawn',
   expired: 'Expired',
+  cancelled: 'Cancelled',
   ended: 'Ended',
+  inactive: 'Inactive',
+  pending: 'Pending',
 };
 
 const statusIcons: Partial<Record<StatusType, React.ComponentType<{ className?: string }>>> = {

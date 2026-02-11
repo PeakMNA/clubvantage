@@ -30,15 +30,15 @@ import type {
 // Map API invoice status to frontend status
 function mapInvoiceStatus(apiStatus: string): InvoiceRegisterItem['status'] {
   const statusMap: Record<string, InvoiceRegisterItem['status']> = {
-    DRAFT: 'draft',
-    SENT: 'sent',
-    PAID: 'paid',
-    PARTIALLY_PAID: 'partial',
-    OVERDUE: 'overdue',
-    VOID: 'cancelled',
-    CANCELLED: 'cancelled',
+    DRAFT: 'DRAFT',
+    SENT: 'SENT',
+    PAID: 'PAID',
+    PARTIALLY_PAID: 'PARTIALLY_PAID',
+    OVERDUE: 'OVERDUE',
+    VOID: 'VOID',
+    CANCELLED: 'CANCELLED',
   };
-  return statusMap[apiStatus] || 'sent';
+  return statusMap[apiStatus] || 'SENT';
 }
 
 // Calculate aging status based on due date

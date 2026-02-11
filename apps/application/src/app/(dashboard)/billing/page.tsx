@@ -65,7 +65,7 @@ const mockInvoices: InvoiceRegisterItem[] = [
     dueDate: new Date('2024-02-15'),
     amount: 45000,
     balance: 45000,
-    status: 'sent',
+    status: 'SENT',
     agingStatus: 'CURRENT',
   },
   {
@@ -77,7 +77,7 @@ const mockInvoices: InvoiceRegisterItem[] = [
     dueDate: new Date('2024-02-10'),
     amount: 32000,
     balance: 12000,
-    status: 'partial',
+    status: 'PARTIALLY_PAID',
     agingStatus: 'DAYS_30',
   },
   {
@@ -89,7 +89,7 @@ const mockInvoices: InvoiceRegisterItem[] = [
     dueDate: new Date('2023-12-01'),
     amount: 55000,
     balance: 55000,
-    status: 'overdue',
+    status: 'OVERDUE',
     agingStatus: 'DAYS_90',
   },
   {
@@ -101,7 +101,7 @@ const mockInvoices: InvoiceRegisterItem[] = [
     dueDate: new Date('2024-02-20'),
     amount: 28000,
     balance: 0,
-    status: 'paid',
+    status: 'PAID',
     agingStatus: 'CURRENT',
   },
   {
@@ -113,7 +113,7 @@ const mockInvoices: InvoiceRegisterItem[] = [
     dueDate: new Date('2023-10-15'),
     amount: 120000,
     balance: 120000,
-    status: 'overdue',
+    status: 'OVERDUE',
     agingStatus: 'SUSPENDED',
   },
 ]

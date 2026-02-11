@@ -21,7 +21,7 @@ interface UserDetailModalProps {
   user: User | null
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSave: (user: User) => void
+  onSave: (user: User) => void | Promise<void>
 }
 
 const statusColors: Record<UserStatus, string> = {
@@ -60,15 +60,18 @@ export function UserDetailModal({
   const handleSave = async () => {
     if (!user) return
     setIsSaving(true)
-    // Simulate save
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    onSave({
-      ...user,
-      ...formData,
-      roles: assignedRoles,
-    })
-    setIsSaving(false)
-    onOpenChange(false)
+    try {
+      await onSave({
+        ...user,
+        ...formData,
+        roles: assignedRoles,
+      })
+      onOpenChange(false)
+    } catch {
+      // Error is handled by the parent
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const removeRole = (roleId: string) => {

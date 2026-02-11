@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Loader2, Check } from 'lucide-react'
 import { Button } from '@clubvantage/ui'
 import { Input } from '@clubvantage/ui'
@@ -17,6 +17,10 @@ import type { ClubProfile } from './types'
 
 interface ClubProfileSectionProps {
   id: string
+  initialProfile?: ClubProfile
+  isLoading?: boolean
+  onSave?: (profile: ClubProfile) => Promise<void>
+  isSaving?: boolean
 }
 
 const months = [
@@ -24,11 +28,27 @@ const months = [
   'July', 'August', 'September', 'October', 'November', 'December',
 ]
 
-export function ClubProfileSection({ id }: ClubProfileSectionProps) {
-  const [profile, setProfile] = useState<ClubProfile>(mockClubProfile)
-  const [isSaving, setIsSaving] = useState(false)
+export function ClubProfileSection({
+  id,
+  initialProfile,
+  isLoading: externalIsLoading,
+  onSave: externalOnSave,
+  isSaving: externalIsSaving,
+}: ClubProfileSectionProps) {
+  const [profile, setProfile] = useState<ClubProfile>(initialProfile ?? mockClubProfile)
+  const [isSavingLocal, setIsSavingLocal] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
   const [hasChanges, setHasChanges] = useState(false)
+
+  const isSaving = externalIsSaving ?? isSavingLocal
+
+  // Sync with external profile when it loads
+  useEffect(() => {
+    if (initialProfile) {
+      setProfile(initialProfile)
+      setHasChanges(false)
+    }
+  }, [initialProfile])
 
   const updateField = <K extends keyof ClubProfile>(key: K, value: ClubProfile[K]) => {
     setProfile({ ...profile, [key]: value })
@@ -36,12 +56,42 @@ export function ClubProfileSection({ id }: ClubProfileSectionProps) {
   }
 
   const handleSave = async () => {
-    setIsSaving(true)
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    setIsSaving(false)
-    setShowSuccess(true)
-    setHasChanges(false)
-    setTimeout(() => setShowSuccess(false), 2000)
+    if (externalOnSave) {
+      try {
+        await externalOnSave(profile)
+        setShowSuccess(true)
+        setHasChanges(false)
+        setTimeout(() => setShowSuccess(false), 2000)
+      } catch {
+        // Error handled by parent
+      }
+    } else {
+      setIsSavingLocal(true)
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+      setIsSavingLocal(false)
+      setShowSuccess(true)
+      setHasChanges(false)
+      setTimeout(() => setShowSuccess(false), 2000)
+    }
+  }
+
+  if (externalIsLoading) {
+    return (
+      <section id={id} className="border rounded-lg p-6 space-y-6 scroll-mt-24">
+        <div>
+          <h2 className="text-xl font-semibold">Club Profile</h2>
+          <p className="text-sm text-muted-foreground">Basic information about your club</p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="space-y-2">
+              <div className="h-4 w-20 bg-muted animate-pulse rounded" />
+              <div className="h-10 w-full bg-muted animate-pulse rounded-md" />
+            </div>
+          ))}
+        </div>
+      </section>
+    )
   }
 
   return (

@@ -334,7 +334,7 @@ export const members: Member[] = [
         lastName: 'Roberts',
         relationship: 'CHILD',
         dateOfBirth: '2015-01-22',
-        status: 'LAPSED',
+        status: 'INACTIVE',
       },
     ],
   },

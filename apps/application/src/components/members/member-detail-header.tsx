@@ -87,7 +87,7 @@ export function MemberDetailHeader({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const statusMap: Record<MemberStatus, string> = {
+  const statusMap = {
     PROSPECT: 'prospect',
     LEAD: 'lead',
     APPLICANT: 'applicant',
@@ -97,7 +97,7 @@ export function MemberDetailHeader({
     RESIGNED: 'resigned',
     TERMINATED: 'terminated',
     REACTIVATED: 'reactivated',
-  };
+  } as const;
 
   return (
     <div

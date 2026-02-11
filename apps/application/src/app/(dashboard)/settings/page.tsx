@@ -1,6 +1,8 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { useClubProfile, useUpdateClubProfile } from '@/hooks/use-settings'
+import type { ClubProfile } from '@/components/settings'
 import {
   SettingsNav,
   ClubProfileSection,
@@ -42,6 +44,45 @@ const sectionIds: SettingsSection[] = [
 export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState<SettingsSection>('club-profile')
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map())
+
+  // Fetch club profile data
+  const { data: clubProfileData, isLoading: isProfileLoading } = useClubProfile()
+  const { updateClubProfile, isPending: isProfileSaving } = useUpdateClubProfile()
+
+  const clubProfile = useMemo((): ClubProfile | undefined => {
+    const p = clubProfileData?.clubProfile
+    if (!p) return undefined
+    return {
+      clubName: p.name ?? '',
+      legalName: p.name ?? '',
+      taxId: '',
+      address1: p.address ?? '',
+      address2: '',
+      city: '',
+      province: '',
+      postalCode: '',
+      country: 'Thailand',
+      phone: p.phone ?? '',
+      email: p.email ?? '',
+      website: p.website ?? '',
+      timezone: p.timezone ?? 'Asia/Bangkok',
+      fiscalYearStart: 1,
+    }
+  }, [clubProfileData])
+
+  const handleSaveProfile = useCallback(
+    async (profile: ClubProfile) => {
+      await updateClubProfile({
+        name: profile.clubName,
+        address: [profile.address1, profile.address2].filter(Boolean).join(', '),
+        phone: profile.phone,
+        email: profile.email,
+        website: profile.website,
+        timezone: profile.timezone,
+      })
+    },
+    [updateClubProfile],
+  )
 
   // Scroll spy using Intersection Observer
   useEffect(() => {
@@ -107,7 +148,13 @@ export default function SettingsPage() {
         </div>
 
         <div ref={(el) => setSectionRef('club-profile', el)}>
-          <ClubProfileSection id="club-profile" />
+          <ClubProfileSection
+            id="club-profile"
+            initialProfile={clubProfile}
+            isLoading={isProfileLoading}
+            onSave={handleSaveProfile}
+            isSaving={isProfileSaving}
+          />
         </div>
 
         <div ref={(el) => setSectionRef('organization', el)}>

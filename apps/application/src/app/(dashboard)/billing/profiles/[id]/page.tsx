@@ -578,7 +578,7 @@ export default function ARProfileDetailPage({ params }: { params: Promise<{ id: 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
                 <DisplayField
                   label="Statement Delivery"
-                  value={deliveryMethod.label}
+                  value={deliveryMethod?.label ?? 'Unknown'}
                   icon={Mail}
                 />
                 <DisplayField

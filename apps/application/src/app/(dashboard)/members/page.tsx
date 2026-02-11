@@ -72,7 +72,7 @@ function getBalanceColor(member: Member): string {
   return 'text-amber-600 dark:text-amber-400';
 }
 
-const statusMap: Record<MemberStatus, string> = {
+const statusMap = {
   PROSPECT: 'prospect',
   LEAD: 'lead',
   APPLICANT: 'applicant',
@@ -82,7 +82,7 @@ const statusMap: Record<MemberStatus, string> = {
   RESIGNED: 'resigned',
   TERMINATED: 'terminated',
   REACTIVATED: 'reactivated',
-};
+} as const;
 
 export default function MembersPage() {
   // Fetch members from API
@@ -259,7 +259,7 @@ export default function MembersPage() {
     setStatusChangeDialog({
       open: true,
       member,
-      newStatus: 'CANCELLED',
+      newStatus: 'TERMINATED',
     });
   }, []);
 
@@ -527,7 +527,7 @@ export default function MembersPage() {
                               Suspend
                             </DropdownMenuItem>
                           )}
-                          {(member.status === 'SUSPENDED' || member.status === 'INACTIVE') && (
+                          {(member.status === 'SUSPENDED' || member.status === 'LAPSED') && (
                             <DropdownMenuItem
                               onClick={() => handleReactivateMember(member)}
                               className="text-green-600"
@@ -536,7 +536,7 @@ export default function MembersPage() {
                               Reactivate
                             </DropdownMenuItem>
                           )}
-                          {member.status !== 'CANCELLED' && (
+                          {member.status !== 'TERMINATED' && (
                             <DropdownMenuItem
                               onClick={() => handleCancelMembership(member)}
                               className="text-red-600"

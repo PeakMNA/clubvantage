@@ -33,12 +33,12 @@ const generateStarterData = () => {
       id: 'on-course-1',
       time: formatTime(baseHour, baseMinute - 40),
       date: now.toISOString().split('T')[0] as string,
-      status: 'on-course',
+      status: 'STARTED',
       players: [
-        { id: 'p1', name: 'Somchai W.', type: 'member' as PlayerType, memberId: 'M-0001', handicap: 12, checkedIn: true },
-        { id: 'p2', name: 'Prasert C.', type: 'member' as PlayerType, memberId: 'M-0003', handicap: 8, checkedIn: true },
-        { id: 'p3', name: 'Wichai P.', type: 'member' as PlayerType, memberId: 'M-0008', handicap: 15, checkedIn: true },
-        { id: 'p4', name: 'Narong T.', type: 'member' as PlayerType, memberId: 'M-0012', handicap: 10, checkedIn: true },
+        { id: 'p1', name: 'Somchai W.', type: 'MEMBER' as PlayerType, memberId: 'M-0001', handicap: 12, checkedIn: true },
+        { id: 'p2', name: 'Prasert C.', type: 'MEMBER' as PlayerType, memberId: 'M-0003', handicap: 8, checkedIn: true },
+        { id: 'p3', name: 'Wichai P.', type: 'MEMBER' as PlayerType, memberId: 'M-0008', handicap: 15, checkedIn: true },
+        { id: 'p4', name: 'Narong T.', type: 'MEMBER' as PlayerType, memberId: 'M-0012', handicap: 10, checkedIn: true },
       ],
       estimatedPosition: 'Hole 5',
       paceStatus: 'on-time',
@@ -47,12 +47,12 @@ const generateStarterData = () => {
       id: 'on-course-2',
       time: formatTime(baseHour, baseMinute - 32),
       date: now.toISOString().split('T')[0] as string,
-      status: 'on-course',
+      status: 'STARTED',
       players: [
-        { id: 'p5', name: 'Apinya S.', type: 'member' as PlayerType, memberId: 'M-0005', handicap: 18, checkedIn: true },
-        { id: 'p6', name: 'John Smith', type: 'guest' as PlayerType, handicap: 20, checkedIn: true },
-        { id: 'p7', name: 'Mike Johnson', type: 'guest' as PlayerType, handicap: 22, checkedIn: true },
-        { id: 'p8', name: 'Tom Williams', type: 'guest' as PlayerType, handicap: 25, checkedIn: true },
+        { id: 'p5', name: 'Apinya S.', type: 'MEMBER' as PlayerType, memberId: 'M-0005', handicap: 18, checkedIn: true },
+        { id: 'p6', name: 'John Smith', type: 'GUEST' as PlayerType, handicap: 20, checkedIn: true },
+        { id: 'p7', name: 'Mike Johnson', type: 'GUEST' as PlayerType, handicap: 22, checkedIn: true },
+        { id: 'p8', name: 'Tom Williams', type: 'GUEST' as PlayerType, handicap: 25, checkedIn: true },
       ],
       estimatedPosition: 'Hole 4',
       paceStatus: 'behind',
@@ -62,12 +62,12 @@ const generateStarterData = () => {
       id: 'on-course-3',
       time: formatTime(baseHour, baseMinute - 24),
       date: now.toISOString().split('T')[0] as string,
-      status: 'on-course',
+      status: 'STARTED',
       players: [
-        { id: 'p9', name: 'Nisa W.', type: 'member' as PlayerType, memberId: 'M-0002', handicap: 24, checkedIn: true },
-        { id: 'p10', name: 'Corporate 1', type: 'guest' as PlayerType, checkedIn: true },
-        { id: 'p11', name: 'Corporate 2', type: 'guest' as PlayerType, checkedIn: true },
-        { id: 'p12', name: 'Corporate 3', type: 'guest' as PlayerType, checkedIn: true },
+        { id: 'p9', name: 'Nisa W.', type: 'MEMBER' as PlayerType, memberId: 'M-0002', handicap: 24, checkedIn: true },
+        { id: 'p10', name: 'Corporate 1', type: 'GUEST' as PlayerType, checkedIn: true },
+        { id: 'p11', name: 'Corporate 2', type: 'GUEST' as PlayerType, checkedIn: true },
+        { id: 'p12', name: 'Corporate 3', type: 'GUEST' as PlayerType, checkedIn: true },
       ],
       estimatedPosition: 'Hole 3',
       paceStatus: 'ahead',
@@ -77,12 +77,12 @@ const generateStarterData = () => {
       id: 'ready-1',
       time: formatTime(baseHour, baseMinute - 8),
       date: now.toISOString().split('T')[0] as string,
-      status: 'checked-in',
+      status: 'CHECKED_IN',
       players: [
-        { id: 'p13', name: 'Sompong K.', type: 'member' as PlayerType, memberId: 'M-0015', handicap: 6, checkedIn: true },
-        { id: 'p14', name: 'Tanawat R.', type: 'member' as PlayerType, memberId: 'M-0018', handicap: 14, checkedIn: true },
-        { id: 'p15', name: 'Prayut S.', type: 'member' as PlayerType, memberId: 'M-0020', handicap: 10, checkedIn: true },
-        { id: 'p16', name: 'Anucha K.', type: 'member' as PlayerType, memberId: 'M-0022', handicap: 18, checkedIn: true },
+        { id: 'p13', name: 'Sompong K.', type: 'MEMBER' as PlayerType, memberId: 'M-0015', handicap: 6, checkedIn: true },
+        { id: 'p14', name: 'Tanawat R.', type: 'MEMBER' as PlayerType, memberId: 'M-0018', handicap: 14, checkedIn: true },
+        { id: 'p15', name: 'Prayut S.', type: 'MEMBER' as PlayerType, memberId: 'M-0020', handicap: 10, checkedIn: true },
+        { id: 'p16', name: 'Anucha K.', type: 'MEMBER' as PlayerType, memberId: 'M-0022', handicap: 18, checkedIn: true },
       ],
       cartId: 'cart-5',
     },
@@ -91,11 +91,11 @@ const generateStarterData = () => {
       id: 'current-1',
       time: formatTime(baseHour, baseMinute),
       date: now.toISOString().split('T')[0] as string,
-      status: 'checked-in',
+      status: 'CHECKED_IN',
       players: [
-        { id: 'p17', name: 'VIP Guest 1', type: 'guest' as PlayerType, checkedIn: true },
-        { id: 'p18', name: 'VIP Guest 2', type: 'guest' as PlayerType, checkedIn: true },
-        { id: 'p19', name: 'Sponsor Rep', type: 'guest' as PlayerType, checkedIn: true },
+        { id: 'p17', name: 'VIP Guest 1', type: 'GUEST' as PlayerType, checkedIn: true },
+        { id: 'p18', name: 'VIP Guest 2', type: 'GUEST' as PlayerType, checkedIn: true },
+        { id: 'p19', name: 'Sponsor Rep', type: 'GUEST' as PlayerType, checkedIn: true },
         null,
       ],
       cartId: 'cart-6',
@@ -107,10 +107,10 @@ const generateStarterData = () => {
       id: 'upcoming-1',
       time: formatTime(baseHour, baseMinute + 8),
       date: now.toISOString().split('T')[0] as string,
-      status: 'booked',
+      status: 'BOOKED',
       players: [
-        { id: 'p20', name: 'Member A', type: 'member' as PlayerType, memberId: 'M-0025' },
-        { id: 'p21', name: 'Member B', type: 'member' as PlayerType, memberId: 'M-0026' },
+        { id: 'p20', name: 'Member A', type: 'MEMBER' as PlayerType, memberId: 'M-0025' },
+        { id: 'p21', name: 'Member B', type: 'MEMBER' as PlayerType, memberId: 'M-0026' },
         null,
         null,
       ],
@@ -119,12 +119,12 @@ const generateStarterData = () => {
       id: 'upcoming-2',
       time: formatTime(baseHour, baseMinute + 16),
       date: now.toISOString().split('T')[0] as string,
-      status: 'booked',
+      status: 'BOOKED',
       players: [
-        { id: 'p22', name: 'Tournament Player 1', type: 'member' as PlayerType, memberId: 'M-0030' },
-        { id: 'p23', name: 'Tournament Player 2', type: 'member' as PlayerType, memberId: 'M-0031' },
-        { id: 'p24', name: 'Tournament Player 3', type: 'member' as PlayerType, memberId: 'M-0032' },
-        { id: 'p25', name: 'Tournament Player 4', type: 'member' as PlayerType, memberId: 'M-0033' },
+        { id: 'p22', name: 'Tournament Player 1', type: 'MEMBER' as PlayerType, memberId: 'M-0030' },
+        { id: 'p23', name: 'Tournament Player 2', type: 'MEMBER' as PlayerType, memberId: 'M-0031' },
+        { id: 'p24', name: 'Tournament Player 3', type: 'MEMBER' as PlayerType, memberId: 'M-0032' },
+        { id: 'p25', name: 'Tournament Player 4', type: 'MEMBER' as PlayerType, memberId: 'M-0033' },
       ],
       notes: 'Tournament group',
     },
@@ -171,17 +171,17 @@ export default function StarterPage() {
   }, [])
 
   const onCourseFlights = useMemo(() =>
-    flights.filter(f => f.status === 'on-course'),
+    flights.filter(f => f.status === 'STARTED'),
     [flights]
   )
 
   const nextUp = useMemo(() =>
-    flights.find(f => f.status === 'checked-in'),
+    flights.find(f => f.status === 'CHECKED_IN'),
     [flights]
   )
 
   const upcoming = useMemo(() =>
-    flights.filter(f => f.status === 'booked' || (f.status === 'checked-in' && f.id !== nextUp?.id)),
+    flights.filter(f => f.status === 'BOOKED' || (f.status === 'CHECKED_IN' && f.id !== nextUp?.id)),
     [flights, nextUp]
   )
 
@@ -193,7 +193,7 @@ export default function StarterPage() {
   const handleSendOff = (flightId: string) => {
     setFlights(prev => prev.map(f =>
       f.id === flightId
-        ? { ...f, status: 'on-course' as FlightStatus, estimatedPosition: 'Hole 1', paceStatus: 'on-time' as const }
+        ? { ...f, status: 'STARTED' as FlightStatus, estimatedPosition: 'Hole 1', paceStatus: 'on-time' as const }
         : f
     ))
   }
@@ -260,7 +260,7 @@ export default function StarterPage() {
             </div>
             <div>
               <div className="text-2xl font-bold">
-                {flights.filter(f => f.status === 'checked-in').length}
+                {flights.filter(f => f.status === 'CHECKED_IN').length}
               </div>
               <div className="text-sm text-muted-foreground">Ready to Go</div>
             </div>
@@ -308,7 +308,7 @@ export default function StarterPage() {
                       <>
                         <div className="font-medium">{player.name}</div>
                         <div className="text-sm opacity-80">
-                          {player.type === 'member' ? player.memberId : 'Guest'}
+                          {player.type === 'MEMBER' ? player.memberId : 'Guest'}
                           {player.handicap && ` • HCP ${player.handicap}`}
                         </div>
                       </>

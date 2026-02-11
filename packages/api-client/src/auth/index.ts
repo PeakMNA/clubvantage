@@ -7,7 +7,7 @@ export type {
   RefreshResponse,
   AuthState,
   AuthContextValue,
-  UserRole,
+  // UserRole is already exported from ./types/generated via the main index
 } from './types';
 
 // Auth API

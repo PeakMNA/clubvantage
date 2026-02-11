@@ -35,6 +35,8 @@ import { mockUsers, mockRoles } from './mock-data'
 import type { User, UserStatus } from './types'
 
 interface UsersTabProps {
+  users?: User[]
+  isLoading?: boolean
   onAddUser: () => void
   onEditUser: (user: User) => void
   onViewActivity: (userId: string) => void
@@ -52,14 +54,22 @@ const statusLabels: Record<UserStatus, string> = {
   locked: 'Locked',
 }
 
-export function UsersTab({ onAddUser, onEditUser, onViewActivity }: UsersTabProps) {
+export function UsersTab({
+  users: externalUsers,
+  isLoading: externalIsLoading,
+  onAddUser,
+  onEditUser,
+  onViewActivity,
+}: UsersTabProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [roleFilter, setRoleFilter] = useState<string>('all')
-  const [isLoading] = useState(false)
+
+  const isLoading = externalIsLoading ?? false
+  const allUsers = externalUsers ?? mockUsers
 
   const filteredUsers = useMemo(() => {
-    return mockUsers.filter((user) => {
+    return allUsers.filter((user) => {
       const matchesSearch =
         user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         user.email.toLowerCase().includes(searchQuery.toLowerCase())
@@ -68,7 +78,7 @@ export function UsersTab({ onAddUser, onEditUser, onViewActivity }: UsersTabProp
         roleFilter === 'all' || user.roles.some((r) => r.id === roleFilter)
       return matchesSearch && matchesStatus && matchesRole
     })
-  }, [searchQuery, statusFilter, roleFilter])
+  }, [allUsers, searchQuery, statusFilter, roleFilter])
 
   if (isLoading) {
     return (

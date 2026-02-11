@@ -8,9 +8,9 @@ import { Label } from '@clubvantage/ui'
 import { Checkbox } from '@clubvantage/ui'
 import {
   useClubBillingSettings,
-  type StatementDelivery,
   type UpdateClubBillingSettingsInput,
 } from '@/hooks/use-billing-settings'
+import { type StatementDelivery } from '@/hooks/use-ar-statements'
 
 interface StatementConfigSectionProps {
   id: string

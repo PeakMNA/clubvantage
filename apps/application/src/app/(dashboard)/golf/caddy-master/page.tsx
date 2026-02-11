@@ -29,7 +29,7 @@ const mockCaddies: ExtendedCaddy[] = [
     id: 'caddy-1',
     name: 'Somchai Prasert',
     skillLevel: 'expert',
-    status: 'assigned',
+    status: 'ASSIGNED',
     experience: 12,
     currentAssignment: '7:00 AM',
     phone: '081-234-5678',
@@ -41,7 +41,7 @@ const mockCaddies: ExtendedCaddy[] = [
     id: 'caddy-2',
     name: 'Niran Wongsawat',
     skillLevel: 'advanced',
-    status: 'assigned',
+    status: 'ASSIGNED',
     experience: 8,
     currentAssignment: '7:16 AM',
     phone: '082-345-6789',
@@ -52,7 +52,7 @@ const mockCaddies: ExtendedCaddy[] = [
     id: 'caddy-3',
     name: 'Prasit Chaiyasit',
     skillLevel: 'intermediate',
-    status: 'available',
+    status: 'AVAILABLE',
     experience: 3,
     phone: '083-456-7890',
     rating: 4.5,
@@ -62,7 +62,7 @@ const mockCaddies: ExtendedCaddy[] = [
     id: 'caddy-4',
     name: 'Wichai Khamwan',
     skillLevel: 'advanced',
-    status: 'available',
+    status: 'AVAILABLE',
     experience: 6,
     phone: '084-567-8901',
     rating: 4.8,
@@ -73,7 +73,7 @@ const mockCaddies: ExtendedCaddy[] = [
     id: 'caddy-5',
     name: 'Apinya Srisuk',
     skillLevel: 'beginner',
-    status: 'available',
+    status: 'AVAILABLE',
     experience: 1,
     notes: 'New hire, training complete',
     phone: '085-678-9012',
@@ -84,7 +84,7 @@ const mockCaddies: ExtendedCaddy[] = [
     id: 'caddy-6',
     name: 'Tanawat Ruangrit',
     skillLevel: 'intermediate',
-    status: 'off-duty',
+    status: 'OFF_DUTY',
     experience: 4,
     phone: '086-789-0123',
     rating: 4.4,
@@ -97,7 +97,7 @@ const mockUpcomingFlights: Flight[] = [
     id: 'f3',
     time: '8:00 AM',
     date: new Date().toISOString().split('T')[0] as string,
-    status: 'booked',
+    status: 'BOOKED',
     players: [
       { id: 'p1', name: 'VIP Guest', type: 'guest' as PlayerType },
       { id: 'p2', name: 'Mr. Corporate', type: 'guest' as PlayerType },
@@ -110,7 +110,7 @@ const mockUpcomingFlights: Flight[] = [
     id: 'f4',
     time: '8:08 AM',
     date: new Date().toISOString().split('T')[0] as string,
-    status: 'booked',
+    status: 'BOOKED',
     players: [
       { id: 'p3', name: 'Sompong K.', type: 'member' as PlayerType, memberId: 'M-0015' },
       { id: 'p4', name: 'Tanawat R.', type: 'member' as PlayerType, memberId: 'M-0018' },
@@ -122,7 +122,7 @@ const mockUpcomingFlights: Flight[] = [
     id: 'f5',
     time: '8:16 AM',
     date: new Date().toISOString().split('T')[0] as string,
-    status: 'booked',
+    status: 'BOOKED',
     players: [
       { id: 'p5', name: 'Tournament Player', type: 'member' as PlayerType, memberId: 'M-0020' },
       { id: 'p6', name: 'Tournament Player 2', type: 'member' as PlayerType, memberId: 'M-0021' },
@@ -133,7 +133,7 @@ const mockUpcomingFlights: Flight[] = [
   },
 ]
 
-type FilterStatus = 'all' | 'available' | 'assigned' | 'off-duty'
+type FilterStatus = 'all' | 'AVAILABLE' | 'ASSIGNED' | 'OFF_DUTY'
 
 export default function CaddyMasterPage() {
   const [caddies, setCaddies] = useState<ExtendedCaddy[]>(mockCaddies)
@@ -150,17 +150,17 @@ export default function CaddyMasterPage() {
   }, [caddies, searchQuery, filterStatus])
 
   const availableCount = useMemo(() =>
-    caddies.filter(c => c.status === 'available').length,
+    caddies.filter(c => c.status === 'AVAILABLE').length,
     [caddies]
   )
 
   const assignedCount = useMemo(() =>
-    caddies.filter(c => c.status === 'assigned').length,
+    caddies.filter(c => c.status === 'ASSIGNED').length,
     [caddies]
   )
 
   const offDutyCount = useMemo(() =>
-    caddies.filter(c => c.status === 'off-duty').length,
+    caddies.filter(c => c.status === 'OFF_DUTY').length,
     [caddies]
   )
 
@@ -169,7 +169,7 @@ export default function CaddyMasterPage() {
       c.id === caddyId
         ? {
             ...c,
-            status: 'assigned' as const,
+            status: 'ASSIGNED' as const,
             currentAssignment: time,
             todayAssignments: [...(c.todayAssignments || []), { time, flightId }]
           }
@@ -184,10 +184,10 @@ export default function CaddyMasterPage() {
     expert: 'bg-emerald-100 text-emerald-700',
   }
 
-  const statusColors = {
-    available: 'bg-emerald-500',
-    assigned: 'bg-blue-500',
-    'off-duty': 'bg-stone-400',
+  const statusColors: Record<Caddy['status'], string> = {
+    AVAILABLE: 'bg-emerald-500',
+    ASSIGNED: 'bg-blue-500',
+    OFF_DUTY: 'bg-stone-400',
   }
 
   return (
@@ -264,17 +264,17 @@ export default function CaddyMasterPage() {
                 />
               </div>
               <div className="flex border border-border rounded-md overflow-hidden">
-                {(['all', 'available', 'assigned', 'off-duty'] as FilterStatus[]).map((status) => (
+                {(['all', 'AVAILABLE', 'ASSIGNED', 'OFF_DUTY'] as FilterStatus[]).map((status) => (
                   <button
                     key={status}
                     onClick={() => setFilterStatus(status)}
-                    className={`px-3 py-1.5 text-sm capitalize ${
+                    className={`px-3 py-1.5 text-sm ${
                       filterStatus === status
                         ? 'bg-primary text-primary-foreground'
                         : 'hover:bg-muted'
                     }`}
                   >
-                    {status === 'off-duty' ? 'Off Duty' : status}
+                    {{ all: 'All', AVAILABLE: 'Available', ASSIGNED: 'Assigned', OFF_DUTY: 'Off Duty' }[status]}
                   </button>
                 ))}
               </div>
@@ -307,16 +307,16 @@ export default function CaddyMasterPage() {
                     </div>
                   </div>
                   <div className="text-right">
-                    {caddy.status === 'assigned' && caddy.currentAssignment && (
+                    {caddy.status === 'ASSIGNED' && caddy.currentAssignment && (
                       <div className="text-sm">
                         <span className="text-muted-foreground">Assigned: </span>
                         <span className="font-medium">{caddy.currentAssignment}</span>
                       </div>
                     )}
-                    {caddy.status === 'available' && (
+                    {caddy.status === 'AVAILABLE' && (
                       <span className="text-sm text-emerald-600 font-medium">Available Now</span>
                     )}
-                    {caddy.status === 'off-duty' && (
+                    {caddy.status === 'OFF_DUTY' && (
                       <span className="text-sm text-stone-500">Off Duty</span>
                     )}
                   </div>
@@ -353,7 +353,7 @@ export default function CaddyMasterPage() {
                 ) : (
                   <div className="flex flex-wrap gap-1">
                     {caddies
-                      .filter(c => c.status === 'available')
+                      .filter(c => c.status === 'AVAILABLE')
                       .slice(0, 3)
                       .map(caddy => (
                         <Button
@@ -388,7 +388,7 @@ export default function CaddyMasterPage() {
               </div>
             </div>
             <div className={`px-3 py-1 rounded-full text-sm text-white ${statusColors[selectedCaddy.status]}`}>
-              {selectedCaddy.status === 'off-duty' ? 'Off Duty' : selectedCaddy.status}
+              {selectedCaddy.status === 'OFF_DUTY' ? 'Off Duty' : selectedCaddy.status === 'ASSIGNED' ? 'Assigned' : 'Available'}
             </div>
           </div>
 

@@ -19,7 +19,7 @@ export type ProrationMethod = 'DAILY' | 'HALF_MONTH' | 'FULL_MONTH' | 'NONE';
 export type TaxMethod = 'ADDON' | 'INCLUDED' | 'EXEMPT';
 export type BillingCycleMode = 'CLUB_CYCLE' | 'MEMBER_CYCLE';
 export type FinancialPeriodType = 'CALENDAR_MONTH' | 'CUSTOM';
-export type StatementDelivery = 'EMAIL' | 'PRINT' | 'PORTAL' | 'SMS' | 'EMAIL_AND_PRINT' | 'ALL';
+type StatementDelivery = 'EMAIL' | 'PRINT' | 'PORTAL' | 'SMS' | 'EMAIL_AND_PRINT' | 'ALL';
 
 export interface ClubBillingSettings {
   id: string;

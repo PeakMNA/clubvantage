@@ -1,10 +1,18 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
+import {
+  useUsers,
+  useCreateUser,
+  useUpdateUser,
+} from '@/hooks/use-users'
+import { transformApiUser } from '@/lib/api-transformers'
+import type { UserRole } from '@clubvantage/api-client'
 import {
   UsersTab,
   UserDetailModal,
   AddUserModal,
+  mockUsers,
 } from '@/components/users'
 import type { User, AddUserFormData } from '@/components/users'
 
@@ -12,6 +20,18 @@ export default function UsersListPage() {
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [isUserDetailModalOpen, setIsUserDetailModalOpen] = useState(false)
+
+  // Fetch real user data
+  const { data, isLoading } = useUsers({ limit: 100 })
+  const { createUser } = useCreateUser()
+  const { updateUser } = useUpdateUser()
+
+  // Transform API data → component shape, fallback to mock
+  const users = useMemo(() => {
+    const apiUsers = data?.users?.data
+    if (!apiUsers || apiUsers.length === 0) return mockUsers
+    return apiUsers.map(transformApiUser)
+  }, [data])
 
   const handleAddUser = useCallback(() => {
     setIsAddUserModalOpen(true)
@@ -23,21 +43,45 @@ export default function UsersListPage() {
   }, [])
 
   const handleViewActivity = useCallback((userId: string) => {
-    // Navigate to activity page with user filter
     window.location.href = `/users/activity?userId=${userId}`
   }, [])
 
-  const handleSaveUser = useCallback((user: User) => {
-    console.log('Saving user:', user)
-  }, [])
+  const handleSaveUser = useCallback(
+    async (user: User) => {
+      const [firstName, ...rest] = user.name.split(' ')
+      const lastName = rest.join(' ')
+      await updateUser(user.id, {
+        firstName,
+        lastName,
+        phone: user.phone,
+        isActive: user.status === 'active',
+      })
+    },
+    [updateUser],
+  )
 
-  const handleCreateUser = useCallback((data: AddUserFormData) => {
-    console.log('Creating user:', data)
-  }, [])
+  const handleCreateUser = useCallback(
+    async (formData: AddUserFormData) => {
+      const [firstName, ...rest] = formData.name.split(' ')
+      const lastName = rest.join(' ')
+      await createUser({
+        email: formData.email,
+        firstName: firstName || '',
+        lastName: lastName || '',
+        password: formData.autoGeneratePassword ? crypto.randomUUID().slice(0, 16) : formData.password,
+        role: (formData.roles[0] || 'STAFF') as UserRole,
+        phone: formData.phone || undefined,
+        permissions: [],
+      })
+    },
+    [createUser],
+  )
 
   return (
     <>
       <UsersTab
+        users={users}
+        isLoading={isLoading}
         onAddUser={handleAddUser}
         onEditUser={handleEditUser}
         onViewActivity={handleViewActivity}

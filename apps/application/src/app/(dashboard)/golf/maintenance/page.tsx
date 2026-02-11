@@ -35,7 +35,7 @@ const mockCarts: ExtendedCart[] = [
     id: 'cart-1',
     number: '01',
     type: '2-seater',
-    status: 'in-use',
+    status: 'IN_USE',
     currentAssignment: '7:00 AM',
     batteryLevel: 85,
     mileage: 1250,
@@ -50,7 +50,7 @@ const mockCarts: ExtendedCart[] = [
     id: 'cart-2',
     number: '02',
     type: '2-seater',
-    status: 'in-use',
+    status: 'IN_USE',
     currentAssignment: '7:08 AM',
     batteryLevel: 72,
     mileage: 1580,
@@ -61,7 +61,7 @@ const mockCarts: ExtendedCart[] = [
     id: 'cart-3',
     number: '03',
     type: '4-seater',
-    status: 'available',
+    status: 'AVAILABLE',
     batteryLevel: 95,
     mileage: 890,
     nextServiceDue: '2024-02-28',
@@ -71,7 +71,7 @@ const mockCarts: ExtendedCart[] = [
     id: 'cart-4',
     number: '04',
     type: '4-seater',
-    status: 'maintenance',
+    status: 'MAINTENANCE',
     conditionNotes: 'Battery replacement needed',
     batteryLevel: 15,
     mileage: 2100,
@@ -84,7 +84,7 @@ const mockCarts: ExtendedCart[] = [
     id: 'cart-5',
     number: '05',
     type: '2-seater',
-    status: 'available',
+    status: 'AVAILABLE',
     batteryLevel: 88,
     mileage: 1420,
     nextServiceDue: '2024-02-20',
@@ -94,7 +94,7 @@ const mockCarts: ExtendedCart[] = [
     id: 'cart-6',
     number: '06',
     type: '2-seater',
-    status: 'in-use',
+    status: 'IN_USE',
     currentAssignment: '7:16 AM',
     batteryLevel: 68,
     mileage: 1680,
@@ -105,7 +105,7 @@ const mockCarts: ExtendedCart[] = [
     id: 'cart-7',
     number: '07',
     type: '4-seater',
-    status: 'out-of-service',
+    status: 'OUT_OF_SERVICE',
     conditionNotes: 'Motor repair in progress',
     mileage: 3200,
     lastServiceDate: '2024-01-25',
@@ -114,7 +114,7 @@ const mockCarts: ExtendedCart[] = [
     id: 'cart-8',
     number: '08',
     type: '2-seater',
-    status: 'available',
+    status: 'AVAILABLE',
     batteryLevel: 100,
     mileage: 450,
     nextServiceDue: '2024-03-15',
@@ -122,7 +122,7 @@ const mockCarts: ExtendedCart[] = [
   },
 ]
 
-type FilterStatus = 'all' | 'available' | 'in-use' | 'maintenance' | 'out-of-service'
+type FilterStatus = 'all' | 'AVAILABLE' | 'IN_USE' | 'MAINTENANCE' | 'OUT_OF_SERVICE'
 
 export default function MaintenancePage() {
   const [carts, setCarts] = useState<ExtendedCart[]>(mockCarts)
@@ -139,10 +139,10 @@ export default function MaintenancePage() {
     })
   }, [carts, searchQuery, filterStatus])
 
-  const availableCount = useMemo(() => carts.filter(c => c.status === 'available').length, [carts])
-  const inUseCount = useMemo(() => carts.filter(c => c.status === 'in-use').length, [carts])
-  const maintenanceCount = useMemo(() => carts.filter(c => c.status === 'maintenance').length, [carts])
-  const outOfServiceCount = useMemo(() => carts.filter(c => c.status === 'out-of-service').length, [carts])
+  const availableCount = useMemo(() => carts.filter(c => c.status === 'AVAILABLE').length, [carts])
+  const inUseCount = useMemo(() => carts.filter(c => c.status === 'IN_USE').length, [carts])
+  const maintenanceCount = useMemo(() => carts.filter(c => c.status === 'MAINTENANCE').length, [carts])
+  const outOfServiceCount = useMemo(() => carts.filter(c => c.status === 'OUT_OF_SERVICE').length, [carts])
 
   const needsServiceSoon = useMemo(() => {
     const today = new Date()
@@ -150,22 +150,22 @@ export default function MaintenancePage() {
     return carts.filter(c => {
       if (!c.nextServiceDue) return false
       const serviceDate = new Date(c.nextServiceDue)
-      return serviceDate <= oneWeekFromNow && c.status !== 'maintenance' && c.status !== 'out-of-service'
+      return serviceDate <= oneWeekFromNow && c.status !== 'MAINTENANCE' && c.status !== 'OUT_OF_SERVICE'
     })
   }, [carts])
 
   const statusColors: Record<ExtendedCart['status'], string> = {
-    available: 'bg-emerald-500',
-    'in-use': 'bg-blue-500',
-    maintenance: 'bg-amber-500',
-    'out-of-service': 'bg-red-500',
+    AVAILABLE: 'bg-emerald-500',
+    IN_USE: 'bg-blue-500',
+    MAINTENANCE: 'bg-amber-500',
+    OUT_OF_SERVICE: 'bg-red-500',
   }
 
   const statusIcons: Record<ExtendedCart['status'], React.ReactNode> = {
-    available: <CheckCircle2 className="h-4 w-4" />,
-    'in-use': <Car className="h-4 w-4" />,
-    maintenance: <Wrench className="h-4 w-4" />,
-    'out-of-service': <XCircle className="h-4 w-4" />,
+    AVAILABLE: <CheckCircle2 className="h-4 w-4" />,
+    IN_USE: <Car className="h-4 w-4" />,
+    MAINTENANCE: <Wrench className="h-4 w-4" />,
+    OUT_OF_SERVICE: <XCircle className="h-4 w-4" />,
   }
 
   const getBatteryColor = (level?: number) => {
@@ -283,7 +283,7 @@ export default function MaintenancePage() {
                 />
               </div>
               <div className="flex border border-border rounded-md overflow-hidden">
-                {(['all', 'available', 'in-use', 'maintenance'] as FilterStatus[]).map((status) => (
+                {(['all', 'AVAILABLE', 'IN_USE', 'MAINTENANCE'] as FilterStatus[]).map((status) => (
                   <button
                     key={status}
                     onClick={() => setFilterStatus(status)}
@@ -293,7 +293,7 @@ export default function MaintenancePage() {
                         : 'hover:bg-muted'
                     }`}
                   >
-                    {status === 'in-use' ? 'In Use' : status}
+                    {status === 'IN_USE' ? 'In Use' : status.toLowerCase().replace('_', ' ')}
                   </button>
                 ))}
               </div>
@@ -316,7 +316,7 @@ export default function MaintenancePage() {
                   </div>
                   <div className={`px-2 py-1 rounded-full text-xs text-white flex items-center gap-1 ${statusColors[cart.status]}`}>
                     {statusIcons[cart.status]}
-                    <span className="capitalize">{cart.status.replace('-', ' ')}</span>
+                    <span className="capitalize">{cart.status.toLowerCase().replace('_', ' ')}</span>
                   </div>
                 </div>
 
@@ -359,7 +359,7 @@ export default function MaintenancePage() {
                 <div className="flex items-center justify-between">
                   <h2 className="font-semibold text-lg">Cart #{selectedCart.number}</h2>
                   <div className={`px-2 py-1 rounded-full text-xs text-white ${statusColors[selectedCart.status]}`}>
-                    {selectedCart.status.replace('-', ' ')}
+                    {selectedCart.status.toLowerCase().replace('_', ' ')}
                   </div>
                 </div>
               </div>
@@ -431,7 +431,7 @@ export default function MaintenancePage() {
                     <Wrench className="mr-2 h-4 w-4" />
                     Schedule Service
                   </Button>
-                  {selectedCart.status === 'maintenance' && (
+                  {selectedCart.status === 'MAINTENANCE' && (
                     <Button className="flex-1">
                       Mark Ready
                     </Button>

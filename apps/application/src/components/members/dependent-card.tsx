@@ -28,6 +28,7 @@ const relationshipColors: Record<DependentRelationship, string> = {
   CHILD: 'bg-blue-50 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-200/60 dark:border-blue-500/30',
   PARENT: 'bg-purple-50 dark:bg-purple-500/20 text-purple-700 dark:text-purple-400 border-purple-200/60 dark:border-purple-500/30',
   SIBLING: 'bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-200/60 dark:border-amber-500/30',
+  OTHER: 'bg-stone-50 dark:bg-stone-500/20 text-stone-700 dark:text-stone-400 border-stone-200/60 dark:border-stone-500/30',
 };
 
 const relationshipLabels: Record<DependentRelationship, string> = {
@@ -35,6 +36,7 @@ const relationshipLabels: Record<DependentRelationship, string> = {
   CHILD: 'Child',
   PARENT: 'Parent',
   SIBLING: 'Sibling',
+  OTHER: 'Other',
 };
 
 function getInitials(firstName: string, lastName: string): string {
@@ -158,7 +160,7 @@ export function DependentCard({
         <div className="flex items-center justify-between gap-3 sm:flex-col sm:items-end">
           {/* Status Badge */}
           <StatusBadge
-            status={dependent.status.toLowerCase() as 'active' | 'inactive'}
+            status={dependent.status === 'ACTIVE' ? 'active' : 'inactive'}
             size="sm"
           />
 

@@ -45,7 +45,7 @@ function getBalanceColor(member: Member): string {
   return 'text-amber-600';
 }
 
-const statusMap: Record<MemberStatus, string> = {
+const statusMap = {
   PROSPECT: 'prospect',
   LEAD: 'lead',
   APPLICANT: 'applicant',
@@ -55,7 +55,7 @@ const statusMap: Record<MemberStatus, string> = {
   RESIGNED: 'resigned',
   TERMINATED: 'terminated',
   REACTIVATED: 'reactivated',
-};
+} as const;
 
 export function MemberTableRow({
   member,

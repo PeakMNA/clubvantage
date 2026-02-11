@@ -120,7 +120,7 @@ export default function InvoiceDetailPage() {
               <Send className="mr-2 h-4 w-4" />
               Send
             </Button>
-            {invoice.status !== 'paid' && invoice.status !== 'cancelled' && (
+            {invoice.status !== 'PAID' && invoice.status !== 'CANCELLED' && (
               <Button
                 size="sm"
                 className="bg-gradient-to-br from-amber-500 to-amber-600 text-white"
@@ -290,7 +290,7 @@ export default function InvoiceDetailPage() {
                 <FileText className="mr-2 h-4 w-4" />
                 Download PDF
               </Button>
-              {invoice.status !== 'cancelled' && invoice.status !== 'paid' && (
+              {invoice.status !== 'CANCELLED' && invoice.status !== 'PAID' && (
                 <Button
                   variant="outline"
                   size="sm"
