@@ -20,7 +20,7 @@ export default function ReportsDashboardPage() {
         value: formatThbCurrency(financial?.thisMonthRevenue ?? 0),
         trend: financial?.revenueGrowth != null
           ? {
-              value: Math.abs(financial.revenueGrowth),
+              value: Math.round(Math.abs(financial.revenueGrowth) * 10) / 10,
               direction: (financial.revenueGrowth >= 0 ? 'up' : 'down') as 'up' | 'down',
               label: 'vs last month',
             }
@@ -37,7 +37,7 @@ export default function ReportsDashboardPage() {
         value: members?.active?.toLocaleString() ?? '0',
         trend: members?.growth != null
           ? {
-              value: Math.abs(members.growth),
+              value: Math.round(Math.abs(members.growth) * 10) / 10,
               direction: (members.growth >= 0 ? 'up' : 'down') as 'up' | 'down',
               label: 'vs last month',
             }

@@ -25,7 +25,7 @@ export default function MembershipReportsPage() {
 
     const statusEntries: { status: string; _count: number }[] =
       Array.isArray(report.byStatus) ? report.byStatus : []
-    const typeEntries: { membershipTypeId: string; _count: number }[] =
+    const typeEntries: { membershipTypeId: string; membershipTypeName?: string; _count: number }[] =
       Array.isArray(report.byType) ? report.byType : []
 
     const totalActive = statusEntries
@@ -40,7 +40,7 @@ export default function MembershipReportsPage() {
 
     const typeBreakdown = typeEntries.map((entry) => ({
       id: entry.membershipTypeId,
-      type: entry.membershipTypeId,
+      type: entry.membershipTypeName ?? entry.membershipTypeId,
       count: entry._count,
       percentOfTotal: totalMembers > 0
         ? Math.round((entry._count / totalMembers) * 100)

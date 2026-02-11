@@ -160,7 +160,7 @@ export class ReportsService {
   }
 
   async getMembershipReport(tenantId: string) {
-    const [byStatus, byType, expiringThisMonth] = await Promise.all([
+    const [byStatus, byTypeRaw, expiringThisMonth, membershipTypes] = await Promise.all([
       this.prisma.member.groupBy({
         by: ['status'],
         where: { clubId: tenantId, deletedAt: null },
@@ -181,7 +181,17 @@ export class ReportsService {
           deletedAt: null,
         },
       }),
+      this.prisma.membershipType.findMany({
+        where: { clubId: tenantId },
+        select: { id: true, name: true },
+      }),
     ]);
+
+    const typeNameMap = new Map(membershipTypes.map((t) => [t.id, t.name]));
+    const byType = byTypeRaw.map((entry) => ({
+      ...entry,
+      membershipTypeName: typeNameMap.get(entry.membershipTypeId) || entry.membershipTypeId,
+    }));
 
     return {
       byStatus,

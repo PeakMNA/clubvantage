@@ -15,10 +15,12 @@ export default function CollectionsReportsPage() {
     if (!metrics) return {}
 
     return {
-      collectionRate: metrics.collectionRate,
-      avgDaysToPay: metrics.avgDaysToPay,
+      collectionRate: Math.round(metrics.collectionRate * 10) / 10,
+      avgDaysToPay: Math.round(metrics.avgDaysToPay * 10) / 10,
       collectedThisPeriod: metrics.collectedThisPeriod,
-      vsLastPeriod: metrics.vsLastPeriod ?? undefined,
+      vsLastPeriod: metrics.vsLastPeriod != null
+        ? Math.round(metrics.vsLastPeriod * 10) / 10
+        : undefined,
       paymentMethods: metrics.paymentMethods.map((pm) => ({
         name: pm.name,
         value: pm.value,
