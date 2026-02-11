@@ -1,0 +1,58 @@
+# Settings Queries & Mutations
+
+query GetClubProfile {
+  clubProfile {
+    id
+    name
+    slug
+    address
+    phone
+    email
+    website
+    logoUrl
+    primaryColor
+    timezone
+    region
+    subscriptionTier
+    subscriptionStatus
+    maxMembers
+    maxUsers
+    features
+  }
+}
+
+query GetBillingSettings {
+  billingSettings {
+    taxRate
+    taxType
+    currency
+    invoicePrefix
+    paymentTermDays
+  }
+}
+
+mutation UpdateClubProfile($input: UpdateClubProfileInput!) {
+  updateClubProfile(input: $input) {
+    id
+    name
+    slug
+    address
+    phone
+    email
+    website
+    logoUrl
+    primaryColor
+    timezone
+    region
+  }
+}
+
+mutation UpdateBillingSettings($input: UpdateBillingSettingsInput!) {
+  updateBillingSettings(input: $input) {
+    taxRate
+    taxType
+    currency
+    invoicePrefix
+    paymentTermDays
+  }
+}

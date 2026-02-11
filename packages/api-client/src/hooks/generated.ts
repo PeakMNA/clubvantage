@@ -124,6 +124,24 @@ export type ActiveSpecialDayInfo = {
   type: SpecialDayType;
 };
 
+export type ActivityEntryType = {
+  __typename?: 'ActivityEntryType';
+  aggregateId: Scalars['String']['output'];
+  aggregateType: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  data: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  type: Scalars['String']['output'];
+  userEmail: Scalars['String']['output'];
+  userId: Scalars['String']['output'];
+};
+
+export type ActivityLogResultType = {
+  __typename?: 'ActivityLogResultType';
+  data: Array<ActivityEntryType>;
+  meta: PaginationMetaType;
+};
+
 export type AddGroupPlayersInput = {
   players: Array<GroupPlayerInput>;
 };
@@ -344,6 +362,21 @@ export type AssignTemplateMutationResponse = {
   success: Scalars['Boolean']['output'];
 };
 
+export type AudienceSegmentType = {
+  __typename?: 'AudienceSegmentType';
+  createdAt: Scalars['DateTime']['output'];
+  description?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  isArchived: Scalars['Boolean']['output'];
+  memberCount: Scalars['Int']['output'];
+  name: Scalars['String']['output'];
+  naturalLanguageQuery?: Maybe<Scalars['String']['output']>;
+  refreshedAt?: Maybe<Scalars['DateTime']['output']>;
+  rules?: Maybe<Scalars['JSON']['output']>;
+  type: SegmentType;
+  updatedAt: Scalars['DateTime']['output'];
+};
+
 export type AutoPayAttempt = {
   __typename?: 'AutoPayAttempt';
   amount: Scalars['Float']['output'];
@@ -524,6 +557,15 @@ export type BillingPeriodPreview = {
   periodStart: Scalars['DateTime']['output'];
 };
 
+export type BillingSettingsType = {
+  __typename?: 'BillingSettingsType';
+  currency?: Maybe<Scalars['String']['output']>;
+  invoicePrefix: Scalars['String']['output'];
+  paymentTermDays: Scalars['Int']['output'];
+  taxRate?: Maybe<Scalars['Float']['output']>;
+  taxType?: Maybe<Scalars['String']['output']>;
+};
+
 /** Statement delivery method (EMAIL, PRINT, PORTAL, SMS, EMAIL_AND_PRINT, ALL) */
 export type BillingStatementDelivery =
   | 'ALL'
@@ -589,6 +631,14 @@ export type BookingGroupType = {
   groupNumber: Scalars['Int']['output'];
   id: Scalars['ID']['output'];
   playerIds: Array<Scalars['String']['output']>;
+};
+
+export type BookingGuestType = {
+  __typename?: 'BookingGuestType';
+  email?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  phone?: Maybe<Scalars['String']['output']>;
 };
 
 export type BookingLineItemType = {
@@ -667,6 +717,7 @@ export type BookingType = {
   endTime: Scalars['DateTime']['output'];
   facility?: Maybe<FacilityType>;
   guestCount?: Maybe<Scalars['Int']['output']>;
+  guests?: Maybe<Array<BookingGuestType>>;
   id: Scalars['ID']['output'];
   member: BookingMemberType;
   notes?: Maybe<Scalars['String']['output']>;
@@ -676,11 +727,36 @@ export type BookingType = {
   staff?: Maybe<StaffType>;
   startTime: Scalars['DateTime']['output'];
   status: BookingStatus;
+  waitlistEntry?: Maybe<BookingWaitlistType>;
 };
 
 export type BookingTypeEnum =
   | 'FACILITY'
   | 'SERVICE';
+
+export type BookingWaitlistType = {
+  __typename?: 'BookingWaitlistType';
+  id: Scalars['ID']['output'];
+  offerExpiresAt?: Maybe<Scalars['DateTime']['output']>;
+  position: Scalars['Int']['output'];
+  status: WaitlistStatus;
+};
+
+export type BrandConfigType = {
+  __typename?: 'BrandConfigType';
+  createdAt: Scalars['DateTime']['output'];
+  fromEmail?: Maybe<Scalars['String']['output']>;
+  fromName?: Maybe<Scalars['String']['output']>;
+  guidelines?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  language?: Maybe<Scalars['String']['output']>;
+  logoUrl?: Maybe<Scalars['String']['output']>;
+  primaryColor?: Maybe<Scalars['String']['output']>;
+  replyToEmail?: Maybe<Scalars['String']['output']>;
+  secondaryColor?: Maybe<Scalars['String']['output']>;
+  tone?: Maybe<Scalars['String']['output']>;
+  updatedAt: Scalars['DateTime']['output'];
+};
 
 export type BulkOutletProductConfigInput = {
   categoryId?: InputMaybe<Scalars['ID']['input']>;
@@ -783,6 +859,54 @@ export type CalendarResourceType = {
   name: Scalars['String']['output'];
   subtitle?: Maybe<Scalars['String']['output']>;
   type: ResourceTypeEnum;
+};
+
+export type CampaignFilterInput = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  status?: InputMaybe<CampaignStatus>;
+  type?: InputMaybe<CampaignKind>;
+};
+
+/** Campaign type (one-shot or automated flow) */
+export type CampaignKind =
+  | 'AUTOMATED_FLOW'
+  | 'ONE_SHOT';
+
+export type CampaignMetricsType = {
+  __typename?: 'CampaignMetricsType';
+  bounced: Scalars['Int']['output'];
+  clicked: Scalars['Int']['output'];
+  delivered: Scalars['Int']['output'];
+  opened: Scalars['Int']['output'];
+  sent: Scalars['Int']['output'];
+  unsubscribed: Scalars['Int']['output'];
+};
+
+/** Campaign status */
+export type CampaignStatus =
+  | 'ACTIVE'
+  | 'ARCHIVED'
+  | 'COMPLETED'
+  | 'DRAFT'
+  | 'PAUSED';
+
+export type CampaignType = {
+  __typename?: 'CampaignType';
+  channels: Array<Scalars['String']['output']>;
+  contentPieceCount?: Maybe<Scalars['Int']['output']>;
+  contentPieces?: Maybe<Array<ContentPieceType>>;
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  memberCount?: Maybe<Scalars['Int']['output']>;
+  name: Scalars['String']['output'];
+  scheduledAt?: Maybe<Scalars['DateTime']['output']>;
+  segmentCount?: Maybe<Scalars['Int']['output']>;
+  segments?: Maybe<Array<AudienceSegmentType>>;
+  sentAt?: Maybe<Scalars['DateTime']['output']>;
+  status: CampaignStatus;
+  type: CampaignKind;
+  updatedAt: Scalars['DateTime']['output'];
 };
 
 export type CanClosePeriodResultType = {
@@ -946,6 +1070,31 @@ export type ChangeSubAccountStatusInput = {
   status: SubAccountStatus;
   subAccountId: Scalars['String']['input'];
 };
+
+export type ChannelConfigType = {
+  __typename?: 'ChannelConfigType';
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  lastSyncAt?: Maybe<Scalars['DateTime']['output']>;
+  status: ChannelStatus;
+  type: ChannelType;
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+/** Channel connection status */
+export type ChannelStatus =
+  | 'CONNECTED'
+  | 'ERROR'
+  | 'NOT_CONNECTED'
+  | 'SUSPENDED';
+
+/** Marketing channel type */
+export type ChannelType =
+  | 'EMAIL'
+  | 'FACEBOOK'
+  | 'INSTAGRAM'
+  | 'LANDING_PAGE'
+  | 'LINE';
 
 export type ChargeTypeType = {
   __typename?: 'ChargeTypeType';
@@ -1335,6 +1484,56 @@ export type ClubGolfSettingsType = {
   requireGuestContact: Scalars['Boolean']['output'];
 };
 
+export type ClubProfileType = {
+  __typename?: 'ClubProfileType';
+  address?: Maybe<Scalars['String']['output']>;
+  email?: Maybe<Scalars['String']['output']>;
+  features?: Maybe<Scalars['JSON']['output']>;
+  id: Scalars['ID']['output'];
+  logoUrl?: Maybe<Scalars['String']['output']>;
+  maxMembers?: Maybe<Scalars['Int']['output']>;
+  maxUsers?: Maybe<Scalars['Int']['output']>;
+  name: Scalars['String']['output'];
+  phone?: Maybe<Scalars['String']['output']>;
+  primaryColor?: Maybe<Scalars['String']['output']>;
+  region?: Maybe<Scalars['String']['output']>;
+  slug: Scalars['String']['output'];
+  subscriptionStatus: Scalars['String']['output'];
+  subscriptionTier: Scalars['String']['output'];
+  timezone?: Maybe<Scalars['String']['output']>;
+  website?: Maybe<Scalars['String']['output']>;
+};
+
+export type ContentPieceType = {
+  __typename?: 'ContentPieceType';
+  body: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  generatedBy?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  previewText?: Maybe<Scalars['String']['output']>;
+  status: ContentStatus;
+  subject?: Maybe<Scalars['String']['output']>;
+  type: ContentType;
+  updatedAt: Scalars['DateTime']['output'];
+  variantLabel?: Maybe<Scalars['String']['output']>;
+};
+
+/** Content piece status */
+export type ContentStatus =
+  | 'APPROVED'
+  | 'DRAFT'
+  | 'FAILED'
+  | 'PENDING_REVIEW'
+  | 'PUBLISHED'
+  | 'SCHEDULED';
+
+/** Content piece type */
+export type ContentType =
+  | 'EMAIL'
+  | 'LANDING_PAGE'
+  | 'LINE_MESSAGE'
+  | 'SOCIAL_POST';
+
 export type CourseIntervalInput = {
   dayType: DayType;
   intervalMin?: Scalars['Int']['input'];
@@ -1429,6 +1628,13 @@ export type CreateCaddyRateInput = {
   rateConfigId: Scalars['ID']['input'];
   taxRate?: Scalars['Float']['input'];
   taxType?: Scalars['String']['input'];
+};
+
+export type CreateCampaignInput = {
+  channels: Array<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+  segmentIds?: InputMaybe<Array<Scalars['ID']['input']>>;
+  type: CampaignKind;
 };
 
 export type CreateCartRateInput = {
@@ -1828,12 +2034,21 @@ export type CreateSeasonInput = {
   weekendBookingMode?: InputMaybe<BookingMode>;
 };
 
+export type CreateSegmentInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+  naturalLanguageQuery?: InputMaybe<Scalars['String']['input']>;
+  rules: Array<SegmentRuleInput>;
+  type: SegmentType;
+};
+
 export type CreateServiceInput = {
   basePrice: Scalars['Float']['input'];
   bufferMinutes?: InputMaybe<Scalars['Int']['input']>;
   category: Scalars['String']['input'];
   description?: InputMaybe<Scalars['String']['input']>;
   durationMinutes: Scalars['Int']['input'];
+  enforceQualification?: InputMaybe<Scalars['Boolean']['input']>;
   isActive?: InputMaybe<Scalars['Boolean']['input']>;
   maxParticipants?: InputMaybe<Scalars['Int']['input']>;
   name: Scalars['String']['input'];
@@ -1925,6 +2140,16 @@ export type CreateTimePeriodInput = {
   name: Scalars['String']['input'];
   sortOrder?: InputMaybe<Scalars['Int']['input']>;
   startTime: Scalars['String']['input'];
+};
+
+export type CreateUserInput = {
+  email: Scalars['String']['input'];
+  firstName: Scalars['String']['input'];
+  lastName: Scalars['String']['input'];
+  password: Scalars['String']['input'];
+  permissions?: InputMaybe<Array<Scalars['String']['input']>>;
+  phone?: InputMaybe<Scalars['String']['input']>;
+  role: UserRole;
 };
 
 export type CreateWaitlistEntryInput = {
@@ -2151,6 +2376,34 @@ export type DailySettlementGraphQlType = {
   transactionCount: Scalars['Int']['output'];
   updatedAt: Scalars['DateTime']['output'];
   voidCount: Scalars['Int']['output'];
+};
+
+export type DashboardBookingStatsType = {
+  __typename?: 'DashboardBookingStatsType';
+  upcoming: Scalars['Int']['output'];
+};
+
+export type DashboardFinancialStatsType = {
+  __typename?: 'DashboardFinancialStatsType';
+  lastMonthRevenue: Scalars['Float']['output'];
+  revenueGrowth: Scalars['Float']['output'];
+  thisMonthRevenue: Scalars['Float']['output'];
+  totalOutstanding: Scalars['Float']['output'];
+};
+
+export type DashboardMemberStatsType = {
+  __typename?: 'DashboardMemberStatsType';
+  active: Scalars['Int']['output'];
+  growth: Scalars['Float']['output'];
+  newThisMonth: Scalars['Int']['output'];
+  total: Scalars['Int']['output'];
+};
+
+export type DashboardStatsType = {
+  __typename?: 'DashboardStatsType';
+  bookings: DashboardBookingStatsType;
+  financial: DashboardFinancialStatsType;
+  members: DashboardMemberStatsType;
 };
 
 export type DayHoursInput = {
@@ -2559,6 +2812,7 @@ export type ExtendedServiceType = {
   category: Scalars['String']['output'];
   description?: Maybe<Scalars['String']['output']>;
   durationMinutes: Scalars['Int']['output'];
+  enforceQualification: Scalars['Boolean']['output'];
   id: Scalars['ID']['output'];
   isActive: Scalars['Boolean']['output'];
   maxParticipants?: Maybe<Scalars['Int']['output']>;
@@ -2609,6 +2863,25 @@ export type FacilityType = {
   type: ResourceTypeEnum;
 };
 
+export type FeatureFlagsType = {
+  __typename?: 'FeatureFlagsType';
+  features: FeatureLevelFlagsType;
+  modules: ModuleFlagsType;
+  operational: OperationalFlagsType;
+};
+
+export type FeatureLevelFlagsType = {
+  __typename?: 'FeatureLevelFlagsType';
+  aiDynamicPricing: Scalars['Boolean']['output'];
+  automatedFlows: Scalars['Boolean']['output'];
+  customDomain: Scalars['Boolean']['output'];
+  golfLottery: Scalars['Boolean']['output'];
+  houseAccounts: Scalars['Boolean']['output'];
+  memberPricing: Scalars['Boolean']['output'];
+  memberWindows: Scalars['Boolean']['output'];
+  whiteLabelApp: Scalars['Boolean']['output'];
+};
+
 export type FifoAllocationItem = {
   __typename?: 'FifoAllocationItem';
   allocatedAmount: Scalars['String']['output'];
@@ -2630,6 +2903,14 @@ export type FifoAllocationPreview = {
 export type FinancialPeriodType =
   | 'CALENDAR_MONTH'
   | 'CUSTOM';
+
+export type FinancialReportType = {
+  __typename?: 'FinancialReportType';
+  byChargeType: Scalars['JSON']['output'];
+  invoices: ReportInvoiceSummaryType;
+  payments: ReportPaymentSummaryType;
+  period: ReportPeriodType;
+};
 
 export type FlightAssignment = {
   __typename?: 'FlightAssignment';
@@ -2671,6 +2952,13 @@ export type FlightPaymentSummaryType = {
   totalPlayers: Scalars['Int']['output'];
 };
 
+export type GenerateContentInput = {
+  audienceDescription?: InputMaybe<Scalars['String']['input']>;
+  campaignGoal: Scalars['String']['input'];
+  contentType?: InputMaybe<ContentType>;
+  tone?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type GenerateStatementInput = {
   endDate: Scalars['DateTime']['input'];
   memberId: Scalars['ID']['input'];
@@ -2680,6 +2968,13 @@ export type GenerateStatementInput = {
 export type GenerateTicketInput = {
   forceRegenerate?: InputMaybe<Scalars['Boolean']['input']>;
   teeTimeId: Scalars['ID']['input'];
+};
+
+export type GeneratedContentType = {
+  __typename?: 'GeneratedContentType';
+  body: Scalars['String']['output'];
+  previewText: Scalars['String']['output'];
+  subject: Scalars['String']['output'];
 };
 
 export type GetAutoPayHistoryInput = {
@@ -2884,6 +3179,14 @@ export type GolfTimePeriodType = {
   startTime: Scalars['String']['output'];
 };
 
+export type GolfUtilizationReportType = {
+  __typename?: 'GolfUtilizationReportType';
+  byCourse: Scalars['JSON']['output'];
+  byStatus: Scalars['JSON']['output'];
+  period: ReportPeriodType;
+  totalBookings: Scalars['Int']['output'];
+};
+
 /** Golf waitlist entry status */
 export type GolfWaitlistStatus =
   | 'BOOKED'
@@ -2977,6 +3280,11 @@ export type HouseholdType = {
 
 export type ImportPlayersFromCsvInput = {
   rows: Array<CsvPlayerRow>;
+};
+
+export type ImproveContentInput = {
+  contentId: Scalars['ID']['input'];
+  feedback: Scalars['String']['input'];
 };
 
 /** Interest category for member engagement */
@@ -3221,6 +3529,14 @@ export type LotteryStatus =
 export type LotteryType =
   | 'PRIME_TIME'
   | 'SPECIAL_EVENT';
+
+export type MarketingStatsType = {
+  __typename?: 'MarketingStatsType';
+  activeCampaigns: Scalars['Int']['output'];
+  totalAudienceSize: Scalars['Int']['output'];
+  totalCampaigns: Scalars['Int']['output'];
+  totalEmailsSent: Scalars['Int']['output'];
+};
 
 export type MemberAddressType = {
   __typename?: 'MemberAddressType';
@@ -3583,6 +3899,13 @@ export type MembershipApplicationTypeEdge = {
   node: MembershipApplicationType;
 };
 
+export type MembershipReportType = {
+  __typename?: 'MembershipReportType';
+  byStatus: Scalars['JSON']['output'];
+  byType: Scalars['JSON']['output'];
+  expiringThisMonth: Scalars['Int']['output'];
+};
+
 export type MembershipTierType = {
   __typename?: 'MembershipTierType';
   code: Scalars['String']['output'];
@@ -3667,6 +3990,16 @@ export type ModifierGroup = {
 export type ModifierSelectionType =
   | 'MULTIPLE'
   | 'SINGLE';
+
+export type ModuleFlagsType = {
+  __typename?: 'ModuleFlagsType';
+  billing: Scalars['Boolean']['output'];
+  bookings: Scalars['Boolean']['output'];
+  golf: Scalars['Boolean']['output'];
+  marketing: Scalars['Boolean']['output'];
+  pos: Scalars['Boolean']['output'];
+  reports: Scalars['Boolean']['output'];
+};
 
 export type MoveTeeTimeInput = {
   newCourseId?: InputMaybe<Scalars['ID']['input']>;
@@ -3797,6 +4130,10 @@ export type Mutation = {
   createLookupValue: LookupMutationResult;
   /** Create a lottery */
   createLottery: LotteryMutationResponse;
+  /** Create a new campaign */
+  createMarketingCampaign: CampaignType;
+  /** Create an audience segment */
+  createMarketingSegment: AudienceSegmentType;
   /** Create a new member */
   createMember: MemberType;
   /** Create a new member address */
@@ -3833,6 +4170,8 @@ export type Mutation = {
   createTeeTimeBlock: BlockMutationResponse;
   /** Create a time period */
   createTimePeriod: TimePeriodMutationResponse;
+  /** Create a new user */
+  createUser: UserType;
   /** Add to waitlist */
   createWaitlistEntry: WaitlistMutationResponse;
   /** Decline a waitlist offer */
@@ -3863,6 +4202,10 @@ export type Mutation = {
   deleteLookupValue: LookupMutationResult;
   /** Delete a draft lottery */
   deleteLottery: LotteryMutationResponse;
+  /** Delete a draft campaign */
+  deleteMarketingCampaign: Scalars['Boolean']['output'];
+  /** Archive an audience segment */
+  deleteMarketingSegment: Scalars['Boolean']['output'];
   /** Soft delete a member */
   deleteMember: DeleteMemberResponseType;
   /** Delete a member address */
@@ -3896,6 +4239,8 @@ export type Mutation = {
   deleteTeeTimeBlock: BlockMutationResponse;
   /** Delete a time period */
   deleteTimePeriod: DeleteMutationResponse;
+  /** Soft delete a user */
+  deleteUser: StatusMessageType;
   /** Delete a waitlist entry */
   deleteWaitlistEntry: WaitlistMutationResponse;
   /** Disable auto-pay for a member */
@@ -3906,12 +4251,20 @@ export type Mutation = {
   exemptMemberFromMinimumSpend: MemberMinimumSpend;
   /** Mark expired waitlist entries */
   expireOldWaitlistEntries: WaitlistMutationResponse;
+  /** AI-generate email content */
+  generateMarketingContent: GeneratedContentType;
+  /** Generate A/B variant of content */
+  generateMarketingVariant: GeneratedContentType;
   /** Generate or regenerate a starter ticket for a tee time */
   generateStarterTicket: StarterTicketResponseType;
   /** Import players from CSV data */
   importPlayersFromCSV: GroupBookingMutationResponse;
+  /** Improve content based on feedback */
+  improveMarketingContent: GeneratedContentType;
   /** Join a waitlist */
   joinWaitlist: WaitlistResponseType;
+  /** Lock a user account for a specified duration in minutes */
+  lockUser: StatusMessageType;
   markStatementPortalViewed: StatementGqlType;
   /** Move a tee time to a different slot */
   moveTeeTime: TeeTimeType;
@@ -3950,6 +4303,8 @@ export type Mutation = {
   recordPayment: PaymentType;
   /** Record a transaction for a sub-account */
   recordSubAccountTransaction: SubAccountTransaction;
+  /** Refresh segment member count */
+  refreshSegmentCount: AudienceSegmentType;
   /** Manually regenerate line items for a tee time */
   regenerateLineItems: Scalars['Boolean']['output'];
   releaseEquipmentForBooking: EquipmentReleaseResponse;
@@ -3999,6 +4354,8 @@ export type Mutation = {
   saveCartDraft: CartDraftType;
   /** Send an invoice */
   sendInvoice: InvoiceType;
+  /** Send a campaign to its audience */
+  sendMarketingCampaign: CampaignType;
   /** Send offer to waitlist entry */
   sendWaitlistOffer: WaitlistResponseType;
   /** Set a payment method as default */
@@ -4037,11 +4394,14 @@ export type Mutation = {
   undoTransfer: TransferResultType;
   /** Unlock a locked sub-account PIN */
   unlockSubAccountPin: SubAccount;
+  /** Unlock a user account */
+  unlockUser: StatusMessageType;
   updateARProfile: ArProfileGqlType;
   /** Update AR period settings for the club */
   updateARSettings: ArPeriodSettingsType;
   /** Update an existing membership application */
   updateApplication: MembershipApplicationType;
+  updateBillingSettings: BillingSettingsType;
   /** Update a caddy rate */
   updateCaddyRate: CaddyRateMutationResponse;
   /** Update a cart rate */
@@ -4054,6 +4414,7 @@ export type Mutation = {
   updateCheckInPolicy: CheckInSettingsType;
   /** Update club-wide billing configuration settings */
   updateClubBillingSettings: ClubBillingSettingsType;
+  updateClubProfile: ClubProfileType;
   /** Update a course schedule */
   updateCourseSchedule: ScheduleMutationResponse;
   /** Update a dependent */
@@ -4076,6 +4437,14 @@ export type Mutation = {
   updateLookupValue: LookupMutationResult;
   /** Update a lottery */
   updateLottery: LotteryMutationResponse;
+  /** Update brand configuration */
+  updateMarketingBrandConfig: BrandConfigType;
+  /** Update a campaign */
+  updateMarketingCampaign: CampaignType;
+  /** Update a channel configuration */
+  updateMarketingChannel: ChannelConfigType;
+  /** Update an audience segment */
+  updateMarketingSegment: AudienceSegmentType;
   /** Update an existing member */
   updateMember: MemberType;
   /** Update an existing member address */
@@ -4091,6 +4460,7 @@ export type Mutation = {
   /** Update a minimum spend requirement */
   updateMinimumSpendRequirement: MinimumSpendRequirement;
   updateModifierGroup: ModifierGroup;
+  updateOperationalFlag: FeatureFlagsType;
   updateOutletGridConfig: OutletGridConfig;
   updateOutletProductConfig: OutletProductConfig;
   /** Update the button registry for the club */
@@ -4141,6 +4511,8 @@ export type Mutation = {
   updateTeeTimePlayers: TeeTimeType;
   /** Update a time period */
   updateTimePeriod: TimePeriodMutationResponse;
+  /** Update an existing user */
+  updateUser: UserType;
   /** Update a waitlist entry */
   updateWaitlistEntry: WaitlistMutationResponse;
   /** Upload a new document for a member */
@@ -4501,6 +4873,16 @@ export type MutationCreateLotteryArgs = {
 };
 
 
+export type MutationCreateMarketingCampaignArgs = {
+  input: CreateCampaignInput;
+};
+
+
+export type MutationCreateMarketingSegmentArgs = {
+  input: CreateSegmentInput;
+};
+
+
 export type MutationCreateMemberArgs = {
   input: CreateMemberInput;
 };
@@ -4604,6 +4986,11 @@ export type MutationCreateTimePeriodArgs = {
 };
 
 
+export type MutationCreateUserArgs = {
+  input: CreateUserInput;
+};
+
+
 export type MutationCreateWaitlistEntryArgs = {
   input: CreateWaitlistEntryInput;
 };
@@ -4685,6 +5072,16 @@ export type MutationDeleteLookupValueArgs = {
 
 
 export type MutationDeleteLotteryArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteMarketingCampaignArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteMarketingSegmentArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -4781,6 +5178,11 @@ export type MutationDeleteTimePeriodArgs = {
 };
 
 
+export type MutationDeleteUserArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteWaitlistEntryArgs = {
   id: Scalars['ID']['input'];
 };
@@ -4801,6 +5203,16 @@ export type MutationExemptMemberFromMinimumSpendArgs = {
 };
 
 
+export type MutationGenerateMarketingContentArgs = {
+  input: GenerateContentInput;
+};
+
+
+export type MutationGenerateMarketingVariantArgs = {
+  contentId: Scalars['ID']['input'];
+};
+
+
 export type MutationGenerateStarterTicketArgs = {
   input: GenerateTicketInput;
 };
@@ -4812,8 +5224,19 @@ export type MutationImportPlayersFromCsvArgs = {
 };
 
 
+export type MutationImproveMarketingContentArgs = {
+  input: ImproveContentInput;
+};
+
+
 export type MutationJoinWaitlistArgs = {
   input: JoinWaitlistInput;
+};
+
+
+export type MutationLockUserArgs = {
+  id: Scalars['ID']['input'];
+  minutes: Scalars['Int']['input'];
 };
 
 
@@ -4919,6 +5342,11 @@ export type MutationRecordPaymentArgs = {
 
 export type MutationRecordSubAccountTransactionArgs = {
   input: RecordTransactionInput;
+};
+
+
+export type MutationRefreshSegmentCountArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -5056,6 +5484,11 @@ export type MutationSendInvoiceArgs = {
 };
 
 
+export type MutationSendMarketingCampaignArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationSendWaitlistOfferArgs = {
   input: SendWaitlistOfferInput;
 };
@@ -5165,6 +5598,11 @@ export type MutationUnlockSubAccountPinArgs = {
 };
 
 
+export type MutationUnlockUserArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationUpdateArProfileArgs = {
   id: Scalars['ID']['input'];
   input: UpdateArProfileInput;
@@ -5179,6 +5617,11 @@ export type MutationUpdateArSettingsArgs = {
 export type MutationUpdateApplicationArgs = {
   id: Scalars['ID']['input'];
   input: UpdateApplicationInput;
+};
+
+
+export type MutationUpdateBillingSettingsArgs = {
+  input: UpdateBillingSettingsInput;
 };
 
 
@@ -5212,6 +5655,11 @@ export type MutationUpdateCheckInPolicyArgs = {
 
 export type MutationUpdateClubBillingSettingsArgs = {
   input: UpdateClubBillingSettingsInput;
+};
+
+
+export type MutationUpdateClubProfileArgs = {
+  input: UpdateClubProfileInput;
 };
 
 
@@ -5287,6 +5735,29 @@ export type MutationUpdateLotteryArgs = {
 };
 
 
+export type MutationUpdateMarketingBrandConfigArgs = {
+  input: UpdateBrandConfigInput;
+};
+
+
+export type MutationUpdateMarketingCampaignArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateCampaignInput;
+};
+
+
+export type MutationUpdateMarketingChannelArgs = {
+  input: UpdateChannelConfigInput;
+  type: ChannelType;
+};
+
+
+export type MutationUpdateMarketingSegmentArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateSegmentInput;
+};
+
+
 export type MutationUpdateMemberArgs = {
   id: Scalars['ID']['input'];
   input: UpdateMemberInput;
@@ -5329,6 +5800,12 @@ export type MutationUpdateMinimumSpendRequirementArgs = {
 export type MutationUpdateModifierGroupArgs = {
   id: Scalars['ID']['input'];
   input: UpdateModifierGroupInput;
+};
+
+
+export type MutationUpdateOperationalFlagArgs = {
+  key: Scalars['String']['input'];
+  value: Scalars['Boolean']['input'];
 };
 
 
@@ -5493,6 +5970,12 @@ export type MutationUpdateTimePeriodArgs = {
 };
 
 
+export type MutationUpdateUserArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateUserInput;
+};
+
+
 export type MutationUpdateWaitlistEntryArgs = {
   id: Scalars['ID']['input'];
   input: UpdateWaitlistEntryInput;
@@ -5558,6 +6041,14 @@ export type OperationType =
   | 'FACILITY'
   | 'GOLF'
   | 'SPA';
+
+export type OperationalFlagsType = {
+  __typename?: 'OperationalFlagsType';
+  emailCampaigns: Scalars['Boolean']['output'];
+  maintenanceMode: Scalars['Boolean']['output'];
+  newMemberRegistration: Scalars['Boolean']['output'];
+  onlineBooking: Scalars['Boolean']['output'];
+};
 
 export type OutletGridConfig = {
   __typename?: 'OutletGridConfig';
@@ -5698,6 +6189,14 @@ export type PageInfo = {
   hasNextPage: Scalars['Boolean']['output'];
   hasPreviousPage: Scalars['Boolean']['output'];
   startCursor?: Maybe<Scalars['String']['output']>;
+};
+
+export type PaginationMetaType = {
+  __typename?: 'PaginationMetaType';
+  limit: Scalars['Int']['output'];
+  page: Scalars['Int']['output'];
+  total: Scalars['Int']['output'];
+  totalPages: Scalars['Int']['output'];
 };
 
 export type PayLineItemsInput = {
@@ -6155,6 +6654,7 @@ export type Query = {
   arProfiles: Array<ArProfileGqlType>;
   /** Calculate totals for multiple players (for batch payment) */
   batchTotal: BatchTotalType;
+  billingSettings: BillingSettingsType;
   /** Get billing statistics for the current month */
   billingStats: BillingStatsType;
   /** Get a single booking by ID */
@@ -6194,6 +6694,7 @@ export type Query = {
   clubBillingSettings: ClubBillingSettingsType;
   /** Get club golf settings including cart, rental, and caddy policies */
   clubGolfSettings?: Maybe<ClubGolfSettingsType>;
+  clubProfile: ClubProfileType;
   /** Get schedules for a course */
   courseSchedules: Array<GolfCourseScheduleType>;
   /** Get all golf courses */
@@ -6228,6 +6729,7 @@ export type Query = {
   equipmentItem?: Maybe<Equipment>;
   /** Get list of facilities */
   facilities: Array<FacilityType>;
+  featureFlags: FeatureFlagsType;
   /** Get check-in info for all players in a tee time */
   flightCheckInInfo: FlightCheckInInfoType;
   /** Get payment summary for a flight */
@@ -6260,6 +6762,7 @@ export type Query = {
   invoiceAutoPayAttempts: Array<AutoPayAttempt>;
   /** Get paginated list of invoices */
   invoices: InvoiceConnection;
+  isFeatureEnabled: Scalars['Boolean']['output'];
   /** Check if all players in a tee time are settled */
   isTeeTimeFullySettled: Scalars['Boolean']['output'];
   /** Get discounts applied to a line item */
@@ -6272,6 +6775,26 @@ export type Query = {
   lotteries: Array<GolfLotteryType>;
   /** Get a single lottery */
   lottery: GolfLotteryType;
+  /** Get brand configuration */
+  marketingBrandConfig: BrandConfigType;
+  /** Get a single campaign */
+  marketingCampaign: CampaignType;
+  /** Get campaign delivery metrics */
+  marketingCampaignMetrics: CampaignMetricsType;
+  /** Get marketing campaigns */
+  marketingCampaigns: Array<CampaignType>;
+  /** Get marketing channel configurations */
+  marketingChannels: Array<ChannelConfigType>;
+  /** Get content pieces for a campaign */
+  marketingContent: Array<ContentPieceType>;
+  /** Get a single audience segment */
+  marketingSegment: AudienceSegmentType;
+  /** Get members in a segment */
+  marketingSegmentMembers: Array<SegmentMemberType>;
+  /** Get audience segments */
+  marketingSegments: Array<AudienceSegmentType>;
+  /** Get marketing overview stats */
+  marketingStats: MarketingStatsType;
   /** Get a single member by ID */
   member: MemberType;
   /** Get member addresses */
@@ -6389,6 +6912,16 @@ export type Query = {
   rateConfig: RateConfigType;
   /** Get HTML template for a receipt */
   receiptHTML: Scalars['String']['output'];
+  /** Get accounts receivable aging report */
+  reportsARAging: ReportArAgingType;
+  /** Get dashboard statistics */
+  reportsDashboard: DashboardStatsType;
+  /** Get financial report for a date range */
+  reportsFinancial: FinancialReportType;
+  /** Get golf utilization report for a date range */
+  reportsGolfUtilization: GolfUtilizationReportType;
+  /** Get membership statistics */
+  reportsMembership: MembershipReportType;
   /** Search AR accounts (Members + City Ledger) */
   searchArAccounts: Array<ArAccountSearchResult>;
   /** Search for caddies by name or caddy number */
@@ -6415,6 +6948,8 @@ export type Query = {
   slotCart?: Maybe<SlotCartType>;
   smartSuggestionConfig?: Maybe<SmartSuggestionConfig>;
   smartSuggestions: Array<Product>;
+  /** Get list of staff members with full details */
+  staffMembers: Array<ExtendedStaffType>;
   /** Get starter ticket by ID */
   starterTicket?: Maybe<StarterTicketResponseType>;
   /** Get starter ticket for a tee time */
@@ -6452,6 +6987,14 @@ export type Query = {
   transactionDiscounts: Array<AppliedDiscountType>;
   /** Get payment transaction history for a tee time */
   transactionHistory: Array<PaymentTransactionType>;
+  /** Translate natural language to segment rules */
+  translateSegmentQuery: SegmentTranslationResultType;
+  /** Get a single user by ID */
+  user: UserType;
+  /** Get activity log for users with pagination */
+  userActivityLog: ActivityLogResultType;
+  /** Get paginated list of users with optional filters */
+  users: UserListResultType;
   /** Validate if a discount can be applied */
   validateDiscount: DiscountValidationResultType;
   /** Validate a tee ticket by barcode */
@@ -6807,6 +7350,11 @@ export type QueryInvoicesArgs = {
 };
 
 
+export type QueryIsFeatureEnabledArgs = {
+  featureKey: Scalars['String']['input'];
+};
+
+
 export type QueryIsTeeTimeFullySettledArgs = {
   teeTimeId: Scalars['ID']['input'];
 };
@@ -6848,6 +7396,43 @@ export type QueryLotteriesArgs = {
 
 export type QueryLotteryArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type QueryMarketingCampaignArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryMarketingCampaignMetricsArgs = {
+  campaignId: Scalars['ID']['input'];
+};
+
+
+export type QueryMarketingCampaignsArgs = {
+  filter?: InputMaybe<CampaignFilterInput>;
+};
+
+
+export type QueryMarketingContentArgs = {
+  campaignId: Scalars['ID']['input'];
+};
+
+
+export type QueryMarketingSegmentArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryMarketingSegmentMembersArgs = {
+  segmentId: Scalars['ID']['input'];
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  take?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryMarketingSegmentsArgs = {
+  filter?: InputMaybe<SegmentFilterInput>;
 };
 
 
@@ -7129,6 +7714,18 @@ export type QueryReceiptHtmlArgs = {
 };
 
 
+export type QueryReportsFinancialArgs = {
+  endDate: Scalars['String']['input'];
+  startDate: Scalars['String']['input'];
+};
+
+
+export type QueryReportsGolfUtilizationArgs = {
+  endDate: Scalars['String']['input'];
+  startDate: Scalars['String']['input'];
+};
+
+
 export type QuerySearchArAccountsArgs = {
   accountTypes?: InputMaybe<Array<Scalars['String']['input']>>;
   limit?: InputMaybe<Scalars['Float']['input']>;
@@ -7202,6 +7799,11 @@ export type QuerySmartSuggestionConfigArgs = {
 
 export type QuerySmartSuggestionsArgs = {
   outletId: Scalars['ID']['input'];
+};
+
+
+export type QueryStaffMembersArgs = {
+  filter?: InputMaybe<StaffFilterInput>;
 };
 
 
@@ -7319,6 +7921,30 @@ export type QueryTransactionDiscountsArgs = {
 
 export type QueryTransactionHistoryArgs = {
   teeTimeId: Scalars['ID']['input'];
+};
+
+
+export type QueryTranslateSegmentQueryArgs = {
+  query: Scalars['String']['input'];
+};
+
+
+export type QueryUserArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryUserActivityLogArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryUsersArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+  role?: InputMaybe<Scalars['String']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -7479,6 +8105,40 @@ export type ReopenStatementPeriodInput = {
   reason: Scalars['String']['input'];
 };
 
+export type ReportArAgingType = {
+  __typename?: 'ReportARAgingType';
+  current: ReportAgingBucketType;
+  days1to30: ReportAgingBucketType;
+  days31to60: ReportAgingBucketType;
+  days90Plus: ReportAgingBucketType;
+};
+
+export type ReportAgingBucketType = {
+  __typename?: 'ReportAgingBucketType';
+  amount: Scalars['Float']['output'];
+  count: Scalars['Int']['output'];
+};
+
+export type ReportInvoiceSummaryType = {
+  __typename?: 'ReportInvoiceSummaryType';
+  count: Scalars['Int']['output'];
+  totalCollected: Scalars['Float']['output'];
+  totalInvoiced: Scalars['Float']['output'];
+  totalOutstanding: Scalars['Float']['output'];
+};
+
+export type ReportPaymentSummaryType = {
+  __typename?: 'ReportPaymentSummaryType';
+  count: Scalars['Int']['output'];
+  totalAmount: Scalars['Float']['output'];
+};
+
+export type ReportPeriodType = {
+  __typename?: 'ReportPeriodType';
+  endDate: Scalars['String']['output'];
+  startDate: Scalars['String']['output'];
+};
+
 export type RescheduleBookingInput = {
   id: Scalars['ID']['input'];
   newResourceId?: InputMaybe<Scalars['ID']['input']>;
@@ -7551,6 +8211,42 @@ export type SeasonMutationResponse = {
   success: Scalars['Boolean']['output'];
 };
 
+export type SegmentFilterInput = {
+  isArchived?: InputMaybe<Scalars['Boolean']['input']>;
+  type?: InputMaybe<SegmentType>;
+};
+
+export type SegmentMemberType = {
+  __typename?: 'SegmentMemberType';
+  email?: Maybe<Scalars['String']['output']>;
+  firstName: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  lastName: Scalars['String']['output'];
+  memberId: Scalars['String']['output'];
+  membershipTypeName?: Maybe<Scalars['String']['output']>;
+  status: Scalars['String']['output'];
+};
+
+export type SegmentRuleInput = {
+  field: Scalars['String']['input'];
+  operator: Scalars['String']['input'];
+  source: Scalars['String']['input'];
+  value: Scalars['JSON']['input'];
+};
+
+export type SegmentTranslationResultType = {
+  __typename?: 'SegmentTranslationResultType';
+  estimatedCount: Scalars['Int']['output'];
+  explanation: Scalars['String']['output'];
+  rules: Scalars['JSON']['output'];
+};
+
+/** Audience segment type */
+export type SegmentType =
+  | 'CUSTOM'
+  | 'MANUAL'
+  | 'SMART';
+
 export type SendWaitlistOfferInput = {
   entryId: Scalars['ID']['input'];
   expiresInHours?: InputMaybe<Scalars['Int']['input']>;
@@ -7574,9 +8270,11 @@ export type ServiceType = {
   category: Scalars['String']['output'];
   description?: Maybe<Scalars['String']['output']>;
   durationMinutes: Scalars['Int']['output'];
+  enforceQualification: Scalars['Boolean']['output'];
   id: Scalars['ID']['output'];
   isActive: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
+  requiredCapabilities?: Maybe<Array<Scalars['String']['output']>>;
 };
 
 export type ServiceVariationInput = {
@@ -8020,6 +8718,11 @@ export type StatementType = {
   periodEnd: Scalars['DateTime']['output'];
   periodStart: Scalars['DateTime']['output'];
   transactions: Array<MemberTransactionType>;
+};
+
+export type StatusMessageType = {
+  __typename?: 'StatusMessageType';
+  message: Scalars['String']['output'];
 };
 
 /** Whether a step is required or optional */
@@ -8576,6 +9279,14 @@ export type UpdateApplicationInput = {
   sponsorId?: InputMaybe<Scalars['ID']['input']>;
 };
 
+export type UpdateBillingSettingsInput = {
+  currency?: InputMaybe<Scalars['String']['input']>;
+  invoicePrefix?: InputMaybe<Scalars['String']['input']>;
+  paymentTermDays?: InputMaybe<Scalars['Int']['input']>;
+  taxRate?: InputMaybe<Scalars['Float']['input']>;
+  taxType?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type UpdateBlockInput = {
   blockType?: InputMaybe<BlockType>;
   endTime?: InputMaybe<Scalars['DateTime']['input']>;
@@ -8583,6 +9294,18 @@ export type UpdateBlockInput = {
   reason?: InputMaybe<Scalars['String']['input']>;
   recurringPattern?: InputMaybe<Scalars['String']['input']>;
   startTime?: InputMaybe<Scalars['DateTime']['input']>;
+};
+
+export type UpdateBrandConfigInput = {
+  fromEmail?: InputMaybe<Scalars['String']['input']>;
+  fromName?: InputMaybe<Scalars['String']['input']>;
+  guidelines?: InputMaybe<Scalars['String']['input']>;
+  language?: InputMaybe<Scalars['String']['input']>;
+  logoUrl?: InputMaybe<Scalars['String']['input']>;
+  primaryColor?: InputMaybe<Scalars['String']['input']>;
+  replyToEmail?: InputMaybe<Scalars['String']['input']>;
+  secondaryColor?: InputMaybe<Scalars['String']['input']>;
+  tone?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type UpdateButtonRegistryInput = {
@@ -8603,6 +9326,14 @@ export type UpdateCaddyRateInput = {
   taxType?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type UpdateCampaignInput = {
+  channels?: InputMaybe<Array<Scalars['String']['input']>>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  scheduledAt?: InputMaybe<Scalars['DateTime']['input']>;
+  segmentIds?: InputMaybe<Array<Scalars['ID']['input']>>;
+  type?: InputMaybe<CampaignKind>;
+};
+
 export type UpdateCartRateInput = {
   amount?: InputMaybe<Scalars['Float']['input']>;
   cartType?: InputMaybe<Scalars['String']['input']>;
@@ -8615,6 +9346,10 @@ export type UpdateCashDrawerInput = {
   isActive?: InputMaybe<Scalars['Boolean']['input']>;
   location?: InputMaybe<Scalars['String']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateChannelConfigInput = {
+  credentials?: InputMaybe<Scalars['JSON']['input']>;
 };
 
 export type UpdateClubBillingSettingsInput = {
@@ -8701,6 +9436,17 @@ export type UpdateClubBillingSettingsInput = {
   whtEnabled?: InputMaybe<Scalars['Boolean']['input']>;
   /** Applicable WHT rates */
   whtRates?: InputMaybe<Scalars['JSON']['input']>;
+};
+
+export type UpdateClubProfileInput = {
+  address?: InputMaybe<Scalars['String']['input']>;
+  email?: InputMaybe<Scalars['String']['input']>;
+  logoUrl?: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  phone?: InputMaybe<Scalars['String']['input']>;
+  primaryColor?: InputMaybe<Scalars['String']['input']>;
+  timezone?: InputMaybe<Scalars['String']['input']>;
+  website?: InputMaybe<Scalars['String']['input']>;
 };
 
 /** Input for updating communication preferences */
@@ -9108,12 +9854,19 @@ export type UpdateSeasonInput = {
   weekendBookingMode?: InputMaybe<BookingMode>;
 };
 
+export type UpdateSegmentInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  rules?: InputMaybe<Array<SegmentRuleInput>>;
+};
+
 export type UpdateServiceInput = {
   basePrice?: InputMaybe<Scalars['Float']['input']>;
   bufferMinutes?: InputMaybe<Scalars['Int']['input']>;
   category?: InputMaybe<Scalars['String']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
   durationMinutes?: InputMaybe<Scalars['Int']['input']>;
+  enforceQualification?: InputMaybe<Scalars['Boolean']['input']>;
   id: Scalars['ID']['input'];
   isActive?: InputMaybe<Scalars['Boolean']['input']>;
   maxParticipants?: InputMaybe<Scalars['Int']['input']>;
@@ -9231,6 +9984,15 @@ export type UpdateTimePeriodInput = {
   startTime?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type UpdateUserInput = {
+  firstName?: InputMaybe<Scalars['String']['input']>;
+  isActive?: InputMaybe<Scalars['Boolean']['input']>;
+  lastName?: InputMaybe<Scalars['String']['input']>;
+  permissions?: InputMaybe<Array<Scalars['String']['input']>>;
+  phone?: InputMaybe<Scalars['String']['input']>;
+  role?: InputMaybe<UserRole>;
+};
+
 export type UpdateWaitlistEntryInput = {
   playerCount?: InputMaybe<Scalars['Int']['input']>;
   priority?: InputMaybe<Scalars['Int']['input']>;
@@ -9266,6 +10028,40 @@ export type UpsertTemplateMutationResponse = {
   message?: Maybe<Scalars['String']['output']>;
   success: Scalars['Boolean']['output'];
   template?: Maybe<PosTemplateGraphQlType>;
+};
+
+export type UserListResultType = {
+  __typename?: 'UserListResultType';
+  data: Array<UserType>;
+  meta: PaginationMetaType;
+};
+
+/** User role options */
+export type UserRole =
+  | 'ACCOUNTANT'
+  | 'ADMIN'
+  | 'F_AND_B'
+  | 'GOLF_MARSHAL'
+  | 'MANAGER'
+  | 'PRO_SHOP'
+  | 'RECEPTIONIST'
+  | 'STAFF'
+  | 'SUPER_ADMIN';
+
+export type UserType = {
+  __typename?: 'UserType';
+  createdAt: Scalars['DateTime']['output'];
+  email: Scalars['String']['output'];
+  emailVerified?: Maybe<Scalars['Boolean']['output']>;
+  firstName: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  isActive: Scalars['Boolean']['output'];
+  lastLoginAt?: Maybe<Scalars['DateTime']['output']>;
+  lastName: Scalars['String']['output'];
+  permissions: Array<Scalars['String']['output']>;
+  phone?: Maybe<Scalars['String']['output']>;
+  role: UserRole;
+  updatedAt?: Maybe<Scalars['DateTime']['output']>;
 };
 
 export type ValidateDiscountInput = {
@@ -9852,14 +10648,14 @@ export type GetBookingsQueryVariables = Exact<{
 }>;
 
 
-export type GetBookingsQuery = { __typename?: 'Query', bookings: { __typename?: 'BookingConnection', totalCount: number, edges: Array<{ __typename?: 'BookingEdge', cursor: string, node: { __typename?: 'BookingType', id: string, bookingNumber: string, bookingType: BookingTypeEnum, status: BookingStatus, startTime: string, endTime: string, durationMinutes: number, guestCount?: number | null | undefined, notes?: string | null | undefined, createdAt: string, member: { __typename?: 'BookingMemberType', id: string, firstName: string, lastName: string, memberId: string, photoUrl?: string | null | undefined, status: string }, service?: { __typename?: 'ServiceType', id: string, name: string, category: string, durationMinutes: number, basePrice: number } | null | undefined, staff?: { __typename?: 'StaffType', id: string, firstName: string, lastName: string, photoUrl?: string | null | undefined, role?: string | null | undefined, isActive: boolean } | null | undefined, facility?: { __typename?: 'FacilityType', id: string, name: string, type: ResourceTypeEnum, location?: string | null | undefined, capacity?: number | null | undefined, isActive: boolean } | null | undefined, pricing?: { __typename?: 'BookingPricingType', basePrice: number, subtotal: number, tax?: number | null | undefined, total: number, modifiers: Array<{ __typename?: 'PriceModifierType', label: string, amount: number, isPercentage: boolean }> } | null | undefined } }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean, startCursor?: string | null | undefined, endCursor?: string | null | undefined } } };
+export type GetBookingsQuery = { __typename?: 'Query', bookings: { __typename?: 'BookingConnection', totalCount: number, edges: Array<{ __typename?: 'BookingEdge', cursor: string, node: { __typename?: 'BookingType', id: string, bookingNumber: string, bookingType: BookingTypeEnum, status: BookingStatus, startTime: string, endTime: string, durationMinutes: number, guestCount?: number | null | undefined, notes?: string | null | undefined, createdAt: string, guests?: Array<{ __typename?: 'BookingGuestType', id: string, name: string, email?: string | null | undefined, phone?: string | null | undefined }> | null | undefined, member: { __typename?: 'BookingMemberType', id: string, firstName: string, lastName: string, memberId: string, photoUrl?: string | null | undefined, status: string }, service?: { __typename?: 'ServiceType', id: string, name: string, category: string, durationMinutes: number, basePrice: number } | null | undefined, staff?: { __typename?: 'StaffType', id: string, firstName: string, lastName: string, photoUrl?: string | null | undefined, role?: string | null | undefined, isActive: boolean } | null | undefined, facility?: { __typename?: 'FacilityType', id: string, name: string, type: ResourceTypeEnum, location?: string | null | undefined, capacity?: number | null | undefined, isActive: boolean } | null | undefined, pricing?: { __typename?: 'BookingPricingType', basePrice: number, subtotal: number, tax?: number | null | undefined, total: number, modifiers: Array<{ __typename?: 'PriceModifierType', label: string, amount: number, isPercentage: boolean }> } | null | undefined } }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean, startCursor?: string | null | undefined, endCursor?: string | null | undefined } } };
 
 export type GetBookingQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type GetBookingQuery = { __typename?: 'Query', booking: { __typename?: 'BookingType', id: string, bookingNumber: string, bookingType: BookingTypeEnum, status: BookingStatus, startTime: string, endTime: string, durationMinutes: number, guestCount?: number | null | undefined, notes?: string | null | undefined, createdAt: string, member: { __typename?: 'BookingMemberType', id: string, firstName: string, lastName: string, memberId: string, photoUrl?: string | null | undefined, status: string }, service?: { __typename?: 'ServiceType', id: string, name: string, description?: string | null | undefined, category: string, durationMinutes: number, basePrice: number } | null | undefined, staff?: { __typename?: 'StaffType', id: string, firstName: string, lastName: string, photoUrl?: string | null | undefined, role?: string | null | undefined, isActive: boolean } | null | undefined, facility?: { __typename?: 'FacilityType', id: string, name: string, type: ResourceTypeEnum, location?: string | null | undefined, capacity?: number | null | undefined, isActive: boolean } | null | undefined, resource?: { __typename?: 'ResourceType', id: string, name: string, facilityId: string, isActive: boolean } | null | undefined, pricing?: { __typename?: 'BookingPricingType', basePrice: number, subtotal: number, tax?: number | null | undefined, total: number, modifiers: Array<{ __typename?: 'PriceModifierType', label: string, amount: number, isPercentage: boolean }> } | null | undefined } };
+export type GetBookingQuery = { __typename?: 'Query', booking: { __typename?: 'BookingType', id: string, bookingNumber: string, bookingType: BookingTypeEnum, status: BookingStatus, startTime: string, endTime: string, durationMinutes: number, guestCount?: number | null | undefined, notes?: string | null | undefined, createdAt: string, guests?: Array<{ __typename?: 'BookingGuestType', id: string, name: string, email?: string | null | undefined, phone?: string | null | undefined }> | null | undefined, waitlistEntry?: { __typename?: 'BookingWaitlistType', id: string, position: number, status: WaitlistStatus, offerExpiresAt?: string | null | undefined } | null | undefined, member: { __typename?: 'BookingMemberType', id: string, firstName: string, lastName: string, memberId: string, photoUrl?: string | null | undefined, status: string }, service?: { __typename?: 'ServiceType', id: string, name: string, description?: string | null | undefined, category: string, durationMinutes: number, basePrice: number } | null | undefined, staff?: { __typename?: 'StaffType', id: string, firstName: string, lastName: string, photoUrl?: string | null | undefined, role?: string | null | undefined, isActive: boolean } | null | undefined, facility?: { __typename?: 'FacilityType', id: string, name: string, type: ResourceTypeEnum, location?: string | null | undefined, capacity?: number | null | undefined, isActive: boolean } | null | undefined, resource?: { __typename?: 'ResourceType', id: string, name: string, facilityId: string, isActive: boolean } | null | undefined, pricing?: { __typename?: 'BookingPricingType', basePrice: number, subtotal: number, tax?: number | null | undefined, total: number, modifiers: Array<{ __typename?: 'PriceModifierType', label: string, amount: number, isPercentage: boolean }> } | null | undefined } };
 
 export type GetBookingStatsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -9937,21 +10733,21 @@ export type GetServicesQueryVariables = Exact<{
 }>;
 
 
-export type GetServicesQuery = { __typename?: 'Query', services: Array<{ __typename?: 'ServiceType', id: string, name: string, category: string, description?: string | null | undefined, durationMinutes: number, basePrice: number, isActive: boolean }> };
+export type GetServicesQuery = { __typename?: 'Query', services: Array<{ __typename?: 'ServiceType', id: string, name: string, category: string, description?: string | null | undefined, durationMinutes: number, basePrice: number, isActive: boolean, enforceQualification: boolean, requiredCapabilities?: Array<string> | null | undefined }> };
 
 export type CreateServiceMutationVariables = Exact<{
   input: CreateServiceInput;
 }>;
 
 
-export type CreateServiceMutation = { __typename?: 'Mutation', createService: { __typename?: 'ServiceResponseType', success: boolean, error?: string | null | undefined, service?: { __typename?: 'ExtendedServiceType', id: string, name: string, category: string, description?: string | null | undefined, durationMinutes: number, bufferMinutes?: number | null | undefined, basePrice: number, isActive: boolean, requiredCapabilities?: Array<string> | null | undefined, requiredFacilityFeatures?: Array<string> | null | undefined, tierDiscounts?: Array<{ __typename?: 'TierDiscountType', tierName: string, discountPercent: number }> | null | undefined, variations?: Array<{ __typename?: 'ServiceVariationType', id: string, name: string, priceModifier: number, priceType: string }> | null | undefined } | null | undefined } };
+export type CreateServiceMutation = { __typename?: 'Mutation', createService: { __typename?: 'ServiceResponseType', success: boolean, error?: string | null | undefined, service?: { __typename?: 'ExtendedServiceType', id: string, name: string, category: string, description?: string | null | undefined, durationMinutes: number, bufferMinutes?: number | null | undefined, basePrice: number, isActive: boolean, enforceQualification: boolean, requiredCapabilities?: Array<string> | null | undefined, requiredFacilityFeatures?: Array<string> | null | undefined, tierDiscounts?: Array<{ __typename?: 'TierDiscountType', tierName: string, discountPercent: number }> | null | undefined, variations?: Array<{ __typename?: 'ServiceVariationType', id: string, name: string, priceModifier: number, priceType: string }> | null | undefined } | null | undefined } };
 
 export type UpdateServiceMutationVariables = Exact<{
   input: UpdateServiceInput;
 }>;
 
 
-export type UpdateServiceMutation = { __typename?: 'Mutation', updateService: { __typename?: 'ServiceResponseType', success: boolean, error?: string | null | undefined, service?: { __typename?: 'ExtendedServiceType', id: string, name: string, category: string, description?: string | null | undefined, durationMinutes: number, bufferMinutes?: number | null | undefined, basePrice: number, isActive: boolean, requiredCapabilities?: Array<string> | null | undefined, requiredFacilityFeatures?: Array<string> | null | undefined, tierDiscounts?: Array<{ __typename?: 'TierDiscountType', tierName: string, discountPercent: number }> | null | undefined, variations?: Array<{ __typename?: 'ServiceVariationType', id: string, name: string, priceModifier: number, priceType: string }> | null | undefined } | null | undefined } };
+export type UpdateServiceMutation = { __typename?: 'Mutation', updateService: { __typename?: 'ServiceResponseType', success: boolean, error?: string | null | undefined, service?: { __typename?: 'ExtendedServiceType', id: string, name: string, category: string, description?: string | null | undefined, durationMinutes: number, bufferMinutes?: number | null | undefined, basePrice: number, isActive: boolean, enforceQualification: boolean, requiredCapabilities?: Array<string> | null | undefined, requiredFacilityFeatures?: Array<string> | null | undefined, tierDiscounts?: Array<{ __typename?: 'TierDiscountType', tierName: string, discountPercent: number }> | null | undefined, variations?: Array<{ __typename?: 'ServiceVariationType', id: string, name: string, priceModifier: number, priceType: string }> | null | undefined } | null | undefined } };
 
 export type DeleteServiceMutationVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -9966,6 +10762,13 @@ export type GetBookingStaffQueryVariables = Exact<{
 
 
 export type GetBookingStaffQuery = { __typename?: 'Query', bookingStaff: Array<{ __typename?: 'StaffType', id: string, firstName: string, lastName: string, photoUrl?: string | null | undefined, role?: string | null | undefined, capabilities?: Array<string> | null | undefined, isActive: boolean }> };
+
+export type GetStaffMembersQueryVariables = Exact<{
+  filter?: InputMaybe<StaffFilterInput>;
+}>;
+
+
+export type GetStaffMembersQuery = { __typename?: 'Query', staffMembers: Array<{ __typename?: 'ExtendedStaffType', id: string, firstName: string, lastName: string, photoUrl?: string | null | undefined, role?: string | null | undefined, capabilities?: Array<string> | null | undefined, isActive: boolean, email?: string | null | undefined, phone?: string | null | undefined, defaultFacilityId?: string | null | undefined, detailedCapabilities?: Array<{ __typename?: 'StaffCapabilityType', capability: string, level: string }> | null | undefined, certifications?: Array<{ __typename?: 'StaffCertificationType', id: string, name: string, expiresAt?: string | null | undefined, status: string }> | null | undefined, workingHours?: Array<{ __typename?: 'DayHoursType', dayOfWeek: string, isOpen: boolean, openTime?: string | null | undefined, closeTime?: string | null | undefined }> | null | undefined }> };
 
 export type CreateStaffMemberMutationVariables = Exact<{
   input: CreateStaffMemberInput;
@@ -10565,6 +11368,26 @@ export type ReleaseEquipmentForBookingMutationVariables = Exact<{
 
 
 export type ReleaseEquipmentForBookingMutation = { __typename?: 'Mutation', releaseEquipmentForBooking: { __typename?: 'EquipmentReleaseResponse', success: boolean, error?: string | null | undefined, releasedCount: number } };
+
+export type GetFeatureFlagsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetFeatureFlagsQuery = { __typename?: 'Query', featureFlags: { __typename?: 'FeatureFlagsType', modules: { __typename?: 'ModuleFlagsType', golf: boolean, bookings: boolean, billing: boolean, marketing: boolean, pos: boolean, reports: boolean }, features: { __typename?: 'FeatureLevelFlagsType', golfLottery: boolean, memberWindows: boolean, aiDynamicPricing: boolean, automatedFlows: boolean, memberPricing: boolean, houseAccounts: boolean, whiteLabelApp: boolean, customDomain: boolean }, operational: { __typename?: 'OperationalFlagsType', maintenanceMode: boolean, newMemberRegistration: boolean, onlineBooking: boolean, emailCampaigns: boolean } } };
+
+export type IsFeatureEnabledQueryVariables = Exact<{
+  featureKey: Scalars['String']['input'];
+}>;
+
+
+export type IsFeatureEnabledQuery = { __typename?: 'Query', isFeatureEnabled: boolean };
+
+export type UpdateOperationalFlagMutationVariables = Exact<{
+  key: Scalars['String']['input'];
+  value: Scalars['Boolean']['input'];
+}>;
+
+
+export type UpdateOperationalFlagMutation = { __typename?: 'Mutation', updateOperationalFlag: { __typename?: 'FeatureFlagsType', modules: { __typename?: 'ModuleFlagsType', golf: boolean, bookings: boolean, billing: boolean, marketing: boolean, pos: boolean, reports: boolean }, features: { __typename?: 'FeatureLevelFlagsType', golfLottery: boolean, memberWindows: boolean, aiDynamicPricing: boolean, automatedFlows: boolean, memberPricing: boolean, houseAccounts: boolean, whiteLabelApp: boolean, customDomain: boolean }, operational: { __typename?: 'OperationalFlagsType', maintenanceMode: boolean, newMemberRegistration: boolean, onlineBooking: boolean, emailCampaigns: boolean } } };
 
 export type GetTeeSheetQueryVariables = Exact<{
   courseId: Scalars['ID']['input'];
@@ -11505,6 +12328,61 @@ export type UpdateSmartSuggestionConfigMutationVariables = Exact<{
 
 export type UpdateSmartSuggestionConfigMutation = { __typename?: 'Mutation', updateSmartSuggestionConfig: { __typename?: 'SmartSuggestionConfig', id: string, enabled: boolean, suggestionCount: number, position: SuggestionPosition, timeOfDayWeight: number, salesVelocityWeight: number, staffHistoryWeight: number } };
 
+export type GetReportsDashboardQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetReportsDashboardQuery = { __typename?: 'Query', reportsDashboard: { __typename?: 'DashboardStatsType', members: { __typename?: 'DashboardMemberStatsType', total: number, active: number, newThisMonth: number, growth: number }, financial: { __typename?: 'DashboardFinancialStatsType', totalOutstanding: number, thisMonthRevenue: number, lastMonthRevenue: number, revenueGrowth: number }, bookings: { __typename?: 'DashboardBookingStatsType', upcoming: number } } };
+
+export type GetReportsFinancialQueryVariables = Exact<{
+  startDate: Scalars['String']['input'];
+  endDate: Scalars['String']['input'];
+}>;
+
+
+export type GetReportsFinancialQuery = { __typename?: 'Query', reportsFinancial: { __typename?: 'FinancialReportType', byChargeType: any, period: { __typename?: 'ReportPeriodType', startDate: string, endDate: string }, invoices: { __typename?: 'ReportInvoiceSummaryType', count: number, totalInvoiced: number, totalCollected: number, totalOutstanding: number }, payments: { __typename?: 'ReportPaymentSummaryType', count: number, totalAmount: number } } };
+
+export type GetReportsMembershipQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetReportsMembershipQuery = { __typename?: 'Query', reportsMembership: { __typename?: 'MembershipReportType', byStatus: any, byType: any, expiringThisMonth: number } };
+
+export type GetReportsArAgingQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetReportsArAgingQuery = { __typename?: 'Query', reportsARAging: { __typename?: 'ReportARAgingType', current: { __typename?: 'ReportAgingBucketType', amount: number, count: number }, days1to30: { __typename?: 'ReportAgingBucketType', amount: number, count: number }, days31to60: { __typename?: 'ReportAgingBucketType', amount: number, count: number }, days90Plus: { __typename?: 'ReportAgingBucketType', amount: number, count: number } } };
+
+export type GetReportsGolfUtilizationQueryVariables = Exact<{
+  startDate: Scalars['String']['input'];
+  endDate: Scalars['String']['input'];
+}>;
+
+
+export type GetReportsGolfUtilizationQuery = { __typename?: 'Query', reportsGolfUtilization: { __typename?: 'GolfUtilizationReportType', totalBookings: number, byStatus: any, byCourse: any, period: { __typename?: 'ReportPeriodType', startDate: string, endDate: string } } };
+
+export type GetClubProfileQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetClubProfileQuery = { __typename?: 'Query', clubProfile: { __typename?: 'ClubProfileType', id: string, name: string, slug: string, address?: string | null | undefined, phone?: string | null | undefined, email?: string | null | undefined, website?: string | null | undefined, logoUrl?: string | null | undefined, primaryColor?: string | null | undefined, timezone?: string | null | undefined, region?: string | null | undefined, subscriptionTier: string, subscriptionStatus: string, maxMembers?: number | null | undefined, maxUsers?: number | null | undefined, features?: any | null | undefined } };
+
+export type GetBillingSettingsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetBillingSettingsQuery = { __typename?: 'Query', billingSettings: { __typename?: 'BillingSettingsType', taxRate?: number | null | undefined, taxType?: string | null | undefined, currency?: string | null | undefined, invoicePrefix: string, paymentTermDays: number } };
+
+export type UpdateClubProfileMutationVariables = Exact<{
+  input: UpdateClubProfileInput;
+}>;
+
+
+export type UpdateClubProfileMutation = { __typename?: 'Mutation', updateClubProfile: { __typename?: 'ClubProfileType', id: string, name: string, slug: string, address?: string | null | undefined, phone?: string | null | undefined, email?: string | null | undefined, website?: string | null | undefined, logoUrl?: string | null | undefined, primaryColor?: string | null | undefined, timezone?: string | null | undefined, region?: string | null | undefined } };
+
+export type UpdateBillingSettingsMutationVariables = Exact<{
+  input: UpdateBillingSettingsInput;
+}>;
+
+
+export type UpdateBillingSettingsMutation = { __typename?: 'Mutation', updateBillingSettings: { __typename?: 'BillingSettingsType', taxRate?: number | null | undefined, taxType?: string | null | undefined, currency?: string | null | undefined, invoicePrefix: string, paymentTermDays: number } };
+
 export type GetMemberPaymentMethodsQueryVariables = Exact<{
   memberId: Scalars['ID']['input'];
   activeOnly?: InputMaybe<Scalars['Boolean']['input']>;
@@ -11695,6 +12573,68 @@ export type ResetSubAccountSpendingMutationVariables = Exact<{
 
 
 export type ResetSubAccountSpendingMutation = { __typename?: 'Mutation', resetSubAccountSpending: { __typename?: 'SubAccount', id: string, dailySpend: number, weeklySpend: number, monthlySpend: number, lastResetDaily: string, lastResetWeekly: string, lastResetMonthly: string } };
+
+export type GetUsersQueryVariables = Exact<{
+  search?: InputMaybe<Scalars['String']['input']>;
+  role?: InputMaybe<Scalars['String']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type GetUsersQuery = { __typename?: 'Query', users: { __typename?: 'UserListResultType', data: Array<{ __typename?: 'UserType', id: string, email: string, firstName: string, lastName: string, role: UserRole, permissions: Array<string>, isActive: boolean, phone?: string | null | undefined, lastLoginAt?: string | null | undefined, createdAt: string, updatedAt?: string | null | undefined }>, meta: { __typename?: 'PaginationMetaType', total: number, page: number, limit: number, totalPages: number } } };
+
+export type GetUserQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetUserQuery = { __typename?: 'Query', user: { __typename?: 'UserType', id: string, email: string, firstName: string, lastName: string, role: UserRole, permissions: Array<string>, isActive: boolean, phone?: string | null | undefined, lastLoginAt?: string | null | undefined, createdAt: string, updatedAt?: string | null | undefined } };
+
+export type GetUserActivityLogQueryVariables = Exact<{
+  page?: InputMaybe<Scalars['Int']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type GetUserActivityLogQuery = { __typename?: 'Query', userActivityLog: { __typename?: 'ActivityLogResultType', data: Array<{ __typename?: 'ActivityEntryType', id: string, type: string, aggregateType: string, aggregateId: string, data: string, userId: string, userEmail: string, createdAt: string }>, meta: { __typename?: 'PaginationMetaType', total: number, page: number, limit: number, totalPages: number } } };
+
+export type CreateUserMutationVariables = Exact<{
+  input: CreateUserInput;
+}>;
+
+
+export type CreateUserMutation = { __typename?: 'Mutation', createUser: { __typename?: 'UserType', id: string, email: string, firstName: string, lastName: string, role: UserRole, permissions: Array<string>, isActive: boolean, createdAt: string } };
+
+export type UpdateUserMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  input: UpdateUserInput;
+}>;
+
+
+export type UpdateUserMutation = { __typename?: 'Mutation', updateUser: { __typename?: 'UserType', id: string, email: string, firstName: string, lastName: string, role: UserRole, permissions: Array<string>, isActive: boolean, updatedAt?: string | null | undefined } };
+
+export type LockUserMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  minutes: Scalars['Int']['input'];
+}>;
+
+
+export type LockUserMutation = { __typename?: 'Mutation', lockUser: { __typename?: 'StatusMessageType', message: string } };
+
+export type UnlockUserMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type UnlockUserMutation = { __typename?: 'Mutation', unlockUser: { __typename?: 'StatusMessageType', message: string } };
+
+export type DeleteUserMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type DeleteUserMutation = { __typename?: 'Mutation', deleteUser: { __typename?: 'StatusMessageType', message: string } };
 
 
 export const SlotLineItemFieldsFragmentDoc = `
@@ -14780,6 +15720,12 @@ export const GetBookingsDocument = `
         endTime
         durationMinutes
         guestCount
+        guests {
+          id
+          name
+          email
+          phone
+        }
         notes
         member {
           id
@@ -14890,6 +15836,18 @@ export const GetBookingDocument = `
     endTime
     durationMinutes
     guestCount
+    guests {
+      id
+      name
+      email
+      phone
+    }
+    waitlistEntry {
+      id
+      position
+      status
+      offerExpiresAt
+    }
     notes
     createdAt
     member {
@@ -15410,6 +16368,8 @@ export const GetServicesDocument = `
     durationMinutes
     basePrice
     isActive
+    enforceQualification
+    requiredCapabilities
   }
 }
     `;
@@ -15469,6 +16429,7 @@ export const CreateServiceDocument = `
       bufferMinutes
       basePrice
       isActive
+      enforceQualification
       requiredCapabilities
       requiredFacilityFeatures
       tierDiscounts {
@@ -15516,6 +16477,7 @@ export const UpdateServiceDocument = `
       bufferMinutes
       basePrice
       isActive
+      enforceQualification
       requiredCapabilities
       requiredFacilityFeatures
       tierDiscounts {
@@ -15631,6 +16593,81 @@ useInfiniteGetBookingStaffQuery.getKey = (variables?: GetBookingStaffQueryVariab
 
 
 useGetBookingStaffQuery.fetcher = (variables?: GetBookingStaffQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetBookingStaffQuery, GetBookingStaffQueryVariables>(GetBookingStaffDocument, variables, options);
+
+export const GetStaffMembersDocument = `
+    query GetStaffMembers($filter: StaffFilterInput) {
+  staffMembers(filter: $filter) {
+    id
+    firstName
+    lastName
+    photoUrl
+    role
+    capabilities
+    isActive
+    email
+    phone
+    detailedCapabilities {
+      capability
+      level
+    }
+    certifications {
+      id
+      name
+      expiresAt
+      status
+    }
+    workingHours {
+      dayOfWeek
+      isOpen
+      openTime
+      closeTime
+    }
+    defaultFacilityId
+  }
+}
+    `;
+
+export const useGetStaffMembersQuery = <
+      TData = GetStaffMembersQuery,
+      TError = unknown
+    >(
+      variables?: GetStaffMembersQueryVariables,
+      options?: Omit<UseQueryOptions<GetStaffMembersQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetStaffMembersQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetStaffMembersQuery, TError, TData>(
+      {
+    queryKey: variables === undefined ? ['GetStaffMembers'] : ['GetStaffMembers', variables],
+    queryFn: graphqlFetcher<GetStaffMembersQuery, GetStaffMembersQueryVariables>(GetStaffMembersDocument, variables),
+    ...options
+  }
+    )};
+
+useGetStaffMembersQuery.getKey = (variables?: GetStaffMembersQueryVariables) => variables === undefined ? ['GetStaffMembers'] : ['GetStaffMembers', variables];
+
+export const useInfiniteGetStaffMembersQuery = <
+      TData = InfiniteData<GetStaffMembersQuery>,
+      TError = unknown
+    >(
+      variables: GetStaffMembersQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetStaffMembersQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetStaffMembersQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetStaffMembersQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? variables === undefined ? ['GetStaffMembers.infinite'] : ['GetStaffMembers.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetStaffMembersQuery, GetStaffMembersQueryVariables>(GetStaffMembersDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetStaffMembersQuery.getKey = (variables?: GetStaffMembersQueryVariables) => variables === undefined ? ['GetStaffMembers.infinite'] : ['GetStaffMembers.infinite', variables];
+
+
+useGetStaffMembersQuery.fetcher = (variables?: GetStaffMembersQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetStaffMembersQuery, GetStaffMembersQueryVariables>(GetStaffMembersDocument, variables, options);
 
 export const CreateStaffMemberDocument = `
     mutation CreateStaffMember($input: CreateStaffMemberInput!) {
@@ -19563,6 +20600,174 @@ export const useReleaseEquipmentForBookingMutation = <
 
 
 useReleaseEquipmentForBookingMutation.fetcher = (variables: ReleaseEquipmentForBookingMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<ReleaseEquipmentForBookingMutation, ReleaseEquipmentForBookingMutationVariables>(ReleaseEquipmentForBookingDocument, variables, options);
+
+export const GetFeatureFlagsDocument = `
+    query GetFeatureFlags {
+  featureFlags {
+    modules {
+      golf
+      bookings
+      billing
+      marketing
+      pos
+      reports
+    }
+    features {
+      golfLottery
+      memberWindows
+      aiDynamicPricing
+      automatedFlows
+      memberPricing
+      houseAccounts
+      whiteLabelApp
+      customDomain
+    }
+    operational {
+      maintenanceMode
+      newMemberRegistration
+      onlineBooking
+      emailCampaigns
+    }
+  }
+}
+    `;
+
+export const useGetFeatureFlagsQuery = <
+      TData = GetFeatureFlagsQuery,
+      TError = unknown
+    >(
+      variables?: GetFeatureFlagsQueryVariables,
+      options?: Omit<UseQueryOptions<GetFeatureFlagsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetFeatureFlagsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetFeatureFlagsQuery, TError, TData>(
+      {
+    queryKey: variables === undefined ? ['GetFeatureFlags'] : ['GetFeatureFlags', variables],
+    queryFn: graphqlFetcher<GetFeatureFlagsQuery, GetFeatureFlagsQueryVariables>(GetFeatureFlagsDocument, variables),
+    ...options
+  }
+    )};
+
+useGetFeatureFlagsQuery.getKey = (variables?: GetFeatureFlagsQueryVariables) => variables === undefined ? ['GetFeatureFlags'] : ['GetFeatureFlags', variables];
+
+export const useInfiniteGetFeatureFlagsQuery = <
+      TData = InfiniteData<GetFeatureFlagsQuery>,
+      TError = unknown
+    >(
+      variables: GetFeatureFlagsQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetFeatureFlagsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetFeatureFlagsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetFeatureFlagsQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? variables === undefined ? ['GetFeatureFlags.infinite'] : ['GetFeatureFlags.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetFeatureFlagsQuery, GetFeatureFlagsQueryVariables>(GetFeatureFlagsDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetFeatureFlagsQuery.getKey = (variables?: GetFeatureFlagsQueryVariables) => variables === undefined ? ['GetFeatureFlags.infinite'] : ['GetFeatureFlags.infinite', variables];
+
+
+useGetFeatureFlagsQuery.fetcher = (variables?: GetFeatureFlagsQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetFeatureFlagsQuery, GetFeatureFlagsQueryVariables>(GetFeatureFlagsDocument, variables, options);
+
+export const IsFeatureEnabledDocument = `
+    query IsFeatureEnabled($featureKey: String!) {
+  isFeatureEnabled(featureKey: $featureKey)
+}
+    `;
+
+export const useIsFeatureEnabledQuery = <
+      TData = IsFeatureEnabledQuery,
+      TError = unknown
+    >(
+      variables: IsFeatureEnabledQueryVariables,
+      options?: Omit<UseQueryOptions<IsFeatureEnabledQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<IsFeatureEnabledQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<IsFeatureEnabledQuery, TError, TData>(
+      {
+    queryKey: ['IsFeatureEnabled', variables],
+    queryFn: graphqlFetcher<IsFeatureEnabledQuery, IsFeatureEnabledQueryVariables>(IsFeatureEnabledDocument, variables),
+    ...options
+  }
+    )};
+
+useIsFeatureEnabledQuery.getKey = (variables: IsFeatureEnabledQueryVariables) => ['IsFeatureEnabled', variables];
+
+export const useInfiniteIsFeatureEnabledQuery = <
+      TData = InfiniteData<IsFeatureEnabledQuery>,
+      TError = unknown
+    >(
+      variables: IsFeatureEnabledQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<IsFeatureEnabledQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<IsFeatureEnabledQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<IsFeatureEnabledQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['IsFeatureEnabled.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<IsFeatureEnabledQuery, IsFeatureEnabledQueryVariables>(IsFeatureEnabledDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteIsFeatureEnabledQuery.getKey = (variables: IsFeatureEnabledQueryVariables) => ['IsFeatureEnabled.infinite', variables];
+
+
+useIsFeatureEnabledQuery.fetcher = (variables: IsFeatureEnabledQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<IsFeatureEnabledQuery, IsFeatureEnabledQueryVariables>(IsFeatureEnabledDocument, variables, options);
+
+export const UpdateOperationalFlagDocument = `
+    mutation UpdateOperationalFlag($key: String!, $value: Boolean!) {
+  updateOperationalFlag(key: $key, value: $value) {
+    modules {
+      golf
+      bookings
+      billing
+      marketing
+      pos
+      reports
+    }
+    features {
+      golfLottery
+      memberWindows
+      aiDynamicPricing
+      automatedFlows
+      memberPricing
+      houseAccounts
+      whiteLabelApp
+      customDomain
+    }
+    operational {
+      maintenanceMode
+      newMemberRegistration
+      onlineBooking
+      emailCampaigns
+    }
+  }
+}
+    `;
+
+export const useUpdateOperationalFlagMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<UpdateOperationalFlagMutation, TError, UpdateOperationalFlagMutationVariables, TContext>) => {
+    
+    return useMutation<UpdateOperationalFlagMutation, TError, UpdateOperationalFlagMutationVariables, TContext>(
+      {
+    mutationKey: ['UpdateOperationalFlag'],
+    mutationFn: (variables?: UpdateOperationalFlagMutationVariables) => graphqlFetcher<UpdateOperationalFlagMutation, UpdateOperationalFlagMutationVariables>(UpdateOperationalFlagDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useUpdateOperationalFlagMutation.fetcher = (variables: UpdateOperationalFlagMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<UpdateOperationalFlagMutation, UpdateOperationalFlagMutationVariables>(UpdateOperationalFlagDocument, variables, options);
 
 export const GetTeeSheetDocument = `
     query GetTeeSheet($courseId: ID!, $date: DateTime!) {
@@ -25530,6 +26735,488 @@ export const useUpdateSmartSuggestionConfigMutation = <
 
 useUpdateSmartSuggestionConfigMutation.fetcher = (variables: UpdateSmartSuggestionConfigMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<UpdateSmartSuggestionConfigMutation, UpdateSmartSuggestionConfigMutationVariables>(UpdateSmartSuggestionConfigDocument, variables, options);
 
+export const GetReportsDashboardDocument = `
+    query GetReportsDashboard {
+  reportsDashboard {
+    members {
+      total
+      active
+      newThisMonth
+      growth
+    }
+    financial {
+      totalOutstanding
+      thisMonthRevenue
+      lastMonthRevenue
+      revenueGrowth
+    }
+    bookings {
+      upcoming
+    }
+  }
+}
+    `;
+
+export const useGetReportsDashboardQuery = <
+      TData = GetReportsDashboardQuery,
+      TError = unknown
+    >(
+      variables?: GetReportsDashboardQueryVariables,
+      options?: Omit<UseQueryOptions<GetReportsDashboardQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetReportsDashboardQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetReportsDashboardQuery, TError, TData>(
+      {
+    queryKey: variables === undefined ? ['GetReportsDashboard'] : ['GetReportsDashboard', variables],
+    queryFn: graphqlFetcher<GetReportsDashboardQuery, GetReportsDashboardQueryVariables>(GetReportsDashboardDocument, variables),
+    ...options
+  }
+    )};
+
+useGetReportsDashboardQuery.getKey = (variables?: GetReportsDashboardQueryVariables) => variables === undefined ? ['GetReportsDashboard'] : ['GetReportsDashboard', variables];
+
+export const useInfiniteGetReportsDashboardQuery = <
+      TData = InfiniteData<GetReportsDashboardQuery>,
+      TError = unknown
+    >(
+      variables: GetReportsDashboardQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetReportsDashboardQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetReportsDashboardQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetReportsDashboardQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? variables === undefined ? ['GetReportsDashboard.infinite'] : ['GetReportsDashboard.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetReportsDashboardQuery, GetReportsDashboardQueryVariables>(GetReportsDashboardDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetReportsDashboardQuery.getKey = (variables?: GetReportsDashboardQueryVariables) => variables === undefined ? ['GetReportsDashboard.infinite'] : ['GetReportsDashboard.infinite', variables];
+
+
+useGetReportsDashboardQuery.fetcher = (variables?: GetReportsDashboardQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetReportsDashboardQuery, GetReportsDashboardQueryVariables>(GetReportsDashboardDocument, variables, options);
+
+export const GetReportsFinancialDocument = `
+    query GetReportsFinancial($startDate: String!, $endDate: String!) {
+  reportsFinancial(startDate: $startDate, endDate: $endDate) {
+    period {
+      startDate
+      endDate
+    }
+    invoices {
+      count
+      totalInvoiced
+      totalCollected
+      totalOutstanding
+    }
+    payments {
+      count
+      totalAmount
+    }
+    byChargeType
+  }
+}
+    `;
+
+export const useGetReportsFinancialQuery = <
+      TData = GetReportsFinancialQuery,
+      TError = unknown
+    >(
+      variables: GetReportsFinancialQueryVariables,
+      options?: Omit<UseQueryOptions<GetReportsFinancialQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetReportsFinancialQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetReportsFinancialQuery, TError, TData>(
+      {
+    queryKey: ['GetReportsFinancial', variables],
+    queryFn: graphqlFetcher<GetReportsFinancialQuery, GetReportsFinancialQueryVariables>(GetReportsFinancialDocument, variables),
+    ...options
+  }
+    )};
+
+useGetReportsFinancialQuery.getKey = (variables: GetReportsFinancialQueryVariables) => ['GetReportsFinancial', variables];
+
+export const useInfiniteGetReportsFinancialQuery = <
+      TData = InfiniteData<GetReportsFinancialQuery>,
+      TError = unknown
+    >(
+      variables: GetReportsFinancialQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetReportsFinancialQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetReportsFinancialQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetReportsFinancialQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetReportsFinancial.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetReportsFinancialQuery, GetReportsFinancialQueryVariables>(GetReportsFinancialDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetReportsFinancialQuery.getKey = (variables: GetReportsFinancialQueryVariables) => ['GetReportsFinancial.infinite', variables];
+
+
+useGetReportsFinancialQuery.fetcher = (variables: GetReportsFinancialQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetReportsFinancialQuery, GetReportsFinancialQueryVariables>(GetReportsFinancialDocument, variables, options);
+
+export const GetReportsMembershipDocument = `
+    query GetReportsMembership {
+  reportsMembership {
+    byStatus
+    byType
+    expiringThisMonth
+  }
+}
+    `;
+
+export const useGetReportsMembershipQuery = <
+      TData = GetReportsMembershipQuery,
+      TError = unknown
+    >(
+      variables?: GetReportsMembershipQueryVariables,
+      options?: Omit<UseQueryOptions<GetReportsMembershipQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetReportsMembershipQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetReportsMembershipQuery, TError, TData>(
+      {
+    queryKey: variables === undefined ? ['GetReportsMembership'] : ['GetReportsMembership', variables],
+    queryFn: graphqlFetcher<GetReportsMembershipQuery, GetReportsMembershipQueryVariables>(GetReportsMembershipDocument, variables),
+    ...options
+  }
+    )};
+
+useGetReportsMembershipQuery.getKey = (variables?: GetReportsMembershipQueryVariables) => variables === undefined ? ['GetReportsMembership'] : ['GetReportsMembership', variables];
+
+export const useInfiniteGetReportsMembershipQuery = <
+      TData = InfiniteData<GetReportsMembershipQuery>,
+      TError = unknown
+    >(
+      variables: GetReportsMembershipQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetReportsMembershipQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetReportsMembershipQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetReportsMembershipQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? variables === undefined ? ['GetReportsMembership.infinite'] : ['GetReportsMembership.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetReportsMembershipQuery, GetReportsMembershipQueryVariables>(GetReportsMembershipDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetReportsMembershipQuery.getKey = (variables?: GetReportsMembershipQueryVariables) => variables === undefined ? ['GetReportsMembership.infinite'] : ['GetReportsMembership.infinite', variables];
+
+
+useGetReportsMembershipQuery.fetcher = (variables?: GetReportsMembershipQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetReportsMembershipQuery, GetReportsMembershipQueryVariables>(GetReportsMembershipDocument, variables, options);
+
+export const GetReportsArAgingDocument = `
+    query GetReportsARAging {
+  reportsARAging {
+    current {
+      amount
+      count
+    }
+    days1to30 {
+      amount
+      count
+    }
+    days31to60 {
+      amount
+      count
+    }
+    days90Plus {
+      amount
+      count
+    }
+  }
+}
+    `;
+
+export const useGetReportsArAgingQuery = <
+      TData = GetReportsArAgingQuery,
+      TError = unknown
+    >(
+      variables?: GetReportsArAgingQueryVariables,
+      options?: Omit<UseQueryOptions<GetReportsArAgingQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetReportsArAgingQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetReportsArAgingQuery, TError, TData>(
+      {
+    queryKey: variables === undefined ? ['GetReportsARAging'] : ['GetReportsARAging', variables],
+    queryFn: graphqlFetcher<GetReportsArAgingQuery, GetReportsArAgingQueryVariables>(GetReportsArAgingDocument, variables),
+    ...options
+  }
+    )};
+
+useGetReportsArAgingQuery.getKey = (variables?: GetReportsArAgingQueryVariables) => variables === undefined ? ['GetReportsARAging'] : ['GetReportsARAging', variables];
+
+export const useInfiniteGetReportsArAgingQuery = <
+      TData = InfiniteData<GetReportsArAgingQuery>,
+      TError = unknown
+    >(
+      variables: GetReportsArAgingQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetReportsArAgingQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetReportsArAgingQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetReportsArAgingQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? variables === undefined ? ['GetReportsARAging.infinite'] : ['GetReportsARAging.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetReportsArAgingQuery, GetReportsArAgingQueryVariables>(GetReportsArAgingDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetReportsArAgingQuery.getKey = (variables?: GetReportsArAgingQueryVariables) => variables === undefined ? ['GetReportsARAging.infinite'] : ['GetReportsARAging.infinite', variables];
+
+
+useGetReportsArAgingQuery.fetcher = (variables?: GetReportsArAgingQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetReportsArAgingQuery, GetReportsArAgingQueryVariables>(GetReportsArAgingDocument, variables, options);
+
+export const GetReportsGolfUtilizationDocument = `
+    query GetReportsGolfUtilization($startDate: String!, $endDate: String!) {
+  reportsGolfUtilization(startDate: $startDate, endDate: $endDate) {
+    period {
+      startDate
+      endDate
+    }
+    totalBookings
+    byStatus
+    byCourse
+  }
+}
+    `;
+
+export const useGetReportsGolfUtilizationQuery = <
+      TData = GetReportsGolfUtilizationQuery,
+      TError = unknown
+    >(
+      variables: GetReportsGolfUtilizationQueryVariables,
+      options?: Omit<UseQueryOptions<GetReportsGolfUtilizationQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetReportsGolfUtilizationQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetReportsGolfUtilizationQuery, TError, TData>(
+      {
+    queryKey: ['GetReportsGolfUtilization', variables],
+    queryFn: graphqlFetcher<GetReportsGolfUtilizationQuery, GetReportsGolfUtilizationQueryVariables>(GetReportsGolfUtilizationDocument, variables),
+    ...options
+  }
+    )};
+
+useGetReportsGolfUtilizationQuery.getKey = (variables: GetReportsGolfUtilizationQueryVariables) => ['GetReportsGolfUtilization', variables];
+
+export const useInfiniteGetReportsGolfUtilizationQuery = <
+      TData = InfiniteData<GetReportsGolfUtilizationQuery>,
+      TError = unknown
+    >(
+      variables: GetReportsGolfUtilizationQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetReportsGolfUtilizationQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetReportsGolfUtilizationQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetReportsGolfUtilizationQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetReportsGolfUtilization.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetReportsGolfUtilizationQuery, GetReportsGolfUtilizationQueryVariables>(GetReportsGolfUtilizationDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetReportsGolfUtilizationQuery.getKey = (variables: GetReportsGolfUtilizationQueryVariables) => ['GetReportsGolfUtilization.infinite', variables];
+
+
+useGetReportsGolfUtilizationQuery.fetcher = (variables: GetReportsGolfUtilizationQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetReportsGolfUtilizationQuery, GetReportsGolfUtilizationQueryVariables>(GetReportsGolfUtilizationDocument, variables, options);
+
+export const GetClubProfileDocument = `
+    query GetClubProfile {
+  clubProfile {
+    id
+    name
+    slug
+    address
+    phone
+    email
+    website
+    logoUrl
+    primaryColor
+    timezone
+    region
+    subscriptionTier
+    subscriptionStatus
+    maxMembers
+    maxUsers
+    features
+  }
+}
+    `;
+
+export const useGetClubProfileQuery = <
+      TData = GetClubProfileQuery,
+      TError = unknown
+    >(
+      variables?: GetClubProfileQueryVariables,
+      options?: Omit<UseQueryOptions<GetClubProfileQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetClubProfileQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetClubProfileQuery, TError, TData>(
+      {
+    queryKey: variables === undefined ? ['GetClubProfile'] : ['GetClubProfile', variables],
+    queryFn: graphqlFetcher<GetClubProfileQuery, GetClubProfileQueryVariables>(GetClubProfileDocument, variables),
+    ...options
+  }
+    )};
+
+useGetClubProfileQuery.getKey = (variables?: GetClubProfileQueryVariables) => variables === undefined ? ['GetClubProfile'] : ['GetClubProfile', variables];
+
+export const useInfiniteGetClubProfileQuery = <
+      TData = InfiniteData<GetClubProfileQuery>,
+      TError = unknown
+    >(
+      variables: GetClubProfileQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetClubProfileQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetClubProfileQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetClubProfileQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? variables === undefined ? ['GetClubProfile.infinite'] : ['GetClubProfile.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetClubProfileQuery, GetClubProfileQueryVariables>(GetClubProfileDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetClubProfileQuery.getKey = (variables?: GetClubProfileQueryVariables) => variables === undefined ? ['GetClubProfile.infinite'] : ['GetClubProfile.infinite', variables];
+
+
+useGetClubProfileQuery.fetcher = (variables?: GetClubProfileQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetClubProfileQuery, GetClubProfileQueryVariables>(GetClubProfileDocument, variables, options);
+
+export const GetBillingSettingsDocument = `
+    query GetBillingSettings {
+  billingSettings {
+    taxRate
+    taxType
+    currency
+    invoicePrefix
+    paymentTermDays
+  }
+}
+    `;
+
+export const useGetBillingSettingsQuery = <
+      TData = GetBillingSettingsQuery,
+      TError = unknown
+    >(
+      variables?: GetBillingSettingsQueryVariables,
+      options?: Omit<UseQueryOptions<GetBillingSettingsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetBillingSettingsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetBillingSettingsQuery, TError, TData>(
+      {
+    queryKey: variables === undefined ? ['GetBillingSettings'] : ['GetBillingSettings', variables],
+    queryFn: graphqlFetcher<GetBillingSettingsQuery, GetBillingSettingsQueryVariables>(GetBillingSettingsDocument, variables),
+    ...options
+  }
+    )};
+
+useGetBillingSettingsQuery.getKey = (variables?: GetBillingSettingsQueryVariables) => variables === undefined ? ['GetBillingSettings'] : ['GetBillingSettings', variables];
+
+export const useInfiniteGetBillingSettingsQuery = <
+      TData = InfiniteData<GetBillingSettingsQuery>,
+      TError = unknown
+    >(
+      variables: GetBillingSettingsQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetBillingSettingsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetBillingSettingsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetBillingSettingsQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? variables === undefined ? ['GetBillingSettings.infinite'] : ['GetBillingSettings.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetBillingSettingsQuery, GetBillingSettingsQueryVariables>(GetBillingSettingsDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetBillingSettingsQuery.getKey = (variables?: GetBillingSettingsQueryVariables) => variables === undefined ? ['GetBillingSettings.infinite'] : ['GetBillingSettings.infinite', variables];
+
+
+useGetBillingSettingsQuery.fetcher = (variables?: GetBillingSettingsQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetBillingSettingsQuery, GetBillingSettingsQueryVariables>(GetBillingSettingsDocument, variables, options);
+
+export const UpdateClubProfileDocument = `
+    mutation UpdateClubProfile($input: UpdateClubProfileInput!) {
+  updateClubProfile(input: $input) {
+    id
+    name
+    slug
+    address
+    phone
+    email
+    website
+    logoUrl
+    primaryColor
+    timezone
+    region
+  }
+}
+    `;
+
+export const useUpdateClubProfileMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<UpdateClubProfileMutation, TError, UpdateClubProfileMutationVariables, TContext>) => {
+    
+    return useMutation<UpdateClubProfileMutation, TError, UpdateClubProfileMutationVariables, TContext>(
+      {
+    mutationKey: ['UpdateClubProfile'],
+    mutationFn: (variables?: UpdateClubProfileMutationVariables) => graphqlFetcher<UpdateClubProfileMutation, UpdateClubProfileMutationVariables>(UpdateClubProfileDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useUpdateClubProfileMutation.fetcher = (variables: UpdateClubProfileMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<UpdateClubProfileMutation, UpdateClubProfileMutationVariables>(UpdateClubProfileDocument, variables, options);
+
+export const UpdateBillingSettingsDocument = `
+    mutation UpdateBillingSettings($input: UpdateBillingSettingsInput!) {
+  updateBillingSettings(input: $input) {
+    taxRate
+    taxType
+    currency
+    invoicePrefix
+    paymentTermDays
+  }
+}
+    `;
+
+export const useUpdateBillingSettingsMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<UpdateBillingSettingsMutation, TError, UpdateBillingSettingsMutationVariables, TContext>) => {
+    
+    return useMutation<UpdateBillingSettingsMutation, TError, UpdateBillingSettingsMutationVariables, TContext>(
+      {
+    mutationKey: ['UpdateBillingSettings'],
+    mutationFn: (variables?: UpdateBillingSettingsMutationVariables) => graphqlFetcher<UpdateBillingSettingsMutation, UpdateBillingSettingsMutationVariables>(UpdateBillingSettingsDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useUpdateBillingSettingsMutation.fetcher = (variables: UpdateBillingSettingsMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<UpdateBillingSettingsMutation, UpdateBillingSettingsMutationVariables>(UpdateBillingSettingsDocument, variables, options);
+
 export const GetMemberPaymentMethodsDocument = `
     query GetMemberPaymentMethods($memberId: ID!, $activeOnly: Boolean) {
   memberPaymentMethods(memberId: $memberId, activeOnly: $activeOnly) {
@@ -26714,3 +28401,330 @@ export const useResetSubAccountSpendingMutation = <
 
 
 useResetSubAccountSpendingMutation.fetcher = (variables: ResetSubAccountSpendingMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<ResetSubAccountSpendingMutation, ResetSubAccountSpendingMutationVariables>(ResetSubAccountSpendingDocument, variables, options);
+
+export const GetUsersDocument = `
+    query GetUsers($search: String, $role: String, $page: Int, $limit: Int) {
+  users(search: $search, role: $role, page: $page, limit: $limit) {
+    data {
+      id
+      email
+      firstName
+      lastName
+      role
+      permissions
+      isActive
+      phone
+      lastLoginAt
+      createdAt
+      updatedAt
+    }
+    meta {
+      total
+      page
+      limit
+      totalPages
+    }
+  }
+}
+    `;
+
+export const useGetUsersQuery = <
+      TData = GetUsersQuery,
+      TError = unknown
+    >(
+      variables?: GetUsersQueryVariables,
+      options?: Omit<UseQueryOptions<GetUsersQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetUsersQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetUsersQuery, TError, TData>(
+      {
+    queryKey: variables === undefined ? ['GetUsers'] : ['GetUsers', variables],
+    queryFn: graphqlFetcher<GetUsersQuery, GetUsersQueryVariables>(GetUsersDocument, variables),
+    ...options
+  }
+    )};
+
+useGetUsersQuery.getKey = (variables?: GetUsersQueryVariables) => variables === undefined ? ['GetUsers'] : ['GetUsers', variables];
+
+export const useInfiniteGetUsersQuery = <
+      TData = InfiniteData<GetUsersQuery>,
+      TError = unknown
+    >(
+      variables: GetUsersQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetUsersQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetUsersQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetUsersQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? variables === undefined ? ['GetUsers.infinite'] : ['GetUsers.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetUsersQuery, GetUsersQueryVariables>(GetUsersDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetUsersQuery.getKey = (variables?: GetUsersQueryVariables) => variables === undefined ? ['GetUsers.infinite'] : ['GetUsers.infinite', variables];
+
+
+useGetUsersQuery.fetcher = (variables?: GetUsersQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetUsersQuery, GetUsersQueryVariables>(GetUsersDocument, variables, options);
+
+export const GetUserDocument = `
+    query GetUser($id: ID!) {
+  user(id: $id) {
+    id
+    email
+    firstName
+    lastName
+    role
+    permissions
+    isActive
+    phone
+    lastLoginAt
+    createdAt
+    updatedAt
+  }
+}
+    `;
+
+export const useGetUserQuery = <
+      TData = GetUserQuery,
+      TError = unknown
+    >(
+      variables: GetUserQueryVariables,
+      options?: Omit<UseQueryOptions<GetUserQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetUserQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetUserQuery, TError, TData>(
+      {
+    queryKey: ['GetUser', variables],
+    queryFn: graphqlFetcher<GetUserQuery, GetUserQueryVariables>(GetUserDocument, variables),
+    ...options
+  }
+    )};
+
+useGetUserQuery.getKey = (variables: GetUserQueryVariables) => ['GetUser', variables];
+
+export const useInfiniteGetUserQuery = <
+      TData = InfiniteData<GetUserQuery>,
+      TError = unknown
+    >(
+      variables: GetUserQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetUserQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetUserQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetUserQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetUser.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetUserQuery, GetUserQueryVariables>(GetUserDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetUserQuery.getKey = (variables: GetUserQueryVariables) => ['GetUser.infinite', variables];
+
+
+useGetUserQuery.fetcher = (variables: GetUserQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetUserQuery, GetUserQueryVariables>(GetUserDocument, variables, options);
+
+export const GetUserActivityLogDocument = `
+    query GetUserActivityLog($page: Int, $limit: Int) {
+  userActivityLog(page: $page, limit: $limit) {
+    data {
+      id
+      type
+      aggregateType
+      aggregateId
+      data
+      userId
+      userEmail
+      createdAt
+    }
+    meta {
+      total
+      page
+      limit
+      totalPages
+    }
+  }
+}
+    `;
+
+export const useGetUserActivityLogQuery = <
+      TData = GetUserActivityLogQuery,
+      TError = unknown
+    >(
+      variables?: GetUserActivityLogQueryVariables,
+      options?: Omit<UseQueryOptions<GetUserActivityLogQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetUserActivityLogQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetUserActivityLogQuery, TError, TData>(
+      {
+    queryKey: variables === undefined ? ['GetUserActivityLog'] : ['GetUserActivityLog', variables],
+    queryFn: graphqlFetcher<GetUserActivityLogQuery, GetUserActivityLogQueryVariables>(GetUserActivityLogDocument, variables),
+    ...options
+  }
+    )};
+
+useGetUserActivityLogQuery.getKey = (variables?: GetUserActivityLogQueryVariables) => variables === undefined ? ['GetUserActivityLog'] : ['GetUserActivityLog', variables];
+
+export const useInfiniteGetUserActivityLogQuery = <
+      TData = InfiniteData<GetUserActivityLogQuery>,
+      TError = unknown
+    >(
+      variables: GetUserActivityLogQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetUserActivityLogQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetUserActivityLogQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetUserActivityLogQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? variables === undefined ? ['GetUserActivityLog.infinite'] : ['GetUserActivityLog.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetUserActivityLogQuery, GetUserActivityLogQueryVariables>(GetUserActivityLogDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetUserActivityLogQuery.getKey = (variables?: GetUserActivityLogQueryVariables) => variables === undefined ? ['GetUserActivityLog.infinite'] : ['GetUserActivityLog.infinite', variables];
+
+
+useGetUserActivityLogQuery.fetcher = (variables?: GetUserActivityLogQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetUserActivityLogQuery, GetUserActivityLogQueryVariables>(GetUserActivityLogDocument, variables, options);
+
+export const CreateUserDocument = `
+    mutation CreateUser($input: CreateUserInput!) {
+  createUser(input: $input) {
+    id
+    email
+    firstName
+    lastName
+    role
+    permissions
+    isActive
+    createdAt
+  }
+}
+    `;
+
+export const useCreateUserMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<CreateUserMutation, TError, CreateUserMutationVariables, TContext>) => {
+    
+    return useMutation<CreateUserMutation, TError, CreateUserMutationVariables, TContext>(
+      {
+    mutationKey: ['CreateUser'],
+    mutationFn: (variables?: CreateUserMutationVariables) => graphqlFetcher<CreateUserMutation, CreateUserMutationVariables>(CreateUserDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useCreateUserMutation.fetcher = (variables: CreateUserMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<CreateUserMutation, CreateUserMutationVariables>(CreateUserDocument, variables, options);
+
+export const UpdateUserDocument = `
+    mutation UpdateUser($id: ID!, $input: UpdateUserInput!) {
+  updateUser(id: $id, input: $input) {
+    id
+    email
+    firstName
+    lastName
+    role
+    permissions
+    isActive
+    updatedAt
+  }
+}
+    `;
+
+export const useUpdateUserMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<UpdateUserMutation, TError, UpdateUserMutationVariables, TContext>) => {
+    
+    return useMutation<UpdateUserMutation, TError, UpdateUserMutationVariables, TContext>(
+      {
+    mutationKey: ['UpdateUser'],
+    mutationFn: (variables?: UpdateUserMutationVariables) => graphqlFetcher<UpdateUserMutation, UpdateUserMutationVariables>(UpdateUserDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useUpdateUserMutation.fetcher = (variables: UpdateUserMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<UpdateUserMutation, UpdateUserMutationVariables>(UpdateUserDocument, variables, options);
+
+export const LockUserDocument = `
+    mutation LockUser($id: ID!, $minutes: Int!) {
+  lockUser(id: $id, minutes: $minutes) {
+    message
+  }
+}
+    `;
+
+export const useLockUserMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<LockUserMutation, TError, LockUserMutationVariables, TContext>) => {
+    
+    return useMutation<LockUserMutation, TError, LockUserMutationVariables, TContext>(
+      {
+    mutationKey: ['LockUser'],
+    mutationFn: (variables?: LockUserMutationVariables) => graphqlFetcher<LockUserMutation, LockUserMutationVariables>(LockUserDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useLockUserMutation.fetcher = (variables: LockUserMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<LockUserMutation, LockUserMutationVariables>(LockUserDocument, variables, options);
+
+export const UnlockUserDocument = `
+    mutation UnlockUser($id: ID!) {
+  unlockUser(id: $id) {
+    message
+  }
+}
+    `;
+
+export const useUnlockUserMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<UnlockUserMutation, TError, UnlockUserMutationVariables, TContext>) => {
+    
+    return useMutation<UnlockUserMutation, TError, UnlockUserMutationVariables, TContext>(
+      {
+    mutationKey: ['UnlockUser'],
+    mutationFn: (variables?: UnlockUserMutationVariables) => graphqlFetcher<UnlockUserMutation, UnlockUserMutationVariables>(UnlockUserDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useUnlockUserMutation.fetcher = (variables: UnlockUserMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<UnlockUserMutation, UnlockUserMutationVariables>(UnlockUserDocument, variables, options);
+
+export const DeleteUserDocument = `
+    mutation DeleteUser($id: ID!) {
+  deleteUser(id: $id) {
+    message
+  }
+}
+    `;
+
+export const useDeleteUserMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<DeleteUserMutation, TError, DeleteUserMutationVariables, TContext>) => {
+    
+    return useMutation<DeleteUserMutation, TError, DeleteUserMutationVariables, TContext>(
+      {
+    mutationKey: ['DeleteUser'],
+    mutationFn: (variables?: DeleteUserMutationVariables) => graphqlFetcher<DeleteUserMutation, DeleteUserMutationVariables>(DeleteUserDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useDeleteUserMutation.fetcher = (variables: DeleteUserMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<DeleteUserMutation, DeleteUserMutationVariables>(DeleteUserDocument, variables, options);

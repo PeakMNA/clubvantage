@@ -47,6 +47,11 @@ import { EquipmentGraphQLModule } from './equipment/equipment.module';
 import { LookupsGraphQLModule } from './lookups/lookups.module';
 import { DocumentsModule } from './documents/documents.module';
 import { ARStatementsModule } from './ar-statements/ar-statements.module';
+import { MarketingGraphqlModule } from './marketing/marketing.module';
+import { ReportsGraphqlModule } from './reports/reports.module';
+import { SettingsGraphqlModule } from './settings/settings.module';
+import { UsersGraphqlModule } from './users/users.module';
+import { FeatureFlagsGraphqlModule } from './feature-flags/feature-flags.module';
 
 // GraphQL error formatter logger
 const graphqlLogger = new Logger('GraphQL');
@@ -162,6 +167,11 @@ function formatGraphQLError(
     LookupsGraphQLModule,
     DocumentsModule,
     ARStatementsModule,
+    MarketingGraphqlModule,
+    ReportsGraphqlModule,
+    SettingsGraphqlModule,
+    UsersGraphqlModule,
+    FeatureFlagsGraphqlModule,
   ],
 })
 export class GraphqlModule {}

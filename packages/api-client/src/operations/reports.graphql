@@ -1,0 +1,82 @@
+# Reports Queries
+
+query GetReportsDashboard {
+  reportsDashboard {
+    members {
+      total
+      active
+      newThisMonth
+      growth
+    }
+    financial {
+      totalOutstanding
+      thisMonthRevenue
+      lastMonthRevenue
+      revenueGrowth
+    }
+    bookings {
+      upcoming
+    }
+  }
+}
+
+query GetReportsFinancial($startDate: String!, $endDate: String!) {
+  reportsFinancial(startDate: $startDate, endDate: $endDate) {
+    period {
+      startDate
+      endDate
+    }
+    invoices {
+      count
+      totalInvoiced
+      totalCollected
+      totalOutstanding
+    }
+    payments {
+      count
+      totalAmount
+    }
+    byChargeType
+  }
+}
+
+query GetReportsMembership {
+  reportsMembership {
+    byStatus
+    byType
+    expiringThisMonth
+  }
+}
+
+query GetReportsARAging {
+  reportsARAging {
+    current {
+      amount
+      count
+    }
+    days1to30 {
+      amount
+      count
+    }
+    days31to60 {
+      amount
+      count
+    }
+    days90Plus {
+      amount
+      count
+    }
+  }
+}
+
+query GetReportsGolfUtilization($startDate: String!, $endDate: String!) {
+  reportsGolfUtilization(startDate: $startDate, endDate: $endDate) {
+    period {
+      startDate
+      endDate
+    }
+    totalBookings
+    byStatus
+    byCourse
+  }
+}

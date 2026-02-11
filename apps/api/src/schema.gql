@@ -111,6 +111,22 @@ type ActiveSpecialDayInfo {
   type: SpecialDayType!
 }
 
+type ActivityEntryType {
+  aggregateId: String!
+  aggregateType: String!
+  createdAt: DateTime!
+  data: String!
+  id: ID!
+  type: String!
+  userEmail: String!
+  userId: String!
+}
+
+type ActivityLogResultType {
+  data: [ActivityEntryType!]!
+  meta: PaginationMetaType!
+}
+
 input AddGroupPlayersInput {
   players: [GroupPlayerInput!]!
 }
@@ -323,6 +339,20 @@ type AssignTemplateMutationResponse {
   success: Boolean!
 }
 
+type AudienceSegmentType {
+  createdAt: DateTime!
+  description: String
+  id: ID!
+  isArchived: Boolean!
+  memberCount: Int!
+  name: String!
+  naturalLanguageQuery: String
+  refreshedAt: DateTime
+  rules: JSON
+  type: SegmentType!
+  updatedAt: DateTime!
+}
+
 type AutoPayAttempt {
   amount: Float!
   attemptNumber: Int!
@@ -503,6 +533,14 @@ type BillingPeriodPreview {
   periodStart: DateTime!
 }
 
+type BillingSettingsType {
+  currency: String
+  invoicePrefix: String!
+  paymentTermDays: Int!
+  taxRate: Float
+  taxType: String
+}
+
 """
 Statement delivery method (EMAIL, PRINT, PORTAL, SMS, EMAIL_AND_PRINT, ALL)
 """
@@ -567,6 +605,13 @@ type BookingGroupType {
   groupNumber: Int!
   id: ID!
   playerIds: [String!]!
+}
+
+type BookingGuestType {
+  email: String
+  id: ID!
+  name: String!
+  phone: String
 }
 
 type BookingLineItemType {
@@ -644,6 +689,7 @@ type BookingType {
   endTime: DateTime!
   facility: FacilityType
   guestCount: Int
+  guests: [BookingGuestType!]
   id: ID!
   member: BookingMemberType!
   notes: String
@@ -653,11 +699,34 @@ type BookingType {
   staff: StaffType
   startTime: DateTime!
   status: BookingStatus!
+  waitlistEntry: BookingWaitlistType
 }
 
 enum BookingTypeEnum {
   FACILITY
   SERVICE
+}
+
+type BookingWaitlistType {
+  id: ID!
+  offerExpiresAt: DateTime
+  position: Int!
+  status: WaitlistStatus!
+}
+
+type BrandConfigType {
+  createdAt: DateTime!
+  fromEmail: String
+  fromName: String
+  guidelines: String
+  id: ID!
+  language: String
+  logoUrl: String
+  primaryColor: String
+  replyToEmail: String
+  secondaryColor: String
+  tone: String
+  updatedAt: DateTime!
 }
 
 input BulkOutletProductConfigInput {
@@ -753,6 +822,54 @@ type CalendarResourceType {
   name: String!
   subtitle: String
   type: ResourceTypeEnum!
+}
+
+input CampaignFilterInput {
+  limit: Int = 50
+  offset: Int = 0
+  status: CampaignStatus
+  type: CampaignKind
+}
+
+"""Campaign type (one-shot or automated flow)"""
+enum CampaignKind {
+  AUTOMATED_FLOW
+  ONE_SHOT
+}
+
+type CampaignMetricsType {
+  bounced: Int!
+  clicked: Int!
+  delivered: Int!
+  opened: Int!
+  sent: Int!
+  unsubscribed: Int!
+}
+
+"""Campaign status"""
+enum CampaignStatus {
+  ACTIVE
+  ARCHIVED
+  COMPLETED
+  DRAFT
+  PAUSED
+}
+
+type CampaignType {
+  channels: [String!]!
+  contentPieceCount: Int
+  contentPieces: [ContentPieceType!]
+  createdAt: DateTime!
+  id: ID!
+  memberCount: Int
+  name: String!
+  scheduledAt: DateTime
+  segmentCount: Int
+  segments: [AudienceSegmentType!]
+  sentAt: DateTime
+  status: CampaignStatus!
+  type: CampaignKind!
+  updatedAt: DateTime!
 }
 
 type CanClosePeriodResultType {
@@ -914,6 +1031,32 @@ input ChangeStatusInput {
 input ChangeSubAccountStatusInput {
   status: SubAccountStatus!
   subAccountId: String!
+}
+
+type ChannelConfigType {
+  createdAt: DateTime!
+  id: ID!
+  lastSyncAt: DateTime
+  status: ChannelStatus!
+  type: ChannelType!
+  updatedAt: DateTime!
+}
+
+"""Channel connection status"""
+enum ChannelStatus {
+  CONNECTED
+  ERROR
+  NOT_CONNECTED
+  SUSPENDED
+}
+
+"""Marketing channel type"""
+enum ChannelType {
+  EMAIL
+  FACEBOOK
+  INSTAGRAM
+  LANDING_PAGE
+  LINE
 }
 
 type ChargeTypeType {
@@ -1339,6 +1482,56 @@ type ClubGolfSettingsType {
   requireGuestContact: Boolean!
 }
 
+type ClubProfileType {
+  address: String
+  email: String
+  features: JSON
+  id: ID!
+  logoUrl: String
+  maxMembers: Int
+  maxUsers: Int
+  name: String!
+  phone: String
+  primaryColor: String
+  region: String
+  slug: String!
+  subscriptionStatus: String!
+  subscriptionTier: String!
+  timezone: String
+  website: String
+}
+
+type ContentPieceType {
+  body: String!
+  createdAt: DateTime!
+  generatedBy: String
+  id: ID!
+  previewText: String
+  status: ContentStatus!
+  subject: String
+  type: ContentType!
+  updatedAt: DateTime!
+  variantLabel: String
+}
+
+"""Content piece status"""
+enum ContentStatus {
+  APPROVED
+  DRAFT
+  FAILED
+  PENDING_REVIEW
+  PUBLISHED
+  SCHEDULED
+}
+
+"""Content piece type"""
+enum ContentType {
+  EMAIL
+  LANDING_PAGE
+  LINE_MESSAGE
+  SOCIAL_POST
+}
+
 input CourseIntervalInput {
   dayType: DayType!
   intervalMin: Int! = 8
@@ -1439,6 +1632,13 @@ input CreateCaddyRateInput {
   rateConfigId: ID!
   taxRate: Float! = 0
   taxType: String! = "NONE"
+}
+
+input CreateCampaignInput {
+  channels: [String!]!
+  name: String!
+  segmentIds: [ID!]
+  type: CampaignKind!
 }
 
 input CreateCartRateInput {
@@ -1848,12 +2048,21 @@ input CreateSeasonInput {
   weekendBookingMode: BookingMode
 }
 
+input CreateSegmentInput {
+  description: String
+  name: String!
+  naturalLanguageQuery: String
+  rules: [SegmentRuleInput!]!
+  type: SegmentType!
+}
+
 input CreateServiceInput {
   basePrice: Float!
   bufferMinutes: Int = 0
   category: String!
   description: String
   durationMinutes: Int!
+  enforceQualification: Boolean
   isActive: Boolean = true
   maxParticipants: Int
   name: String!
@@ -1948,6 +2157,16 @@ input CreateTimePeriodInput {
   name: String!
   sortOrder: Int
   startTime: String!
+}
+
+input CreateUserInput {
+  email: String!
+  firstName: String!
+  lastName: String!
+  password: String!
+  permissions: [String!]
+  phone: String
+  role: UserRole!
 }
 
 input CreateWaitlistEntryInput {
@@ -2168,6 +2387,30 @@ type DailySettlementGraphQLType {
   transactionCount: Int!
   updatedAt: DateTime!
   voidCount: Int!
+}
+
+type DashboardBookingStatsType {
+  upcoming: Int!
+}
+
+type DashboardFinancialStatsType {
+  lastMonthRevenue: Float!
+  revenueGrowth: Float!
+  thisMonthRevenue: Float!
+  totalOutstanding: Float!
+}
+
+type DashboardMemberStatsType {
+  active: Int!
+  growth: Float!
+  newThisMonth: Int!
+  total: Int!
+}
+
+type DashboardStatsType {
+  bookings: DashboardBookingStatsType!
+  financial: DashboardFinancialStatsType!
+  members: DashboardMemberStatsType!
 }
 
 """
@@ -2564,6 +2807,7 @@ type ExtendedServiceType {
   category: String!
   description: String
   durationMinutes: Int!
+  enforceQualification: Boolean!
   id: ID!
   isActive: Boolean!
   maxParticipants: Int
@@ -2611,6 +2855,23 @@ type FacilityType {
   type: ResourceTypeEnum!
 }
 
+type FeatureFlagsType {
+  features: FeatureLevelFlagsType!
+  modules: ModuleFlagsType!
+  operational: OperationalFlagsType!
+}
+
+type FeatureLevelFlagsType {
+  aiDynamicPricing: Boolean!
+  automatedFlows: Boolean!
+  customDomain: Boolean!
+  golfLottery: Boolean!
+  houseAccounts: Boolean!
+  memberPricing: Boolean!
+  memberWindows: Boolean!
+  whiteLabelApp: Boolean!
+}
+
 type FifoAllocationItem {
   allocatedAmount: String!
   balance: String!
@@ -2630,6 +2891,13 @@ type FifoAllocationPreview {
 enum FinancialPeriodType {
   CALENDAR_MONTH
   CUSTOM
+}
+
+type FinancialReportType {
+  byChargeType: JSON!
+  invoices: ReportInvoiceSummaryType!
+  payments: ReportPaymentSummaryType!
+  period: ReportPeriodType!
 }
 
 type FlightAssignment {
@@ -2668,6 +2936,13 @@ type FlightPaymentSummaryType {
   totalPlayers: Int!
 }
 
+input GenerateContentInput {
+  audienceDescription: String
+  campaignGoal: String!
+  contentType: ContentType
+  tone: String
+}
+
 input GenerateStatementInput {
   endDate: DateTime!
   memberId: ID!
@@ -2677,6 +2952,12 @@ input GenerateStatementInput {
 input GenerateTicketInput {
   forceRegenerate: Boolean = false
   teeTimeId: ID!
+}
+
+type GeneratedContentType {
+  body: String!
+  previewText: String!
+  subject: String!
 }
 
 input GetAutoPayHistoryInput {
@@ -2870,6 +3151,13 @@ type GolfTimePeriodType {
   startTime: String!
 }
 
+type GolfUtilizationReportType {
+  byCourse: JSON!
+  byStatus: JSON!
+  period: ReportPeriodType!
+  totalBookings: Int!
+}
+
 """Golf waitlist entry status"""
 enum GolfWaitlistStatus {
   BOOKED
@@ -2959,6 +3247,11 @@ type HouseholdType {
 
 input ImportPlayersFromCSVInput {
   rows: [CSVPlayerRow!]!
+}
+
+input ImproveContentInput {
+  contentId: ID!
+  feedback: String!
 }
 
 """Interest category for member engagement"""
@@ -3204,6 +3497,13 @@ enum LotteryStatus {
 enum LotteryType {
   PRIME_TIME
   SPECIAL_EVENT
+}
+
+type MarketingStatsType {
+  activeCampaigns: Int!
+  totalAudienceSize: Int!
+  totalCampaigns: Int!
+  totalEmailsSent: Int!
 }
 
 type MemberAddressType {
@@ -3573,6 +3873,12 @@ type MembershipApplicationTypeEdge {
   node: MembershipApplicationType!
 }
 
+type MembershipReportType {
+  byStatus: JSON!
+  byType: JSON!
+  expiringThisMonth: Int!
+}
+
 type MembershipTierType {
   code: String!
   description: String
@@ -3653,6 +3959,15 @@ type ModifierGroup {
 enum ModifierSelectionType {
   MULTIPLE
   SINGLE
+}
+
+type ModuleFlagsType {
+  billing: Boolean!
+  bookings: Boolean!
+  golf: Boolean!
+  marketing: Boolean!
+  pos: Boolean!
+  reports: Boolean!
 }
 
 input MoveTeeTimeInput {
@@ -3838,6 +4153,12 @@ type Mutation {
   """Create a lottery"""
   createLottery(input: CreateLotteryInput!): LotteryMutationResponse!
 
+  """Create a new campaign"""
+  createMarketingCampaign(input: CreateCampaignInput!): CampaignType!
+
+  """Create an audience segment"""
+  createMarketingSegment(input: CreateSegmentInput!): AudienceSegmentType!
+
   """Create a new member"""
   createMember(input: CreateMemberInput!): MemberType!
 
@@ -3890,6 +4211,9 @@ type Mutation {
   """Create a time period"""
   createTimePeriod(input: CreateTimePeriodInput!, scheduleId: ID!): TimePeriodMutationResponse!
 
+  """Create a new user"""
+  createUser(input: CreateUserInput!): UserType!
+
   """Add to waitlist"""
   createWaitlistEntry(input: CreateWaitlistEntryInput!): WaitlistMutationResponse!
 
@@ -3932,6 +4256,12 @@ type Mutation {
 
   """Delete a draft lottery"""
   deleteLottery(id: ID!): LotteryMutationResponse!
+
+  """Delete a draft campaign"""
+  deleteMarketingCampaign(id: ID!): Boolean!
+
+  """Archive an audience segment"""
+  deleteMarketingSegment(id: ID!): Boolean!
 
   """Soft delete a member"""
   deleteMember(id: ID!): DeleteMemberResponseType!
@@ -3983,6 +4313,9 @@ type Mutation {
   """Delete a time period"""
   deleteTimePeriod(id: ID!): DeleteMutationResponse!
 
+  """Soft delete a user"""
+  deleteUser(id: ID!): StatusMessageType!
+
   """Delete a waitlist entry"""
   deleteWaitlistEntry(id: ID!): WaitlistMutationResponse!
 
@@ -3998,14 +4331,26 @@ type Mutation {
   """Mark expired waitlist entries"""
   expireOldWaitlistEntries: WaitlistMutationResponse!
 
+  """AI-generate email content"""
+  generateMarketingContent(input: GenerateContentInput!): GeneratedContentType!
+
+  """Generate A/B variant of content"""
+  generateMarketingVariant(contentId: ID!): GeneratedContentType!
+
   """Generate or regenerate a starter ticket for a tee time"""
   generateStarterTicket(input: GenerateTicketInput!): StarterTicketResponseType!
 
   """Import players from CSV data"""
   importPlayersFromCSV(id: ID!, input: ImportPlayersFromCSVInput!): GroupBookingMutationResponse!
 
+  """Improve content based on feedback"""
+  improveMarketingContent(input: ImproveContentInput!): GeneratedContentType!
+
   """Join a waitlist"""
   joinWaitlist(input: JoinWaitlistInput!): WaitlistResponseType!
+
+  """Lock a user account for a specified duration in minutes"""
+  lockUser(id: ID!, minutes: Int!): StatusMessageType!
   markStatementPortalViewed(id: ID!): StatementGQLType!
 
   """Move a tee time to a different slot"""
@@ -4062,6 +4407,9 @@ type Mutation {
 
   """Record a transaction for a sub-account"""
   recordSubAccountTransaction(input: RecordTransactionInput!): SubAccountTransaction!
+
+  """Refresh segment member count"""
+  refreshSegmentCount(id: ID!): AudienceSegmentType!
 
   """Manually regenerate line items for a tee time"""
   regenerateLineItems(teeTimeId: ID!): Boolean!
@@ -4134,6 +4482,9 @@ type Mutation {
   """Send an invoice"""
   sendInvoice(id: ID!): InvoiceType!
 
+  """Send a campaign to its audience"""
+  sendMarketingCampaign(id: ID!): CampaignType!
+
   """Send offer to waitlist entry"""
   sendWaitlistOffer(input: SendWaitlistOfferInput!): WaitlistResponseType!
 
@@ -4188,6 +4539,9 @@ type Mutation {
 
   """Unlock a locked sub-account PIN"""
   unlockSubAccountPin(subAccountId: ID!): SubAccount!
+
+  """Unlock a user account"""
+  unlockUser(id: ID!): StatusMessageType!
   updateARProfile(id: ID!, input: UpdateARProfileInput!): ARProfileGQLType!
 
   """Update AR period settings for the club"""
@@ -4195,6 +4549,7 @@ type Mutation {
 
   """Update an existing membership application"""
   updateApplication(id: ID!, input: UpdateApplicationInput!): MembershipApplicationType!
+  updateBillingSettings(input: UpdateBillingSettingsInput!): BillingSettingsType!
 
   """Update a caddy rate"""
   updateCaddyRate(id: ID!, input: UpdateCaddyRateInput!): CaddyRateMutationResponse!
@@ -4213,6 +4568,7 @@ type Mutation {
 
   """Update club-wide billing configuration settings"""
   updateClubBillingSettings(input: UpdateClubBillingSettingsInput!): ClubBillingSettingsType!
+  updateClubProfile(input: UpdateClubProfileInput!): ClubProfileType!
 
   """Update a course schedule"""
   updateCourseSchedule(id: ID!, input: UpdateScheduleInput!): ScheduleMutationResponse!
@@ -4245,6 +4601,18 @@ type Mutation {
   """Update a lottery"""
   updateLottery(id: ID!, input: UpdateLotteryInput!): LotteryMutationResponse!
 
+  """Update brand configuration"""
+  updateMarketingBrandConfig(input: UpdateBrandConfigInput!): BrandConfigType!
+
+  """Update a campaign"""
+  updateMarketingCampaign(id: ID!, input: UpdateCampaignInput!): CampaignType!
+
+  """Update a channel configuration"""
+  updateMarketingChannel(input: UpdateChannelConfigInput!, type: ChannelType!): ChannelConfigType!
+
+  """Update an audience segment"""
+  updateMarketingSegment(id: ID!, input: UpdateSegmentInput!): AudienceSegmentType!
+
   """Update an existing member"""
   updateMember(id: ID!, input: UpdateMemberInput!): MemberType!
 
@@ -4266,6 +4634,7 @@ type Mutation {
   """Update a minimum spend requirement"""
   updateMinimumSpendRequirement(input: UpdateRequirementInput!): MinimumSpendRequirement!
   updateModifierGroup(id: ID!, input: UpdateModifierGroupInput!): ModifierGroup!
+  updateOperationalFlag(key: String!, value: Boolean!): FeatureFlagsType!
   updateOutletGridConfig(input: UpdateOutletGridConfigInput!, outletId: ID!): OutletGridConfig!
   updateOutletProductConfig(input: UpdateOutletProductConfigInput!, outletId: ID!, productId: ID!): OutletProductConfig!
 
@@ -4341,6 +4710,9 @@ type Mutation {
   """Update a time period"""
   updateTimePeriod(id: ID!, input: UpdateTimePeriodInput!): TimePeriodMutationResponse!
 
+  """Update an existing user"""
+  updateUser(id: ID!, input: UpdateUserInput!): UserType!
+
   """Update a waitlist entry"""
   updateWaitlistEntry(id: ID!, input: UpdateWaitlistEntryInput!): WaitlistMutationResponse!
 
@@ -4392,6 +4764,13 @@ enum OperationType {
   FACILITY
   GOLF
   SPA
+}
+
+type OperationalFlagsType {
+  emailCampaigns: Boolean!
+  maintenanceMode: Boolean!
+  newMemberRegistration: Boolean!
+  onlineBooking: Boolean!
 }
 
 type OutletGridConfig {
@@ -4522,6 +4901,13 @@ type PageInfo {
   hasNextPage: Boolean!
   hasPreviousPage: Boolean!
   startCursor: String
+}
+
+type PaginationMetaType {
+  limit: Int!
+  page: Int!
+  total: Int!
+  totalPages: Int!
 }
 
 input PayLineItemsInput {
@@ -4976,6 +5362,7 @@ type Query {
 
   """Calculate totals for multiple players (for batch payment)"""
   batchTotal(playerIds: [ID!]!): BatchTotalType!
+  billingSettings: BillingSettingsType!
 
   """Get billing statistics for the current month"""
   billingStats: BillingStatsType!
@@ -5033,6 +5420,7 @@ type Query {
 
   """Get club golf settings including cart, rental, and caddy policies"""
   clubGolfSettings: ClubGolfSettingsType
+  clubProfile: ClubProfileType!
 
   """Get schedules for a course"""
   courseSchedules(courseId: ID!): [GolfCourseScheduleType!]!
@@ -5081,6 +5469,7 @@ type Query {
 
   """Get list of facilities"""
   facilities(filter: FacilityFilterInput): [FacilityType!]!
+  featureFlags: FeatureFlagsType!
 
   """Get check-in info for all players in a tee time"""
   flightCheckInInfo(teeTimeId: ID!): FlightCheckInInfoType!
@@ -5136,6 +5525,7 @@ type Query {
 
   """Get paginated list of invoices"""
   invoices(after: String, endDate: DateTime, first: Int = 10, memberId: ID, search: String, skip: Int, sortBy: String = "invoiceDate", sortOrder: String = "desc", startDate: DateTime, status: InvoiceStatus): InvoiceConnection!
+  isFeatureEnabled(featureKey: String!): Boolean!
 
   """Check if all players in a tee time are settled"""
   isTeeTimeFullySettled(teeTimeId: ID!): Boolean!
@@ -5152,6 +5542,36 @@ type Query {
 
   """Get a single lottery"""
   lottery(id: ID!): GolfLotteryType!
+
+  """Get brand configuration"""
+  marketingBrandConfig: BrandConfigType!
+
+  """Get a single campaign"""
+  marketingCampaign(id: ID!): CampaignType!
+
+  """Get campaign delivery metrics"""
+  marketingCampaignMetrics(campaignId: ID!): CampaignMetricsType!
+
+  """Get marketing campaigns"""
+  marketingCampaigns(filter: CampaignFilterInput): [CampaignType!]!
+
+  """Get marketing channel configurations"""
+  marketingChannels: [ChannelConfigType!]!
+
+  """Get content pieces for a campaign"""
+  marketingContent(campaignId: ID!): [ContentPieceType!]!
+
+  """Get a single audience segment"""
+  marketingSegment(id: ID!): AudienceSegmentType!
+
+  """Get members in a segment"""
+  marketingSegmentMembers(segmentId: ID!, skip: Int = 0, take: Int = 50): [SegmentMemberType!]!
+
+  """Get audience segments"""
+  marketingSegments(filter: SegmentFilterInput): [AudienceSegmentType!]!
+
+  """Get marketing overview stats"""
+  marketingStats: MarketingStatsType!
 
   """Get a single member by ID"""
   member(id: ID!): MemberType!
@@ -5326,6 +5746,21 @@ type Query {
   """Get HTML template for a receipt"""
   receiptHTML(playerId: ID!, teeTimeId: ID!): String!
 
+  """Get accounts receivable aging report"""
+  reportsARAging: ReportARAgingType!
+
+  """Get dashboard statistics"""
+  reportsDashboard: DashboardStatsType!
+
+  """Get financial report for a date range"""
+  reportsFinancial(endDate: String!, startDate: String!): FinancialReportType!
+
+  """Get golf utilization report for a date range"""
+  reportsGolfUtilization(endDate: String!, startDate: String!): GolfUtilizationReportType!
+
+  """Get membership statistics"""
+  reportsMembership: MembershipReportType!
+
   """Search AR accounts (Members + City Ledger)"""
   searchArAccounts(accountTypes: [String!], limit: Float = 10, search: String!): [ArAccountSearchResult!]!
 
@@ -5363,6 +5798,9 @@ type Query {
   slotCart(playerId: ID!): SlotCartType
   smartSuggestionConfig(outletId: ID!): SmartSuggestionConfig
   smartSuggestions(outletId: ID!): [Product!]!
+
+  """Get list of staff members with full details"""
+  staffMembers(filter: StaffFilterInput): [ExtendedStaffType!]!
 
   """Get starter ticket by ID"""
   starterTicket(ticketId: ID!): StarterTicketResponseType
@@ -5415,6 +5853,18 @@ type Query {
 
   """Get payment transaction history for a tee time"""
   transactionHistory(teeTimeId: ID!): [PaymentTransactionType!]!
+
+  """Translate natural language to segment rules"""
+  translateSegmentQuery(query: String!): SegmentTranslationResultType!
+
+  """Get a single user by ID"""
+  user(id: ID!): UserType!
+
+  """Get activity log for users with pagination"""
+  userActivityLog(limit: Int, page: Int): ActivityLogResultType!
+
+  """Get paginated list of users with optional filters"""
+  users(limit: Int, page: Int, role: String, search: String): UserListResultType!
 
   """Validate if a discount can be applied"""
   validateDiscount(input: ValidateDiscountInput!): DiscountValidationResultType!
@@ -5551,6 +6001,35 @@ input ReopenStatementPeriodInput {
   reason: String!
 }
 
+type ReportARAgingType {
+  current: ReportAgingBucketType!
+  days1to30: ReportAgingBucketType!
+  days31to60: ReportAgingBucketType!
+  days90Plus: ReportAgingBucketType!
+}
+
+type ReportAgingBucketType {
+  amount: Float!
+  count: Int!
+}
+
+type ReportInvoiceSummaryType {
+  count: Int!
+  totalCollected: Float!
+  totalInvoiced: Float!
+  totalOutstanding: Float!
+}
+
+type ReportPaymentSummaryType {
+  count: Int!
+  totalAmount: Float!
+}
+
+type ReportPeriodType {
+  endDate: String!
+  startDate: String!
+}
+
 input RescheduleBookingInput {
   id: ID!
   newResourceId: ID
@@ -5620,6 +6099,41 @@ type SeasonMutationResponse {
   success: Boolean!
 }
 
+input SegmentFilterInput {
+  isArchived: Boolean
+  type: SegmentType
+}
+
+type SegmentMemberType {
+  email: String
+  firstName: String!
+  id: ID!
+  lastName: String!
+  memberId: String!
+  membershipTypeName: String
+  status: String!
+}
+
+input SegmentRuleInput {
+  field: String!
+  operator: String!
+  source: String!
+  value: JSON!
+}
+
+type SegmentTranslationResultType {
+  estimatedCount: Int!
+  explanation: String!
+  rules: JSON!
+}
+
+"""Audience segment type"""
+enum SegmentType {
+  CUSTOM
+  MANUAL
+  SMART
+}
+
 input SendWaitlistOfferInput {
   entryId: ID!
   expiresInHours: Int = 24
@@ -5641,9 +6155,11 @@ type ServiceType {
   category: String!
   description: String
   durationMinutes: Int!
+  enforceQualification: Boolean!
   id: ID!
   isActive: Boolean!
   name: String!
+  requiredCapabilities: [String!]
 }
 
 input ServiceVariationInput {
@@ -6072,6 +6588,10 @@ type StatementType {
   periodEnd: DateTime!
   periodStart: DateTime!
   transactions: [MemberTransactionType!]!
+}
+
+type StatusMessageType {
+  message: String!
 }
 
 """Whether a step is required or optional"""
@@ -6622,6 +7142,14 @@ input UpdateApplicationInput {
   sponsorId: ID
 }
 
+input UpdateBillingSettingsInput {
+  currency: String
+  invoicePrefix: String
+  paymentTermDays: Int
+  taxRate: Float
+  taxType: String
+}
+
 input UpdateBlockInput {
   blockType: BlockType
   endTime: DateTime
@@ -6629,6 +7157,18 @@ input UpdateBlockInput {
   reason: String
   recurringPattern: String
   startTime: DateTime
+}
+
+input UpdateBrandConfigInput {
+  fromEmail: String
+  fromName: String
+  guidelines: String
+  language: String
+  logoUrl: String
+  primaryColor: String
+  replyToEmail: String
+  secondaryColor: String
+  tone: String
 }
 
 input UpdateButtonRegistryInput {
@@ -6648,6 +7188,14 @@ input UpdateCaddyRateInput {
   taxType: String
 }
 
+input UpdateCampaignInput {
+  channels: [String!]
+  name: String
+  scheduledAt: DateTime
+  segmentIds: [ID!]
+  type: CampaignKind
+}
+
 input UpdateCartRateInput {
   amount: Float
   cartType: String
@@ -6660,6 +7208,10 @@ input UpdateCashDrawerInput {
   isActive: Boolean
   location: String
   name: String
+}
+
+input UpdateChannelConfigInput {
+  credentials: JSON
 }
 
 input UpdateClubBillingSettingsInput {
@@ -6784,6 +7336,17 @@ input UpdateClubBillingSettingsInput {
 
   """Applicable WHT rates"""
   whtRates: JSON
+}
+
+input UpdateClubProfileInput {
+  address: String
+  email: String
+  logoUrl: String
+  name: String
+  phone: String
+  primaryColor: String
+  timezone: String
+  website: String
 }
 
 """Input for updating communication preferences"""
@@ -7205,12 +7768,19 @@ input UpdateSeasonInput {
   weekendBookingMode: BookingMode
 }
 
+input UpdateSegmentInput {
+  description: String
+  name: String
+  rules: [SegmentRuleInput!]
+}
+
 input UpdateServiceInput {
   basePrice: Float
   bufferMinutes: Int
   category: String
   description: String
   durationMinutes: Int
+  enforceQualification: Boolean
   id: ID!
   isActive: Boolean
   maxParticipants: Int
@@ -7331,6 +7901,15 @@ input UpdateTimePeriodInput {
   startTime: String
 }
 
+input UpdateUserInput {
+  firstName: String
+  isActive: Boolean
+  lastName: String
+  permissions: [String!]
+  phone: String
+  role: UserRole
+}
+
 input UpdateWaitlistEntryInput {
   playerCount: Int
   priority: Int
@@ -7364,6 +7943,39 @@ type UpsertTemplateMutationResponse {
   message: String
   success: Boolean!
   template: POSTemplateGraphQLType
+}
+
+type UserListResultType {
+  data: [UserType!]!
+  meta: PaginationMetaType!
+}
+
+"""User role options"""
+enum UserRole {
+  ACCOUNTANT
+  ADMIN
+  F_AND_B
+  GOLF_MARSHAL
+  MANAGER
+  PRO_SHOP
+  RECEPTIONIST
+  STAFF
+  SUPER_ADMIN
+}
+
+type UserType {
+  createdAt: DateTime!
+  email: String!
+  emailVerified: Boolean
+  firstName: String!
+  id: ID!
+  isActive: Boolean!
+  lastLoginAt: DateTime
+  lastName: String!
+  permissions: [String!]!
+  phone: String
+  role: UserRole!
+  updatedAt: DateTime
 }
 
 input ValidateDiscountInput {

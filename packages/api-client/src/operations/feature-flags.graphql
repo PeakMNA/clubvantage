@@ -1,0 +1,63 @@
+# Feature Flags Queries & Mutations
+
+query GetFeatureFlags {
+  featureFlags {
+    modules {
+      golf
+      bookings
+      billing
+      marketing
+      pos
+      reports
+    }
+    features {
+      golfLottery
+      memberWindows
+      aiDynamicPricing
+      automatedFlows
+      memberPricing
+      houseAccounts
+      whiteLabelApp
+      customDomain
+    }
+    operational {
+      maintenanceMode
+      newMemberRegistration
+      onlineBooking
+      emailCampaigns
+    }
+  }
+}
+
+query IsFeatureEnabled($featureKey: String!) {
+  isFeatureEnabled(featureKey: $featureKey)
+}
+
+mutation UpdateOperationalFlag($key: String!, $value: Boolean!) {
+  updateOperationalFlag(key: $key, value: $value) {
+    modules {
+      golf
+      bookings
+      billing
+      marketing
+      pos
+      reports
+    }
+    features {
+      golfLottery
+      memberWindows
+      aiDynamicPricing
+      automatedFlows
+      memberPricing
+      houseAccounts
+      whiteLabelApp
+      customDomain
+    }
+    operational {
+      maintenanceMode
+      newMemberRegistration
+      onlineBooking
+      emailCampaigns
+    }
+  }
+}

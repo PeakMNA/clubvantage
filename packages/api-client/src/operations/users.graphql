@@ -1,0 +1,106 @@
+# Users Queries & Mutations
+
+query GetUsers($search: String, $role: String, $page: Int, $limit: Int) {
+  users(search: $search, role: $role, page: $page, limit: $limit) {
+    data {
+      id
+      email
+      firstName
+      lastName
+      role
+      permissions
+      isActive
+      phone
+      lastLoginAt
+      createdAt
+      updatedAt
+    }
+    meta {
+      total
+      page
+      limit
+      totalPages
+    }
+  }
+}
+
+query GetUser($id: ID!) {
+  user(id: $id) {
+    id
+    email
+    firstName
+    lastName
+    role
+    permissions
+    isActive
+    phone
+    lastLoginAt
+    createdAt
+    updatedAt
+  }
+}
+
+query GetUserActivityLog($page: Int, $limit: Int) {
+  userActivityLog(page: $page, limit: $limit) {
+    data {
+      id
+      type
+      aggregateType
+      aggregateId
+      data
+      userId
+      userEmail
+      createdAt
+    }
+    meta {
+      total
+      page
+      limit
+      totalPages
+    }
+  }
+}
+
+mutation CreateUser($input: CreateUserInput!) {
+  createUser(input: $input) {
+    id
+    email
+    firstName
+    lastName
+    role
+    permissions
+    isActive
+    createdAt
+  }
+}
+
+mutation UpdateUser($id: ID!, $input: UpdateUserInput!) {
+  updateUser(id: $id, input: $input) {
+    id
+    email
+    firstName
+    lastName
+    role
+    permissions
+    isActive
+    updatedAt
+  }
+}
+
+mutation LockUser($id: ID!, $minutes: Int!) {
+  lockUser(id: $id, minutes: $minutes) {
+    message
+  }
+}
+
+mutation UnlockUser($id: ID!) {
+  unlockUser(id: $id) {
+    message
+  }
+}
+
+mutation DeleteUser($id: ID!) {
+  deleteUser(id: $id) {
+    message
+  }
+}
