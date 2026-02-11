@@ -51,6 +51,38 @@ export class BookingMemberType {
   status: string;
 }
 
+// Guest reference for bookings
+@ObjectType()
+export class BookingGuestType {
+  @Field(() => ID)
+  id: string;
+
+  @Field()
+  name: string;
+
+  @Field({ nullable: true })
+  email?: string;
+
+  @Field({ nullable: true })
+  phone?: string;
+}
+
+// Lightweight waitlist reference for bookings (avoids circular dependency)
+@ObjectType()
+export class BookingWaitlistType {
+  @Field(() => ID)
+  id: string;
+
+  @Field(() => Int)
+  position: number;
+
+  @Field(() => WaitlistStatusEnum)
+  status: WaitlistStatusEnum;
+
+  @Field({ nullable: true })
+  offerExpiresAt?: Date;
+}
+
 // Facility type
 @ObjectType()
 export class FacilityType {
@@ -112,6 +144,12 @@ export class ServiceType {
 
   @Field({ nullable: true })
   description?: string;
+
+  @Field(() => [String], { nullable: true })
+  requiredCapabilities?: string[];
+
+  @Field(() => Boolean)
+  enforceQualification: boolean;
 
   @Field()
   isActive: boolean;
@@ -215,6 +253,12 @@ export class BookingType {
 
   @Field(() => Int, { nullable: true })
   guestCount?: number;
+
+  @Field(() => [BookingGuestType], { nullable: true })
+  guests?: BookingGuestType[];
+
+  @Field(() => BookingWaitlistType, { nullable: true })
+  waitlistEntry?: BookingWaitlistType;
 
   @Field({ nullable: true })
   notes?: string;
@@ -463,6 +507,9 @@ export class ExtendedServiceType extends ServiceType {
 
   @Field(() => [String], { nullable: true })
   requiredCapabilities?: string[];
+
+  @Field(() => Boolean)
+  enforceQualification: boolean;
 
   @Field(() => [String], { nullable: true })
   requiredFacilityFeatures?: string[];

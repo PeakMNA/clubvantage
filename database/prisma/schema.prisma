@@ -91,6 +91,11 @@ model Club {
   arStatements           Statement[]
   events                 Event[]
   announcements          Announcement[]
+  marketingSegments      MarketingAudienceSegment[]
+  marketingCampaigns     MarketingCampaign[]
+  marketingContent       MarketingContentPiece[]
+  marketingChannels      MarketingChannelConfig[]
+  marketingBrandConfig   MarketingBrandConfig?
 
   @@index([slug])
   @@index([isActive])
@@ -699,6 +704,7 @@ model Member {
   arProfile             ARProfile?
   eventRegistrations    EventRegistration[]
   scorecards            Scorecard[]
+  marketingCampaignMembers MarketingCampaignMember[]
 
   @@unique([clubId, memberId])
   @@unique([clubId, email])
@@ -1175,6 +1181,7 @@ model Service {
   equipmentNeeds        Json?
   consumableNeeds       Json?
   revenueCenterId       String?                       @db.VarChar(50)
+  enforceQualification  Boolean                       @default(false)
   isActive              Boolean                       @default(true)
   sortOrder             Int                           @default(0)
   createdAt             DateTime                      @default(now())
@@ -4560,4 +4567,186 @@ model ScoreHole {
   @@unique([scorecardId, holeNumber])
   @@index([scorecardId])
   @@map("score_holes")
+}
+
+// =============================================================================
+// MARKETING ENGINE (Phase 1)
+// =============================================================================
+
+/// Audience segment definitions with rule-based filtering
+model MarketingAudienceSegment {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId             String   @db.Uuid
+  name               String   @db.VarChar(255)
+  description        String?
+  type               String   @db.VarChar(20)
+  rules              Json     @default("[]")
+  naturalLanguageQuery String?
+  memberCount        Int      @default(0)
+  isArchived         Boolean  @default(false)
+  refreshedAt        DateTime?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  club               Club     @relation(fields: [clubId], references: [id])
+  campaigns          MarketingCampaign[] @relation("CampaignSegments")
+
+  @@index([clubId])
+  @@index([clubId, isArchived])
+  @@map("marketing_audience_segments")
+}
+
+/// Marketing campaign configuration and status
+model MarketingCampaign {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId             String   @db.Uuid
+  name               String   @db.VarChar(255)
+  type               String   @db.VarChar(20)
+  status             String   @db.VarChar(20)
+  channels           String[] @default([])
+  scheduledAt        DateTime?
+  sentAt             DateTime?
+  completedAt        DateTime?
+  tier               String   @default("SELF_SERVE") @db.VarChar(20)
+  createdBy          String   @db.Uuid
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  club               Club     @relation(fields: [clubId], references: [id])
+  segments           MarketingAudienceSegment[] @relation("CampaignSegments")
+  contentPieces      MarketingContentPiece[]
+  members            MarketingCampaignMember[]
+  analytics          MarketingCampaignAnalytics[]
+
+  @@index([clubId])
+  @@index([clubId, status])
+  @@map("marketing_campaigns")
+}
+
+/// Tracks which members are in which campaign and their delivery status
+model MarketingCampaignMember {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  campaignId         String   @db.Uuid
+  memberId           String   @db.Uuid
+  status             String   @db.VarChar(20)
+  sentAt             DateTime?
+  deliveredAt        DateTime?
+  openedAt           DateTime?
+  clickedAt          DateTime?
+  createdAt          DateTime @default(now())
+
+  campaign           MarketingCampaign @relation(fields: [campaignId], references: [id])
+  member             Member   @relation(fields: [memberId], references: [id])
+
+  @@unique([campaignId, memberId])
+  @@index([campaignId])
+  @@index([memberId])
+  @@map("marketing_campaign_members")
+}
+
+/// Generated or authored content pieces (emails, social posts, etc.)
+model MarketingContentPiece {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId             String   @db.Uuid
+  campaignId         String?  @db.Uuid
+  type               String   @db.VarChar(20)
+  status             String   @db.VarChar(20)
+  title              String   @db.VarChar(500)
+  subject            String?  @db.VarChar(500)
+  body               String
+  previewText        String?  @db.VarChar(255)
+  metadata           Json     @default("{}")
+  audienceSegmentId  String?  @db.Uuid
+  scheduledAt        DateTime?
+  publishedAt        DateTime?
+  generatedBy        String   @db.VarChar(10)
+  approvedBy         String?  @db.Uuid
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  club               Club     @relation(fields: [clubId], references: [id])
+  campaign           MarketingCampaign? @relation(fields: [campaignId], references: [id])
+
+  @@index([clubId])
+  @@index([clubId, type])
+  @@index([campaignId])
+  @@map("marketing_content_pieces")
+}
+
+/// Channel credentials and configuration (email, social, LINE, etc.)
+model MarketingChannelConfig {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId             String   @db.Uuid
+  type               String   @db.VarChar(20)
+  status             String   @db.VarChar(20)
+  credentials        Json     @default("{}")
+  settings           Json     @default("{}")
+  dailySendLimit     Int?
+  connectedAt        DateTime?
+  lastSyncAt         DateTime?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  club               Club     @relation(fields: [clubId], references: [id])
+
+  @@unique([clubId, type])
+  @@map("marketing_channel_configs")
+}
+
+/// Brand voice configuration per club
+model MarketingBrandConfig {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId             String   @unique @db.Uuid
+  tone               String   @default("professional") @db.VarChar(50)
+  language           String   @default("en") @db.VarChar(10)
+  guidelines         String?
+  sampleContent      Json     @default("[]")
+  fromName           String?  @db.VarChar(100)
+  fromEmail          String?  @db.VarChar(255)
+  replyToEmail       String?  @db.VarChar(255)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  club               Club     @relation(fields: [clubId], references: [id])
+
+  @@map("marketing_brand_configs")
+}
+
+/// Aggregated campaign analytics by period
+model MarketingCampaignAnalytics {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  campaignId         String   @db.Uuid
+  period             String   @db.VarChar(20)
+  date               DateTime @db.Date
+  sent               Int      @default(0)
+  delivered          Int      @default(0)
+  opened             Int      @default(0)
+  clicked            Int      @default(0)
+  bounced            Int      @default(0)
+  unsubscribed       Int      @default(0)
+  bookingsMade       Int      @default(0)
+  revenueAttributed  Decimal  @default(0) @db.Decimal(12, 2)
+  createdAt          DateTime @default(now())
+
+  campaign           MarketingCampaign @relation(fields: [campaignId], references: [id])
+
+  @@unique([campaignId, period, date])
+  @@index([campaignId])
+  @@map("marketing_campaign_analytics")
+}
+
+/// Raw marketing event log (sent, opened, clicked, etc.)
+model MarketingEvent {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId             String   @db.Uuid
+  campaignId         String?  @db.Uuid
+  memberId           String?  @db.Uuid
+  eventType          String   @db.VarChar(30)
+  channel            String   @db.VarChar(20)
+  metadata           Json     @default("{}")
+  createdAt          DateTime @default(now())
+
+  @@index([clubId, campaignId])
+  @@index([memberId])
+  @@map("marketing_events")
 }

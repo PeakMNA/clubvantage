@@ -31,6 +31,12 @@ query GetBookings(
         endTime
         durationMinutes
         guestCount
+        guests {
+          id
+          name
+          email
+          phone
+        }
         notes
         member {
           id
@@ -97,6 +103,18 @@ query GetBooking($id: ID!) {
     endTime
     durationMinutes
     guestCount
+    guests {
+      id
+      name
+      email
+      phone
+    }
+    waitlistEntry {
+      id
+      position
+      status
+      offerExpiresAt
+    }
     notes
     createdAt
     member {
@@ -322,6 +340,8 @@ query GetServices($filter: ServiceFilterInput) {
     durationMinutes
     basePrice
     isActive
+    enforceQualification
+    requiredCapabilities
   }
 }
 
@@ -337,6 +357,7 @@ mutation CreateService($input: CreateServiceInput!) {
       bufferMinutes
       basePrice
       isActive
+      enforceQualification
       requiredCapabilities
       requiredFacilityFeatures
       tierDiscounts {
@@ -366,6 +387,7 @@ mutation UpdateService($input: UpdateServiceInput!) {
       bufferMinutes
       basePrice
       isActive
+      enforceQualification
       requiredCapabilities
       requiredFacilityFeatures
       tierDiscounts {
@@ -404,6 +426,37 @@ query GetBookingStaff($filter: StaffFilterInput) {
     role
     capabilities
     isActive
+  }
+}
+
+query GetStaffMembers($filter: StaffFilterInput) {
+  staffMembers(filter: $filter) {
+    id
+    firstName
+    lastName
+    photoUrl
+    role
+    capabilities
+    isActive
+    email
+    phone
+    detailedCapabilities {
+      capability
+      level
+    }
+    certifications {
+      id
+      name
+      expiresAt
+      status
+    }
+    workingHours {
+      dayOfWeek
+      isOpen
+      openTime
+      closeTime
+    }
+    defaultFacilityId
   }
 }
 

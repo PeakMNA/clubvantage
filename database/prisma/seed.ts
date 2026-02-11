@@ -1662,22 +1662,140 @@ async function main() {
   const gymFacility = facilities.find(f => f.code === 'GYM')!;
   const poolFacility = facilities.find(f => f.code === 'POOL')!;
 
+  // Working schedule helper — uses array format matching DayHoursType[]
+  // dayOfWeek: '0'=Sun, '1'=Mon, '2'=Tue, '3'=Wed, '4'=Thu, '5'=Fri, '6'=Sat
+  const scheduleMonToFri = (start: string, end: string) => [
+    { dayOfWeek: '0', isOpen: false },
+    { dayOfWeek: '1', isOpen: true, openTime: start, closeTime: end },
+    { dayOfWeek: '2', isOpen: true, openTime: start, closeTime: end },
+    { dayOfWeek: '3', isOpen: true, openTime: start, closeTime: end },
+    { dayOfWeek: '4', isOpen: true, openTime: start, closeTime: end },
+    { dayOfWeek: '5', isOpen: true, openTime: start, closeTime: end },
+    { dayOfWeek: '6', isOpen: false },
+  ];
+
+  const scheduleMonToSat = (weekdayStart: string, weekdayEnd: string, satStart: string, satEnd: string) => [
+    { dayOfWeek: '0', isOpen: false },
+    { dayOfWeek: '1', isOpen: true, openTime: weekdayStart, closeTime: weekdayEnd },
+    { dayOfWeek: '2', isOpen: true, openTime: weekdayStart, closeTime: weekdayEnd },
+    { dayOfWeek: '3', isOpen: true, openTime: weekdayStart, closeTime: weekdayEnd },
+    { dayOfWeek: '4', isOpen: true, openTime: weekdayStart, closeTime: weekdayEnd },
+    { dayOfWeek: '5', isOpen: true, openTime: weekdayStart, closeTime: weekdayEnd },
+    { dayOfWeek: '6', isOpen: true, openTime: satStart, closeTime: satEnd },
+  ];
+
+  const scheduleTueToSun = (weekdayStart: string, weekdayEnd: string, sunStart: string, sunEnd: string) => [
+    { dayOfWeek: '0', isOpen: true, openTime: sunStart, closeTime: sunEnd },
+    { dayOfWeek: '1', isOpen: false },
+    { dayOfWeek: '2', isOpen: true, openTime: weekdayStart, closeTime: weekdayEnd },
+    { dayOfWeek: '3', isOpen: true, openTime: weekdayStart, closeTime: weekdayEnd },
+    { dayOfWeek: '4', isOpen: true, openTime: weekdayStart, closeTime: weekdayEnd },
+    { dayOfWeek: '5', isOpen: true, openTime: weekdayStart, closeTime: weekdayEnd },
+    { dayOfWeek: '6', isOpen: true, openTime: weekdayStart, closeTime: weekdayEnd },
+  ];
+
   const staffData = [
     // Spa & Massage therapists
-    { firstName: 'Suwanna', lastName: 'Charoen', email: 'suwanna@royalbangkokclub.com', phone: '+66 81 222 0001', capabilities: [{ name: 'thai_massage', level: SkillLevel.EXPERT }, { name: 'aromatherapy', level: SkillLevel.ADVANCED }] },
-    { firstName: 'Pranee', lastName: 'Kanchana', email: 'pranee@royalbangkokclub.com', phone: '+66 81 222 0002', capabilities: [{ name: 'swedish_massage', level: SkillLevel.EXPERT }, { name: 'deep_tissue', level: SkillLevel.ADVANCED }] },
-    { firstName: 'Somjai', lastName: 'Rattana', email: 'somjai@royalbangkokclub.com', phone: '+66 81 222 0003', capabilities: [{ name: 'thai_massage', level: SkillLevel.ADVANCED }, { name: 'foot_massage', level: SkillLevel.EXPERT }] },
+    {
+      firstName: 'Suwanna', lastName: 'Charoen', email: 'suwanna@royalbangkokclub.com', phone: '+66 81 222 0001',
+      capabilities: [{ name: 'thai_massage', level: SkillLevel.EXPERT }, { name: 'aromatherapy', level: SkillLevel.ADVANCED }],
+      schedule: scheduleMonToSat('09:00', '18:00', '10:00', '16:00'),
+      certifications: [
+        { name: 'Thai Massage Board Certification', expiryDate: new Date('2027-06-15') },
+        { name: 'Aromatherapy Diploma', expiryDate: new Date('2026-12-01') },
+      ],
+    },
+    {
+      firstName: 'Pranee', lastName: 'Kanchana', email: 'pranee@royalbangkokclub.com', phone: '+66 81 222 0002',
+      capabilities: [{ name: 'swedish_massage', level: SkillLevel.EXPERT }, { name: 'deep_tissue', level: SkillLevel.ADVANCED }],
+      schedule: scheduleTueToSun('10:00', '19:00', '10:00', '15:00'),
+      certifications: [
+        { name: 'Swedish Massage Certification', expiryDate: new Date('2027-03-20') },
+        { name: 'First Aid & CPR', expiryDate: new Date('2026-05-10') },
+      ],
+    },
+    {
+      firstName: 'Somjai', lastName: 'Rattana', email: 'somjai@royalbangkokclub.com', phone: '+66 81 222 0003',
+      capabilities: [{ name: 'thai_massage', level: SkillLevel.ADVANCED }, { name: 'foot_massage', level: SkillLevel.EXPERT }],
+      schedule: scheduleMonToFri('08:00', '17:00'),
+      certifications: [
+        { name: 'Thai Massage Board Certification', expiryDate: new Date('2026-09-30') },
+      ],
+    },
     // Personal trainers
-    { firstName: 'Natthawut', lastName: 'Chaiyasit', email: 'natthawut@royalbangkokclub.com', phone: '+66 81 222 0004', facilityId: gymFacility.id, capabilities: [{ name: 'personal_training', level: SkillLevel.EXPERT }, { name: 'strength', level: SkillLevel.EXPERT }] },
-    { firstName: 'Pattarapol', lastName: 'Somsak', email: 'pattarapol@royalbangkokclub.com', phone: '+66 81 222 0005', facilityId: gymFacility.id, capabilities: [{ name: 'personal_training', level: SkillLevel.ADVANCED }, { name: 'cardio', level: SkillLevel.EXPERT }] },
+    {
+      firstName: 'Natthawut', lastName: 'Chaiyasit', email: 'natthawut@royalbangkokclub.com', phone: '+66 81 222 0004',
+      facilityId: gymFacility.id,
+      capabilities: [{ name: 'personal_training', level: SkillLevel.EXPERT }, { name: 'strength', level: SkillLevel.EXPERT }],
+      schedule: scheduleMonToSat('06:00', '15:00', '07:00', '13:00'),
+      certifications: [
+        { name: 'ACE Personal Trainer', expiryDate: new Date('2027-01-15') },
+        { name: 'First Aid & CPR', expiryDate: new Date('2026-08-20') },
+        { name: 'Strength & Conditioning Specialist', expiryDate: new Date('2027-04-01') },
+      ],
+    },
+    {
+      firstName: 'Pattarapol', lastName: 'Somsak', email: 'pattarapol@royalbangkokclub.com', phone: '+66 81 222 0005',
+      facilityId: gymFacility.id,
+      capabilities: [{ name: 'personal_training', level: SkillLevel.ADVANCED }, { name: 'cardio', level: SkillLevel.EXPERT }],
+      schedule: scheduleMonToSat('07:00', '16:00', '08:00', '14:00'),
+      certifications: [
+        { name: 'NASM Certified Personal Trainer', expiryDate: new Date('2026-11-30') },
+        { name: 'First Aid & CPR', expiryDate: new Date('2026-04-15') },
+      ],
+    },
     // Tennis coaches
-    { firstName: 'Rachata', lastName: 'Wongsawat', email: 'rachata@royalbangkokclub.com', phone: '+66 81 222 0006', facilityId: tennisCourtFacility.id, capabilities: [{ name: 'tennis_coaching', level: SkillLevel.EXPERT }] },
-    { firstName: 'Supachai', lastName: 'Bunyong', email: 'supachai@royalbangkokclub.com', phone: '+66 81 222 0007', facilityId: tennisCourtFacility.id, capabilities: [{ name: 'tennis_coaching', level: SkillLevel.ADVANCED }] },
+    {
+      firstName: 'Rachata', lastName: 'Wongsawat', email: 'rachata@royalbangkokclub.com', phone: '+66 81 222 0006',
+      facilityId: tennisCourtFacility.id,
+      capabilities: [{ name: 'tennis_coaching', level: SkillLevel.EXPERT }],
+      schedule: scheduleTueToSun('07:00', '16:00', '08:00', '14:00'),
+      certifications: [
+        { name: 'PTR Certified Tennis Coach', expiryDate: new Date('2027-08-01') },
+        { name: 'First Aid & CPR', expiryDate: new Date('2026-07-10') },
+      ],
+    },
+    {
+      firstName: 'Supachai', lastName: 'Bunyong', email: 'supachai@royalbangkokclub.com', phone: '+66 81 222 0007',
+      facilityId: tennisCourtFacility.id,
+      capabilities: [{ name: 'tennis_coaching', level: SkillLevel.ADVANCED }],
+      schedule: scheduleMonToSat('08:00', '17:00', '08:00', '13:00'),
+      certifications: [
+        { name: 'PTR Certified Tennis Coach', expiryDate: new Date('2026-06-15') },
+      ],
+      isActive: false, // On leave
+    },
     // Swim instructors
-    { firstName: 'Kannika', lastName: 'Thongkam', email: 'kannika@royalbangkokclub.com', phone: '+66 81 222 0008', facilityId: poolFacility.id, capabilities: [{ name: 'swim_instruction', level: SkillLevel.EXPERT }, { name: 'aqua_aerobics', level: SkillLevel.ADVANCED }] },
+    {
+      firstName: 'Kannika', lastName: 'Thongkam', email: 'kannika@royalbangkokclub.com', phone: '+66 81 222 0008',
+      facilityId: poolFacility.id,
+      capabilities: [{ name: 'swim_instruction', level: SkillLevel.EXPERT }, { name: 'aqua_aerobics', level: SkillLevel.ADVANCED }],
+      schedule: scheduleMonToSat('06:00', '14:00', '07:00', '12:00'),
+      certifications: [
+        { name: 'AUSTSWIM Teacher of Swimming', expiryDate: new Date('2027-02-28') },
+        { name: 'Lifeguard Certification', expiryDate: new Date('2026-10-15') },
+        { name: 'First Aid & CPR', expiryDate: new Date('2026-06-30') },
+      ],
+    },
     // Yoga instructors
-    { firstName: 'Apinya', lastName: 'Srisombat', email: 'apinya@royalbangkokclub.com', phone: '+66 81 222 0009', capabilities: [{ name: 'yoga', level: SkillLevel.EXPERT }, { name: 'meditation', level: SkillLevel.ADVANCED }] },
-    { firstName: 'Orathai', lastName: 'Wongsakul', email: 'orathai@royalbangkokclub.com', phone: '+66 81 222 0010', capabilities: [{ name: 'yoga', level: SkillLevel.ADVANCED }, { name: 'pilates', level: SkillLevel.EXPERT }] },
+    {
+      firstName: 'Apinya', lastName: 'Srisombat', email: 'apinya@royalbangkokclub.com', phone: '+66 81 222 0009',
+      capabilities: [{ name: 'yoga', level: SkillLevel.EXPERT }, { name: 'meditation', level: SkillLevel.ADVANCED }],
+      schedule: scheduleMonToFri('07:00', '16:00'),
+      certifications: [
+        { name: 'RYT-500 Yoga Alliance', expiryDate: new Date('2028-01-01') },
+        { name: 'Mindfulness Meditation Certification', expiryDate: new Date('2027-05-15') },
+      ],
+    },
+    {
+      firstName: 'Orathai', lastName: 'Wongsakul', email: 'orathai@royalbangkokclub.com', phone: '+66 81 222 0010',
+      capabilities: [{ name: 'yoga', level: SkillLevel.ADVANCED }, { name: 'pilates', level: SkillLevel.EXPERT }],
+      schedule: scheduleTueToSun('08:00', '17:00', '09:00', '14:00'),
+      certifications: [
+        { name: 'RYT-200 Yoga Alliance', expiryDate: new Date('2027-09-01') },
+        { name: 'Pilates Method Alliance Certification', expiryDate: new Date('2026-12-15') },
+      ],
+    },
   ];
 
   const staffMembers = await Promise.all(
@@ -1687,7 +1805,30 @@ async function main() {
         where: { clubId: demoClub.id, email: s.email }
       });
 
-      if (existing) return existing;
+      if (existing) {
+        // Update existing staff with new schedule format and certifications
+        await prisma.staff.update({
+          where: { id: existing.id },
+          data: {
+            workingSchedule: JSON.stringify(s.schedule),
+            isActive: s.isActive ?? true,
+          },
+        });
+        // Upsert certifications for existing staff
+        const existingCerts = await prisma.staffCertification.findMany({
+          where: { staffId: existing.id },
+        });
+        if (existingCerts.length === 0 && s.certifications?.length) {
+          await prisma.staffCertification.createMany({
+            data: s.certifications.map(c => ({
+              staffId: existing.id,
+              name: c.name,
+              expiryDate: c.expiryDate,
+            })),
+          });
+        }
+        return existing;
+      }
 
       return prisma.staff.create({
         data: {
@@ -1697,26 +1838,26 @@ async function main() {
           email: s.email,
           phone: s.phone,
           defaultFacilityId: s.facilityId,
-          workingSchedule: {
-            monday: { start: '09:00', end: '18:00' },
-            tuesday: { start: '09:00', end: '18:00' },
-            wednesday: { start: '09:00', end: '18:00' },
-            thursday: { start: '09:00', end: '18:00' },
-            friday: { start: '09:00', end: '18:00' },
-            saturday: { start: '10:00', end: '16:00' },
-          },
+          isActive: s.isActive ?? true,
+          workingSchedule: JSON.stringify(s.schedule),
           capabilities: {
             create: s.capabilities.map(c => ({
               capability: c.name,
               skillLevel: c.level,
             }))
-          }
+          },
+          certifications: s.certifications?.length ? {
+            create: s.certifications.map(c => ({
+              name: c.name,
+              expiryDate: c.expiryDate,
+            }))
+          } : undefined,
         }
       });
     })
   );
 
-  console.log(`✅ Created ${staffMembers.length} staff members`);
+  console.log(`✅ Created ${staffMembers.length} staff members with schedules and certifications`);
 
   // ============================================================================
   // SERVICES
@@ -1792,87 +1933,451 @@ async function main() {
   console.log(`✅ Created ${services.length} services`);
 
   // ============================================================================
-  // SAMPLE FACILITY BOOKINGS (Enhanced)
+  // SAMPLE BOOKINGS (Expanded — ~30 bookings, waitlist, guests)
   // ============================================================================
   console.log('Creating sample bookings...');
 
+  // --- Date helpers ---
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   tomorrow.setHours(0, 0, 0, 0);
 
-  const thaiMassageService = services.find(s => s.name === 'Thai Traditional Massage');
-  const personalTrainingService = services.find(s => s.name === 'Personal Training Session');
-  const tennisLessonService = services.find(s => s.name === 'Private Tennis Lesson');
+  const dayAt = (offsetDays: number, hour: number, minute = 0) => {
+    const d = new Date(today);
+    d.setDate(d.getDate() + offsetDays);
+    d.setHours(hour, minute, 0, 0);
+    return d;
+  };
 
-  const suwannaStaff = staffMembers.find(s => s.firstName === 'Suwanna');
-  const natthawutStaff = staffMembers.find(s => s.firstName === 'Natthawut');
-  const rachataStaff = staffMembers.find(s => s.firstName === 'Rachata');
+  // --- Service lookups (all 14) ---
+  const svc = (name: string) => services.find(s => s.name === name);
+  const thaiMassageService = svc('Thai Traditional Massage');
+  const swedishMassageService = svc('Swedish Massage');
+  const deepTissueService = svc('Deep Tissue Massage');
+  const footReflexologyService = svc('Foot Reflexology');
+  const personalTrainingService = svc('Personal Training Session');
+  const groupFitnessService = svc('Group Fitness Class');
+  const tennisLessonService = svc('Private Tennis Lesson');
+  const groupTennisService = svc('Group Tennis Clinic');
+  const swimLessonService = svc('Private Swim Lesson');
+  const aquaAerobicsService = svc('Aqua Aerobics Class');
+  const yogaSessionService = svc('Private Yoga Session');
+  const groupYogaService = svc('Group Yoga Class');
+  const pilatesService = svc('Pilates Session');
+  const meditationService = svc('Meditation & Mindfulness');
 
-  const bookingData = [
-    // Facility booking (tennis court)
+  // --- Staff lookups (all 10) ---
+  const staff = (name: string) => staffMembers.find(s => s.firstName === name);
+  const suwannaStaff = staff('Suwanna');
+  const praneeStaff = staff('Pranee');
+  const somjaiStaff = staff('Somjai');
+  const natthawutStaff = staff('Natthawut');
+  const pattarapolStaff = staff('Pattarapol');
+  const rachataStaff = staff('Rachata');
+  const supachaiStaff = staff('Supachai');
+  const kannikaStaff = staff('Kannika');
+  const apinyaStaff = staff('Apinya');
+  const orathaiStaff = staff('Orathai');
+
+  // --- Facility lookups (all 5) ---
+  const verandahFacility = facilities.find(f => f.code === 'CLUBHOUSE_DINING')!;
+  const poolsideBarFacility = facilities.find(f => f.code === 'POOLSIDE_BAR')!;
+
+  const bookingData: Array<{
+    bookingType: BookingType;
+    memberId: string;
+    facilityId?: string;
+    serviceId?: string;
+    staffId?: string;
+    startTime: Date;
+    durationMinutes: number;
+    basePrice: number;
+    tierDiscount?: number;
+    variationsTotal?: number;
+    status: BookingStatus;
+    bookingPaymentStatus?: BookingPaymentStatus;
+    bookingPaymentMethod?: BookingPaymentMethod;
+    guestCount?: number;
+    cancelReason?: string;
+    cancelledAt?: Date;
+    noShowMarkedAt?: Date;
+    checkedInAt?: Date;
+    notes?: string;
+  }> = [
+    // ===================== PAST BOOKINGS (last 7 days) — 8 total =====================
+
+    // 1. Completed tennis court booking (3 days ago)
     {
       bookingType: BookingType.FACILITY,
       memberId: members[0].id,
       facilityId: tennisCourtFacility.id,
-      startTime: new Date(tomorrow.getTime() + 9 * 60 * 60 * 1000), // 9 AM
+      startTime: dayAt(-3, 9),
       durationMinutes: 60,
       basePrice: 500,
-      status: BookingStatus.CONFIRMED,
+      status: BookingStatus.COMPLETED,
+      bookingPaymentStatus: BookingPaymentStatus.PAID,
     },
-    // Service booking (massage)
+    // 2. Completed massage (5 days ago)
     {
       bookingType: BookingType.SERVICE,
       memberId: members[1].id,
       serviceId: thaiMassageService?.id,
       staffId: suwannaStaff?.id,
-      startTime: new Date(tomorrow.getTime() + 10 * 60 * 60 * 1000), // 10 AM
+      startTime: dayAt(-5, 14),
       durationMinutes: 60,
       basePrice: 1500,
-      tierDiscount: 150, // 10% discount
+      tierDiscount: 150,
+      status: BookingStatus.COMPLETED,
+      bookingPaymentStatus: BookingPaymentStatus.PAID,
+    },
+    // 3. Completed personal training (2 days ago)
+    {
+      bookingType: BookingType.SERVICE,
+      memberId: members[5].id,
+      serviceId: personalTrainingService?.id,
+      staffId: natthawutStaff?.id,
+      facilityId: gymFacility.id,
+      startTime: dayAt(-2, 7),
+      durationMinutes: 60,
+      basePrice: 1500,
+      status: BookingStatus.COMPLETED,
+      bookingPaymentStatus: BookingPaymentStatus.PAID,
+    },
+    // 4. Completed pool booking with guests (4 days ago)
+    {
+      bookingType: BookingType.FACILITY,
+      memberId: members[6].id,
+      facilityId: poolFacility.id,
+      startTime: dayAt(-4, 10),
+      durationMinutes: 120,
+      basePrice: 300,
+      guestCount: 2,
+      status: BookingStatus.COMPLETED,
+      bookingPaymentStatus: BookingPaymentStatus.PAID,
+    },
+    // 5. Cancelled yoga session (6 days ago)
+    {
+      bookingType: BookingType.SERVICE,
+      memberId: members[7].id,
+      serviceId: yogaSessionService?.id,
+      staffId: apinyaStaff?.id,
+      startTime: dayAt(-6, 8),
+      durationMinutes: 60,
+      basePrice: 1500,
+      status: BookingStatus.CANCELLED,
+      cancelReason: 'Member requested cancellation — schedule conflict',
+      cancelledAt: dayAt(-7, 15),
+    },
+    // 6. Cancelled tennis lesson (1 day ago)
+    {
+      bookingType: BookingType.STAFF,
+      memberId: members[8].id,
+      serviceId: tennisLessonService?.id,
+      staffId: rachataStaff?.id,
+      facilityId: tennisCourtFacility.id,
+      startTime: dayAt(-1, 16),
+      durationMinutes: 60,
+      basePrice: 2000,
+      status: BookingStatus.CANCELLED,
+      cancelReason: 'Rain — outdoor court unavailable',
+      cancelledAt: dayAt(-1, 14),
+    },
+    // 7. No-show swim lesson (2 days ago)
+    {
+      bookingType: BookingType.SERVICE,
+      memberId: members[9].id,
+      serviceId: swimLessonService?.id,
+      staffId: kannikaStaff?.id,
+      facilityId: poolFacility.id,
+      startTime: dayAt(-2, 11),
+      durationMinutes: 45,
+      basePrice: 1200,
+      status: BookingStatus.NO_SHOW,
+      noShowMarkedAt: dayAt(-2, 11, 30),
+    },
+    // 8. No-show group tennis (3 days ago)
+    {
+      bookingType: BookingType.SERVICE,
+      memberId: members[10].id,
+      serviceId: groupTennisService?.id,
+      staffId: supachaiStaff?.id,
+      facilityId: tennisCourtFacility.id,
+      startTime: dayAt(-3, 15),
+      durationMinutes: 90,
+      basePrice: 800,
+      status: BookingStatus.NO_SHOW,
+      noShowMarkedAt: dayAt(-3, 15, 30),
+    },
+
+    // ===================== TODAY BOOKINGS — 5 total =====================
+
+    // 9. Checked-in gym session (today, started 1h ago)
+    {
+      bookingType: BookingType.FACILITY,
+      memberId: members[2].id,
+      facilityId: gymFacility.id,
+      startTime: dayAt(0, Math.max(7, new Date().getHours() - 1)),
+      durationMinutes: 90,
+      basePrice: 200,
+      status: BookingStatus.CHECKED_IN,
+      checkedInAt: dayAt(0, Math.max(7, new Date().getHours() - 1), 5),
+    },
+    // 10. Checked-in deep tissue massage (today)
+    {
+      bookingType: BookingType.SERVICE,
+      memberId: members[3].id,
+      serviceId: deepTissueService?.id,
+      staffId: praneeStaff?.id,
+      startTime: dayAt(0, Math.max(8, new Date().getHours())),
+      durationMinutes: 60,
+      basePrice: 2000,
+      status: BookingStatus.CHECKED_IN,
+      checkedInAt: dayAt(0, Math.max(8, new Date().getHours()), 2),
+    },
+    // 11. Confirmed pilates later today
+    {
+      bookingType: BookingType.SERVICE,
+      memberId: members[4].id,
+      serviceId: pilatesService?.id,
+      staffId: orathaiStaff?.id,
+      startTime: dayAt(0, 17),
+      durationMinutes: 60,
+      basePrice: 1500,
       status: BookingStatus.CONFIRMED,
     },
-    // Service booking (personal training)
+    // 12. Completed foot reflexology (today morning)
+    {
+      bookingType: BookingType.SERVICE,
+      memberId: members[11].id,
+      serviceId: footReflexologyService?.id,
+      staffId: somjaiStaff?.id,
+      startTime: dayAt(0, 9),
+      durationMinutes: 45,
+      basePrice: 800,
+      status: BookingStatus.COMPLETED,
+      bookingPaymentStatus: BookingPaymentStatus.PAID,
+    },
+    // 13. Checked-in aqua aerobics (today)
+    {
+      bookingType: BookingType.SERVICE,
+      memberId: members[12].id,
+      serviceId: aquaAerobicsService?.id,
+      staffId: kannikaStaff?.id,
+      facilityId: poolFacility.id,
+      startTime: dayAt(0, Math.max(9, new Date().getHours())),
+      durationMinutes: 60,
+      basePrice: 400,
+      status: BookingStatus.CHECKED_IN,
+      checkedInAt: dayAt(0, Math.max(9, new Date().getHours()), 3),
+    },
+
+    // ===================== TOMORROW BOOKINGS — 12 total =====================
+
+    // 14. Tennis court (morning)
+    {
+      bookingType: BookingType.FACILITY,
+      memberId: members[0].id,
+      facilityId: tennisCourtFacility.id,
+      startTime: dayAt(1, 7),
+      durationMinutes: 60,
+      basePrice: 500,
+      status: BookingStatus.CONFIRMED,
+    },
+    // 15. Tennis court with guests
+    {
+      bookingType: BookingType.FACILITY,
+      memberId: members[5].id,
+      facilityId: tennisCourtFacility.id,
+      startTime: dayAt(1, 8),
+      durationMinutes: 60,
+      basePrice: 500,
+      guestCount: 1,
+      status: BookingStatus.CONFIRMED,
+    },
+    // 16. Pool booking
+    {
+      bookingType: BookingType.FACILITY,
+      memberId: members[6].id,
+      facilityId: poolFacility.id,
+      startTime: dayAt(1, 9),
+      durationMinutes: 120,
+      basePrice: 300,
+      guestCount: 3,
+      status: BookingStatus.CONFIRMED,
+    },
+    // 17. Thai massage
+    {
+      bookingType: BookingType.SERVICE,
+      memberId: members[1].id,
+      serviceId: thaiMassageService?.id,
+      staffId: suwannaStaff?.id,
+      startTime: dayAt(1, 10),
+      durationMinutes: 60,
+      basePrice: 1500,
+      tierDiscount: 150,
+      status: BookingStatus.CONFIRMED,
+    },
+    // 18. Swedish massage
+    {
+      bookingType: BookingType.SERVICE,
+      memberId: members[7].id,
+      serviceId: swedishMassageService?.id,
+      staffId: praneeStaff?.id,
+      startTime: dayAt(1, 10),
+      durationMinutes: 60,
+      basePrice: 1800,
+      variationsTotal: 400, // Aromatherapy add-on
+      status: BookingStatus.CONFIRMED,
+    },
+    // 19. Personal training
     {
       bookingType: BookingType.SERVICE,
       memberId: members[2].id,
       serviceId: personalTrainingService?.id,
       staffId: natthawutStaff?.id,
       facilityId: gymFacility.id,
-      startTime: new Date(tomorrow.getTime() + 14 * 60 * 60 * 1000), // 2 PM
+      startTime: dayAt(1, 11),
       durationMinutes: 60,
       basePrice: 1500,
       status: BookingStatus.CONFIRMED,
     },
-    // Staff-based booking (tennis lesson)
+    // 20. Group fitness
+    {
+      bookingType: BookingType.SERVICE,
+      memberId: members[8].id,
+      serviceId: groupFitnessService?.id,
+      staffId: pattarapolStaff?.id,
+      facilityId: gymFacility.id,
+      startTime: dayAt(1, 9),
+      durationMinutes: 60,
+      basePrice: 500,
+      status: BookingStatus.PENDING,
+    },
+    // 21. Tennis lesson (staff booking)
     {
       bookingType: BookingType.STAFF,
       memberId: members[3].id,
       serviceId: tennisLessonService?.id,
       staffId: rachataStaff?.id,
       facilityId: tennisCourtFacility.id,
-      startTime: new Date(tomorrow.getTime() + 15 * 60 * 60 * 1000), // 3 PM
+      startTime: dayAt(1, 14),
       durationMinutes: 60,
       basePrice: 2000,
-      variationsTotal: 500, // Video analysis add-on
+      variationsTotal: 500, // Video analysis
       status: BookingStatus.CONFIRMED,
     },
-    // Completed booking
+    // 22. Group tennis clinic
+    {
+      bookingType: BookingType.STAFF,
+      memberId: members[9].id,
+      serviceId: groupTennisService?.id,
+      staffId: supachaiStaff?.id,
+      facilityId: tennisCourtFacility.id,
+      startTime: dayAt(1, 15),
+      durationMinutes: 90,
+      basePrice: 800,
+      status: BookingStatus.PENDING,
+    },
+    // 23. Swim lesson
+    {
+      bookingType: BookingType.SERVICE,
+      memberId: members[10].id,
+      serviceId: swimLessonService?.id,
+      staffId: kannikaStaff?.id,
+      facilityId: poolFacility.id,
+      startTime: dayAt(1, 13),
+      durationMinutes: 45,
+      basePrice: 1200,
+      status: BookingStatus.CONFIRMED,
+    },
+    // 24. Yoga session
     {
       bookingType: BookingType.SERVICE,
       memberId: members[4].id,
-      serviceId: thaiMassageService?.id,
-      staffId: suwannaStaff?.id,
-      startTime: new Date(today.getTime() - 2 * 60 * 60 * 1000), // 2 hours ago
+      serviceId: yogaSessionService?.id,
+      staffId: apinyaStaff?.id,
+      startTime: dayAt(1, 8),
       durationMinutes: 60,
       basePrice: 1500,
-      status: BookingStatus.COMPLETED,
-      bookingPaymentStatus: BookingPaymentStatus.PAID,
+      status: BookingStatus.CONFIRMED,
+    },
+    // 25. Meditation session (pending)
+    {
+      bookingType: BookingType.SERVICE,
+      memberId: members[11].id,
+      serviceId: meditationService?.id,
+      staffId: apinyaStaff?.id,
+      startTime: dayAt(1, 16),
+      durationMinutes: 45,
+      basePrice: 600,
+      status: BookingStatus.PENDING,
+    },
+
+    // ===================== NEXT FEW DAYS — 5 total =====================
+
+    // 26. Tennis court (day +2)
+    {
+      bookingType: BookingType.FACILITY,
+      memberId: members[12].id,
+      facilityId: tennisCourtFacility.id,
+      startTime: dayAt(2, 8),
+      durationMinutes: 60,
+      basePrice: 500,
+      status: BookingStatus.CONFIRMED,
+    },
+    // 27. Personal training (day +2)
+    {
+      bookingType: BookingType.STAFF,
+      memberId: members[0].id,
+      serviceId: personalTrainingService?.id,
+      staffId: pattarapolStaff?.id,
+      facilityId: gymFacility.id,
+      startTime: dayAt(2, 10),
+      durationMinutes: 60,
+      basePrice: 1500,
+      tierDiscount: 150,
+      status: BookingStatus.CONFIRMED,
+    },
+    // 28. Group yoga (day +3)
+    {
+      bookingType: BookingType.SERVICE,
+      memberId: members[3].id,
+      serviceId: groupYogaService?.id,
+      staffId: orathaiStaff?.id,
+      startTime: dayAt(3, 9),
+      durationMinutes: 60,
+      basePrice: 400,
+      status: BookingStatus.PENDING,
+    },
+    // 29. Pool with guests (day +3)
+    {
+      bookingType: BookingType.FACILITY,
+      memberId: members[5].id,
+      facilityId: poolFacility.id,
+      startTime: dayAt(3, 11),
+      durationMinutes: 120,
+      basePrice: 300,
+      guestCount: 2,
+      status: BookingStatus.CONFIRMED,
+    },
+    // 30. Tennis lesson (day +4)
+    {
+      bookingType: BookingType.STAFF,
+      memberId: members[8].id,
+      serviceId: tennisLessonService?.id,
+      staffId: rachataStaff?.id,
+      facilityId: tennisCourtFacility.id,
+      startTime: dayAt(4, 15),
+      durationMinutes: 60,
+      basePrice: 2000,
+      variationsTotal: 800, // 90-minute add-on
+      status: BookingStatus.CONFIRMED,
     },
   ];
 
   const bookings = await Promise.all(
     bookingData.map(async (b, i) => {
-      const bookingNumber = `BK-2025-${String(i + 1).padStart(4, '0')}`;
+      const bookingNumber = `BK-2026-${String(i + 1).padStart(4, '0')}`;
 
       // Check if booking already exists
       const existing = await prisma.booking.findFirst({
@@ -1896,19 +2401,156 @@ async function main() {
           startTime: b.startTime,
           endTime,
           durationMinutes: b.durationMinutes,
+          guestCount: b.guestCount || 0,
           basePrice: b.basePrice || 0,
           tierDiscount: b.tierDiscount || 0,
           variationsTotal: b.variationsTotal || 0,
           totalAmount,
           status: b.status,
-          bookingPaymentMethod: BookingPaymentMethod.ON_ACCOUNT,
+          bookingPaymentMethod: b.bookingPaymentMethod || BookingPaymentMethod.ON_ACCOUNT,
           bookingPaymentStatus: b.bookingPaymentStatus || BookingPaymentStatus.PENDING,
+          cancelReason: b.cancelReason,
+          cancelledAt: b.cancelledAt,
+          noShowMarkedAt: b.noShowMarkedAt,
+          checkedInAt: b.checkedInAt,
+          notes: b.notes,
         }
       });
     })
   );
 
   console.log(`✅ Created ${bookings.length} sample bookings`);
+
+  // ============================================================================
+  // WAITLIST ENTRIES (5)
+  // ============================================================================
+  console.log('Creating waitlist entries...');
+
+  const waitlistData = [
+    // 1. WAITING — popular tennis slot tomorrow
+    {
+      memberId: members[11].id,
+      facilityId: tennisCourtFacility.id,
+      preferredDate: dayAt(1, 0),
+      preferredTime: '08:00-09:00',
+      position: 1,
+      status: WaitlistStatus.WAITING,
+    },
+    // 2. WAITING — popular pool slot tomorrow
+    {
+      memberId: members[12].id,
+      facilityId: poolFacility.id,
+      preferredDate: dayAt(1, 0),
+      preferredTime: '09:00-11:00',
+      position: 1,
+      status: WaitlistStatus.WAITING,
+    },
+    // 3. OFFERED — massage slot, expires in 2 hours
+    {
+      memberId: members[7].id,
+      serviceId: thaiMassageService?.id,
+      preferredDate: dayAt(1, 0),
+      preferredTime: '14:00-15:00',
+      position: 1,
+      status: WaitlistStatus.OFFERED,
+      offeredAt: new Date(),
+      offerExpiresAt: new Date(Date.now() + 2 * 60 * 60 * 1000),
+    },
+    // 4. ACCEPTED — linked to booking #15 (tennis court tomorrow 8 AM)
+    {
+      memberId: members[5].id,
+      facilityId: tennisCourtFacility.id,
+      preferredDate: dayAt(1, 0),
+      preferredTime: '08:00-09:00',
+      position: 1,
+      status: WaitlistStatus.ACCEPTED,
+      bookingIndex: 14, // will link to bookings[14] (index 14 = booking #15)
+    },
+    // 5. EXPIRED — missed the window
+    {
+      memberId: members[9].id,
+      serviceId: personalTrainingService?.id,
+      preferredDate: dayAt(-1, 0),
+      preferredTime: '10:00-11:00',
+      position: 1,
+      status: WaitlistStatus.EXPIRED,
+      offeredAt: dayAt(-2, 10),
+      offerExpiresAt: dayAt(-2, 12),
+    },
+  ];
+
+  let waitlistCount = 0;
+  for (const w of waitlistData) {
+    const existing = await prisma.waitlistEntry.findFirst({
+      where: {
+        clubId: demoClub.id,
+        memberId: w.memberId,
+        preferredDate: w.preferredDate,
+        preferredTime: w.preferredTime,
+      }
+    });
+
+    if (existing) { waitlistCount++; continue; }
+
+    await prisma.waitlistEntry.create({
+      data: {
+        clubId: demoClub.id,
+        memberId: w.memberId,
+        facilityId: w.facilityId,
+        serviceId: w.serviceId,
+        preferredDate: w.preferredDate,
+        preferredTime: w.preferredTime,
+        position: w.position,
+        status: w.status,
+        offeredAt: w.offeredAt,
+        offerExpiresAt: w.offerExpiresAt,
+        bookingId: w.bookingIndex !== undefined ? bookings[w.bookingIndex]?.id : undefined,
+      }
+    });
+    waitlistCount++;
+  }
+
+  console.log(`✅ Created ${waitlistCount} waitlist entries`);
+
+  // ============================================================================
+  // BOOKING GUESTS (for bookings with guestCount > 0)
+  // ============================================================================
+  console.log('Creating booking guest records...');
+
+  const guestData = [
+    // Guests for booking #4 (past pool booking, guestCount=2, member[6])
+    { bookingIndex: 3, invitedById: members[6].id, name: 'Arun Patel', email: 'arun.patel@example.com', phone: '+66 89 111 2233' },
+    { bookingIndex: 3, invitedById: members[6].id, name: 'Lina Chen', email: 'lina.chen@example.com' },
+    // Guest for booking #16 (tomorrow pool, guestCount=3, member[6])
+    { bookingIndex: 15, invitedById: members[6].id, name: 'Takeshi Yamamoto', email: 'takeshi@example.com', phone: '+66 89 444 5566' },
+    // Guest for booking #15 (tomorrow tennis, guestCount=1, member[5])
+    { bookingIndex: 14, invitedById: members[5].id, name: 'Sarah Mitchell', email: 'sarah.m@example.com' },
+  ];
+
+  let guestCount = 0;
+  for (const g of guestData) {
+    const booking = bookings[g.bookingIndex];
+    if (!booking) continue;
+
+    const existing = await prisma.guest.findFirst({
+      where: { bookingId: booking.id, name: g.name }
+    });
+
+    if (existing) { guestCount++; continue; }
+
+    await prisma.guest.create({
+      data: {
+        bookingId: booking.id,
+        invitedById: g.invitedById,
+        name: g.name,
+        email: g.email,
+        phone: g.phone,
+      }
+    });
+    guestCount++;
+  }
+
+  console.log(`✅ Created ${guestCount} guest records`);
 
   // ============================================================================
   // CONSUMABLES

@@ -65,6 +65,8 @@ export default function BookingsServicePage() {
       basePrice: s.basePrice,
       isActive: s.isActive,
       description: s.description,
+      enforceQualification: s.enforceQualification,
+      requiredCapabilities: s.requiredCapabilities as string[] | undefined,
     }))
   }, [servicesData])
 
@@ -196,6 +198,11 @@ export default function BookingsServicePage() {
                 serviceId={selectedService?.id}
                 onSlotSelect={handleStaffSlotSelect}
                 searchQuery={staffSearch}
+                requiredCapabilities={
+                  selectedService?.enforceQualification
+                    ? selectedService.requiredCapabilities
+                    : undefined
+                }
                 className="max-h-[calc(100vh-280px)]"
               />
             </div>

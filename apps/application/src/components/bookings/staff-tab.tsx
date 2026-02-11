@@ -53,6 +53,10 @@ interface StaffMember {
   rating?: number;
   phone?: string;
   email?: string;
+  detailedCapabilities?: { capability: string; level: string }[];
+  certifications?: { id: string; name: string; expiresAt?: string; status: string }[];
+  workingHours?: { dayOfWeek: string; isOpen: boolean; openTime?: string; closeTime?: string }[];
+  defaultFacilityId?: string;
 }
 
 export interface StaffTabProps {
@@ -271,53 +275,56 @@ function StaffCard({ staff, viewMode, onViewSchedule, onSetAvailability, onEdit,
                 </button>
 
                 {showActions && (
-                  <div className="absolute right-0 top-full z-10 mt-1 w-44 rounded-lg border border-border bg-card py-1 shadow-lg">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        onEdit();
-                        setShowActions(false);
-                      }}
-                      className="flex w-full items-center gap-2 px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted"
-                    >
-                      <Edit2 className="h-4 w-4" />
-                      Edit Staff
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        onViewSchedule();
-                        setShowActions(false);
-                      }}
-                      className="flex w-full items-center gap-2 px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted"
-                    >
-                      <Eye className="h-4 w-4" />
-                      View Schedule
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        onSetAvailability();
-                        setShowActions(false);
-                      }}
-                      className="flex w-full items-center gap-2 px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted"
-                    >
-                      <CalendarClock className="h-4 w-4" />
-                      Set Availability
-                    </button>
-                    <div className="my-1 border-t border-border" />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        onDelete();
-                        setShowActions(false);
-                      }}
-                      className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
-                    >
-                      <X className="h-4 w-4" />
-                      Delete Staff
-                    </button>
-                  </div>
+                  <>
+                    <div className="fixed inset-0 z-[5]" onClick={() => setShowActions(false)} />
+                    <div className="absolute right-0 top-full z-10 mt-1 w-44 rounded-lg border border-border bg-card py-1 shadow-lg">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onEdit();
+                          setShowActions(false);
+                        }}
+                        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted"
+                      >
+                        <Edit2 className="h-4 w-4" />
+                        Edit Staff
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onViewSchedule();
+                          setShowActions(false);
+                        }}
+                        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted"
+                      >
+                        <Eye className="h-4 w-4" />
+                        View Schedule
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onSetAvailability();
+                          setShowActions(false);
+                        }}
+                        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted"
+                      >
+                        <CalendarClock className="h-4 w-4" />
+                        Set Availability
+                      </button>
+                      <div className="my-1 border-t border-border" />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onDelete();
+                          setShowActions(false);
+                        }}
+                        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
+                      >
+                        <X className="h-4 w-4" />
+                        Delete Staff
+                      </button>
+                    </div>
+                  </>
                 )}
               </div>
             )}
@@ -486,9 +493,22 @@ export function StaffTab({
       email: member.email || '',
       phone: member.phone || '',
       avatarUrl: member.photoUrl,
-      capabilities: member.specialties.map((s) => ({ capability: s, level: 'intermediate' as const })),
-      certifications: [],
-      workingHours: [],
+      capabilities: member.detailedCapabilities?.map((c) => ({
+        capability: c.capability,
+        level: c.level.toLowerCase() as 'beginner' | 'intermediate' | 'expert',
+      })) || member.specialties.map((s) => ({ capability: s, level: 'intermediate' as const })),
+      certifications: member.certifications?.map((c) => ({
+        id: c.id,
+        name: c.name,
+        expiresAt: c.expiresAt || '',
+      })) || [],
+      workingHours: member.workingHours?.map((h) => ({
+        dayOfWeek: h.dayOfWeek,
+        isOpen: h.isOpen,
+        openTime: h.openTime,
+        closeTime: h.closeTime,
+      })) || [],
+      defaultFacilityId: member.defaultFacilityId,
       isActive: member.status !== 'off_duty' && member.status !== 'on_leave',
     });
     setIsModalOpen(true);

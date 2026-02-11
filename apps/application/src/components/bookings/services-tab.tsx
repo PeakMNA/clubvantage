@@ -53,6 +53,8 @@ interface Service {
   popularityRank?: number;
   revenueCenterId?: string;
   revenueCenterName?: string;
+  requiredCapabilities?: string[];
+  enforceQualification?: boolean;
 }
 
 export interface ServicesTabProps {
@@ -354,6 +356,8 @@ function ServiceCard({
               </button>
 
               {showActions && (
+                <>
+                <div className="fixed inset-0 z-[9]" onClick={() => setShowActions(false)} />
                 <div className="absolute right-0 top-full z-10 mt-1 w-40 rounded-lg border border-border bg-card py-1 shadow-lg">
                   <button
                     type="button"
@@ -401,6 +405,7 @@ function ServiceCard({
                     Delete Service
                   </button>
                 </div>
+                </>
               )}
             </div>
           </div>
@@ -525,7 +530,8 @@ export function ServicesTab({
       maxParticipants: service.maxParticipants,
       variations: [],
       tierDiscounts: [],
-      requiredCapabilities: [],
+      requiredCapabilities: service.requiredCapabilities || [],
+      enforceQualification: service.enforceQualification || false,
       requiredFacilityFeatures: [],
       isActive: service.status === 'active',
     });
@@ -932,7 +938,7 @@ export function ServicesTab({
                 key={service.id}
                 service={service}
                 viewMode={viewMode}
-                onViewDetails={() => onViewDetails?.(service.id)}
+                onViewDetails={() => handleEditServiceModal(service)}
                 onToggleStatus={() => onToggleStatus?.(service.id)}
                 onEditService={() => handleEditServiceModal(service)}
                 onDelete={() => handleDeleteClick(service)}

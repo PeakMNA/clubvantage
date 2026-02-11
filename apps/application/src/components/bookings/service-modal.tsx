@@ -21,6 +21,7 @@ export interface ServiceFormData {
   basePrice: number;
   tierDiscounts: TierDiscount[];
   requiredCapabilities: string[];
+  enforceQualification: boolean;
   requiredFacilityFeatures: string[];
   variations: ServiceVariation[];
   maxParticipants?: number;
@@ -93,6 +94,7 @@ function getInitialFormData(service?: ServiceFormData | null): ServiceFormData {
     basePrice: service?.basePrice || 0,
     tierDiscounts: service?.tierDiscounts || [],
     requiredCapabilities: service?.requiredCapabilities || [],
+    enforceQualification: service?.enforceQualification ?? false,
     requiredFacilityFeatures: service?.requiredFacilityFeatures || [],
     variations: service?.variations || [],
     maxParticipants: service?.maxParticipants,
@@ -493,6 +495,37 @@ export function ServiceModal({
                     </div>
                   )}
                 </div>
+              </div>
+
+              {/* Enforce Qualification Toggle */}
+              <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-4 py-3">
+                <div>
+                  <label className="text-sm font-medium text-foreground">
+                    Enforce staff qualification
+                  </label>
+                  <p className="text-xs text-muted-foreground">
+                    Only qualified staff can be booked for this service
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={formData.enforceQualification}
+                  onClick={() => updateField('enforceQualification', !formData.enforceQualification)}
+                  className={cn(
+                    'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors',
+                    formData.enforceQualification
+                      ? 'bg-amber-500'
+                      : 'bg-stone-200 dark:bg-stone-700'
+                  )}
+                >
+                  <span
+                    className={cn(
+                      'pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-sm ring-0 transition-transform',
+                      formData.enforceQualification ? 'translate-x-5' : 'translate-x-0'
+                    )}
+                  />
+                </button>
               </div>
 
               {/* Facility Features */}

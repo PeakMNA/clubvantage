@@ -28,6 +28,8 @@ export interface StaffScheduleProps {
   onSlotSelect: (staffId: string, staffName: string, time: string) => void;
   /** Search query to filter staff */
   searchQuery?: string;
+  /** When set, only show staff who have ALL of these capabilities */
+  requiredCapabilities?: string[];
   className?: string;
 }
 
@@ -100,6 +102,7 @@ export function StaffSchedule({
   operatingHours = { start: 8, end: 18 },
   onSlotSelect,
   searchQuery,
+  requiredCapabilities,
   className,
 }: StaffScheduleProps) {
   const { data, isLoading } = useGetBookingStaffQuery();
@@ -118,6 +121,14 @@ export function StaffSchedule({
 
     let list = data.bookingStaff.filter((s) => s.isActive);
 
+    // Filter by qualification (AND logic: staff must have ALL required capabilities)
+    if (requiredCapabilities && requiredCapabilities.length > 0) {
+      list = list.filter((s) => {
+        const caps = s.capabilities ?? [];
+        return requiredCapabilities.every((req) => caps.includes(req));
+      });
+    }
+
     // Filter by search query
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
@@ -129,7 +140,7 @@ export function StaffSchedule({
     }
 
     return list;
-  }, [data, searchQuery]);
+  }, [data, searchQuery, requiredCapabilities]);
 
   if (isLoading) {
     return <StaffScheduleSkeleton hours={hours.length} className={className} />;
@@ -139,7 +150,11 @@ export function StaffSchedule({
     return (
       <div className={cn('flex flex-col items-center justify-center py-12 text-center', className)}>
         <p className="text-sm text-muted-foreground">
-          {searchQuery ? 'No staff match your search.' : 'No active staff found.'}
+          {searchQuery
+            ? 'No staff match your search.'
+            : requiredCapabilities && requiredCapabilities.length > 0
+              ? 'No qualified staff available for this service.'
+              : 'No active staff found.'}
         </p>
       </div>
     );

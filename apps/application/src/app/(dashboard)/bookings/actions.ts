@@ -1,6 +1,7 @@
 'use server';
 
 import { cache } from 'react';
+import { cookies } from 'next/headers';
 import { after } from 'next/server';
 import { requireAuth, requirePermission } from '@/lib/auth/server-auth';
 import {
@@ -18,7 +19,6 @@ import {
   type WorkingHours,
   type DayAvailability,
 } from '@/lib/services';
-import { GraphQLClient } from '@clubvantage/api-client/client';
 import type {
   // Facility types
   CreateFacilityMutation,
@@ -237,6 +237,8 @@ const GetServiceByIdDocument = /* GraphQL */ `
       durationMinutes
       bufferMinutes
       basePrice
+      requiredCapabilities
+      enforceQualification
       isActive
     }
   }
@@ -302,11 +304,35 @@ const GetBookingsForDateDocument = /* GraphQL */ `
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
-function getServerClient(): GraphQLClient {
-  return new GraphQLClient(`${API_URL}/graphql`, {
-    // Server-side doesn't need credentials: 'include'
-    // In production, you'd add proper auth headers here
+async function serverGqlRequest<T = any>(
+  document: string,
+  variables?: Record<string, any>,
+): Promise<T> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get('sb-access-token')?.value;
+
+  const body = JSON.stringify({ query: document, variables });
+
+  const res = await globalThis.fetch(`${API_URL}/graphql`, {
+    method: 'POST',
+    cache: 'no-store',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body,
   });
+
+  const json = await res.json();
+
+  if (json.errors?.length) {
+    const msg = typeof json.errors[0].message === 'string'
+      ? json.errors[0].message
+      : JSON.stringify(json.errors[0]);
+    throw new Error(msg);
+  }
+
+  return json.data as T;
 }
 
 // ============================================================================
@@ -369,8 +395,7 @@ export interface GetAvailabilityInput {
  */
 const getMemberContext = cache(async (memberId: string): Promise<MemberContext> => {
   try {
-    const client = getServerClient();
-    const data = await client.request<any>(GetMemberDocument, { id: memberId });
+    const data = await serverGqlRequest<any>(GetMemberDocument, { id: memberId });
     const m = data?.member;
     if (!m) {
       return { id: memberId, status: 'ACTIVE', membershipType: 'Standard', balance: 0, credits: 0, noShowCount: 0 };
@@ -395,8 +420,7 @@ const getMemberContext = cache(async (memberId: string): Promise<MemberContext> 
  */
 const getServiceContext = cache(async (serviceId: string): Promise<ServiceContext | undefined> => {
   try {
-    const client = getServerClient();
-    const data = await client.request<any>(GetServiceByIdDocument);
+    const data = await serverGqlRequest<any>(GetServiceByIdDocument);
     const service = data?.services?.find((s: any) => s.id === serviceId);
     if (!service) return undefined;
     return {
@@ -418,8 +442,7 @@ const getServiceContext = cache(async (serviceId: string): Promise<ServiceContex
  */
 const getStaffContext = cache(async (staffId: string): Promise<StaffContext | undefined> => {
   try {
-    const client = getServerClient();
-    const data = await client.request<any>(GetStaffByIdDocument);
+    const data = await serverGqlRequest<any>(GetStaffByIdDocument);
     const staff = data?.bookingStaff?.find((s: any) => s.id === staffId);
     if (!staff) return undefined;
 
@@ -455,8 +478,7 @@ const getStaffContext = cache(async (staffId: string): Promise<StaffContext | un
  */
 const getFacilityContext = cache(async (facilityId: string): Promise<FacilityContext | undefined> => {
   try {
-    const client = getServerClient();
-    const data = await client.request<any>(GetFacilitiesByIdDocument);
+    const data = await serverGqlRequest<any>(GetFacilitiesByIdDocument);
     const facility = data?.facilities?.find((f: any) => f.id === facilityId);
     if (!facility) return undefined;
 
@@ -519,10 +541,9 @@ async function fetchExistingBookings(
   facilityId?: string
 ): Promise<ExistingBooking[]> {
   try {
-    const client = getServerClient();
     const startDate = `${dateStr}T00:00:00.000Z`;
     const endDate = `${dateStr}T23:59:59.999Z`;
-    const data = await client.request<any>(GetBookingsForDateDocument, {
+    const data = await serverGqlRequest<any>(GetBookingsForDateDocument, {
       staffId: staffId || undefined,
       facilityId: facilityId || undefined,
       startDate,
@@ -801,8 +822,7 @@ export async function searchMembers(
   }
 
   try {
-    const client = getServerClient();
-    const data = await client.request<any>(SearchMembersDocument, { search: query, first: 10 });
+    const data = await serverGqlRequest<any>(SearchMembersDocument, { search: query, first: 10 });
 
     const statusMap: Record<string, 'active' | 'suspended' | 'lapsed'> = {
       ACTIVE: 'active',
@@ -824,7 +844,9 @@ export async function searchMembers(
 }
 
 /**
- * Get services available for a staff member
+ * Get services available for a staff member.
+ * Includes services where enforceQualification is false (any staff),
+ * plus services where enforceQualification is true AND staff has all requiredCapabilities.
  */
 export async function getServicesForStaff(
   staffId: string
@@ -836,17 +858,22 @@ export async function getServicesForStaff(
   category?: string;
 }>> {
   try {
-    const staff = await getStaffContext(staffId);
-    if (!staff) {
-      return [];
-    }
+    const [staff, servicesData] = await Promise.all([
+      getStaffContext(staffId),
+      serverGqlRequest<any>(GetServiceByIdDocument),
+    ]);
 
-    const client = getServerClient();
-    const data = await client.request<any>(GetServiceByIdDocument);
+    if (!staff) return [];
 
-    // Filter services by staff capabilities
-    return (data?.services || [])
-      .filter((s: any) => s.isActive && staff.capabilities?.some((cap: string) => s.name.includes(cap) || cap.includes(s.name)))
+    const staffCaps = staff.capabilities || [];
+
+    return (servicesData?.services || [])
+      .filter((s: any) => {
+        if (!s.isActive) return false;
+        if (!s.enforceQualification) return true;
+        const required: string[] = s.requiredCapabilities || [];
+        return required.every((req: string) => staffCaps.includes(req));
+      })
       .map((s: any) => ({
         id: s.id,
         name: s.name,
@@ -889,9 +916,8 @@ export async function createFacility(
     // Verify authentication and permissions
     await requirePermission('facility:create');
 
-    const client = getServerClient();
     const variables: CreateFacilityMutationVariables = { input };
-    const result = await client.request<CreateFacilityMutation>(
+    const result = await serverGqlRequest<CreateFacilityMutation>(
       CreateFacilityDocument,
       variables
     );
@@ -934,9 +960,8 @@ export async function updateFacility(
     // Verify authentication and permissions
     await requirePermission('facility:update');
 
-    const client = getServerClient();
     const variables: UpdateFacilityMutationVariables = { input };
-    const result = await client.request<UpdateFacilityMutation>(
+    const result = await serverGqlRequest<UpdateFacilityMutation>(
       UpdateFacilityDocument,
       variables
     );
@@ -977,9 +1002,8 @@ export async function deleteFacility(id: string): Promise<{ success: boolean; me
     // Verify authentication and permissions
     await requirePermission('facility:delete');
 
-    const client = getServerClient();
     const variables: DeleteFacilityMutationVariables = { id };
-    const result = await client.request<DeleteFacilityMutation>(
+    const result = await serverGqlRequest<DeleteFacilityMutation>(
       DeleteFacilityDocument,
       variables
     );
@@ -1035,9 +1059,8 @@ export async function createService(
     // Verify authentication and permissions
     await requirePermission('service:create');
 
-    const client = getServerClient();
     const variables: CreateServiceMutationVariables = { input };
-    const result = await client.request<CreateServiceMutation>(
+    const result = await serverGqlRequest<CreateServiceMutation>(
       CreateServiceDocument,
       variables
     );
@@ -1083,9 +1106,8 @@ export async function updateService(
     // Verify authentication and permissions
     await requirePermission('service:update');
 
-    const client = getServerClient();
     const variables: UpdateServiceMutationVariables = { input };
-    const result = await client.request<UpdateServiceMutation>(
+    const result = await serverGqlRequest<UpdateServiceMutation>(
       UpdateServiceDocument,
       variables
     );
@@ -1129,9 +1151,8 @@ export async function deleteService(id: string): Promise<{ success: boolean; mes
     // Verify authentication and permissions
     await requirePermission('service:delete');
 
-    const client = getServerClient();
     const variables: DeleteServiceMutationVariables = { id };
-    const result = await client.request<DeleteServiceMutation>(
+    const result = await serverGqlRequest<DeleteServiceMutation>(
       DeleteServiceDocument,
       variables
     );
@@ -1186,9 +1207,8 @@ export async function createStaffMember(
     // Verify authentication and permissions
     await requirePermission('staff:create');
 
-    const client = getServerClient();
     const variables: CreateStaffMemberMutationVariables = { input };
-    const result = await client.request<CreateStaffMemberMutation>(
+    const result = await serverGqlRequest<CreateStaffMemberMutation>(
       CreateStaffMemberDocument,
       variables
     );
@@ -1233,9 +1253,8 @@ export async function updateStaffMember(
     // Verify authentication and permissions
     await requirePermission('staff:update');
 
-    const client = getServerClient();
     const variables: UpdateStaffMemberMutationVariables = { input };
-    const result = await client.request<UpdateStaffMemberMutation>(
+    const result = await serverGqlRequest<UpdateStaffMemberMutation>(
       UpdateStaffMemberDocument,
       variables
     );
@@ -1278,9 +1297,8 @@ export async function deleteStaffMember(id: string): Promise<{ success: boolean;
     // Verify authentication and permissions
     await requirePermission('staff:delete');
 
-    const client = getServerClient();
     const variables: DeleteStaffMemberMutationVariables = { id };
-    const result = await client.request<DeleteStaffMemberMutation>(
+    const result = await serverGqlRequest<DeleteStaffMemberMutation>(
       DeleteStaffMemberDocument,
       variables
     );

@@ -7,15 +7,38 @@ ClubVantage is an AI-First Club Management ERP system for country clubs and golf
 
 ### PRD Documents
 - **Main Application PRD**: `/Users/peak/development/vantage/docs/clubvantage-prd-01-application.md`
-- **Section Specs**: `/Users/peak/development/vantage/docs/product/sections/`
-  - `golf/spec.md` - Golf tee sheet, caddies, carts, courses
-  - `members/spec.md` - Member directory, applications, contracts, dependents
-  - `billing/spec.md` - Invoices, payments, AR
-  - `bookings/spec.md` - Facility bookings
-  - `reports/spec.md` - Reporting & analytics
-  - `settings/spec.md` - System configuration
-  - `users/spec.md` - User management
-  - `portal/spec.md` - Member portal
+- **Strategy Docs**: `/Users/peak/development/vantage/docs/product/`
+  - `pricing-structure.md` - Tier pricing and UAL framework
+  - `tiered-release.md` - Tiered feature release strategy
+
+### Product Specs
+All specs live under `/Users/peak/development/vantage/docs/product/sections/`:
+
+**Application** (`sections/application/`) — Staff-facing admin system:
+- `billing/spec.md` - Invoices, payments, AR
+  - Sub-features: `ar-profiles/`, `ar-statements/`, `autopay/`, `billing-cycles/`, `minimum-spend/`, `payment-methods/`
+- `bookings/spec.md` - Facility bookings
+  - Sub-features: `calendar/`, `equipment/`, `facilities/`, `services/`, `staff/`, `waitlist/`
+- `golf/spec.md` - Golf tee sheet, caddies, carts, courses
+  - Sub-features: `tee-sheet/` (booking, cart-assignment, check-in, flight-management, schedule), `courses/configuration/`, `caddies/`, `carts/`, `scoring/`, `booking-management/`, `schedule-configuration/`
+- `marketing/spec.md` - Campaigns, audiences, AI content
+- `members/spec.md` - Member directory, applications, contracts, dependents
+  - Sub-features: `management/`, `profiles/`, `sub-accounts/`
+- `portal/spec.md` - Member portal
+  - Sub-features: `aura-concierge/`, `member-directory/`, `spending-dashboard/`
+- `pos/` - Point of sale
+  - Sub-features: `cash-management/`, `outlets/`, `product-panel/`, `sales/`, `settlement/`, `stations/`
+- `reports/spec.md` - Reporting & analytics
+- `settings/spec.md` - System configuration
+- `users/spec.md` - User management
+- `integrations/` - Cross-module specs: `golf-billing/`, `pos-golf/`, `multi-outlet/`
+
+**Platform** (`sections/platform/`) — Platform Manager & Tenant Admin:
+- `spec.md` - Main platform spec (index of all sub-specs)
+- ClubVantage Team: `tenant-management/`, `subscription-management/`, `feature-flags/`, `tier-limits/`, `revenue-tracking/`, `monitoring/`, `support-tools/`, `waitlist/`, `feature-voting/`, `launch-plan/`
+- Tenant Admin: `tenant-configuration/`, `tenant-branding/`, `tenant-user-management/`, `tenant-billing-portal/`
+- Infrastructure: `i18n/`, `multi-tenancy/`, `navigation/`
+- External: `marketing-site/` (site, video)
 
 ### Design System
 - **Location**: `/Users/peak/development/vantage/docs/product/design-system/`
@@ -182,9 +205,10 @@ const t = useTranslations('memberStatus');
 
 ### Feature Specs (Living Documentation)
 
-Feature specs live at `clubvantage/docs/features/{section}/{feature}/{capability}/spec.md`. These are the source of truth for what each feature does, its dependencies, settings, data model, and implementation status.
+Feature specs live at `docs/product/sections/{application|platform}/{module}/{feature}/spec.md`. These are the source of truth for what each feature does, its dependencies, settings, data model, and implementation status.
 
-**Sections:** golf, bookings, pos, billing, members, marketing, platform
+**Application modules:** billing, bookings, golf, marketing, members, portal, pos, reports, settings, users, integrations
+**Platform modules:** tenant-management, subscription-management, feature-flags, tier-limits, revenue-tracking, monitoring, support-tools, waitlist, feature-voting, tenant-configuration, tenant-branding, tenant-user-management, tenant-billing-portal, launch-plan, i18n, multi-tenancy, navigation, marketing-site
 
 **When creating or modifying a plan (`clubvantage/docs/plans/`):**
 1. Identify which feature specs are affected by the plan
@@ -213,10 +237,9 @@ Feature specs live at `clubvantage/docs/features/{section}/{feature}/{capability
 ```
 
 ### Before Making Changes
-1. Check the relevant feature spec in `clubvantage/docs/features/`
-2. Check the section spec in `/docs/product/sections/`
-3. Follow existing component patterns in the codebase
-4. Use design system colors from this reference
+1. Check the relevant feature spec in `docs/product/sections/application/` or `docs/product/sections/platform/`
+2. Follow existing component patterns in the codebase
+3. Use design system colors from this reference
 
 ### CSS/Styling
 - Import `@clubvantage/ui/globals.css` for design tokens

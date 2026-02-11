@@ -37,6 +37,9 @@ import {
   TrendingUp,
   PieChart,
   DollarSign,
+  Mail,
+  Megaphone,
+  Target,
   type LucideIcon,
 } from 'lucide-react';
 import { cn, Button } from '@clubvantage/ui';
@@ -94,6 +97,7 @@ const navigation: NavItem[] = [
       { label: 'Bookings', icon: Calendar, href: '/bookings/list' },
       { label: 'Manage Facilities', icon: Settings, href: '/bookings/facilities' },
       { label: 'Manage Services', icon: Settings, href: '/bookings/services' },
+      { label: 'Manage Staff', icon: UserCog, href: '/bookings/manage-staff' },
       { label: 'Equipment', icon: Wrench, href: '/bookings/equipment' },
       { label: 'Waitlist', icon: Clock, href: '/bookings/waitlist' },
     ],
@@ -123,6 +127,19 @@ const navigation: NavItem[] = [
       { label: 'WHT', icon: FileBarChart, href: '/reports/wht' },
       { label: 'Collections', icon: CreditCard, href: '/reports/collections' },
       { label: 'Membership', icon: Users, href: '/reports/membership' },
+    ],
+  },
+  {
+    label: 'Marketing',
+    icon: Megaphone,
+    href: '/marketing',
+    children: [
+      { label: 'Dashboard', icon: BarChart3, href: '/marketing' },
+      { label: 'Campaigns', icon: Mail, href: '/marketing/campaigns' },
+      { label: 'Audiences', icon: Target, href: '/marketing/audiences' },
+      { label: 'Content', icon: FileText, href: '/marketing/content' },
+      { label: 'Analytics', icon: TrendingUp, href: '/marketing/analytics' },
+      { label: 'Settings', icon: Settings, href: '/marketing/settings' },
     ],
   },
 ];

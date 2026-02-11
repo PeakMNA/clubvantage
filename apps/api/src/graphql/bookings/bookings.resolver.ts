@@ -20,6 +20,8 @@ import {
   CheckInResponseType,
   BookingStatusEnum,
   ResourceTypeEnum,
+  BookingGuestType,
+  BookingWaitlistType,
   WaitlistEntryType,
   WaitlistConnection,
   WaitlistResponseType,
@@ -181,6 +183,8 @@ export class BookingsResolver {
           resource: true,
           service: true,
           staff: true,
+          guests: true,
+          waitlistEntry: true,
         },
         orderBy: { startTime: 'desc' },
         take: first,
@@ -317,6 +321,8 @@ export class BookingsResolver {
       durationMinutes: s.durationMinutes,
       basePrice: s.basePrice.toNumber(),
       description: s.description ?? undefined,
+      requiredCapabilities: s.requiredCapabilities as string[],
+      enforceQualification: s.enforceQualification,
       isActive: s.isActive,
     }));
   }
@@ -346,6 +352,83 @@ export class BookingsResolver {
       capabilities: s.capabilities.map((c) => c.capability),
       isActive: s.isActive,
     }));
+  }
+
+  @Query(() => [ExtendedStaffType], { name: 'staffMembers', description: 'Get list of staff members with full details' })
+  async getStaffMembers(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('filter', { type: () => StaffFilterInput, nullable: true }) filter?: StaffFilterInput,
+  ): Promise<ExtendedStaffType[]> {
+    const where: any = { clubId: user.tenantId };
+    if (filter?.isActive !== undefined) where.isActive = filter.isActive;
+
+    const staff = await this.prisma.staff.findMany({
+      where,
+      include: {
+        capabilities: true,
+        certifications: true,
+      },
+      orderBy: { firstName: 'asc' },
+    });
+
+    const now = new Date();
+    const ninetyDaysFromNow = new Date();
+    ninetyDaysFromNow.setDate(ninetyDaysFromNow.getDate() + 90);
+
+    return staff.map((s) => ({
+      id: s.id,
+      firstName: s.firstName,
+      lastName: s.lastName,
+      photoUrl: s.avatarUrl ?? undefined,
+      role: undefined,
+      capabilities: s.capabilities.map((c) => c.capability),
+      isActive: s.isActive,
+      email: s.email ?? undefined,
+      phone: s.phone ?? undefined,
+      userId: s.userId ?? undefined,
+      detailedCapabilities: s.capabilities.map((c) => ({
+        capability: c.capability,
+        level: c.skillLevel,
+      })),
+      certifications: s.certifications.map((c) => ({
+        id: c.id,
+        name: c.name,
+        expiresAt: c.expiryDate ?? undefined,
+        status: !c.expiryDate ? 'VALID' : c.expiryDate < now ? 'EXPIRED' : c.expiryDate < ninetyDaysFromNow ? 'EXPIRING' : 'VALID',
+      })),
+      workingHours: this.parseWorkingHours(s.workingSchedule),
+      defaultFacilityId: s.defaultFacilityId ?? undefined,
+    }));
+  }
+
+  /**
+   * Parses workingSchedule JSON from the database.
+   * Handles both formats:
+   * - Array format (from create/update mutations): [{ dayOfWeek, isOpen, openTime, closeTime }]
+   * - Legacy day-name format (from old seed): { monday: { start, end }, ... }
+   */
+  private parseWorkingHours(workingSchedule: any): any[] | undefined {
+    if (!workingSchedule) return undefined;
+    const parsed = typeof workingSchedule === 'string' ? JSON.parse(workingSchedule) : workingSchedule;
+
+    // Already in array format
+    if (Array.isArray(parsed)) return parsed;
+
+    // Legacy day-name format → convert to array
+    const dayMap: Record<string, string> = {
+      sunday: '0', monday: '1', tuesday: '2', wednesday: '3',
+      thursday: '4', friday: '5', saturday: '6',
+    };
+
+    return Object.entries(dayMap).map(([name, index]) => {
+      const hours = parsed[name];
+      return {
+        dayOfWeek: index,
+        isOpen: !!hours,
+        openTime: hours?.start || undefined,
+        closeTime: hours?.end || undefined,
+      };
+    });
   }
 
   // ============================================================================
@@ -633,8 +716,9 @@ export class BookingsResolver {
           durationMinutes: input.durationMinutes,
           bufferMinutes: input.bufferMinutes || 0,
           basePrice: input.basePrice,
-          tierDiscounts: input.tierDiscounts ? JSON.stringify(input.tierDiscounts) : undefined,
+          tierDiscounts: input.tierDiscounts ? JSON.parse(JSON.stringify(input.tierDiscounts)) : undefined,
           requiredCapabilities: input.requiredCapabilities || [],
+          enforceQualification: input.enforceQualification ?? false,
           requiredFeatures: input.requiredFacilityFeatures || [],
           revenueCenterId: input.revenueCenterId,
           isActive: input.isActive ?? true,
@@ -669,8 +753,9 @@ export class BookingsResolver {
           isActive: service.isActive,
           bufferMinutes: service.bufferMinutes,
           requiredCapabilities: service.requiredCapabilities as string[],
+          enforceQualification: service.enforceQualification,
           requiredFacilityFeatures: service.requiredFeatures as string[],
-          tierDiscounts: service.tierDiscounts ? JSON.parse(service.tierDiscounts as string) : [],
+          tierDiscounts: (service.tierDiscounts as any[]) || [],
           variations: variations.map((v) => ({
             id: v.id,
             name: v.name,
@@ -701,8 +786,9 @@ export class BookingsResolver {
       if (input.durationMinutes !== undefined) data.durationMinutes = input.durationMinutes;
       if (input.bufferMinutes !== undefined) data.bufferMinutes = input.bufferMinutes;
       if (input.basePrice !== undefined) data.basePrice = input.basePrice;
-      if (input.tierDiscounts !== undefined) data.tierDiscounts = JSON.stringify(input.tierDiscounts);
+      if (input.tierDiscounts !== undefined) data.tierDiscounts = JSON.parse(JSON.stringify(input.tierDiscounts));
       if (input.requiredCapabilities !== undefined) data.requiredCapabilities = input.requiredCapabilities;
+      if (input.enforceQualification !== undefined) data.enforceQualification = input.enforceQualification;
       if (input.requiredFacilityFeatures !== undefined) data.requiredFeatures = input.requiredFacilityFeatures;
       if (input.revenueCenterId !== undefined) data.revenueCenterId = input.revenueCenterId;
       if (input.isActive !== undefined) data.isActive = input.isActive;
@@ -746,8 +832,9 @@ export class BookingsResolver {
           isActive: service.isActive,
           bufferMinutes: service.bufferMinutes,
           requiredCapabilities: service.requiredCapabilities as string[],
+          enforceQualification: service.enforceQualification,
           requiredFacilityFeatures: service.requiredFeatures as string[],
-          tierDiscounts: service.tierDiscounts ? JSON.parse(service.tierDiscounts as string) : [],
+          tierDiscounts: (service.tierDiscounts as any[]) || [],
           variations: variations.map((v) => ({
             id: v.id,
             name: v.name,
@@ -1012,7 +1099,7 @@ export class BookingsResolver {
         expiresAt: c.expiryDate ?? undefined,
         status: !c.expiryDate ? 'VALID' : c.expiryDate < now ? 'EXPIRED' : c.expiryDate < ninetyDaysFromNow ? 'EXPIRING' : 'VALID',
       })),
-      workingHours: staff.workingSchedule ? JSON.parse(staff.workingSchedule as string) : undefined,
+      workingHours: this.parseWorkingHours(staff.workingSchedule),
       defaultFacilityId: staff.defaultFacilityId ?? undefined,
     };
   }
@@ -1072,6 +1159,8 @@ export class BookingsResolver {
             durationMinutes: booking.service.durationMinutes,
             basePrice: Number(booking.service.basePrice),
             description: booking.service.description,
+            requiredCapabilities: booking.service.requiredCapabilities as string[],
+            enforceQualification: booking.service.enforceQualification,
             isActive: booking.service.isActive,
           }
         : undefined,
@@ -1089,6 +1178,20 @@ export class BookingsResolver {
       endTime: booking.endTime,
       durationMinutes: booking.durationMinutes || booking.duration || 0,
       guestCount: booking.guestCount,
+      guests: booking.guests?.map((g: any) => ({
+        id: g.id,
+        name: g.name,
+        email: g.email,
+        phone: g.phone,
+      })),
+      waitlistEntry: booking.waitlistEntry
+        ? {
+            id: booking.waitlistEntry.id,
+            position: booking.waitlistEntry.position,
+            status: booking.waitlistEntry.status as WaitlistStatusEnum,
+            offerExpiresAt: booking.waitlistEntry.offerExpiresAt,
+          }
+        : undefined,
       notes: booking.notes,
       bufferBefore: booking.bufferBefore,
       bufferAfter: booking.bufferAfter,

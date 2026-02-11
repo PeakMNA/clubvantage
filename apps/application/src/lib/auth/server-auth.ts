@@ -115,8 +115,9 @@ export async function hasPermission(permission: string): Promise<boolean> {
     return false;
   }
 
-  // Admins have all permissions
-  if (result.session.user.role === 'admin') {
+  // Admin-level roles have all permissions
+  const adminRoles = ['SUPER_ADMIN', 'PLATFORM_ADMIN', 'TENANT_ADMIN'];
+  if (adminRoles.includes(result.session.user.role)) {
     return true;
   }
 
@@ -131,8 +132,9 @@ export async function hasPermission(permission: string): Promise<boolean> {
 export async function requirePermission(permission: string): Promise<Session> {
   const session = await requireAuth();
 
-  // Admins have all permissions
-  if (session.user.role === 'admin') {
+  // Admin-level roles have all permissions
+  const adminRoles = ['SUPER_ADMIN', 'PLATFORM_ADMIN', 'TENANT_ADMIN'];
+  if (adminRoles.includes(session.user.role)) {
     return session;
   }
 

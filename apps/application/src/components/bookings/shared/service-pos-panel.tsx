@@ -17,6 +17,8 @@ export interface ServiceCard {
   basePrice: number;
   isActive: boolean;
   description?: string | null;
+  enforceQualification?: boolean;
+  requiredCapabilities?: string[];
 }
 
 export interface ServicePosPanelProps {

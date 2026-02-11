@@ -29,6 +29,7 @@ import { GolfModule } from './modules/golf/golf.module';
 import { BookingsModule } from './modules/bookings/bookings.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { MarketingModule } from './modules/marketing/marketing.module';
 
 // Guards and interceptors
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
@@ -86,6 +87,7 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
     BookingsModule,
     ReportsModule,
     NotificationsModule,
+    MarketingModule,
   ],
   providers: [
     // Global exception filter

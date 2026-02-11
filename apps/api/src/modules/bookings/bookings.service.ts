@@ -187,6 +187,10 @@ export class BookingsService {
         member: true,
         facility: true,
         resource: true,
+        service: true,
+        staff: true,
+        guests: true,
+        waitlistEntry: true,
       },
     });
 

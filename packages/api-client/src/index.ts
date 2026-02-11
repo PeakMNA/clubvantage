@@ -68,6 +68,8 @@ export {
   // Staff hooks
   useGetBookingStaffQuery,
   useInfiniteGetBookingStaffQuery,
+  useGetStaffMembersQuery,
+  useInfiniteGetStaffMembersQuery,
   useCreateStaffMemberMutation,
   useUpdateStaffMemberMutation,
   useDeleteStaffMemberMutation,

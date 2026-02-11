@@ -37,6 +37,8 @@ export default function BookingsServicesPage() {
       status: s.isActive ? ('active' as const) : ('inactive' as const),
       bookingsThisWeek: 0,
       requiresStaff: true,
+      requiredCapabilities: (s.requiredCapabilities as string[]) || [],
+      enforceQualification: s.enforceQualification,
     }))
   }, [data])
 
@@ -90,8 +92,9 @@ export default function BookingsServicesPage() {
             bufferMinutes: data.bufferMinutes || undefined,
             basePrice: data.basePrice || undefined,
             isActive: data.isActive,
+            enforceQualification: data.enforceQualification,
             maxParticipants: data.maxParticipants || undefined,
-            requiredCapabilities: data.requiredCapabilities.length > 0 ? data.requiredCapabilities : undefined,
+            requiredCapabilities: data.requiredCapabilities,
             requiredFacilityFeatures: data.requiredFacilityFeatures.length > 0 ? data.requiredFacilityFeatures : undefined,
             tierDiscounts: data.tierDiscounts.length > 0 ? data.tierDiscounts.map((t) => ({
               tierName: t.tierName,

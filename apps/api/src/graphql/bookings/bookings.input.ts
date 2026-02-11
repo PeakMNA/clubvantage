@@ -1,5 +1,5 @@
 import { ArgsType, Field, ID, InputType, Int, Float } from '@nestjs/graphql';
-import { IsOptional, IsUUID, IsDateString, IsInt, Min, Max, IsEnum, IsString } from 'class-validator';
+import { IsOptional, IsUUID, IsDateString, IsInt, IsBoolean, Min, Max, IsEnum, IsString } from 'class-validator';
 import { BookingStatusEnum, BookingTypeEnum, ResourceTypeEnum } from './bookings.types';
 
 // Query args for calendar view
@@ -465,6 +465,11 @@ export class CreateServiceInput {
   @IsOptional()
   requiredCapabilities?: string[];
 
+  @Field(() => Boolean, { nullable: true })
+  @IsOptional()
+  @IsBoolean()
+  enforceQualification?: boolean;
+
   @Field(() => [String], { nullable: true })
   @IsOptional()
   requiredFacilityFeatures?: string[];
@@ -535,6 +540,11 @@ export class UpdateServiceInput {
   @Field(() => [String], { nullable: true })
   @IsOptional()
   requiredCapabilities?: string[];
+
+  @Field(() => Boolean, { nullable: true })
+  @IsOptional()
+  @IsBoolean()
+  enforceQualification?: boolean;
 
   @Field(() => [String], { nullable: true })
   @IsOptional()
