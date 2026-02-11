@@ -78,6 +78,8 @@ model Club {
   posStations            POSStation[]
   creditNotes            CreditNote[]
   collectionActions      CollectionAction[]
+  paymentArrangements    PaymentArrangement[]
+  shareableLinks         ShareableLink[]
   cityLedgers            CityLedger[]
   interestCategories     InterestCategory[]
   equipmentCategories    EquipmentCategory[]
@@ -696,6 +698,7 @@ model Member {
   storedPaymentMethods  StoredPaymentMethod[]
   creditNotes           CreditNote[]
   collectionActions     CollectionAction[]
+  paymentArrangements   PaymentArrangement[]
   billingProfile        MemberBillingProfile?
   interests             MemberInterest[]
   communicationPrefs    MemberCommunicationPrefs?
@@ -838,6 +841,7 @@ model Invoice {
   creditNoteSources CreditNote[]            @relation("CreditNoteSource")
   creditNoteApps    CreditNoteApplication[]
   collectionActions CollectionAction[]
+  arrangements      PaymentArrangementInvoice[]
 
   @@unique([clubId, invoiceNumber])
   @@index([clubId])
@@ -3804,6 +3808,124 @@ model CreditNote {
   @@index([clubId, memberId])
   @@index([creditNoteNumber])
   @@map("credit_notes")
+}
+
+// Payment Arrangement models
+model PaymentArrangement {
+  id                String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId            String                    @db.Uuid
+  memberId          String                    @db.Uuid
+  arrangementNumber String                    @db.VarChar(30)
+  totalAmount       Decimal                   @db.Decimal(12, 2)
+  paidAmount        Decimal                   @default(0) @db.Decimal(12, 2)
+  remainingAmount   Decimal                   @db.Decimal(12, 2)
+  installmentCount  Int
+  frequency         ArrangementFrequency
+  startDate         DateTime                  @db.Date
+  endDate           DateTime                  @db.Date
+  status            ArrangementStatus         @default(DRAFT)
+  notes             String?
+  approvedBy        String?                   @db.Uuid
+  approvedAt        DateTime?
+  createdBy         String                    @db.Uuid
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @updatedAt
+
+  club              Club                      @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  member            Member                    @relation(fields: [memberId], references: [id])
+  installments      ArrangementInstallment[]
+  invoices          PaymentArrangementInvoice[]
+
+  @@unique([clubId, arrangementNumber])
+  @@index([clubId])
+  @@index([memberId])
+  @@map("payment_arrangements")
+}
+
+model ArrangementInstallment {
+  id              String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  arrangementId   String              @db.Uuid
+  installmentNo   Int
+  dueDate         DateTime            @db.Date
+  amount          Decimal             @db.Decimal(12, 2)
+  paidAmount      Decimal             @default(0) @db.Decimal(12, 2)
+  status          InstallmentStatus   @default(PENDING)
+  paymentId       String?             @db.Uuid
+  paidAt          DateTime?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  arrangement     PaymentArrangement  @relation(fields: [arrangementId], references: [id], onDelete: Cascade)
+
+  @@index([arrangementId])
+  @@map("arrangement_installments")
+}
+
+model PaymentArrangementInvoice {
+  id            String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  arrangementId String              @db.Uuid
+  invoiceId     String              @db.Uuid
+  createdAt     DateTime            @default(now())
+
+  arrangement   PaymentArrangement  @relation(fields: [arrangementId], references: [id], onDelete: Cascade)
+  invoice       Invoice             @relation(fields: [invoiceId], references: [id])
+
+  @@unique([arrangementId, invoiceId])
+  @@index([arrangementId])
+  @@index([invoiceId])
+  @@map("payment_arrangement_invoices")
+}
+
+enum ArrangementFrequency {
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+}
+
+enum ArrangementStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+  DEFAULTED
+  CANCELLED
+}
+
+enum InstallmentStatus {
+  PENDING
+  PAID
+  OVERDUE
+  WAIVED
+}
+
+// Shareable Link model
+model ShareableLink {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId       String   @db.Uuid
+  token        String   @unique @db.VarChar(64)
+  entityType   ShareableEntityType
+  entityId     String   @db.Uuid
+  expiresAt    DateTime?
+  maxViews     Int?
+  viewCount    Int      @default(0)
+  isActive     Boolean  @default(true)
+  password     String?  @db.VarChar(255)
+  createdBy    String   @db.Uuid
+  lastViewedAt DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  club         Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  @@index([clubId])
+  @@index([token])
+  @@index([entityType, entityId])
+  @@map("shareable_links")
+}
+
+enum ShareableEntityType {
+  INVOICE
+  RECEIPT
+  STATEMENT
 }
 
 enum CreditNoteType {

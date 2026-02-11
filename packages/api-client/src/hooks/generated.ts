@@ -341,6 +341,39 @@ export type ArAgingReportType = {
   totalCount: Scalars['Float']['output'];
 };
 
+/** Payment arrangement frequency */
+export type ArrangementFrequency =
+  | 'BIWEEKLY'
+  | 'MONTHLY'
+  | 'WEEKLY';
+
+export type ArrangementInstallmentType = {
+  __typename?: 'ArrangementInstallmentType';
+  amount: Scalars['String']['output'];
+  dueDate: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  installmentNo: Scalars['Int']['output'];
+  paidAmount: Scalars['String']['output'];
+  paidAt?: Maybe<Scalars['DateTime']['output']>;
+  paymentId?: Maybe<Scalars['ID']['output']>;
+  status: InstallmentStatus;
+};
+
+export type ArrangementInvoiceType = {
+  __typename?: 'ArrangementInvoiceType';
+  id: Scalars['ID']['output'];
+  invoice?: Maybe<InvoiceType>;
+  invoiceId: Scalars['ID']['output'];
+};
+
+/** Payment arrangement status */
+export type ArrangementStatus =
+  | 'ACTIVE'
+  | 'CANCELLED'
+  | 'COMPLETED'
+  | 'DEFAULTED'
+  | 'DRAFT';
+
 export type AssignEquipmentInput = {
   bookingId?: InputMaybe<Scalars['ID']['input']>;
   conditionAtCheckout?: InputMaybe<EquipmentCondition>;
@@ -468,6 +501,21 @@ export type AutoPaySettingInput = {
   requireApprovalAbove?: InputMaybe<Scalars['Float']['input']>;
   retryIntervalDays?: InputMaybe<Scalars['Int']['input']>;
   schedule?: InputMaybe<AutoPaySchedule>;
+};
+
+export type BatchInvoiceErrorType = {
+  __typename?: 'BatchInvoiceErrorType';
+  error: Scalars['String']['output'];
+  memberId: Scalars['String']['output'];
+  memberName?: Maybe<Scalars['String']['output']>;
+};
+
+export type BatchInvoiceResultType = {
+  __typename?: 'BatchInvoiceResultType';
+  createdCount: Scalars['Float']['output'];
+  errors: Array<BatchInvoiceErrorType>;
+  failedCount: Scalars['Float']['output'];
+  invoices: Array<InvoiceType>;
 };
 
 export type BatchPaymentInput = {
@@ -1591,6 +1639,16 @@ export type CreateApplicationInput = {
   sponsorId?: InputMaybe<Scalars['ID']['input']>;
 };
 
+export type CreateBatchInvoicesInput = {
+  billingPeriod?: InputMaybe<Scalars['String']['input']>;
+  dueDate: Scalars['DateTime']['input'];
+  invoiceDate: Scalars['DateTime']['input'];
+  lineItems: Array<InvoiceLineItemInput>;
+  memberIds: Array<Scalars['ID']['input']>;
+  notes?: InputMaybe<Scalars['String']['input']>;
+  sendEmail?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
 export type CreateBlockInput = {
   blockType: BlockType;
   courseId: Scalars['ID']['input'];
@@ -1774,6 +1832,7 @@ export type CreateInterestCategoryInput = {
 
 export type CreateInvoiceInput = {
   billingPeriod?: InputMaybe<Scalars['String']['input']>;
+  discountId?: InputMaybe<Scalars['ID']['input']>;
   dueDate: Scalars['DateTime']['input'];
   internalNotes?: InputMaybe<Scalars['String']['input']>;
   invoiceDate: Scalars['DateTime']['input'];
@@ -1884,6 +1943,15 @@ export type CreateModifierInput = {
   name: Scalars['String']['input'];
   priceAdjustment?: InputMaybe<Scalars['Float']['input']>;
   sortOrder?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type CreatePaymentArrangementInput = {
+  frequency: ArrangementFrequency;
+  installmentCount: Scalars['Int']['input'];
+  invoiceIds: Array<Scalars['ID']['input']>;
+  memberId: Scalars['ID']['input'];
+  notes?: InputMaybe<Scalars['String']['input']>;
+  startDate: Scalars['DateTime']['input'];
 };
 
 export type CreatePaymentInput = {
@@ -2057,6 +2125,14 @@ export type CreateServiceInput = {
   revenueCenterId?: InputMaybe<Scalars['ID']['input']>;
   tierDiscounts?: InputMaybe<Array<TierDiscountInput>>;
   variations?: InputMaybe<Array<ServiceVariationInput>>;
+};
+
+export type CreateShareableLinkInput = {
+  entityId: Scalars['ID']['input'];
+  entityType: ShareableEntityType;
+  expiresInDays?: InputMaybe<Scalars['Int']['input']>;
+  maxViews?: InputMaybe<Scalars['Int']['input']>;
+  password?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type CreateSpecialDayInput = {
@@ -3287,6 +3363,13 @@ export type ImproveContentInput = {
   feedback: Scalars['String']['input'];
 };
 
+/** Installment payment status */
+export type InstallmentStatus =
+  | 'OVERDUE'
+  | 'PAID'
+  | 'PENDING'
+  | 'WAIVED';
+
 /** Interest category for member engagement */
 export type InterestCategoryType = {
   __typename?: 'InterestCategoryType';
@@ -4011,6 +4094,7 @@ export type Mutation = {
   __typename?: 'Mutation';
   /** Accept a waitlist offer */
   acceptWaitlistOffer: WaitlistResponseType;
+  activatePaymentArrangement: PaymentArrangementType;
   /** Add players to a group booking */
   addGroupPlayers: GroupBookingMutationResponse;
   /** Add a line item to a player */
@@ -4050,6 +4134,7 @@ export type Mutation = {
   cancelGroupBooking: GroupBookingMutationResponse;
   /** Cancel a lottery request */
   cancelLotteryRequest: LotteryRequestMutationResponse;
+  cancelPaymentArrangement: PaymentArrangementType;
   cancelStatementRun: StatementRunGqlType;
   /** Cancel a tee time */
   cancelTeeTime: CancelResponseType;
@@ -4092,6 +4177,8 @@ export type Mutation = {
   createARProfile: ArProfileGqlType;
   /** Create a new membership application */
   createApplication: MembershipApplicationType;
+  /** Create invoices for multiple members */
+  createBatchInvoices: BatchInvoiceResultType;
   /** Create a new booking */
   createBooking: CreateBookingResponseType;
   /** Create a caddy rate */
@@ -4143,6 +4230,7 @@ export type Mutation = {
   /** Create a new minimum spend requirement */
   createMinimumSpendRequirement: MinimumSpendRequirement;
   createModifierGroup: ModifierGroup;
+  createPaymentArrangement: PaymentArrangementType;
   /** Create a new pro shop category */
   createProShopCategory: ProShopCategoryType;
   /** Create a new pro shop product */
@@ -4157,6 +4245,7 @@ export type Mutation = {
   createService: ServiceResponseType;
   /** Create a settlement exception */
   createSettlementException: SettlementExceptionGraphQlType;
+  createShareableLink: ShareableLinkType;
   /** Create a special day */
   createSpecialDay: SpecialDayMutationResponse;
   /** Create a new staff member */
@@ -4297,6 +4386,7 @@ export type Mutation = {
   recordCashCount: DailySettlementGraphQlType;
   /** Record a cash movement */
   recordCashMovement: CashMovementGraphQlType;
+  recordInstallmentPayment: PaymentArrangementType;
   /** Record spending against a member minimum spend requirement */
   recordMinimumSpend: MemberMinimumSpend;
   /** Record a payment */
@@ -4348,6 +4438,7 @@ export type Mutation = {
   returnEquipment: EquipmentAssignmentResponse;
   /** Revert a credit limit override */
   revertCreditOverride: Scalars['Boolean']['output'];
+  revokeShareableLink: ShareableLinkType;
   runAllAutoChecks: CloseChecklistGqlType;
   runAutoVerification: CloseChecklistStepGqlType;
   /** Save cart draft for a tee time */
@@ -4537,6 +4628,11 @@ export type MutationAcceptWaitlistOfferArgs = {
 };
 
 
+export type MutationActivatePaymentArrangementArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationAddGroupPlayersArgs = {
   id: Scalars['ID']['input'];
   input: AddGroupPlayersInput;
@@ -4643,6 +4739,11 @@ export type MutationCancelGroupBookingArgs = {
 
 
 export type MutationCancelLotteryRequestArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationCancelPaymentArrangementArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -4765,6 +4866,11 @@ export type MutationCreateArProfileArgs = {
 
 export type MutationCreateApplicationArgs = {
   input: CreateApplicationInput;
+};
+
+
+export type MutationCreateBatchInvoicesArgs = {
+  input: CreateBatchInvoicesInput;
 };
 
 
@@ -4908,6 +5014,11 @@ export type MutationCreateModifierGroupArgs = {
 };
 
 
+export type MutationCreatePaymentArrangementArgs = {
+  input: CreatePaymentArrangementInput;
+};
+
+
 export type MutationCreateProShopCategoryArgs = {
   input: CreateProShopCategoryInput;
 };
@@ -4946,6 +5057,11 @@ export type MutationCreateServiceArgs = {
 
 export type MutationCreateSettlementExceptionArgs = {
   input: CreateExceptionInput;
+};
+
+
+export type MutationCreateShareableLinkArgs = {
+  input: CreateShareableLinkInput;
 };
 
 
@@ -5330,6 +5446,11 @@ export type MutationRecordCashMovementArgs = {
 };
 
 
+export type MutationRecordInstallmentPaymentArgs = {
+  input: RecordInstallmentPaymentInput;
+};
+
+
 export type MutationRecordMinimumSpendArgs = {
   input: RecordSpendInput;
 };
@@ -5461,6 +5582,11 @@ export type MutationReturnEquipmentArgs = {
 
 export type MutationRevertCreditOverrideArgs = {
   overrideId: Scalars['ID']['input'];
+};
+
+
+export type MutationRevokeShareableLinkArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -6235,6 +6361,40 @@ export type PaymentAllocationType = {
   invoiceNumber: Scalars['String']['output'];
 };
 
+export type PaymentArrangementConnection = {
+  __typename?: 'PaymentArrangementConnection';
+  edges: Array<PaymentArrangementTypeEdge>;
+  pageInfo: PageInfo;
+  totalCount: Scalars['Int']['output'];
+};
+
+export type PaymentArrangementType = {
+  __typename?: 'PaymentArrangementType';
+  approvedAt?: Maybe<Scalars['DateTime']['output']>;
+  arrangementNumber: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  endDate: Scalars['DateTime']['output'];
+  frequency: ArrangementFrequency;
+  id: Scalars['ID']['output'];
+  installmentCount: Scalars['Int']['output'];
+  installments: Array<ArrangementInstallmentType>;
+  invoices: Array<ArrangementInvoiceType>;
+  member?: Maybe<MemberSummaryBillingType>;
+  notes?: Maybe<Scalars['String']['output']>;
+  paidAmount: Scalars['String']['output'];
+  remainingAmount: Scalars['String']['output'];
+  startDate: Scalars['DateTime']['output'];
+  status: ArrangementStatus;
+  totalAmount: Scalars['String']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+export type PaymentArrangementTypeEdge = {
+  __typename?: 'PaymentArrangementTypeEdge';
+  cursor: Scalars['String']['output'];
+  node: PaymentArrangementType;
+};
+
 export type PaymentConnection = {
   __typename?: 'PaymentConnection';
   edges: Array<PaymentTypeEdge>;
@@ -6864,6 +7024,8 @@ export type Query = {
   outletProductPanel: OutletProductPanel;
   /** Get a single payment/receipt by ID */
   payment: PaymentType;
+  paymentArrangement: PaymentArrangementType;
+  paymentArrangements: PaymentArrangementConnection;
   /** Get a single stored payment method */
   paymentMethod?: Maybe<StoredPaymentMethod>;
   /** Get paginated list of payments/receipts */
@@ -6938,6 +7100,7 @@ export type Query = {
   settlementSummary: SettlementSummaryGraphQlType;
   /** Get settlements for a date range */
   settlements: Array<DailySettlementGraphQlType>;
+  shareableLinks: Array<ShareableLinkType>;
   /** Get shift history for a drawer */
   shiftHistory: Array<CashDrawerShiftGraphQlType>;
   /** Get movements for a shift */
@@ -7597,6 +7760,20 @@ export type QueryPaymentArgs = {
 };
 
 
+export type QueryPaymentArrangementArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryPaymentArrangementsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  memberId?: InputMaybe<Scalars['ID']['input']>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  status?: InputMaybe<ArrangementStatus>;
+};
+
+
 export type QueryPaymentMethodArgs = {
   id: Scalars['ID']['input'];
 };
@@ -7767,6 +7944,12 @@ export type QuerySettlementSummaryArgs = {
 
 export type QuerySettlementsArgs = {
   input: GetSettlementsInput;
+};
+
+
+export type QueryShareableLinksArgs = {
+  entityId: Scalars['ID']['input'];
+  entityType: ShareableEntityType;
 };
 
 
@@ -8025,6 +8208,13 @@ export type RateConfigType = {
 export type RecordCashCountInput = {
   actualCash: Scalars['Float']['input'];
   settlementId: Scalars['ID']['input'];
+};
+
+export type RecordInstallmentPaymentInput = {
+  amount: Scalars['Float']['input'];
+  arrangementId: Scalars['ID']['input'];
+  installmentId: Scalars['ID']['input'];
+  paymentId: Scalars['ID']['input'];
 };
 
 export type RecordMovementInput = {
@@ -8368,6 +8558,28 @@ export type SettlementSummaryGraphQlType = {
   totalMemberAccount: Scalars['Float']['output'];
   totalNetSales: Scalars['Float']['output'];
   unresolvedExceptionCount: Scalars['Int']['output'];
+};
+
+/** Type of entity that can be shared via link */
+export type ShareableEntityType =
+  | 'INVOICE'
+  | 'RECEIPT'
+  | 'STATEMENT';
+
+export type ShareableLinkType = {
+  __typename?: 'ShareableLinkType';
+  createdAt: Scalars['DateTime']['output'];
+  entityId: Scalars['ID']['output'];
+  entityType: ShareableEntityType;
+  expiresAt?: Maybe<Scalars['DateTime']['output']>;
+  hasPassword: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  isActive: Scalars['Boolean']['output'];
+  lastViewedAt?: Maybe<Scalars['DateTime']['output']>;
+  maxViews?: Maybe<Scalars['Int']['output']>;
+  token: Scalars['String']['output'];
+  url: Scalars['String']['output'];
+  viewCount: Scalars['Int']['output'];
 };
 
 export type ShiftSummaryGraphQlType = {
@@ -10526,6 +10738,13 @@ export type GetArAgingReportQueryVariables = Exact<{
 
 export type GetArAgingReportQuery = { __typename?: 'Query', arAgingReport: { __typename?: 'ArAgingReportType', totalCount: number, buckets: Array<{ __typename?: 'AgingBucketType', id: string, label: string, memberCount: number, totalAmount: string, percentage: number }>, members: Array<{ __typename?: 'AgingMemberType', id: string, name: string, photoUrl?: string | null | undefined, memberNumber: string, membershipType: string, oldestInvoiceDate: string, balance: string, daysOutstanding: number, status: string }>, reinstatedMembers: Array<{ __typename?: 'ReinstatedMemberType', id: string, name: string, clearedDate: string, previousBalance: string, receiptId: string, receiptNumber: string }> } };
 
+export type CreateBatchInvoicesMutationVariables = Exact<{
+  input: CreateBatchInvoicesInput;
+}>;
+
+
+export type CreateBatchInvoicesMutation = { __typename?: 'Mutation', createBatchInvoices: { __typename?: 'BatchInvoiceResultType', createdCount: number, failedCount: number, invoices: Array<{ __typename?: 'InvoiceType', id: string, invoiceNumber: string, totalAmount: string, status: InvoiceStatus, member?: { __typename?: 'MemberSummaryBillingType', id: string, memberId: string, firstName: string, lastName: string } | null | undefined }>, errors: Array<{ __typename?: 'BatchInvoiceErrorType', memberId: string, error: string }> } };
+
 export type CreateInvoiceMutationVariables = Exact<{
   input: CreateInvoiceInput;
 }>;
@@ -12191,6 +12410,51 @@ export type RecalculateMemberSpendMutationVariables = Exact<{
 
 export type RecalculateMemberSpendMutation = { __typename?: 'Mutation', recalculateMemberSpend: { __typename?: 'MemberMinimumSpend', id: string, currentSpend: number, status: MemberSpendStatus, lastCalculatedAt: string } };
 
+export type GetPaymentArrangementsQueryVariables = Exact<{
+  first?: InputMaybe<Scalars['Int']['input']>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  memberId?: InputMaybe<Scalars['ID']['input']>;
+  status?: InputMaybe<ArrangementStatus>;
+}>;
+
+
+export type GetPaymentArrangementsQuery = { __typename?: 'Query', paymentArrangements: { __typename?: 'PaymentArrangementConnection', totalCount: number, edges: Array<{ __typename?: 'PaymentArrangementTypeEdge', cursor: string, node: { __typename?: 'PaymentArrangementType', id: string, arrangementNumber: string, totalAmount: string, paidAmount: string, remainingAmount: string, installmentCount: number, frequency: ArrangementFrequency, startDate: string, endDate: string, status: ArrangementStatus, notes?: string | null | undefined, approvedAt?: string | null | undefined, createdAt: string, member?: { __typename?: 'MemberSummaryBillingType', id: string, memberId: string, firstName: string, lastName: string } | null | undefined, installments: Array<{ __typename?: 'ArrangementInstallmentType', id: string, installmentNo: number, dueDate: string, amount: string, paidAmount: string, status: InstallmentStatus, paymentId?: string | null | undefined, paidAt?: string | null | undefined }> } }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean, startCursor?: string | null | undefined, endCursor?: string | null | undefined } } };
+
+export type GetPaymentArrangementQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetPaymentArrangementQuery = { __typename?: 'Query', paymentArrangement: { __typename?: 'PaymentArrangementType', id: string, arrangementNumber: string, totalAmount: string, paidAmount: string, remainingAmount: string, installmentCount: number, frequency: ArrangementFrequency, startDate: string, endDate: string, status: ArrangementStatus, notes?: string | null | undefined, approvedAt?: string | null | undefined, createdAt: string, updatedAt: string, member?: { __typename?: 'MemberSummaryBillingType', id: string, memberId: string, firstName: string, lastName: string } | null | undefined, installments: Array<{ __typename?: 'ArrangementInstallmentType', id: string, installmentNo: number, dueDate: string, amount: string, paidAmount: string, status: InstallmentStatus, paymentId?: string | null | undefined, paidAt?: string | null | undefined }>, invoices: Array<{ __typename?: 'ArrangementInvoiceType', id: string, invoiceId: string, invoice?: { __typename?: 'InvoiceType', id: string, invoiceNumber: string, totalAmount: string, balanceDue: string, status: InvoiceStatus } | null | undefined }> } };
+
+export type CreatePaymentArrangementMutationVariables = Exact<{
+  input: CreatePaymentArrangementInput;
+}>;
+
+
+export type CreatePaymentArrangementMutation = { __typename?: 'Mutation', createPaymentArrangement: { __typename?: 'PaymentArrangementType', id: string, arrangementNumber: string, totalAmount: string, installmentCount: number, status: ArrangementStatus } };
+
+export type ActivatePaymentArrangementMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type ActivatePaymentArrangementMutation = { __typename?: 'Mutation', activatePaymentArrangement: { __typename?: 'PaymentArrangementType', id: string, status: ArrangementStatus, approvedAt?: string | null | undefined } };
+
+export type RecordInstallmentPaymentMutationVariables = Exact<{
+  input: RecordInstallmentPaymentInput;
+}>;
+
+
+export type RecordInstallmentPaymentMutation = { __typename?: 'Mutation', recordInstallmentPayment: { __typename?: 'PaymentArrangementType', id: string, paidAmount: string, remainingAmount: string, status: ArrangementStatus, installments: Array<{ __typename?: 'ArrangementInstallmentType', id: string, installmentNo: number, status: InstallmentStatus, paidAmount: string, paidAt?: string | null | undefined }> } };
+
+export type CancelPaymentArrangementMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type CancelPaymentArrangementMutation = { __typename?: 'Mutation', cancelPaymentArrangement: { __typename?: 'PaymentArrangementType', id: string, status: ArrangementStatus } };
+
 export type GetPosConfigQueryVariables = Exact<{
   outletId: Scalars['ID']['input'];
   userRole: Scalars['String']['input'];
@@ -12382,6 +12646,28 @@ export type UpdateBillingSettingsMutationVariables = Exact<{
 
 
 export type UpdateBillingSettingsMutation = { __typename?: 'Mutation', updateBillingSettings: { __typename?: 'BillingSettingsType', taxRate?: number | null | undefined, taxType?: string | null | undefined, currency?: string | null | undefined, invoicePrefix: string, paymentTermDays: number } };
+
+export type GetShareableLinksQueryVariables = Exact<{
+  entityType: ShareableEntityType;
+  entityId: Scalars['ID']['input'];
+}>;
+
+
+export type GetShareableLinksQuery = { __typename?: 'Query', shareableLinks: Array<{ __typename?: 'ShareableLinkType', id: string, token: string, entityType: ShareableEntityType, entityId: string, expiresAt?: string | null | undefined, maxViews?: number | null | undefined, viewCount: number, isActive: boolean, hasPassword: boolean, lastViewedAt?: string | null | undefined, createdAt: string, url: string }> };
+
+export type CreateShareableLinkMutationVariables = Exact<{
+  input: CreateShareableLinkInput;
+}>;
+
+
+export type CreateShareableLinkMutation = { __typename?: 'Mutation', createShareableLink: { __typename?: 'ShareableLinkType', id: string, token: string, entityType: ShareableEntityType, entityId: string, expiresAt?: string | null | undefined, maxViews?: number | null | undefined, viewCount: number, isActive: boolean, hasPassword: boolean, createdAt: string, url: string } };
+
+export type RevokeShareableLinkMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type RevokeShareableLinkMutation = { __typename?: 'Mutation', revokeShareableLink: { __typename?: 'ShareableLinkType', id: string, isActive: boolean } };
 
 export type GetMemberPaymentMethodsQueryVariables = Exact<{
   memberId: Scalars['ID']['input'];
@@ -15025,6 +15311,47 @@ useInfiniteGetArAgingReportQuery.getKey = (variables?: GetArAgingReportQueryVari
 
 
 useGetArAgingReportQuery.fetcher = (variables?: GetArAgingReportQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetArAgingReportQuery, GetArAgingReportQueryVariables>(GetArAgingReportDocument, variables, options);
+
+export const CreateBatchInvoicesDocument = `
+    mutation CreateBatchInvoices($input: CreateBatchInvoicesInput!) {
+  createBatchInvoices(input: $input) {
+    createdCount
+    failedCount
+    invoices {
+      id
+      invoiceNumber
+      totalAmount
+      status
+      member {
+        id
+        memberId
+        firstName
+        lastName
+      }
+    }
+    errors {
+      memberId
+      error
+    }
+  }
+}
+    `;
+
+export const useCreateBatchInvoicesMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<CreateBatchInvoicesMutation, TError, CreateBatchInvoicesMutationVariables, TContext>) => {
+    
+    return useMutation<CreateBatchInvoicesMutation, TError, CreateBatchInvoicesMutationVariables, TContext>(
+      {
+    mutationKey: ['CreateBatchInvoices'],
+    mutationFn: (variables?: CreateBatchInvoicesMutationVariables) => graphqlFetcher<CreateBatchInvoicesMutation, CreateBatchInvoicesMutationVariables>(CreateBatchInvoicesDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useCreateBatchInvoicesMutation.fetcher = (variables: CreateBatchInvoicesMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<CreateBatchInvoicesMutation, CreateBatchInvoicesMutationVariables>(CreateBatchInvoicesDocument, variables, options);
 
 export const CreateInvoiceDocument = `
     mutation CreateInvoice($input: CreateInvoiceInput!) {
@@ -25847,6 +26174,304 @@ export const useRecalculateMemberSpendMutation = <
 
 useRecalculateMemberSpendMutation.fetcher = (variables: RecalculateMemberSpendMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<RecalculateMemberSpendMutation, RecalculateMemberSpendMutationVariables>(RecalculateMemberSpendDocument, variables, options);
 
+export const GetPaymentArrangementsDocument = `
+    query GetPaymentArrangements($first: Int, $skip: Int, $memberId: ID, $status: ArrangementStatus) {
+  paymentArrangements(
+    first: $first
+    skip: $skip
+    memberId: $memberId
+    status: $status
+  ) {
+    edges {
+      node {
+        id
+        arrangementNumber
+        totalAmount
+        paidAmount
+        remainingAmount
+        installmentCount
+        frequency
+        startDate
+        endDate
+        status
+        notes
+        approvedAt
+        createdAt
+        member {
+          id
+          memberId
+          firstName
+          lastName
+        }
+        installments {
+          id
+          installmentNo
+          dueDate
+          amount
+          paidAmount
+          status
+          paymentId
+          paidAt
+        }
+      }
+      cursor
+    }
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      startCursor
+      endCursor
+    }
+    totalCount
+  }
+}
+    `;
+
+export const useGetPaymentArrangementsQuery = <
+      TData = GetPaymentArrangementsQuery,
+      TError = unknown
+    >(
+      variables?: GetPaymentArrangementsQueryVariables,
+      options?: Omit<UseQueryOptions<GetPaymentArrangementsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetPaymentArrangementsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetPaymentArrangementsQuery, TError, TData>(
+      {
+    queryKey: variables === undefined ? ['GetPaymentArrangements'] : ['GetPaymentArrangements', variables],
+    queryFn: graphqlFetcher<GetPaymentArrangementsQuery, GetPaymentArrangementsQueryVariables>(GetPaymentArrangementsDocument, variables),
+    ...options
+  }
+    )};
+
+useGetPaymentArrangementsQuery.getKey = (variables?: GetPaymentArrangementsQueryVariables) => variables === undefined ? ['GetPaymentArrangements'] : ['GetPaymentArrangements', variables];
+
+export const useInfiniteGetPaymentArrangementsQuery = <
+      TData = InfiniteData<GetPaymentArrangementsQuery>,
+      TError = unknown
+    >(
+      variables: GetPaymentArrangementsQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetPaymentArrangementsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetPaymentArrangementsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetPaymentArrangementsQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? variables === undefined ? ['GetPaymentArrangements.infinite'] : ['GetPaymentArrangements.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetPaymentArrangementsQuery, GetPaymentArrangementsQueryVariables>(GetPaymentArrangementsDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetPaymentArrangementsQuery.getKey = (variables?: GetPaymentArrangementsQueryVariables) => variables === undefined ? ['GetPaymentArrangements.infinite'] : ['GetPaymentArrangements.infinite', variables];
+
+
+useGetPaymentArrangementsQuery.fetcher = (variables?: GetPaymentArrangementsQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetPaymentArrangementsQuery, GetPaymentArrangementsQueryVariables>(GetPaymentArrangementsDocument, variables, options);
+
+export const GetPaymentArrangementDocument = `
+    query GetPaymentArrangement($id: ID!) {
+  paymentArrangement(id: $id) {
+    id
+    arrangementNumber
+    totalAmount
+    paidAmount
+    remainingAmount
+    installmentCount
+    frequency
+    startDate
+    endDate
+    status
+    notes
+    approvedAt
+    createdAt
+    updatedAt
+    member {
+      id
+      memberId
+      firstName
+      lastName
+    }
+    installments {
+      id
+      installmentNo
+      dueDate
+      amount
+      paidAmount
+      status
+      paymentId
+      paidAt
+    }
+    invoices {
+      id
+      invoiceId
+      invoice {
+        id
+        invoiceNumber
+        totalAmount
+        balanceDue
+        status
+      }
+    }
+  }
+}
+    `;
+
+export const useGetPaymentArrangementQuery = <
+      TData = GetPaymentArrangementQuery,
+      TError = unknown
+    >(
+      variables: GetPaymentArrangementQueryVariables,
+      options?: Omit<UseQueryOptions<GetPaymentArrangementQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetPaymentArrangementQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetPaymentArrangementQuery, TError, TData>(
+      {
+    queryKey: ['GetPaymentArrangement', variables],
+    queryFn: graphqlFetcher<GetPaymentArrangementQuery, GetPaymentArrangementQueryVariables>(GetPaymentArrangementDocument, variables),
+    ...options
+  }
+    )};
+
+useGetPaymentArrangementQuery.getKey = (variables: GetPaymentArrangementQueryVariables) => ['GetPaymentArrangement', variables];
+
+export const useInfiniteGetPaymentArrangementQuery = <
+      TData = InfiniteData<GetPaymentArrangementQuery>,
+      TError = unknown
+    >(
+      variables: GetPaymentArrangementQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetPaymentArrangementQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetPaymentArrangementQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetPaymentArrangementQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetPaymentArrangement.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetPaymentArrangementQuery, GetPaymentArrangementQueryVariables>(GetPaymentArrangementDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetPaymentArrangementQuery.getKey = (variables: GetPaymentArrangementQueryVariables) => ['GetPaymentArrangement.infinite', variables];
+
+
+useGetPaymentArrangementQuery.fetcher = (variables: GetPaymentArrangementQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetPaymentArrangementQuery, GetPaymentArrangementQueryVariables>(GetPaymentArrangementDocument, variables, options);
+
+export const CreatePaymentArrangementDocument = `
+    mutation CreatePaymentArrangement($input: CreatePaymentArrangementInput!) {
+  createPaymentArrangement(input: $input) {
+    id
+    arrangementNumber
+    totalAmount
+    installmentCount
+    status
+  }
+}
+    `;
+
+export const useCreatePaymentArrangementMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<CreatePaymentArrangementMutation, TError, CreatePaymentArrangementMutationVariables, TContext>) => {
+    
+    return useMutation<CreatePaymentArrangementMutation, TError, CreatePaymentArrangementMutationVariables, TContext>(
+      {
+    mutationKey: ['CreatePaymentArrangement'],
+    mutationFn: (variables?: CreatePaymentArrangementMutationVariables) => graphqlFetcher<CreatePaymentArrangementMutation, CreatePaymentArrangementMutationVariables>(CreatePaymentArrangementDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useCreatePaymentArrangementMutation.fetcher = (variables: CreatePaymentArrangementMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<CreatePaymentArrangementMutation, CreatePaymentArrangementMutationVariables>(CreatePaymentArrangementDocument, variables, options);
+
+export const ActivatePaymentArrangementDocument = `
+    mutation ActivatePaymentArrangement($id: ID!) {
+  activatePaymentArrangement(id: $id) {
+    id
+    status
+    approvedAt
+  }
+}
+    `;
+
+export const useActivatePaymentArrangementMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<ActivatePaymentArrangementMutation, TError, ActivatePaymentArrangementMutationVariables, TContext>) => {
+    
+    return useMutation<ActivatePaymentArrangementMutation, TError, ActivatePaymentArrangementMutationVariables, TContext>(
+      {
+    mutationKey: ['ActivatePaymentArrangement'],
+    mutationFn: (variables?: ActivatePaymentArrangementMutationVariables) => graphqlFetcher<ActivatePaymentArrangementMutation, ActivatePaymentArrangementMutationVariables>(ActivatePaymentArrangementDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useActivatePaymentArrangementMutation.fetcher = (variables: ActivatePaymentArrangementMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<ActivatePaymentArrangementMutation, ActivatePaymentArrangementMutationVariables>(ActivatePaymentArrangementDocument, variables, options);
+
+export const RecordInstallmentPaymentDocument = `
+    mutation RecordInstallmentPayment($input: RecordInstallmentPaymentInput!) {
+  recordInstallmentPayment(input: $input) {
+    id
+    paidAmount
+    remainingAmount
+    status
+    installments {
+      id
+      installmentNo
+      status
+      paidAmount
+      paidAt
+    }
+  }
+}
+    `;
+
+export const useRecordInstallmentPaymentMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<RecordInstallmentPaymentMutation, TError, RecordInstallmentPaymentMutationVariables, TContext>) => {
+    
+    return useMutation<RecordInstallmentPaymentMutation, TError, RecordInstallmentPaymentMutationVariables, TContext>(
+      {
+    mutationKey: ['RecordInstallmentPayment'],
+    mutationFn: (variables?: RecordInstallmentPaymentMutationVariables) => graphqlFetcher<RecordInstallmentPaymentMutation, RecordInstallmentPaymentMutationVariables>(RecordInstallmentPaymentDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useRecordInstallmentPaymentMutation.fetcher = (variables: RecordInstallmentPaymentMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<RecordInstallmentPaymentMutation, RecordInstallmentPaymentMutationVariables>(RecordInstallmentPaymentDocument, variables, options);
+
+export const CancelPaymentArrangementDocument = `
+    mutation CancelPaymentArrangement($id: ID!) {
+  cancelPaymentArrangement(id: $id) {
+    id
+    status
+  }
+}
+    `;
+
+export const useCancelPaymentArrangementMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<CancelPaymentArrangementMutation, TError, CancelPaymentArrangementMutationVariables, TContext>) => {
+    
+    return useMutation<CancelPaymentArrangementMutation, TError, CancelPaymentArrangementMutationVariables, TContext>(
+      {
+    mutationKey: ['CancelPaymentArrangement'],
+    mutationFn: (variables?: CancelPaymentArrangementMutationVariables) => graphqlFetcher<CancelPaymentArrangementMutation, CancelPaymentArrangementMutationVariables>(CancelPaymentArrangementDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useCancelPaymentArrangementMutation.fetcher = (variables: CancelPaymentArrangementMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<CancelPaymentArrangementMutation, CancelPaymentArrangementMutationVariables>(CancelPaymentArrangementDocument, variables, options);
+
 export const GetPosConfigDocument = `
     query GetPOSConfig($outletId: ID!, $userRole: String!, $userPermissions: [String!]) {
   posConfig(
@@ -27216,6 +27841,126 @@ export const useUpdateBillingSettingsMutation = <
 
 
 useUpdateBillingSettingsMutation.fetcher = (variables: UpdateBillingSettingsMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<UpdateBillingSettingsMutation, UpdateBillingSettingsMutationVariables>(UpdateBillingSettingsDocument, variables, options);
+
+export const GetShareableLinksDocument = `
+    query GetShareableLinks($entityType: ShareableEntityType!, $entityId: ID!) {
+  shareableLinks(entityType: $entityType, entityId: $entityId) {
+    id
+    token
+    entityType
+    entityId
+    expiresAt
+    maxViews
+    viewCount
+    isActive
+    hasPassword
+    lastViewedAt
+    createdAt
+    url
+  }
+}
+    `;
+
+export const useGetShareableLinksQuery = <
+      TData = GetShareableLinksQuery,
+      TError = unknown
+    >(
+      variables: GetShareableLinksQueryVariables,
+      options?: Omit<UseQueryOptions<GetShareableLinksQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetShareableLinksQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetShareableLinksQuery, TError, TData>(
+      {
+    queryKey: ['GetShareableLinks', variables],
+    queryFn: graphqlFetcher<GetShareableLinksQuery, GetShareableLinksQueryVariables>(GetShareableLinksDocument, variables),
+    ...options
+  }
+    )};
+
+useGetShareableLinksQuery.getKey = (variables: GetShareableLinksQueryVariables) => ['GetShareableLinks', variables];
+
+export const useInfiniteGetShareableLinksQuery = <
+      TData = InfiniteData<GetShareableLinksQuery>,
+      TError = unknown
+    >(
+      variables: GetShareableLinksQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetShareableLinksQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetShareableLinksQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetShareableLinksQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetShareableLinks.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetShareableLinksQuery, GetShareableLinksQueryVariables>(GetShareableLinksDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetShareableLinksQuery.getKey = (variables: GetShareableLinksQueryVariables) => ['GetShareableLinks.infinite', variables];
+
+
+useGetShareableLinksQuery.fetcher = (variables: GetShareableLinksQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetShareableLinksQuery, GetShareableLinksQueryVariables>(GetShareableLinksDocument, variables, options);
+
+export const CreateShareableLinkDocument = `
+    mutation CreateShareableLink($input: CreateShareableLinkInput!) {
+  createShareableLink(input: $input) {
+    id
+    token
+    entityType
+    entityId
+    expiresAt
+    maxViews
+    viewCount
+    isActive
+    hasPassword
+    createdAt
+    url
+  }
+}
+    `;
+
+export const useCreateShareableLinkMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<CreateShareableLinkMutation, TError, CreateShareableLinkMutationVariables, TContext>) => {
+    
+    return useMutation<CreateShareableLinkMutation, TError, CreateShareableLinkMutationVariables, TContext>(
+      {
+    mutationKey: ['CreateShareableLink'],
+    mutationFn: (variables?: CreateShareableLinkMutationVariables) => graphqlFetcher<CreateShareableLinkMutation, CreateShareableLinkMutationVariables>(CreateShareableLinkDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useCreateShareableLinkMutation.fetcher = (variables: CreateShareableLinkMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<CreateShareableLinkMutation, CreateShareableLinkMutationVariables>(CreateShareableLinkDocument, variables, options);
+
+export const RevokeShareableLinkDocument = `
+    mutation RevokeShareableLink($id: ID!) {
+  revokeShareableLink(id: $id) {
+    id
+    isActive
+  }
+}
+    `;
+
+export const useRevokeShareableLinkMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<RevokeShareableLinkMutation, TError, RevokeShareableLinkMutationVariables, TContext>) => {
+    
+    return useMutation<RevokeShareableLinkMutation, TError, RevokeShareableLinkMutationVariables, TContext>(
+      {
+    mutationKey: ['RevokeShareableLink'],
+    mutationFn: (variables?: RevokeShareableLinkMutationVariables) => graphqlFetcher<RevokeShareableLinkMutation, RevokeShareableLinkMutationVariables>(RevokeShareableLinkDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useRevokeShareableLinkMutation.fetcher = (variables: RevokeShareableLinkMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<RevokeShareableLinkMutation, RevokeShareableLinkMutationVariables>(RevokeShareableLinkDocument, variables, options);
 
 export const GetMemberPaymentMethodsDocument = `
     query GetMemberPaymentMethods($memberId: ID!, $activeOnly: Boolean) {

@@ -16,11 +16,20 @@ import {
 } from '@clubvantage/ui';
 import { InvoiceLineItemRow, type LineItemData, type ChargeType } from './invoice-line-item-row';
 
+export interface DiscountOption {
+  id: string;
+  name: string;
+  code: string | null;
+  type: string;
+  value: number;
+}
+
 interface InvoiceCreateModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   members: MemberOption[];
   chargeTypes: ChargeType[];
+  discounts?: DiscountOption[];
   isLoadingMembers?: boolean;
   onMemberSearch?: (query: string) => void;
   onSubmit: (data: InvoiceFormData) => Promise<void>;
@@ -40,6 +49,7 @@ export interface InvoiceFormData {
     taxRate: number;
   }[];
   sendEmail: boolean;
+  discountId?: string;
 }
 
 function formatDateForInput(date: Date): string {
@@ -51,12 +61,14 @@ export function InvoiceCreateModal({
   onOpenChange,
   members,
   chargeTypes,
+  discounts = [],
   isLoadingMembers = false,
   onMemberSearch,
   onSubmit,
   isSubmitting = false,
 }: InvoiceCreateModalProps) {
   const [memberId, setMemberId] = useState<string>();
+  const [selectedDiscountId, setSelectedDiscountId] = useState<string>('');
   const [invoiceDate, setInvoiceDate] = useState(formatDateForInput(new Date()));
   const [dueDate, setDueDate] = useState(
     formatDateForInput(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000))
@@ -98,6 +110,8 @@ export function InvoiceCreateModal({
     setLineItems((prev) => prev.filter((item) => item.id !== id));
   };
 
+  const selectedDiscount = discounts.find((d) => d.id === selectedDiscountId);
+
   const totals = useMemo(() => {
     let subtotal = 0;
     let taxTotal = 0;
@@ -110,18 +124,30 @@ export function InvoiceCreateModal({
       }
     });
 
+    const beforeDiscount = subtotal + taxTotal;
+    let discountAmount = 0;
+    if (selectedDiscount) {
+      if (selectedDiscount.type === 'PERCENTAGE') {
+        discountAmount = beforeDiscount * (selectedDiscount.value / 100);
+      } else {
+        discountAmount = Math.min(selectedDiscount.value, beforeDiscount);
+      }
+    }
+
     return {
       subtotal,
       taxTotal,
-      total: subtotal + taxTotal,
+      discountAmount,
+      total: beforeDiscount - discountAmount,
     };
-  }, [lineItems]);
+  }, [lineItems, selectedDiscount]);
 
   const resetForm = () => {
     setMemberId(undefined);
     setInvoiceDate(formatDateForInput(new Date()));
     setDueDate(formatDateForInput(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)));
     setNotes('');
+    setSelectedDiscountId('');
     setLineItems([
       {
         id: crypto.randomUUID(),
@@ -167,6 +193,7 @@ export function InvoiceCreateModal({
           taxRate: item.taxRate,
         })),
         sendEmail: sendNow,
+        discountId: selectedDiscountId || undefined,
       });
 
       resetForm();
@@ -277,11 +304,45 @@ export function InvoiceCreateModal({
                   ฿{totals.taxTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </span>
               </div>
+              {totals.discountAmount > 0 && (
+                <div className="text-sm text-emerald-600">
+                  Discount:{' '}
+                  <span className="font-medium">
+                    -฿{totals.discountAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+              )}
               <div className="text-lg font-semibold">
                 Total: ฿{totals.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </div>
             </div>
           </div>
+
+          {/* Discount Selector */}
+          {discounts.length > 0 && (
+            <div className="space-y-2">
+              <Label>Apply Discount (optional)</Label>
+              <select
+                className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                value={selectedDiscountId}
+                onChange={(e) => setSelectedDiscountId(e.target.value)}
+              >
+                <option value="">No discount</option>
+                {discounts.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name}
+                    {d.code ? ` (${d.code})` : ''} —{' '}
+                    {d.type === 'PERCENTAGE' ? `${d.value}%` : `฿${d.value}`}
+                  </option>
+                ))}
+              </select>
+              {selectedDiscount && totals.discountAmount > 0 && (
+                <p className="text-xs text-emerald-600">
+                  Saves ฿{totals.discountAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Notes */}
           <div className="space-y-2">

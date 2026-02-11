@@ -1,0 +1,43 @@
+# Shareable Link Queries
+
+query GetShareableLinks($entityType: ShareableEntityType!, $entityId: ID!) {
+  shareableLinks(entityType: $entityType, entityId: $entityId) {
+    id
+    token
+    entityType
+    entityId
+    expiresAt
+    maxViews
+    viewCount
+    isActive
+    hasPassword
+    lastViewedAt
+    createdAt
+    url
+  }
+}
+
+# Shareable Link Mutations
+
+mutation CreateShareableLink($input: CreateShareableLinkInput!) {
+  createShareableLink(input: $input) {
+    id
+    token
+    entityType
+    entityId
+    expiresAt
+    maxViews
+    viewCount
+    isActive
+    hasPassword
+    createdAt
+    url
+  }
+}
+
+mutation RevokeShareableLink($id: ID!) {
+  revokeShareableLink(id: $id) {
+    id
+    isActive
+  }
+}

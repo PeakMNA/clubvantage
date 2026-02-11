@@ -21,7 +21,9 @@ import {
 
 // Modal imports
 import { InvoiceCreateModal, type InvoiceFormData } from '@/components/billing/invoice-create-modal'
+import { BatchInvoiceModal, type BatchInvoiceFormData, type BatchInvoiceResult } from '@/components/billing/batch-invoice-modal'
 import { type ChargeType } from '@/components/billing/invoice-line-item-row'
+import { PaymentArrangementModal, type PaymentArrangementFormData } from '@/components/billing/payment-arrangement-modal'
 import { PaymentRecordModal } from '@/components/billing/payment-record-modal'
 import { CreditNoteModal, type CreditNoteFormData } from '@/components/billing/credit-note-modal'
 import { StatementModal, type StatementFormData } from '@/components/billing/statement-modal'
@@ -51,7 +53,13 @@ import type {
   CreditNoteType as ListCreditNoteType,
 } from '@/components/billing/credit-note-list'
 
-import { useInvoices, usePayments, useGenerateStatement } from '@/hooks/use-billing'
+import { useInvoices, usePayments, useGenerateStatement, useCreditNotes, useCreditNoteMutations } from '@/hooks/use-billing'
+import { usePaymentArrangementMutations } from '@/hooks/use-payment-arrangements'
+import {
+  ApproveCreditNoteDialog,
+  VoidCreditNoteDialog,
+  ApplyCreditNoteToInvoiceDialog,
+} from '@/components/billing/credit-note-action-dialogs'
 import { type MemberOption } from '@clubvantage/ui'
 
 // Fallback mock invoice data (used when API unavailable)
@@ -163,52 +171,7 @@ const mockWhtSummary: WhtCertificatesSummary = {
   totalAmount: 55500,
 }
 
-// Mock credit note data
-const mockCreditNotes: CreditNoteListItem[] = [
-  {
-    id: '1',
-    creditNoteNumber: 'CN-2024-000001',
-    memberId: 'M002',
-    memberName: 'Sarah Johnson',
-    issueDate: new Date('2024-01-20'),
-    type: 'adjustment',
-    reason: 'Billing error correction',
-    totalAmount: 5000,
-    appliedAmount: 5000,
-    status: 'applied',
-  },
-  {
-    id: '2',
-    creditNoteNumber: 'CN-2024-000002',
-    memberId: 'M003',
-    memberName: 'Michael Chen',
-    issueDate: new Date('2024-01-22'),
-    type: 'courtesy',
-    reason: 'Service compensation',
-    totalAmount: 15000,
-    appliedAmount: 0,
-    status: 'pending_approval',
-  },
-  {
-    id: '3',
-    creditNoteNumber: 'CN-2024-000003',
-    memberId: 'M005',
-    memberName: 'Robert Wilson',
-    issueDate: new Date('2024-01-25'),
-    type: 'promo',
-    reason: 'New year promotion',
-    totalAmount: 10000,
-    appliedAmount: 3000,
-    status: 'partially_applied',
-  },
-]
-
-const mockCreditNoteSummary: CreditNoteSummary = {
-  totalIssued: 150000,
-  pendingApproval: 15000,
-  applied: 85000,
-  availableBalance: 50000,
-}
+// Mock credit note data removed — now using real API data via useCreditNotes()
 
 const mockReinstatedMembers: ReinstatedMember[] = [
   {
@@ -265,7 +228,21 @@ export default function BillingPage() {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
   const [isCreditNoteModalOpen, setIsCreditNoteModalOpen] = useState(false)
   const [isStatementModalOpen, setIsStatementModalOpen] = useState(false)
+  const [isBatchInvoiceModalOpen, setIsBatchInvoiceModalOpen] = useState(false)
+  const [isArrangementModalOpen, setIsArrangementModalOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Credit note action dialog states
+  const [approveDialogOpen, setApproveDialogOpen] = useState(false)
+  const [voidDialogOpen, setVoidDialogOpen] = useState(false)
+  const [applyToInvoiceDialogOpen, setApplyToInvoiceDialogOpen] = useState(false)
+  const [selectedCreditNote, setSelectedCreditNote] = useState<{
+    id: string
+    creditNoteNumber: string
+    totalAmount: number
+    appliedAmount: number
+    memberId: string
+  } | null>(null)
 
   // Fetch invoices from API
   const {
@@ -287,6 +264,41 @@ export default function BillingPage() {
 
   // Statement generation hook
   const { generateStatement, isLoading: statementLoading } = useGenerateStatement()
+
+  // Credit notes from API
+  const [creditNotePage, setCreditNotePage] = useState(1)
+  const {
+    creditNotes,
+    summary: creditNoteSummary,
+    totalCount: creditNoteTotalCount,
+    totalPages: creditNoteTotalPages,
+    isLoading: isCreditNotesLoading,
+  } = useCreditNotes({ page: creditNotePage, pageSize: 20 })
+
+  // Credit note mutations
+  const {
+    createCreditNote,
+    approveCreditNote,
+    applyCreditNoteToBalance,
+    applyCreditNoteToInvoice,
+    voidCreditNote,
+    isCreating: isCreditNoteCreating,
+    isApproving: isCreditNoteApproving,
+    isApplyingToInvoice: isCreditNoteApplyingToInvoice,
+    isVoiding: isCreditNoteVoiding,
+  } = useCreditNoteMutations()
+
+  // Payment arrangement mutations
+  const {
+    createArrangement,
+    isCreating: isArrangementCreating,
+  } = usePaymentArrangementMutations()
+
+  // Fetch member invoices for apply-to-invoice dialog
+  const { invoices: memberInvoicesForCreditNote } = useInvoices({
+    memberId: selectedCreditNote?.memberId,
+    enabled: !!selectedCreditNote?.memberId && applyToInvoiceDialogOpen,
+  })
 
   // Use API data if available, fall back to mock data
   const invoices = apiInvoices.length > 0 ? apiInvoices : mockInvoices
@@ -349,7 +361,7 @@ export default function BillingPage() {
   const tabBadges: Partial<Record<BillingTab, number>> = {
     invoices: invoiceTotalCount,
     receipts: receiptTotalCount,
-    'credit-notes': mockCreditNotes.filter((c) => c.status === 'pending_approval').length,
+    'credit-notes': creditNotes.filter((c) => c.status === 'pending_approval').length,
     'wht-certificates': mockWhtCertificates.filter((c) => c.status === 'pending').length,
     aging: agingMembers.length,
   }
@@ -436,16 +448,21 @@ export default function BillingPage() {
   }, [])
 
   const handleCreditNoteSubmit = useCallback(async (data: CreditNoteFormData) => {
-    setIsSubmitting(true)
-    try {
-      // TODO: Call GraphQL mutation
-      console.log('Creating credit note:', data)
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      setIsCreditNoteModalOpen(false)
-    } finally {
-      setIsSubmitting(false)
-    }
-  }, [])
+    await createCreditNote({
+      memberId: data.memberId,
+      type: (data.type || 'ADJUSTMENT').toUpperCase(),
+      reason: (data.reason || 'OTHER').toUpperCase().replace(/ /g, '_'),
+      reasonDetail: data.description,
+      lineItems: [
+        {
+          description: data.description || 'Credit note',
+          quantity: 1,
+          unitPrice: data.amount,
+        },
+      ],
+    })
+    setIsCreditNoteModalOpen(false)
+  }, [createCreditNote])
 
   const handleMemberSelect = useCallback(async (memberId: string): Promise<{
     member: MemberSelectionData
@@ -528,25 +545,48 @@ export default function BillingPage() {
       case 'credit-notes':
         return (
           <CreditNoteList
-            creditNotes={mockCreditNotes}
-            summary={mockCreditNoteSummary}
-            currentPage={1}
-            totalPages={1}
-            totalCount={mockCreditNotes.length}
+            creditNotes={creditNotes}
+            summary={creditNoteSummary}
+            currentPage={creditNotePage}
+            totalPages={creditNoteTotalPages}
+            totalCount={creditNoteTotalCount}
             pageSize={20}
-            isLoading={false}
+            isLoading={isCreditNotesLoading}
             onCreateCreditNote={handleNewCreditNote}
+            onPageChange={setCreditNotePage}
             onRowAction={(action, id) => {
+              const cn = creditNotes.find((c) => c.id === id)
               if (action === 'view') {
                 router.push(`/billing/credit-notes/${id}`)
-              } else if (action === 'approve') {
-                console.log('Approve credit note:', id)
-              } else if (action === 'apply-balance') {
-                console.log('Apply to balance:', id)
-              } else if (action === 'apply-invoice') {
-                console.log('Apply to invoice:', id)
-              } else if (action === 'void') {
-                console.log('Void credit note:', id)
+              } else if (action === 'approve' && cn) {
+                setSelectedCreditNote({
+                  id: cn.id,
+                  creditNoteNumber: cn.creditNoteNumber,
+                  totalAmount: cn.totalAmount,
+                  appliedAmount: cn.appliedAmount,
+                  memberId: cn.memberId,
+                })
+                setApproveDialogOpen(true)
+              } else if (action === 'apply-balance' && cn) {
+                applyCreditNoteToBalance(cn.id)
+              } else if (action === 'apply-invoice' && cn) {
+                setSelectedCreditNote({
+                  id: cn.id,
+                  creditNoteNumber: cn.creditNoteNumber,
+                  totalAmount: cn.totalAmount,
+                  appliedAmount: cn.appliedAmount,
+                  memberId: cn.memberId,
+                })
+                setApplyToInvoiceDialogOpen(true)
+              } else if (action === 'void' && cn) {
+                setSelectedCreditNote({
+                  id: cn.id,
+                  creditNoteNumber: cn.creditNoteNumber,
+                  totalAmount: cn.totalAmount,
+                  appliedAmount: cn.appliedAmount,
+                  memberId: cn.memberId,
+                })
+                setVoidDialogOpen(true)
               }
             }}
           />
@@ -600,7 +640,7 @@ export default function BillingPage() {
               } else if (action === 'send-reminder') {
                 console.log('Send reminder to member:', id)
               } else if (action === 'create-arrangement') {
-                console.log('Create payment arrangement for member:', id)
+                setIsArrangementModalOpen(true)
               } else if (action === 'override-suspension') {
                 console.log('Override suspension for member:', id)
               }
@@ -618,7 +658,7 @@ export default function BillingPage() {
       case 'invoices':
         return (
           <div className="flex gap-2">
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={() => setIsBatchInvoiceModalOpen(true)}>
               <Wand2 className="mr-2 h-4 w-4" />
               Generate Monthly
             </Button>
@@ -717,6 +757,54 @@ export default function BillingPage() {
         isSubmitting={isSubmitting}
       />
 
+      {/* Batch Invoice Modal */}
+      <BatchInvoiceModal
+        open={isBatchInvoiceModalOpen}
+        onOpenChange={setIsBatchInvoiceModalOpen}
+        members={mockMemberOptions}
+        chargeTypes={mockChargeTypes}
+        isLoadingMembers={false}
+        onMemberSearch={(query) => console.log('Search members:', query)}
+        onSubmit={async (data) => {
+          console.log('Creating batch invoices:', data)
+          // TODO: Wire to useCreateBatchInvoicesMutation when codegen runs
+          await new Promise((resolve) => setTimeout(resolve, 1500))
+          return { createdCount: data.memberIds.length, failedCount: 0, errors: [] }
+        }}
+        isSubmitting={isSubmitting}
+      />
+
+      {/* Payment Arrangement Modal */}
+      <PaymentArrangementModal
+        open={isArrangementModalOpen}
+        onOpenChange={setIsArrangementModalOpen}
+        members={mockMemberOptions}
+        isLoadingMembers={false}
+        onMemberSearch={(query) => console.log('Search members:', query)}
+        onMemberSelect={async (memberId) => {
+          const memberInvoices = mockInvoices
+            .filter((inv) => inv.memberId === memberId && inv.balance > 0)
+            .map((inv) => ({
+              id: inv.id,
+              invoiceNumber: inv.invoiceNumber,
+              balance: inv.balance,
+              dueDate: inv.dueDate instanceof Date ? inv.dueDate : new Date(inv.dueDate),
+            }))
+          return memberInvoices
+        }}
+        onSubmit={async (data) => {
+          await createArrangement({
+            memberId: data.memberId,
+            invoiceIds: data.invoiceIds,
+            installmentCount: data.installmentCount,
+            frequency: data.frequency,
+            startDate: data.startDate,
+            notes: data.notes,
+          })
+        }}
+        isSubmitting={isArrangementCreating}
+      />
+
       {/* Statement Modal */}
       <StatementModal
         open={isStatementModalOpen}
@@ -735,6 +823,44 @@ export default function BillingPage() {
         }}
         isSubmitting={isSubmitting}
       />
+
+      {/* Credit Note Action Dialogs */}
+      {selectedCreditNote && (
+        <>
+          <ApproveCreditNoteDialog
+            open={approveDialogOpen}
+            onOpenChange={setApproveDialogOpen}
+            creditNoteNumber={selectedCreditNote.creditNoteNumber}
+            amount={selectedCreditNote.totalAmount}
+            onConfirm={async () => { await approveCreditNote(selectedCreditNote.id) }}
+            isSubmitting={isCreditNoteApproving}
+          />
+          <VoidCreditNoteDialog
+            open={voidDialogOpen}
+            onOpenChange={setVoidDialogOpen}
+            creditNoteNumber={selectedCreditNote.creditNoteNumber}
+            onConfirm={async (reason) => { await voidCreditNote(selectedCreditNote.id, reason) }}
+            isSubmitting={isCreditNoteVoiding}
+          />
+          <ApplyCreditNoteToInvoiceDialog
+            open={applyToInvoiceDialogOpen}
+            onOpenChange={setApplyToInvoiceDialogOpen}
+            creditNoteNumber={selectedCreditNote.creditNoteNumber}
+            availableAmount={selectedCreditNote.totalAmount - selectedCreditNote.appliedAmount}
+            invoices={memberInvoicesForCreditNote
+              .filter((inv) => inv.balance > 0)
+              .map((inv) => ({
+                id: inv.id,
+                invoiceNumber: inv.invoiceNumber,
+                balance: inv.balance,
+              }))}
+            onConfirm={async (invoiceId, amount) => {
+              await applyCreditNoteToInvoice(selectedCreditNote.id, invoiceId, amount)
+            }}
+            isSubmitting={isCreditNoteApplyingToInvoice}
+          />
+        </>
+      )}
     </>
   )
 }

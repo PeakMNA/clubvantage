@@ -234,6 +234,29 @@ query GetArAgingReport($filter: String, $page: Float, $limit: Float) {
 
 # Billing Mutations
 
+mutation CreateBatchInvoices($input: CreateBatchInvoicesInput!) {
+  createBatchInvoices(input: $input) {
+    createdCount
+    failedCount
+    invoices {
+      id
+      invoiceNumber
+      totalAmount
+      status
+      member {
+        id
+        memberId
+        firstName
+        lastName
+      }
+    }
+    errors {
+      memberId
+      error
+    }
+  }
+}
+
 mutation CreateInvoice($input: CreateInvoiceInput!) {
   createInvoice(input: $input) {
     id

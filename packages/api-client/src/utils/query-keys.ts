@@ -19,6 +19,32 @@ export const queryKeys = {
     lists: () => [...queryKeys.payments.all, 'list'] as const,
     list: (filters?: Record<string, unknown>) => [...queryKeys.payments.lists(), filters] as const,
   },
+  creditNotes: {
+    all: ['creditNotes'] as const,
+    lists: () => [...queryKeys.creditNotes.all, 'list'] as const,
+    list: (filters?: Record<string, unknown>) => [...queryKeys.creditNotes.lists(), filters] as const,
+    details: () => [...queryKeys.creditNotes.all, 'detail'] as const,
+    detail: (id: string) => [...queryKeys.creditNotes.details(), id] as const,
+  },
+  discounts: {
+    all: ['discounts'] as const,
+    lists: () => [...queryKeys.discounts.all, 'list'] as const,
+    list: (filters?: Record<string, unknown>) => [...queryKeys.discounts.lists(), filters] as const,
+    details: () => [...queryKeys.discounts.all, 'detail'] as const,
+    detail: (id: string) => [...queryKeys.discounts.details(), id] as const,
+  },
+  paymentArrangements: {
+    all: ['paymentArrangements'] as const,
+    lists: () => [...queryKeys.paymentArrangements.all, 'list'] as const,
+    list: (filters?: Record<string, unknown>) => [...queryKeys.paymentArrangements.lists(), filters] as const,
+    details: () => [...queryKeys.paymentArrangements.all, 'detail'] as const,
+    detail: (id: string) => [...queryKeys.paymentArrangements.details(), id] as const,
+  },
+  shareableLinks: {
+    all: ['shareableLinks'] as const,
+    lists: () => [...queryKeys.shareableLinks.all, 'list'] as const,
+    list: (filters?: Record<string, unknown>) => [...queryKeys.shareableLinks.lists(), filters] as const,
+  },
 
   // Members module
   members: {

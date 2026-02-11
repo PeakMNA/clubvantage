@@ -15,7 +15,15 @@ import {
   useGenerateStatementQuery,
   queryKeys,
 } from '@clubvantage/api-client';
-import { useGetPaymentsQuery } from '@clubvantage/api-client/hooks';
+import {
+  useGetPaymentsQuery,
+  useGetCreditNotesQuery,
+  useCreateCreditNoteMutation,
+  useApproveCreditNoteMutation,
+  useApplyCreditNoteToBalanceMutation,
+  useApplyCreditNoteToInvoiceMutation,
+  useVoidCreditNoteMutation,
+} from '@clubvantage/api-client/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 // Direct imports to optimize bundle size (avoid barrel imports)
 import type {
@@ -26,6 +34,10 @@ import type {
   ReceiptRegisterItem,
   ReceiptRegisterSummary,
 } from '@/components/billing/receipt-register';
+import type {
+  CreditNoteListItem,
+  CreditNoteSummary,
+} from '@/components/billing/credit-note-list';
 
 // Map API invoice status to frontend status
 function mapInvoiceStatus(apiStatus: string): InvoiceRegisterItem['status'] {
@@ -504,4 +516,227 @@ export function useGenerateStatement() {
   );
 
   return { generateStatement, isLoading, error };
+}
+
+// ==================== Credit Notes ====================
+
+// Map API credit note status to frontend status
+function mapCreditNoteStatus(apiStatus: string): CreditNoteListItem['status'] {
+  const statusMap: Record<string, CreditNoteListItem['status']> = {
+    DRAFT: 'draft',
+    PENDING_APPROVAL: 'pending_approval',
+    APPROVED: 'approved',
+    APPLIED: 'applied',
+    PARTIALLY_APPLIED: 'partially_applied',
+    REFUNDED: 'refunded',
+    VOIDED: 'voided',
+  };
+  return statusMap[apiStatus] || 'draft';
+}
+
+function mapCreditNoteType(apiType: string): CreditNoteListItem['type'] {
+  const typeMap: Record<string, CreditNoteListItem['type']> = {
+    REFUND: 'refund',
+    ADJUSTMENT: 'adjustment',
+    COURTESY: 'courtesy',
+    PROMO: 'promo',
+    WRITE_OFF: 'write_off',
+    RETURN: 'return',
+    CANCELLATION: 'cancellation',
+  };
+  return typeMap[apiType] || 'adjustment';
+}
+
+function transformCreditNote(apiCreditNote: any): CreditNoteListItem {
+  return {
+    id: apiCreditNote.id,
+    creditNoteNumber: apiCreditNote.creditNoteNumber || '',
+    memberId: apiCreditNote.member?.id || '',
+    memberName: apiCreditNote.member
+      ? `${apiCreditNote.member.firstName} ${apiCreditNote.member.lastName}`
+      : '',
+    issueDate: new Date(apiCreditNote.issueDate),
+    type: mapCreditNoteType(apiCreditNote.type),
+    reason: apiCreditNote.reason || '',
+    totalAmount: parseFloat(apiCreditNote.totalAmount || '0'),
+    appliedAmount: parseFloat(apiCreditNote.appliedToBalance || '0'),
+    status: mapCreditNoteStatus(apiCreditNote.status),
+  };
+}
+
+export interface UseCreditNotesOptions {
+  page?: number;
+  pageSize?: number;
+  memberId?: string;
+  status?: string;
+  startDate?: Date;
+  endDate?: Date;
+  enabled?: boolean;
+}
+
+export function useCreditNotes(options: UseCreditNotesOptions = {}) {
+  const {
+    page = 1,
+    pageSize = 20,
+    memberId,
+    status,
+    startDate,
+    endDate,
+    enabled = true,
+  } = options;
+
+  const { data, isLoading, error, refetch } = useGetCreditNotesQuery(
+    {
+      first: pageSize,
+      skip: (page - 1) * pageSize,
+      memberId: memberId || undefined,
+      status: status as any,
+      startDate: startDate?.toISOString(),
+      endDate: endDate?.toISOString(),
+    },
+    { enabled }
+  );
+
+  const creditNotes = useMemo(() => {
+    if (!data?.creditNotes?.edges) return [];
+    return data.creditNotes.edges.map((edge: any) => transformCreditNote(edge.node));
+  }, [data]);
+
+  const totalCount = data?.creditNotes?.totalCount || 0;
+  const hasNextPage = data?.creditNotes?.pageInfo?.hasNextPage || false;
+  const hasPreviousPage = data?.creditNotes?.pageInfo?.hasPreviousPage || false;
+
+  const summary = useMemo((): CreditNoteSummary => {
+    const totals = {
+      totalIssued: 0,
+      pendingApproval: 0,
+      applied: 0,
+      availableBalance: 0,
+    };
+
+    creditNotes.forEach((cn) => {
+      totals.totalIssued += cn.totalAmount;
+      if (cn.status === 'pending_approval') {
+        totals.pendingApproval += cn.totalAmount;
+      }
+      if (cn.status === 'applied' || cn.status === 'partially_applied') {
+        totals.applied += cn.appliedAmount;
+      }
+      if (cn.status === 'approved' || cn.status === 'partially_applied') {
+        totals.availableBalance += cn.totalAmount - cn.appliedAmount;
+      }
+    });
+
+    return totals;
+  }, [creditNotes]);
+
+  return {
+    creditNotes,
+    summary,
+    totalCount,
+    totalPages: Math.ceil(totalCount / pageSize),
+    hasNextPage,
+    hasPreviousPage,
+    isLoading,
+    error,
+    refetch,
+  };
+}
+
+export function useCreditNoteMutations() {
+  const queryClient = useQueryClient();
+
+  const invalidateCreditNotes = () => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.creditNotes.all });
+  };
+
+  const createMutation = useCreateCreditNoteMutation({
+    onSuccess: invalidateCreditNotes,
+  });
+
+  const approveMutation = useApproveCreditNoteMutation({
+    onSuccess: invalidateCreditNotes,
+  });
+
+  const applyToBalanceMutation = useApplyCreditNoteToBalanceMutation({
+    onSuccess: invalidateCreditNotes,
+  });
+
+  const applyToInvoiceMutation = useApplyCreditNoteToInvoiceMutation({
+    onSuccess: () => {
+      invalidateCreditNotes();
+      queryClient.invalidateQueries({ queryKey: queryKeys.invoices.all });
+    },
+  });
+
+  const voidMutation = useVoidCreditNoteMutation({
+    onSuccess: invalidateCreditNotes,
+  });
+
+  const createCreditNote = useCallback(
+    async (data: {
+      memberId: string;
+      type: string;
+      reason: string;
+      reasonDetail?: string;
+      sourceInvoiceId?: string;
+      lineItems: Array<{
+        description: string;
+        quantity: number;
+        unitPrice: number;
+        taxable?: boolean;
+        taxRate?: number;
+        chargeTypeId?: string;
+      }>;
+      internalNotes?: string;
+      memberVisibleNotes?: string;
+    }) => {
+      return createMutation.mutateAsync({ input: data as any });
+    },
+    [createMutation]
+  );
+
+  const approveCreditNote = useCallback(
+    async (id: string) => {
+      return approveMutation.mutateAsync({ id });
+    },
+    [approveMutation]
+  );
+
+  const applyCreditNoteToBalance = useCallback(
+    async (id: string) => {
+      return applyToBalanceMutation.mutateAsync({ id });
+    },
+    [applyToBalanceMutation]
+  );
+
+  const applyCreditNoteToInvoice = useCallback(
+    async (id: string, invoiceId: string, amount: number) => {
+      return applyToInvoiceMutation.mutateAsync({
+        id,
+        input: { invoiceId, amount },
+      });
+    },
+    [applyToInvoiceMutation]
+  );
+
+  const voidCreditNote = useCallback(
+    async (id: string, reason: string) => {
+      return voidMutation.mutateAsync({ id, input: { reason } });
+    },
+    [voidMutation]
+  );
+
+  return {
+    createCreditNote,
+    approveCreditNote,
+    applyCreditNoteToBalance,
+    applyCreditNoteToInvoice,
+    voidCreditNote,
+    isCreating: createMutation.isPending,
+    isApproving: approveMutation.isPending,
+    isApplyingToBalance: applyToBalanceMutation.isPending,
+    isApplyingToInvoice: applyToInvoiceMutation.isPending,
+    isVoiding: voidMutation.isPending,
+  };
 }

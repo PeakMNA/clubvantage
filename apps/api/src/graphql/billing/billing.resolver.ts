@@ -27,6 +27,8 @@ import {
   CreditNoteLineItemType,
   CreditNoteApplicationType,
   CreditNoteStatus,
+  BatchInvoiceResultType,
+  BatchInvoiceErrorType,
   ArAccountSearchResult,
   ArAccountType,
   CityLedgerType,
@@ -48,6 +50,7 @@ import {
   ApplyCreditNoteInput,
   VoidCreditNoteInput,
   BatchSettlementInput,
+  CreateBatchInvoicesInput,
   GenerateStatementInput,
   UpdateARSettingsInput,
 } from './billing.input';
@@ -715,6 +718,40 @@ export class BillingResolver {
       user.email,
     );
     return this.transformInvoice(invoice);
+  }
+
+  @Mutation(() => BatchInvoiceResultType, { name: 'createBatchInvoices', description: 'Create invoices for multiple members' })
+  async createBatchInvoices(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('input') input: CreateBatchInvoicesInput,
+  ): Promise<BatchInvoiceResultType> {
+    const result = await this.billingService.createBatchInvoices(
+      user.tenantId,
+      {
+        memberIds: input.memberIds,
+        invoiceDate: input.invoiceDate.toISOString(),
+        dueDate: input.dueDate.toISOString(),
+        billingPeriod: input.billingPeriod,
+        lineItems: input.lineItems.map((li) => ({
+          ...li,
+          description: li.description || '',
+        })),
+        notes: input.notes,
+        sendEmail: input.sendEmail,
+      },
+      user.sub,
+      user.email,
+    );
+
+    return {
+      createdCount: result.created.length,
+      failedCount: result.failed.length,
+      invoices: result.created.map((inv: any) => this.transformInvoice(inv)),
+      errors: result.failed.map((f: any) => ({
+        memberId: f.memberId,
+        error: f.error,
+      })),
+    };
   }
 
   @Mutation(() => InvoiceType, { name: 'sendInvoice', description: 'Send an invoice' })

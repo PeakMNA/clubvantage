@@ -319,6 +319,39 @@ type ArAgingReportType {
   totalCount: Float!
 }
 
+"""Payment arrangement frequency"""
+enum ArrangementFrequency {
+  BIWEEKLY
+  MONTHLY
+  WEEKLY
+}
+
+type ArrangementInstallmentType {
+  amount: String!
+  dueDate: DateTime!
+  id: ID!
+  installmentNo: Int!
+  paidAmount: String!
+  paidAt: DateTime
+  paymentId: ID
+  status: InstallmentStatus!
+}
+
+type ArrangementInvoiceType {
+  id: ID!
+  invoice: InvoiceType
+  invoiceId: ID!
+}
+
+"""Payment arrangement status"""
+enum ArrangementStatus {
+  ACTIVE
+  CANCELLED
+  COMPLETED
+  DEFAULTED
+  DRAFT
+}
+
 input AssignEquipmentInput {
   bookingId: ID
   conditionAtCheckout: EquipmentCondition
@@ -443,6 +476,19 @@ input AutoPaySettingInput {
   requireApprovalAbove: Float
   retryIntervalDays: Int = 3
   schedule: AutoPaySchedule
+}
+
+type BatchInvoiceErrorType {
+  error: String!
+  memberId: String!
+  memberName: String
+}
+
+type BatchInvoiceResultType {
+  createdCount: Float!
+  errors: [BatchInvoiceErrorType!]!
+  failedCount: Float!
+  invoices: [InvoiceType!]!
 }
 
 input BatchPaymentInput {
@@ -1596,6 +1642,16 @@ input CreateApplicationInput {
   sponsorId: ID
 }
 
+input CreateBatchInvoicesInput {
+  billingPeriod: String
+  dueDate: DateTime!
+  invoiceDate: DateTime!
+  lineItems: [InvoiceLineItemInput!]!
+  memberIds: [ID!]!
+  notes: String
+  sendEmail: Boolean = false
+}
+
 input CreateBlockInput {
   blockType: BlockType!
   courseId: ID!
@@ -1778,6 +1834,7 @@ input CreateInterestCategoryInput {
 
 input CreateInvoiceInput {
   billingPeriod: String
+  discountId: ID
   dueDate: DateTime!
   internalNotes: String
   invoiceDate: DateTime!
@@ -1898,6 +1955,15 @@ input CreateModifierInput {
   name: String!
   priceAdjustment: Float
   sortOrder: Int
+}
+
+input CreatePaymentArrangementInput {
+  frequency: ArrangementFrequency!
+  installmentCount: Int!
+  invoiceIds: [ID!]!
+  memberId: ID!
+  notes: String
+  startDate: DateTime!
 }
 
 input CreatePaymentInput {
@@ -2071,6 +2137,14 @@ input CreateServiceInput {
   revenueCenterId: ID
   tierDiscounts: [TierDiscountInput!]
   variations: [ServiceVariationInput!]
+}
+
+input CreateShareableLinkInput {
+  entityId: ID!
+  entityType: ShareableEntityType!
+  expiresInDays: Int
+  maxViews: Int
+  password: String
 }
 
 input CreateSpecialDayInput {
@@ -3254,6 +3328,14 @@ input ImproveContentInput {
   feedback: String!
 }
 
+"""Installment payment status"""
+enum InstallmentStatus {
+  OVERDUE
+  PAID
+  PENDING
+  WAIVED
+}
+
 """Interest category for member engagement"""
 type InterestCategoryType {
   code: String!
@@ -3979,6 +4061,7 @@ input MoveTeeTimeInput {
 type Mutation {
   """Accept a waitlist offer"""
   acceptWaitlistOffer(input: WaitlistActionInput!): WaitlistResponseType!
+  activatePaymentArrangement(id: ID!): PaymentArrangementType!
 
   """Add players to a group booking"""
   addGroupPlayers(id: ID!, input: AddGroupPlayersInput!): GroupBookingMutationResponse!
@@ -4036,6 +4119,7 @@ type Mutation {
 
   """Cancel a lottery request"""
   cancelLotteryRequest(id: ID!): LotteryRequestMutationResponse!
+  cancelPaymentArrangement(id: ID!): PaymentArrangementType!
   cancelStatementRun(id: ID!): StatementRunGQLType!
 
   """Cancel a tee time"""
@@ -4097,6 +4181,9 @@ type Mutation {
 
   """Create a new membership application"""
   createApplication(input: CreateApplicationInput!): MembershipApplicationType!
+
+  """Create invoices for multiple members"""
+  createBatchInvoices(input: CreateBatchInvoicesInput!): BatchInvoiceResultType!
 
   """Create a new booking"""
   createBooking(input: CreateBookingInput!): CreateBookingResponseType!
@@ -4171,6 +4258,7 @@ type Mutation {
   """Create a new minimum spend requirement"""
   createMinimumSpendRequirement(input: CreateRequirementInput!): MinimumSpendRequirement!
   createModifierGroup(input: CreateModifierGroupInput!): ModifierGroup!
+  createPaymentArrangement(input: CreatePaymentArrangementInput!): PaymentArrangementType!
 
   """Create a new pro shop category"""
   createProShopCategory(input: CreateProShopCategoryInput!): ProShopCategoryType!
@@ -4191,6 +4279,7 @@ type Mutation {
 
   """Create a settlement exception"""
   createSettlementException(input: CreateExceptionInput!): SettlementExceptionGraphQLType!
+  createShareableLink(input: CreateShareableLinkInput!): ShareableLinkType!
 
   """Create a special day"""
   createSpecialDay(input: CreateSpecialDayInput!, scheduleId: ID!): SpecialDayMutationResponse!
@@ -4398,6 +4487,7 @@ type Mutation {
 
   """Record a cash movement"""
   recordCashMovement(approvedBy: ID, input: RecordMovementInput!): CashMovementGraphQLType!
+  recordInstallmentPayment(input: RecordInstallmentPaymentInput!): PaymentArrangementType!
 
   """Record spending against a member minimum spend requirement"""
   recordMinimumSpend(input: RecordSpendInput!): MemberMinimumSpend!
@@ -4473,6 +4563,7 @@ type Mutation {
 
   """Revert a credit limit override"""
   revertCreditOverride(overrideId: ID!): Boolean!
+  revokeShareableLink(id: ID!): ShareableLinkType!
   runAllAutoChecks(checklistId: ID!): CloseChecklistGQLType!
   runAutoVerification(stepId: ID!): CloseChecklistStepGQLType!
 
@@ -4941,6 +5032,37 @@ type PaymentAllocationType {
   id: ID!
   invoiceId: ID!
   invoiceNumber: String!
+}
+
+type PaymentArrangementConnection {
+  edges: [PaymentArrangementTypeEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type PaymentArrangementType {
+  approvedAt: DateTime
+  arrangementNumber: String!
+  createdAt: DateTime!
+  endDate: DateTime!
+  frequency: ArrangementFrequency!
+  id: ID!
+  installmentCount: Int!
+  installments: [ArrangementInstallmentType!]!
+  invoices: [ArrangementInvoiceType!]!
+  member: MemberSummaryBillingType
+  notes: String
+  paidAmount: String!
+  remainingAmount: String!
+  startDate: DateTime!
+  status: ArrangementStatus!
+  totalAmount: String!
+  updatedAt: DateTime!
+}
+
+type PaymentArrangementTypeEdge {
+  cursor: String!
+  node: PaymentArrangementType!
 }
 
 type PaymentConnection {
@@ -5673,6 +5795,8 @@ type Query {
 
   """Get a single payment/receipt by ID"""
   payment(id: ID!): PaymentType!
+  paymentArrangement(id: ID!): PaymentArrangementType!
+  paymentArrangements(after: String, first: Int = 10, memberId: ID, skip: Int, status: ArrangementStatus): PaymentArrangementConnection!
 
   """Get a single stored payment method"""
   paymentMethod(id: ID!): StoredPaymentMethod
@@ -5784,6 +5908,7 @@ type Query {
 
   """Get settlements for a date range"""
   settlements(input: GetSettlementsInput!): [DailySettlementGraphQLType!]!
+  shareableLinks(entityId: ID!, entityType: ShareableEntityType!): [ShareableLinkType!]!
 
   """Get shift history for a drawer"""
   shiftHistory(cashDrawerId: ID!, limit: Int = 30): [CashDrawerShiftGraphQLType!]!
@@ -5922,6 +6047,13 @@ type RateConfigType {
 input RecordCashCountInput {
   actualCash: Float!
   settlementId: ID!
+}
+
+input RecordInstallmentPaymentInput {
+  amount: Float!
+  arrangementId: ID!
+  installmentId: ID!
+  paymentId: ID!
 }
 
 input RecordMovementInput {
@@ -6249,6 +6381,28 @@ type SettlementSummaryGraphQLType {
   totalMemberAccount: Float!
   totalNetSales: Float!
   unresolvedExceptionCount: Int!
+}
+
+"""Type of entity that can be shared via link"""
+enum ShareableEntityType {
+  INVOICE
+  RECEIPT
+  STATEMENT
+}
+
+type ShareableLinkType {
+  createdAt: DateTime!
+  entityId: ID!
+  entityType: ShareableEntityType!
+  expiresAt: DateTime
+  hasPassword: Boolean!
+  id: ID!
+  isActive: Boolean!
+  lastViewedAt: DateTime
+  maxViews: Int
+  token: String!
+  url: String!
+  viewCount: Int!
 }
 
 type ShiftSummaryGraphQLType {

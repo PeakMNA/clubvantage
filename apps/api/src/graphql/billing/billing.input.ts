@@ -91,6 +91,11 @@ export class CreateInvoiceInput {
   @Field({ nullable: true, defaultValue: false })
   @IsOptional()
   sendEmail?: boolean;
+
+  @Field(() => ID, { nullable: true })
+  @IsOptional()
+  @IsUUID()
+  discountId?: string;
 }
 
 @InputType()
@@ -328,6 +333,45 @@ export class CreditNotesQueryArgs extends PaginationArgs {
   @Field({ nullable: true })
   @IsOptional()
   endDate?: Date;
+}
+
+// Batch Invoice Input
+@InputType()
+export class CreateBatchInvoicesInput {
+  @Field(() => [ID])
+  @IsArray()
+  memberIds: string[];
+
+  @Field()
+  @Type(() => Date)
+  @IsDate()
+  invoiceDate: Date;
+
+  @Field()
+  @Type(() => Date)
+  @IsDate()
+  dueDate: Date;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  billingPeriod?: string;
+
+  @Field(() => [InvoiceLineItemInput])
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => InvoiceLineItemInput)
+  lineItems: InvoiceLineItemInput[];
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  notes?: string;
+
+  @Field({ nullable: true, defaultValue: false })
+  @IsOptional()
+  @IsBoolean()
+  sendEmail?: boolean;
 }
 
 // Batch Settlement Input - for FIFO-based payment settlement

@@ -1,0 +1,146 @@
+# Payment Arrangement Queries
+
+query GetPaymentArrangements(
+  $first: Int
+  $skip: Int
+  $memberId: ID
+  $status: ArrangementStatus
+) {
+  paymentArrangements(
+    first: $first
+    skip: $skip
+    memberId: $memberId
+    status: $status
+  ) {
+    edges {
+      node {
+        id
+        arrangementNumber
+        totalAmount
+        paidAmount
+        remainingAmount
+        installmentCount
+        frequency
+        startDate
+        endDate
+        status
+        notes
+        approvedAt
+        createdAt
+        member {
+          id
+          memberId
+          firstName
+          lastName
+        }
+        installments {
+          id
+          installmentNo
+          dueDate
+          amount
+          paidAmount
+          status
+          paymentId
+          paidAt
+        }
+      }
+      cursor
+    }
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      startCursor
+      endCursor
+    }
+    totalCount
+  }
+}
+
+query GetPaymentArrangement($id: ID!) {
+  paymentArrangement(id: $id) {
+    id
+    arrangementNumber
+    totalAmount
+    paidAmount
+    remainingAmount
+    installmentCount
+    frequency
+    startDate
+    endDate
+    status
+    notes
+    approvedAt
+    createdAt
+    updatedAt
+    member {
+      id
+      memberId
+      firstName
+      lastName
+    }
+    installments {
+      id
+      installmentNo
+      dueDate
+      amount
+      paidAmount
+      status
+      paymentId
+      paidAt
+    }
+    invoices {
+      id
+      invoiceId
+      invoice {
+        id
+        invoiceNumber
+        totalAmount
+        balanceDue
+        status
+      }
+    }
+  }
+}
+
+# Payment Arrangement Mutations
+
+mutation CreatePaymentArrangement($input: CreatePaymentArrangementInput!) {
+  createPaymentArrangement(input: $input) {
+    id
+    arrangementNumber
+    totalAmount
+    installmentCount
+    status
+  }
+}
+
+mutation ActivatePaymentArrangement($id: ID!) {
+  activatePaymentArrangement(id: $id) {
+    id
+    status
+    approvedAt
+  }
+}
+
+mutation RecordInstallmentPayment($input: RecordInstallmentPaymentInput!) {
+  recordInstallmentPayment(input: $input) {
+    id
+    paidAmount
+    remainingAmount
+    status
+    installments {
+      id
+      installmentNo
+      status
+      paidAmount
+      paidAt
+    }
+  }
+}
+
+mutation CancelPaymentArrangement($id: ID!) {
+  cancelPaymentArrangement(id: $id) {
+    id
+    status
+  }
+}

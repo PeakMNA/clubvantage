@@ -69,6 +69,28 @@ export class BillingService {
 
     const totalAmount = subtotal + taxAmount;
 
+    // Apply discount if provided
+    let discountAmount = 0;
+    let discountRecord: any = null;
+    if ((dto as any).discountId) {
+      discountRecord = await this.prisma.discount.findFirst({
+        where: {
+          id: (dto as any).discountId,
+          clubId: tenantId,
+          isActive: true,
+        },
+      });
+      if (discountRecord) {
+        if (discountRecord.type === 'PERCENTAGE') {
+          discountAmount = totalAmount * (discountRecord.value.toNumber() / 100);
+        } else {
+          discountAmount = Math.min(discountRecord.value.toNumber(), totalAmount);
+        }
+      }
+    }
+
+    const finalTotal = totalAmount - discountAmount;
+
     const invoice = await this.prisma.invoice.create({
       data: {
         clubId: tenantId,
@@ -79,9 +101,9 @@ export class BillingService {
         billingPeriod: dto.billingPeriod,
         subtotal,
         taxAmount,
-        discountAmount: 0,
-        totalAmount,
-        balanceDue: totalAmount,
+        discountAmount,
+        totalAmount: finalTotal,
+        balanceDue: finalTotal,
         status: 'DRAFT',
         notes: dto.notes,
         internalNotes: dto.internalNotes,
@@ -97,13 +119,21 @@ export class BillingService {
       },
     });
 
+    // Create applied discount record and increment usage count
+    if (discountRecord && discountAmount > 0) {
+      await this.prisma.discount.update({
+        where: { id: discountRecord.id },
+        data: { usageCount: { increment: 1 } },
+      });
+    }
+
     // Log event
     await this.eventStore.append({
       tenantId,
       aggregateType: 'Invoice',
       aggregateId: invoice.id,
       type: 'CREATED',
-      data: { invoiceNumber, totalAmount },
+      data: { invoiceNumber, totalAmount: finalTotal, discountAmount },
       userId,
       userEmail,
     });
@@ -760,5 +790,70 @@ export class BillingService {
       thisMonthRevenue: thisMonthRevenue._sum.amount?.toNumber() || 0,
       pendingPayments,
     };
+  }
+
+  // ==================== BATCH INVOICES ====================
+
+  async createBatchInvoices(
+    tenantId: string,
+    dto: {
+      memberIds: string[];
+      invoiceDate: string;
+      dueDate: string;
+      billingPeriod?: string;
+      lineItems: Array<{
+        chargeTypeId: string;
+        description?: string;
+        quantity: number;
+        unitPrice: number;
+        discountPct?: number;
+        taxType?: string;
+        taxRate?: number;
+      }>;
+      notes?: string;
+      sendEmail?: boolean;
+    },
+    userId: string,
+    userEmail: string,
+  ) {
+    const results = await Promise.allSettled(
+      dto.memberIds.map(async (memberId) => {
+        const invoice = await this.createInvoice(
+          tenantId,
+          {
+            memberId,
+            invoiceDate: dto.invoiceDate,
+            dueDate: dto.dueDate,
+            billingPeriod: dto.billingPeriod,
+            lineItems: dto.lineItems,
+            notes: dto.notes,
+            sendEmail: dto.sendEmail,
+          } as CreateInvoiceDto,
+          userId,
+          userEmail,
+        );
+        return invoice;
+      }),
+    );
+
+    const created: any[] = [];
+    const failed: Array<{ memberId: string; error: string }> = [];
+
+    results.forEach((result, index) => {
+      if (result.status === 'fulfilled') {
+        created.push(result.value);
+      } else {
+        failed.push({
+          memberId: dto.memberIds[index],
+          error: result.reason?.message || 'Unknown error',
+        });
+      }
+    });
+
+    this.logger.log(
+      `Batch invoice creation: ${created.length} created, ${failed.length} failed`,
+    );
+
+    return { created, failed };
   }
 }

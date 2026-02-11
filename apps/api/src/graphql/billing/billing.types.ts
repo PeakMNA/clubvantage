@@ -776,6 +776,34 @@ export class BatchSettlementResult {
   newCreditBalance: string;
 }
 
+// Batch Invoice Result types
+@ObjectType()
+export class BatchInvoiceErrorType {
+  @Field()
+  memberId: string;
+
+  @Field({ nullable: true })
+  memberName?: string;
+
+  @Field()
+  error: string;
+}
+
+@ObjectType()
+export class BatchInvoiceResultType {
+  @Field()
+  createdCount: number;
+
+  @Field()
+  failedCount: number;
+
+  @Field(() => [InvoiceType])
+  invoices: InvoiceType[];
+
+  @Field(() => [BatchInvoiceErrorType])
+  errors: BatchInvoiceErrorType[];
+}
+
 // Statement types for member statement generation
 @ObjectType()
 export class MemberStatementInfoType {

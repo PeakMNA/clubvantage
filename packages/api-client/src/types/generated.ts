@@ -337,6 +337,39 @@ export type ArAgingReportType = {
   totalCount: Scalars['Float']['output'];
 };
 
+/** Payment arrangement frequency */
+export type ArrangementFrequency =
+  | 'BIWEEKLY'
+  | 'MONTHLY'
+  | 'WEEKLY';
+
+export type ArrangementInstallmentType = {
+  __typename?: 'ArrangementInstallmentType';
+  amount: Scalars['String']['output'];
+  dueDate: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  installmentNo: Scalars['Int']['output'];
+  paidAmount: Scalars['String']['output'];
+  paidAt?: Maybe<Scalars['DateTime']['output']>;
+  paymentId?: Maybe<Scalars['ID']['output']>;
+  status: InstallmentStatus;
+};
+
+export type ArrangementInvoiceType = {
+  __typename?: 'ArrangementInvoiceType';
+  id: Scalars['ID']['output'];
+  invoice?: Maybe<InvoiceType>;
+  invoiceId: Scalars['ID']['output'];
+};
+
+/** Payment arrangement status */
+export type ArrangementStatus =
+  | 'ACTIVE'
+  | 'CANCELLED'
+  | 'COMPLETED'
+  | 'DEFAULTED'
+  | 'DRAFT';
+
 export type AssignEquipmentInput = {
   bookingId?: InputMaybe<Scalars['ID']['input']>;
   conditionAtCheckout?: InputMaybe<EquipmentCondition>;
@@ -464,6 +497,21 @@ export type AutoPaySettingInput = {
   requireApprovalAbove?: InputMaybe<Scalars['Float']['input']>;
   retryIntervalDays?: InputMaybe<Scalars['Int']['input']>;
   schedule?: InputMaybe<AutoPaySchedule>;
+};
+
+export type BatchInvoiceErrorType = {
+  __typename?: 'BatchInvoiceErrorType';
+  error: Scalars['String']['output'];
+  memberId: Scalars['String']['output'];
+  memberName?: Maybe<Scalars['String']['output']>;
+};
+
+export type BatchInvoiceResultType = {
+  __typename?: 'BatchInvoiceResultType';
+  createdCount: Scalars['Float']['output'];
+  errors: Array<BatchInvoiceErrorType>;
+  failedCount: Scalars['Float']['output'];
+  invoices: Array<InvoiceType>;
 };
 
 export type BatchPaymentInput = {
@@ -1587,6 +1635,16 @@ export type CreateApplicationInput = {
   sponsorId?: InputMaybe<Scalars['ID']['input']>;
 };
 
+export type CreateBatchInvoicesInput = {
+  billingPeriod?: InputMaybe<Scalars['String']['input']>;
+  dueDate: Scalars['DateTime']['input'];
+  invoiceDate: Scalars['DateTime']['input'];
+  lineItems: Array<InvoiceLineItemInput>;
+  memberIds: Array<Scalars['ID']['input']>;
+  notes?: InputMaybe<Scalars['String']['input']>;
+  sendEmail?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
 export type CreateBlockInput = {
   blockType: BlockType;
   courseId: Scalars['ID']['input'];
@@ -1770,6 +1828,7 @@ export type CreateInterestCategoryInput = {
 
 export type CreateInvoiceInput = {
   billingPeriod?: InputMaybe<Scalars['String']['input']>;
+  discountId?: InputMaybe<Scalars['ID']['input']>;
   dueDate: Scalars['DateTime']['input'];
   internalNotes?: InputMaybe<Scalars['String']['input']>;
   invoiceDate: Scalars['DateTime']['input'];
@@ -1880,6 +1939,15 @@ export type CreateModifierInput = {
   name: Scalars['String']['input'];
   priceAdjustment?: InputMaybe<Scalars['Float']['input']>;
   sortOrder?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type CreatePaymentArrangementInput = {
+  frequency: ArrangementFrequency;
+  installmentCount: Scalars['Int']['input'];
+  invoiceIds: Array<Scalars['ID']['input']>;
+  memberId: Scalars['ID']['input'];
+  notes?: InputMaybe<Scalars['String']['input']>;
+  startDate: Scalars['DateTime']['input'];
 };
 
 export type CreatePaymentInput = {
@@ -2053,6 +2121,14 @@ export type CreateServiceInput = {
   revenueCenterId?: InputMaybe<Scalars['ID']['input']>;
   tierDiscounts?: InputMaybe<Array<TierDiscountInput>>;
   variations?: InputMaybe<Array<ServiceVariationInput>>;
+};
+
+export type CreateShareableLinkInput = {
+  entityId: Scalars['ID']['input'];
+  entityType: ShareableEntityType;
+  expiresInDays?: InputMaybe<Scalars['Int']['input']>;
+  maxViews?: InputMaybe<Scalars['Int']['input']>;
+  password?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type CreateSpecialDayInput = {
@@ -3283,6 +3359,13 @@ export type ImproveContentInput = {
   feedback: Scalars['String']['input'];
 };
 
+/** Installment payment status */
+export type InstallmentStatus =
+  | 'OVERDUE'
+  | 'PAID'
+  | 'PENDING'
+  | 'WAIVED';
+
 /** Interest category for member engagement */
 export type InterestCategoryType = {
   __typename?: 'InterestCategoryType';
@@ -4007,6 +4090,7 @@ export type Mutation = {
   __typename?: 'Mutation';
   /** Accept a waitlist offer */
   acceptWaitlistOffer: WaitlistResponseType;
+  activatePaymentArrangement: PaymentArrangementType;
   /** Add players to a group booking */
   addGroupPlayers: GroupBookingMutationResponse;
   /** Add a line item to a player */
@@ -4046,6 +4130,7 @@ export type Mutation = {
   cancelGroupBooking: GroupBookingMutationResponse;
   /** Cancel a lottery request */
   cancelLotteryRequest: LotteryRequestMutationResponse;
+  cancelPaymentArrangement: PaymentArrangementType;
   cancelStatementRun: StatementRunGqlType;
   /** Cancel a tee time */
   cancelTeeTime: CancelResponseType;
@@ -4088,6 +4173,8 @@ export type Mutation = {
   createARProfile: ArProfileGqlType;
   /** Create a new membership application */
   createApplication: MembershipApplicationType;
+  /** Create invoices for multiple members */
+  createBatchInvoices: BatchInvoiceResultType;
   /** Create a new booking */
   createBooking: CreateBookingResponseType;
   /** Create a caddy rate */
@@ -4139,6 +4226,7 @@ export type Mutation = {
   /** Create a new minimum spend requirement */
   createMinimumSpendRequirement: MinimumSpendRequirement;
   createModifierGroup: ModifierGroup;
+  createPaymentArrangement: PaymentArrangementType;
   /** Create a new pro shop category */
   createProShopCategory: ProShopCategoryType;
   /** Create a new pro shop product */
@@ -4153,6 +4241,7 @@ export type Mutation = {
   createService: ServiceResponseType;
   /** Create a settlement exception */
   createSettlementException: SettlementExceptionGraphQlType;
+  createShareableLink: ShareableLinkType;
   /** Create a special day */
   createSpecialDay: SpecialDayMutationResponse;
   /** Create a new staff member */
@@ -4293,6 +4382,7 @@ export type Mutation = {
   recordCashCount: DailySettlementGraphQlType;
   /** Record a cash movement */
   recordCashMovement: CashMovementGraphQlType;
+  recordInstallmentPayment: PaymentArrangementType;
   /** Record spending against a member minimum spend requirement */
   recordMinimumSpend: MemberMinimumSpend;
   /** Record a payment */
@@ -4344,6 +4434,7 @@ export type Mutation = {
   returnEquipment: EquipmentAssignmentResponse;
   /** Revert a credit limit override */
   revertCreditOverride: Scalars['Boolean']['output'];
+  revokeShareableLink: ShareableLinkType;
   runAllAutoChecks: CloseChecklistGqlType;
   runAutoVerification: CloseChecklistStepGqlType;
   /** Save cart draft for a tee time */
@@ -4533,6 +4624,11 @@ export type MutationAcceptWaitlistOfferArgs = {
 };
 
 
+export type MutationActivatePaymentArrangementArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationAddGroupPlayersArgs = {
   id: Scalars['ID']['input'];
   input: AddGroupPlayersInput;
@@ -4639,6 +4735,11 @@ export type MutationCancelGroupBookingArgs = {
 
 
 export type MutationCancelLotteryRequestArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationCancelPaymentArrangementArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -4761,6 +4862,11 @@ export type MutationCreateArProfileArgs = {
 
 export type MutationCreateApplicationArgs = {
   input: CreateApplicationInput;
+};
+
+
+export type MutationCreateBatchInvoicesArgs = {
+  input: CreateBatchInvoicesInput;
 };
 
 
@@ -4904,6 +5010,11 @@ export type MutationCreateModifierGroupArgs = {
 };
 
 
+export type MutationCreatePaymentArrangementArgs = {
+  input: CreatePaymentArrangementInput;
+};
+
+
 export type MutationCreateProShopCategoryArgs = {
   input: CreateProShopCategoryInput;
 };
@@ -4942,6 +5053,11 @@ export type MutationCreateServiceArgs = {
 
 export type MutationCreateSettlementExceptionArgs = {
   input: CreateExceptionInput;
+};
+
+
+export type MutationCreateShareableLinkArgs = {
+  input: CreateShareableLinkInput;
 };
 
 
@@ -5326,6 +5442,11 @@ export type MutationRecordCashMovementArgs = {
 };
 
 
+export type MutationRecordInstallmentPaymentArgs = {
+  input: RecordInstallmentPaymentInput;
+};
+
+
 export type MutationRecordMinimumSpendArgs = {
   input: RecordSpendInput;
 };
@@ -5457,6 +5578,11 @@ export type MutationReturnEquipmentArgs = {
 
 export type MutationRevertCreditOverrideArgs = {
   overrideId: Scalars['ID']['input'];
+};
+
+
+export type MutationRevokeShareableLinkArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -6231,6 +6357,40 @@ export type PaymentAllocationType = {
   invoiceNumber: Scalars['String']['output'];
 };
 
+export type PaymentArrangementConnection = {
+  __typename?: 'PaymentArrangementConnection';
+  edges: Array<PaymentArrangementTypeEdge>;
+  pageInfo: PageInfo;
+  totalCount: Scalars['Int']['output'];
+};
+
+export type PaymentArrangementType = {
+  __typename?: 'PaymentArrangementType';
+  approvedAt?: Maybe<Scalars['DateTime']['output']>;
+  arrangementNumber: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  endDate: Scalars['DateTime']['output'];
+  frequency: ArrangementFrequency;
+  id: Scalars['ID']['output'];
+  installmentCount: Scalars['Int']['output'];
+  installments: Array<ArrangementInstallmentType>;
+  invoices: Array<ArrangementInvoiceType>;
+  member?: Maybe<MemberSummaryBillingType>;
+  notes?: Maybe<Scalars['String']['output']>;
+  paidAmount: Scalars['String']['output'];
+  remainingAmount: Scalars['String']['output'];
+  startDate: Scalars['DateTime']['output'];
+  status: ArrangementStatus;
+  totalAmount: Scalars['String']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+export type PaymentArrangementTypeEdge = {
+  __typename?: 'PaymentArrangementTypeEdge';
+  cursor: Scalars['String']['output'];
+  node: PaymentArrangementType;
+};
+
 export type PaymentConnection = {
   __typename?: 'PaymentConnection';
   edges: Array<PaymentTypeEdge>;
@@ -6860,6 +7020,8 @@ export type Query = {
   outletProductPanel: OutletProductPanel;
   /** Get a single payment/receipt by ID */
   payment: PaymentType;
+  paymentArrangement: PaymentArrangementType;
+  paymentArrangements: PaymentArrangementConnection;
   /** Get a single stored payment method */
   paymentMethod?: Maybe<StoredPaymentMethod>;
   /** Get paginated list of payments/receipts */
@@ -6934,6 +7096,7 @@ export type Query = {
   settlementSummary: SettlementSummaryGraphQlType;
   /** Get settlements for a date range */
   settlements: Array<DailySettlementGraphQlType>;
+  shareableLinks: Array<ShareableLinkType>;
   /** Get shift history for a drawer */
   shiftHistory: Array<CashDrawerShiftGraphQlType>;
   /** Get movements for a shift */
@@ -7593,6 +7756,20 @@ export type QueryPaymentArgs = {
 };
 
 
+export type QueryPaymentArrangementArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryPaymentArrangementsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  memberId?: InputMaybe<Scalars['ID']['input']>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  status?: InputMaybe<ArrangementStatus>;
+};
+
+
 export type QueryPaymentMethodArgs = {
   id: Scalars['ID']['input'];
 };
@@ -7763,6 +7940,12 @@ export type QuerySettlementSummaryArgs = {
 
 export type QuerySettlementsArgs = {
   input: GetSettlementsInput;
+};
+
+
+export type QueryShareableLinksArgs = {
+  entityId: Scalars['ID']['input'];
+  entityType: ShareableEntityType;
 };
 
 
@@ -8021,6 +8204,13 @@ export type RateConfigType = {
 export type RecordCashCountInput = {
   actualCash: Scalars['Float']['input'];
   settlementId: Scalars['ID']['input'];
+};
+
+export type RecordInstallmentPaymentInput = {
+  amount: Scalars['Float']['input'];
+  arrangementId: Scalars['ID']['input'];
+  installmentId: Scalars['ID']['input'];
+  paymentId: Scalars['ID']['input'];
 };
 
 export type RecordMovementInput = {
@@ -8364,6 +8554,28 @@ export type SettlementSummaryGraphQlType = {
   totalMemberAccount: Scalars['Float']['output'];
   totalNetSales: Scalars['Float']['output'];
   unresolvedExceptionCount: Scalars['Int']['output'];
+};
+
+/** Type of entity that can be shared via link */
+export type ShareableEntityType =
+  | 'INVOICE'
+  | 'RECEIPT'
+  | 'STATEMENT';
+
+export type ShareableLinkType = {
+  __typename?: 'ShareableLinkType';
+  createdAt: Scalars['DateTime']['output'];
+  entityId: Scalars['ID']['output'];
+  entityType: ShareableEntityType;
+  expiresAt?: Maybe<Scalars['DateTime']['output']>;
+  hasPassword: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  isActive: Scalars['Boolean']['output'];
+  lastViewedAt?: Maybe<Scalars['DateTime']['output']>;
+  maxViews?: Maybe<Scalars['Int']['output']>;
+  token: Scalars['String']['output'];
+  url: Scalars['String']['output'];
+  viewCount: Scalars['Int']['output'];
 };
 
 export type ShiftSummaryGraphQlType = {
@@ -10522,6 +10734,13 @@ export type GetArAgingReportQueryVariables = Exact<{
 
 export type GetArAgingReportQuery = { __typename?: 'Query', arAgingReport: { __typename?: 'ArAgingReportType', totalCount: number, buckets: Array<{ __typename?: 'AgingBucketType', id: string, label: string, memberCount: number, totalAmount: string, percentage: number }>, members: Array<{ __typename?: 'AgingMemberType', id: string, name: string, photoUrl?: string | null | undefined, memberNumber: string, membershipType: string, oldestInvoiceDate: string, balance: string, daysOutstanding: number, status: string }>, reinstatedMembers: Array<{ __typename?: 'ReinstatedMemberType', id: string, name: string, clearedDate: string, previousBalance: string, receiptId: string, receiptNumber: string }> } };
 
+export type CreateBatchInvoicesMutationVariables = Exact<{
+  input: CreateBatchInvoicesInput;
+}>;
+
+
+export type CreateBatchInvoicesMutation = { __typename?: 'Mutation', createBatchInvoices: { __typename?: 'BatchInvoiceResultType', createdCount: number, failedCount: number, invoices: Array<{ __typename?: 'InvoiceType', id: string, invoiceNumber: string, totalAmount: string, status: InvoiceStatus, member?: { __typename?: 'MemberSummaryBillingType', id: string, memberId: string, firstName: string, lastName: string } | null | undefined }>, errors: Array<{ __typename?: 'BatchInvoiceErrorType', memberId: string, error: string }> } };
+
 export type CreateInvoiceMutationVariables = Exact<{
   input: CreateInvoiceInput;
 }>;
@@ -12187,6 +12406,51 @@ export type RecalculateMemberSpendMutationVariables = Exact<{
 
 export type RecalculateMemberSpendMutation = { __typename?: 'Mutation', recalculateMemberSpend: { __typename?: 'MemberMinimumSpend', id: string, currentSpend: number, status: MemberSpendStatus, lastCalculatedAt: string } };
 
+export type GetPaymentArrangementsQueryVariables = Exact<{
+  first?: InputMaybe<Scalars['Int']['input']>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  memberId?: InputMaybe<Scalars['ID']['input']>;
+  status?: InputMaybe<ArrangementStatus>;
+}>;
+
+
+export type GetPaymentArrangementsQuery = { __typename?: 'Query', paymentArrangements: { __typename?: 'PaymentArrangementConnection', totalCount: number, edges: Array<{ __typename?: 'PaymentArrangementTypeEdge', cursor: string, node: { __typename?: 'PaymentArrangementType', id: string, arrangementNumber: string, totalAmount: string, paidAmount: string, remainingAmount: string, installmentCount: number, frequency: ArrangementFrequency, startDate: string, endDate: string, status: ArrangementStatus, notes?: string | null | undefined, approvedAt?: string | null | undefined, createdAt: string, member?: { __typename?: 'MemberSummaryBillingType', id: string, memberId: string, firstName: string, lastName: string } | null | undefined, installments: Array<{ __typename?: 'ArrangementInstallmentType', id: string, installmentNo: number, dueDate: string, amount: string, paidAmount: string, status: InstallmentStatus, paymentId?: string | null | undefined, paidAt?: string | null | undefined }> } }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean, startCursor?: string | null | undefined, endCursor?: string | null | undefined } } };
+
+export type GetPaymentArrangementQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetPaymentArrangementQuery = { __typename?: 'Query', paymentArrangement: { __typename?: 'PaymentArrangementType', id: string, arrangementNumber: string, totalAmount: string, paidAmount: string, remainingAmount: string, installmentCount: number, frequency: ArrangementFrequency, startDate: string, endDate: string, status: ArrangementStatus, notes?: string | null | undefined, approvedAt?: string | null | undefined, createdAt: string, updatedAt: string, member?: { __typename?: 'MemberSummaryBillingType', id: string, memberId: string, firstName: string, lastName: string } | null | undefined, installments: Array<{ __typename?: 'ArrangementInstallmentType', id: string, installmentNo: number, dueDate: string, amount: string, paidAmount: string, status: InstallmentStatus, paymentId?: string | null | undefined, paidAt?: string | null | undefined }>, invoices: Array<{ __typename?: 'ArrangementInvoiceType', id: string, invoiceId: string, invoice?: { __typename?: 'InvoiceType', id: string, invoiceNumber: string, totalAmount: string, balanceDue: string, status: InvoiceStatus } | null | undefined }> } };
+
+export type CreatePaymentArrangementMutationVariables = Exact<{
+  input: CreatePaymentArrangementInput;
+}>;
+
+
+export type CreatePaymentArrangementMutation = { __typename?: 'Mutation', createPaymentArrangement: { __typename?: 'PaymentArrangementType', id: string, arrangementNumber: string, totalAmount: string, installmentCount: number, status: ArrangementStatus } };
+
+export type ActivatePaymentArrangementMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type ActivatePaymentArrangementMutation = { __typename?: 'Mutation', activatePaymentArrangement: { __typename?: 'PaymentArrangementType', id: string, status: ArrangementStatus, approvedAt?: string | null | undefined } };
+
+export type RecordInstallmentPaymentMutationVariables = Exact<{
+  input: RecordInstallmentPaymentInput;
+}>;
+
+
+export type RecordInstallmentPaymentMutation = { __typename?: 'Mutation', recordInstallmentPayment: { __typename?: 'PaymentArrangementType', id: string, paidAmount: string, remainingAmount: string, status: ArrangementStatus, installments: Array<{ __typename?: 'ArrangementInstallmentType', id: string, installmentNo: number, status: InstallmentStatus, paidAmount: string, paidAt?: string | null | undefined }> } };
+
+export type CancelPaymentArrangementMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type CancelPaymentArrangementMutation = { __typename?: 'Mutation', cancelPaymentArrangement: { __typename?: 'PaymentArrangementType', id: string, status: ArrangementStatus } };
+
 export type GetPosConfigQueryVariables = Exact<{
   outletId: Scalars['ID']['input'];
   userRole: Scalars['String']['input'];
@@ -12378,6 +12642,28 @@ export type UpdateBillingSettingsMutationVariables = Exact<{
 
 
 export type UpdateBillingSettingsMutation = { __typename?: 'Mutation', updateBillingSettings: { __typename?: 'BillingSettingsType', taxRate?: number | null | undefined, taxType?: string | null | undefined, currency?: string | null | undefined, invoicePrefix: string, paymentTermDays: number } };
+
+export type GetShareableLinksQueryVariables = Exact<{
+  entityType: ShareableEntityType;
+  entityId: Scalars['ID']['input'];
+}>;
+
+
+export type GetShareableLinksQuery = { __typename?: 'Query', shareableLinks: Array<{ __typename?: 'ShareableLinkType', id: string, token: string, entityType: ShareableEntityType, entityId: string, expiresAt?: string | null | undefined, maxViews?: number | null | undefined, viewCount: number, isActive: boolean, hasPassword: boolean, lastViewedAt?: string | null | undefined, createdAt: string, url: string }> };
+
+export type CreateShareableLinkMutationVariables = Exact<{
+  input: CreateShareableLinkInput;
+}>;
+
+
+export type CreateShareableLinkMutation = { __typename?: 'Mutation', createShareableLink: { __typename?: 'ShareableLinkType', id: string, token: string, entityType: ShareableEntityType, entityId: string, expiresAt?: string | null | undefined, maxViews?: number | null | undefined, viewCount: number, isActive: boolean, hasPassword: boolean, createdAt: string, url: string } };
+
+export type RevokeShareableLinkMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type RevokeShareableLinkMutation = { __typename?: 'Mutation', revokeShareableLink: { __typename?: 'ShareableLinkType', id: string, isActive: boolean } };
 
 export type GetMemberPaymentMethodsQueryVariables = Exact<{
   memberId: Scalars['ID']['input'];
