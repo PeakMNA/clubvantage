@@ -69,6 +69,32 @@ query GetReportsARAging {
   }
 }
 
+query GetReportsCollections($startDate: String!, $endDate: String!) {
+  reportsCollections(startDate: $startDate, endDate: $endDate) {
+    collectionRate
+    avgDaysToPay
+    collectedThisPeriod
+    vsLastPeriod
+    paymentMethods {
+      name
+      value
+    }
+  }
+}
+
+query GetReportsARAgingMembers {
+  reportsARAgingMembers {
+    id
+    name
+    membershipNumber
+    invoiceCount
+    totalDue
+    oldestInvoice
+    daysOverdue
+    status
+  }
+}
+
 query GetReportsGolfUtilization($startDate: String!, $endDate: String!) {
   reportsGolfUtilization(startDate: $startDate, endDate: $endDate) {
     period {

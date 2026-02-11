@@ -22,6 +22,18 @@ export type Scalars = {
   JSON: { input: any; output: any; }
 };
 
+export type ArAgingMemberType = {
+  __typename?: 'ARAgingMemberType';
+  daysOverdue: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  invoiceCount: Scalars['Int']['output'];
+  membershipNumber: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  oldestInvoice: Scalars['DateTime']['output'];
+  status: Scalars['String']['output'];
+  totalDue: Scalars['Float']['output'];
+};
+
 /** How AR periods are closed */
 export type ArCloseBehavior =
   | 'AUTO_AFTER_FINAL_RUN'
@@ -1550,6 +1562,15 @@ export type ClubProfileType = {
   subscriptionTier: Scalars['String']['output'];
   timezone?: Maybe<Scalars['String']['output']>;
   website?: Maybe<Scalars['String']['output']>;
+};
+
+export type CollectionMetricsType = {
+  __typename?: 'CollectionMetricsType';
+  avgDaysToPay: Scalars['Float']['output'];
+  collectedThisPeriod: Scalars['Float']['output'];
+  collectionRate: Scalars['Float']['output'];
+  paymentMethods: Array<PaymentMethodBreakdownType>;
+  vsLastPeriod?: Maybe<Scalars['Float']['output']>;
 };
 
 export type ContentPieceType = {
@@ -6412,6 +6433,12 @@ export type PaymentMethod =
   | 'MOBILE_PAYMENT'
   | 'OTHER';
 
+export type PaymentMethodBreakdownType = {
+  __typename?: 'PaymentMethodBreakdownType';
+  name: Scalars['String']['output'];
+  value: Scalars['Float']['output'];
+};
+
 /** Type of payment method */
 export type PaymentMethodTypeEnum =
   | 'ACCOUNT'
@@ -7076,6 +7103,10 @@ export type Query = {
   receiptHTML: Scalars['String']['output'];
   /** Get accounts receivable aging report */
   reportsARAging: ReportArAgingType;
+  /** Get AR aging member list */
+  reportsARAgingMembers: Array<ArAgingMemberType>;
+  /** Get collection performance metrics */
+  reportsCollections: CollectionMetricsType;
   /** Get dashboard statistics */
   reportsDashboard: DashboardStatsType;
   /** Get financial report for a date range */
@@ -7888,6 +7919,12 @@ export type QueryRateConfigArgs = {
 export type QueryReceiptHtmlArgs = {
   playerId: Scalars['ID']['input'];
   teeTimeId: Scalars['ID']['input'];
+};
+
+
+export type QueryReportsCollectionsArgs = {
+  endDate: Scalars['String']['input'];
+  startDate: Scalars['String']['input'];
 };
 
 
@@ -12614,6 +12651,19 @@ export type GetReportsArAgingQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type GetReportsArAgingQuery = { __typename?: 'Query', reportsARAging: { __typename?: 'ReportARAgingType', current: { __typename?: 'ReportAgingBucketType', amount: number, count: number }, days1to30: { __typename?: 'ReportAgingBucketType', amount: number, count: number }, days31to60: { __typename?: 'ReportAgingBucketType', amount: number, count: number }, days90Plus: { __typename?: 'ReportAgingBucketType', amount: number, count: number } } };
+
+export type GetReportsCollectionsQueryVariables = Exact<{
+  startDate: Scalars['String']['input'];
+  endDate: Scalars['String']['input'];
+}>;
+
+
+export type GetReportsCollectionsQuery = { __typename?: 'Query', reportsCollections: { __typename?: 'CollectionMetricsType', collectionRate: number, avgDaysToPay: number, collectedThisPeriod: number, vsLastPeriod?: number | null | undefined, paymentMethods: Array<{ __typename?: 'PaymentMethodBreakdownType', name: string, value: number }> } };
+
+export type GetReportsArAgingMembersQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetReportsArAgingMembersQuery = { __typename?: 'Query', reportsARAgingMembers: Array<{ __typename?: 'ARAgingMemberType', id: string, name: string, membershipNumber: string, invoiceCount: number, totalDue: number, oldestInvoice: string, daysOverdue: number, status: string }> };
 
 export type GetReportsGolfUtilizationQueryVariables = Exact<{
   startDate: Scalars['String']['input'];
@@ -27604,6 +27654,120 @@ useInfiniteGetReportsArAgingQuery.getKey = (variables?: GetReportsArAgingQueryVa
 
 
 useGetReportsArAgingQuery.fetcher = (variables?: GetReportsArAgingQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetReportsArAgingQuery, GetReportsArAgingQueryVariables>(GetReportsArAgingDocument, variables, options);
+
+export const GetReportsCollectionsDocument = `
+    query GetReportsCollections($startDate: String!, $endDate: String!) {
+  reportsCollections(startDate: $startDate, endDate: $endDate) {
+    collectionRate
+    avgDaysToPay
+    collectedThisPeriod
+    vsLastPeriod
+    paymentMethods {
+      name
+      value
+    }
+  }
+}
+    `;
+
+export const useGetReportsCollectionsQuery = <
+      TData = GetReportsCollectionsQuery,
+      TError = unknown
+    >(
+      variables: GetReportsCollectionsQueryVariables,
+      options?: Omit<UseQueryOptions<GetReportsCollectionsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetReportsCollectionsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetReportsCollectionsQuery, TError, TData>(
+      {
+    queryKey: ['GetReportsCollections', variables],
+    queryFn: graphqlFetcher<GetReportsCollectionsQuery, GetReportsCollectionsQueryVariables>(GetReportsCollectionsDocument, variables),
+    ...options
+  }
+    )};
+
+useGetReportsCollectionsQuery.getKey = (variables: GetReportsCollectionsQueryVariables) => ['GetReportsCollections', variables];
+
+export const useInfiniteGetReportsCollectionsQuery = <
+      TData = InfiniteData<GetReportsCollectionsQuery>,
+      TError = unknown
+    >(
+      variables: GetReportsCollectionsQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetReportsCollectionsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetReportsCollectionsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetReportsCollectionsQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetReportsCollections.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetReportsCollectionsQuery, GetReportsCollectionsQueryVariables>(GetReportsCollectionsDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetReportsCollectionsQuery.getKey = (variables: GetReportsCollectionsQueryVariables) => ['GetReportsCollections.infinite', variables];
+
+
+useGetReportsCollectionsQuery.fetcher = (variables: GetReportsCollectionsQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetReportsCollectionsQuery, GetReportsCollectionsQueryVariables>(GetReportsCollectionsDocument, variables, options);
+
+export const GetReportsArAgingMembersDocument = `
+    query GetReportsARAgingMembers {
+  reportsARAgingMembers {
+    id
+    name
+    membershipNumber
+    invoiceCount
+    totalDue
+    oldestInvoice
+    daysOverdue
+    status
+  }
+}
+    `;
+
+export const useGetReportsArAgingMembersQuery = <
+      TData = GetReportsArAgingMembersQuery,
+      TError = unknown
+    >(
+      variables?: GetReportsArAgingMembersQueryVariables,
+      options?: Omit<UseQueryOptions<GetReportsArAgingMembersQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetReportsArAgingMembersQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetReportsArAgingMembersQuery, TError, TData>(
+      {
+    queryKey: variables === undefined ? ['GetReportsARAgingMembers'] : ['GetReportsARAgingMembers', variables],
+    queryFn: graphqlFetcher<GetReportsArAgingMembersQuery, GetReportsArAgingMembersQueryVariables>(GetReportsArAgingMembersDocument, variables),
+    ...options
+  }
+    )};
+
+useGetReportsArAgingMembersQuery.getKey = (variables?: GetReportsArAgingMembersQueryVariables) => variables === undefined ? ['GetReportsARAgingMembers'] : ['GetReportsARAgingMembers', variables];
+
+export const useInfiniteGetReportsArAgingMembersQuery = <
+      TData = InfiniteData<GetReportsArAgingMembersQuery>,
+      TError = unknown
+    >(
+      variables: GetReportsArAgingMembersQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetReportsArAgingMembersQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetReportsArAgingMembersQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetReportsArAgingMembersQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? variables === undefined ? ['GetReportsARAgingMembers.infinite'] : ['GetReportsARAgingMembers.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetReportsArAgingMembersQuery, GetReportsArAgingMembersQueryVariables>(GetReportsArAgingMembersDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetReportsArAgingMembersQuery.getKey = (variables?: GetReportsArAgingMembersQueryVariables) => variables === undefined ? ['GetReportsARAgingMembers.infinite'] : ['GetReportsARAgingMembers.infinite', variables];
+
+
+useGetReportsArAgingMembersQuery.fetcher = (variables?: GetReportsArAgingMembersQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetReportsArAgingMembersQuery, GetReportsArAgingMembersQueryVariables>(GetReportsArAgingMembersDocument, variables, options);
 
 export const GetReportsGolfUtilizationDocument = `
     query GetReportsGolfUtilization($startDate: String!, $endDate: String!) {

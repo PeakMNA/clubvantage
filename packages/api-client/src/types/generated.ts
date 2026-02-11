@@ -18,6 +18,18 @@ export type Scalars = {
   JSON: { input: any; output: any; }
 };
 
+export type ArAgingMemberType = {
+  __typename?: 'ARAgingMemberType';
+  daysOverdue: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  invoiceCount: Scalars['Int']['output'];
+  membershipNumber: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  oldestInvoice: Scalars['DateTime']['output'];
+  status: Scalars['String']['output'];
+  totalDue: Scalars['Float']['output'];
+};
+
 /** How AR periods are closed */
 export type ArCloseBehavior =
   | 'AUTO_AFTER_FINAL_RUN'
@@ -1546,6 +1558,15 @@ export type ClubProfileType = {
   subscriptionTier: Scalars['String']['output'];
   timezone?: Maybe<Scalars['String']['output']>;
   website?: Maybe<Scalars['String']['output']>;
+};
+
+export type CollectionMetricsType = {
+  __typename?: 'CollectionMetricsType';
+  avgDaysToPay: Scalars['Float']['output'];
+  collectedThisPeriod: Scalars['Float']['output'];
+  collectionRate: Scalars['Float']['output'];
+  paymentMethods: Array<PaymentMethodBreakdownType>;
+  vsLastPeriod?: Maybe<Scalars['Float']['output']>;
 };
 
 export type ContentPieceType = {
@@ -6408,6 +6429,12 @@ export type PaymentMethod =
   | 'MOBILE_PAYMENT'
   | 'OTHER';
 
+export type PaymentMethodBreakdownType = {
+  __typename?: 'PaymentMethodBreakdownType';
+  name: Scalars['String']['output'];
+  value: Scalars['Float']['output'];
+};
+
 /** Type of payment method */
 export type PaymentMethodTypeEnum =
   | 'ACCOUNT'
@@ -7072,6 +7099,10 @@ export type Query = {
   receiptHTML: Scalars['String']['output'];
   /** Get accounts receivable aging report */
   reportsARAging: ReportArAgingType;
+  /** Get AR aging member list */
+  reportsARAgingMembers: Array<ArAgingMemberType>;
+  /** Get collection performance metrics */
+  reportsCollections: CollectionMetricsType;
   /** Get dashboard statistics */
   reportsDashboard: DashboardStatsType;
   /** Get financial report for a date range */
@@ -7884,6 +7915,12 @@ export type QueryRateConfigArgs = {
 export type QueryReceiptHtmlArgs = {
   playerId: Scalars['ID']['input'];
   teeTimeId: Scalars['ID']['input'];
+};
+
+
+export type QueryReportsCollectionsArgs = {
+  endDate: Scalars['String']['input'];
+  startDate: Scalars['String']['input'];
 };
 
 
@@ -12610,6 +12647,19 @@ export type GetReportsArAgingQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type GetReportsArAgingQuery = { __typename?: 'Query', reportsARAging: { __typename?: 'ReportARAgingType', current: { __typename?: 'ReportAgingBucketType', amount: number, count: number }, days1to30: { __typename?: 'ReportAgingBucketType', amount: number, count: number }, days31to60: { __typename?: 'ReportAgingBucketType', amount: number, count: number }, days90Plus: { __typename?: 'ReportAgingBucketType', amount: number, count: number } } };
+
+export type GetReportsCollectionsQueryVariables = Exact<{
+  startDate: Scalars['String']['input'];
+  endDate: Scalars['String']['input'];
+}>;
+
+
+export type GetReportsCollectionsQuery = { __typename?: 'Query', reportsCollections: { __typename?: 'CollectionMetricsType', collectionRate: number, avgDaysToPay: number, collectedThisPeriod: number, vsLastPeriod?: number | null | undefined, paymentMethods: Array<{ __typename?: 'PaymentMethodBreakdownType', name: string, value: number }> } };
+
+export type GetReportsArAgingMembersQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetReportsArAgingMembersQuery = { __typename?: 'Query', reportsARAgingMembers: Array<{ __typename?: 'ARAgingMemberType', id: string, name: string, membershipNumber: string, invoiceCount: number, totalDue: number, oldestInvoice: string, daysOverdue: number, status: string }> };
 
 export type GetReportsGolfUtilizationQueryVariables = Exact<{
   startDate: Scalars['String']['input'];

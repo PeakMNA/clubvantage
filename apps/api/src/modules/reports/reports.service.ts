@@ -259,6 +259,170 @@ export class ReportsService {
     };
   }
 
+  async getCollectionMetrics(tenantId: string, startDate: string, endDate: string) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    // Previous period of same length for comparison
+    const periodMs = end.getTime() - start.getTime();
+    const prevStart = new Date(start.getTime() - periodMs);
+    const prevEnd = new Date(start.getTime());
+
+    const [
+      paymentTotal,
+      paymentsByMethod,
+      invoiceAgg,
+      prevPaymentTotal,
+    ] = await Promise.all([
+      this.prisma.payment.aggregate({
+        where: {
+          clubId: tenantId,
+          paymentDate: { gte: start, lte: end },
+        },
+        _sum: { amount: true },
+        _count: true,
+      }),
+      this.prisma.payment.groupBy({
+        by: ['method'],
+        where: {
+          clubId: tenantId,
+          paymentDate: { gte: start, lte: end },
+        },
+        _sum: { amount: true },
+      }),
+      this.prisma.invoice.aggregate({
+        where: {
+          clubId: tenantId,
+          invoiceDate: { gte: start, lte: end },
+          deletedAt: null,
+        },
+        _sum: { totalAmount: true, paidAmount: true },
+      }),
+      this.prisma.payment.aggregate({
+        where: {
+          clubId: tenantId,
+          paymentDate: { gte: prevStart, lte: prevEnd },
+        },
+        _sum: { amount: true },
+      }),
+    ]);
+
+    const totalInvoiced = invoiceAgg._sum.totalAmount?.toNumber() || 0;
+    const totalPaid = invoiceAgg._sum.paidAmount?.toNumber() || 0;
+    const collectionRate = totalInvoiced > 0 ? (totalPaid / totalInvoiced) * 100 : 0;
+
+    const collectedThisPeriod = paymentTotal._sum.amount?.toNumber() || 0;
+    const collectedLastPeriod = prevPaymentTotal._sum.amount?.toNumber() || 0;
+    const vsLastPeriod = collectedLastPeriod > 0
+      ? ((collectedThisPeriod - collectedLastPeriod) / collectedLastPeriod) * 100
+      : 0;
+
+    // Compute avg days to pay from invoices that were paid in this period
+    const paidInvoices = await this.prisma.invoice.findMany({
+      where: {
+        clubId: tenantId,
+        paidDate: { gte: start, lte: end },
+        deletedAt: null,
+      },
+      select: { invoiceDate: true, paidDate: true },
+    });
+
+    let avgDaysToPay = 0;
+    if (paidInvoices.length > 0) {
+      const totalDays = paidInvoices.reduce((sum, inv) => {
+        const days = Math.ceil(
+          (inv.paidDate!.getTime() - inv.invoiceDate.getTime()) / (1000 * 60 * 60 * 24),
+        );
+        return sum + Math.max(0, days);
+      }, 0);
+      avgDaysToPay = totalDays / paidInvoices.length;
+    }
+
+    const paymentMethods = paymentsByMethod.map((entry) => ({
+      name: entry.method,
+      value: entry._sum.amount?.toNumber() || 0,
+    }));
+
+    return {
+      collectionRate,
+      avgDaysToPay,
+      collectedThisPeriod,
+      vsLastPeriod,
+      paymentMethods,
+    };
+  }
+
+  async getARAgingMembers(tenantId: string) {
+    const now = new Date();
+    const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+
+    const membersWithUnpaid = await this.prisma.member.findMany({
+      where: {
+        clubId: tenantId,
+        deletedAt: null,
+        invoices: {
+          some: {
+            balanceDue: { gt: 0 },
+            deletedAt: null,
+          },
+        },
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        memberId: true,
+        status: true,
+        invoices: {
+          where: {
+            balanceDue: { gt: 0 },
+            deletedAt: null,
+          },
+          select: {
+            balanceDue: true,
+            dueDate: true,
+          },
+          orderBy: { dueDate: 'asc' },
+        },
+      },
+    });
+
+    const agingMembers = membersWithUnpaid
+      .map((member) => {
+        const totalDue = member.invoices.reduce(
+          (sum, inv) => sum + (inv.balanceDue?.toNumber() || 0),
+          0,
+        );
+        const oldestInvoice = member.invoices[0]?.dueDate ?? now;
+        const daysOverdue = Math.max(
+          0,
+          Math.ceil((now.getTime() - oldestInvoice.getTime()) / (1000 * 60 * 60 * 24)),
+        );
+
+        let status: string;
+        if (daysOverdue === 0) status = 'CURRENT';
+        else if (daysOverdue <= 30) status = 'DAYS_30';
+        else if (daysOverdue <= 60) status = 'DAYS_60';
+        else if (daysOverdue <= 90) status = 'DAYS_90';
+        else status = 'SUSPENDED';
+
+        return {
+          id: member.id,
+          name: `${member.firstName} ${member.lastName}`,
+          membershipNumber: member.memberId,
+          invoiceCount: member.invoices.length,
+          totalDue,
+          oldestInvoice,
+          daysOverdue,
+          status,
+        };
+      })
+      .sort((a, b) => b.totalDue - a.totalDue)
+      .slice(0, 50);
+
+    return agingMembers;
+  }
+
   async getGolfUtilizationReport(tenantId: string, startDate: string, endDate: string) {
     const start = new Date(startDate);
     const end = new Date(endDate);

@@ -1,4 +1,4 @@
-import { ObjectType, Field, Float, Int } from '@nestjs/graphql';
+import { ObjectType, Field, Float, Int, ID } from '@nestjs/graphql';
 import GraphQLJSON from 'graphql-type-json';
 
 // Dashboard Stats Types
@@ -135,6 +135,62 @@ export class ReportARAgingType {
 
   @Field(() => ReportAgingBucketType, { name: 'days90Plus' })
   '90+': ReportAgingBucketType;
+}
+
+// Collection Metrics Types
+@ObjectType()
+export class PaymentMethodBreakdownType {
+  @Field()
+  name: string;
+
+  @Field(() => Float)
+  value: number;
+}
+
+@ObjectType()
+export class CollectionMetricsType {
+  @Field(() => Float)
+  collectionRate: number;
+
+  @Field(() => Float)
+  avgDaysToPay: number;
+
+  @Field(() => Float)
+  collectedThisPeriod: number;
+
+  @Field(() => Float, { nullable: true })
+  vsLastPeriod?: number;
+
+  @Field(() => [PaymentMethodBreakdownType])
+  paymentMethods: PaymentMethodBreakdownType[];
+}
+
+// AR Aging Member Types
+@ObjectType()
+export class ARAgingMemberType {
+  @Field(() => ID)
+  id: string;
+
+  @Field()
+  name: string;
+
+  @Field()
+  membershipNumber: string;
+
+  @Field(() => Int)
+  invoiceCount: number;
+
+  @Field(() => Float)
+  totalDue: number;
+
+  @Field()
+  oldestInvoice: Date;
+
+  @Field(() => Int)
+  daysOverdue: number;
+
+  @Field()
+  status: string;
 }
 
 // Golf Utilization Report Types

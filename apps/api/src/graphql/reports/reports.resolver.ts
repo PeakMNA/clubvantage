@@ -10,6 +10,8 @@ import {
   MembershipReportType,
   ReportARAgingType,
   GolfUtilizationReportType,
+  CollectionMetricsType,
+  ARAgingMemberType,
 } from './reports.types';
 
 @Resolver()
@@ -45,6 +47,22 @@ export class ReportsResolver {
     @GqlCurrentUser() user: JwtPayload,
   ): Promise<ReportARAgingType> {
     return this.reportsService.getARAgingReport(user.tenantId);
+  }
+
+  @Query(() => CollectionMetricsType, { name: 'reportsCollections', description: 'Get collection performance metrics' })
+  async getCollectionMetrics(
+    @GqlCurrentUser() user: JwtPayload,
+    @Args('startDate') startDate: string,
+    @Args('endDate') endDate: string,
+  ): Promise<CollectionMetricsType> {
+    return this.reportsService.getCollectionMetrics(user.tenantId, startDate, endDate);
+  }
+
+  @Query(() => [ARAgingMemberType], { name: 'reportsARAgingMembers', description: 'Get AR aging member list' })
+  async getARAgingMembers(
+    @GqlCurrentUser() user: JwtPayload,
+  ): Promise<ARAgingMemberType[]> {
+    return this.reportsService.getARAgingMembers(user.tenantId);
   }
 
   @Query(() => GolfUtilizationReportType, { name: 'reportsGolfUtilization', description: 'Get golf utilization report for a date range' })
