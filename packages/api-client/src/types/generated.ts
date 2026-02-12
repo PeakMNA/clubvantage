@@ -1530,6 +1530,15 @@ export type ClubBillingSettingsType = {
   whtRates: Scalars['JSON']['output'];
 };
 
+export type ClubFeatureFlagsSummaryType = {
+  __typename?: 'ClubFeatureFlagsSummaryType';
+  clubId: Scalars['ID']['output'];
+  clubName: Scalars['String']['output'];
+  flags: FeatureFlagsType;
+  hasOperationalOverrides: Scalars['Boolean']['output'];
+  subscriptionTier: Scalars['String']['output'];
+};
+
 export type ClubGolfSettingsType = {
   __typename?: 'ClubGolfSettingsType';
   caddyDrivesCart: Scalars['Boolean']['output'];
@@ -4522,6 +4531,7 @@ export type Mutation = {
   updateCheckInPolicy: CheckInSettingsType;
   /** Update club-wide billing configuration settings */
   updateClubBillingSettings: ClubBillingSettingsType;
+  updateClubOperationalFlag: FeatureFlagsType;
   updateClubProfile: ClubProfileType;
   /** Update a course schedule */
   updateCourseSchedule: ScheduleMutationResponse;
@@ -5801,6 +5811,13 @@ export type MutationUpdateClubBillingSettingsArgs = {
 };
 
 
+export type MutationUpdateClubOperationalFlagArgs = {
+  clubId: Scalars['ID']['input'];
+  key: Scalars['String']['input'];
+  value: Scalars['Boolean']['input'];
+};
+
+
 export type MutationUpdateClubProfileArgs = {
   input: UpdateClubProfileInput;
 };
@@ -6821,6 +6838,7 @@ export type Query = {
   activeDiscounts: Array<DiscountGraphQlType>;
   /** Get active schedule for a course and date */
   activeSchedule?: Maybe<GolfCourseScheduleType>;
+  allClubFeatureFlags: Array<ClubFeatureFlagsSummaryType>;
   /** Get a single membership application by ID */
   application: MembershipApplicationType;
   /** Get application statistics */
@@ -6875,6 +6893,7 @@ export type Query = {
   closeChecklist?: Maybe<CloseChecklistGqlType>;
   /** Get club-wide billing configuration settings */
   clubBillingSettings: ClubBillingSettingsType;
+  clubFeatureFlags: FeatureFlagsType;
   /** Get club golf settings including cart, rental, and caddy policies */
   clubGolfSettings?: Maybe<ClubGolfSettingsType>;
   clubProfile: ClubProfileType;
@@ -7171,6 +7190,7 @@ export type Query = {
   teeTimesWithDrafts: Array<Scalars['ID']['output']>;
   /** Get HTML template for a starter ticket */
   ticketHTML: Scalars['String']['output'];
+  tierDefaults: Array<TierDefaultsType>;
   /** Get today's settlement for the current club */
   todaySettlement?: Maybe<DailySettlementGraphQlType>;
   /** Get discounts applied to a transaction */
@@ -7341,6 +7361,11 @@ export type QueryCityLedgerStatementsArgs = {
 
 export type QueryCloseChecklistArgs = {
   periodId: Scalars['ID']['input'];
+};
+
+
+export type QueryClubFeatureFlagsArgs = {
+  clubId: Scalars['ID']['input'];
 };
 
 
@@ -9392,6 +9417,12 @@ export type TicketValidationResultType = {
   teeTimeId?: Maybe<Scalars['ID']['output']>;
   ticketId?: Maybe<Scalars['ID']['output']>;
   valid: Scalars['Boolean']['output'];
+};
+
+export type TierDefaultsType = {
+  __typename?: 'TierDefaultsType';
+  flags: FeatureFlagsType;
+  tier: Scalars['String']['output'];
 };
 
 export type TierDiscountInput = {
@@ -11640,6 +11671,32 @@ export type UpdateOperationalFlagMutationVariables = Exact<{
 
 
 export type UpdateOperationalFlagMutation = { __typename?: 'Mutation', updateOperationalFlag: { __typename?: 'FeatureFlagsType', modules: { __typename?: 'ModuleFlagsType', golf: boolean, bookings: boolean, billing: boolean, marketing: boolean, pos: boolean, reports: boolean }, features: { __typename?: 'FeatureLevelFlagsType', golfLottery: boolean, memberWindows: boolean, aiDynamicPricing: boolean, automatedFlows: boolean, memberPricing: boolean, houseAccounts: boolean, whiteLabelApp: boolean, customDomain: boolean }, operational: { __typename?: 'OperationalFlagsType', maintenanceMode: boolean, newMemberRegistration: boolean, onlineBooking: boolean, emailCampaigns: boolean } } };
+
+export type GetClubFeatureFlagsQueryVariables = Exact<{
+  clubId: Scalars['ID']['input'];
+}>;
+
+
+export type GetClubFeatureFlagsQuery = { __typename?: 'Query', clubFeatureFlags: { __typename?: 'FeatureFlagsType', modules: { __typename?: 'ModuleFlagsType', golf: boolean, bookings: boolean, billing: boolean, marketing: boolean, pos: boolean, reports: boolean }, features: { __typename?: 'FeatureLevelFlagsType', golfLottery: boolean, memberWindows: boolean, aiDynamicPricing: boolean, automatedFlows: boolean, memberPricing: boolean, houseAccounts: boolean, whiteLabelApp: boolean, customDomain: boolean }, operational: { __typename?: 'OperationalFlagsType', maintenanceMode: boolean, newMemberRegistration: boolean, onlineBooking: boolean, emailCampaigns: boolean } } };
+
+export type GetAllClubFeatureFlagsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetAllClubFeatureFlagsQuery = { __typename?: 'Query', allClubFeatureFlags: Array<{ __typename?: 'ClubFeatureFlagsSummaryType', clubId: string, clubName: string, subscriptionTier: string, hasOperationalOverrides: boolean, flags: { __typename?: 'FeatureFlagsType', modules: { __typename?: 'ModuleFlagsType', golf: boolean, bookings: boolean, billing: boolean, marketing: boolean, pos: boolean, reports: boolean }, features: { __typename?: 'FeatureLevelFlagsType', golfLottery: boolean, memberWindows: boolean, aiDynamicPricing: boolean, automatedFlows: boolean, memberPricing: boolean, houseAccounts: boolean, whiteLabelApp: boolean, customDomain: boolean }, operational: { __typename?: 'OperationalFlagsType', maintenanceMode: boolean, newMemberRegistration: boolean, onlineBooking: boolean, emailCampaigns: boolean } } }> };
+
+export type GetTierDefaultsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetTierDefaultsQuery = { __typename?: 'Query', tierDefaults: Array<{ __typename?: 'TierDefaultsType', tier: string, flags: { __typename?: 'FeatureFlagsType', modules: { __typename?: 'ModuleFlagsType', golf: boolean, bookings: boolean, billing: boolean, marketing: boolean, pos: boolean, reports: boolean }, features: { __typename?: 'FeatureLevelFlagsType', golfLottery: boolean, memberWindows: boolean, aiDynamicPricing: boolean, automatedFlows: boolean, memberPricing: boolean, houseAccounts: boolean, whiteLabelApp: boolean, customDomain: boolean }, operational: { __typename?: 'OperationalFlagsType', maintenanceMode: boolean, newMemberRegistration: boolean, onlineBooking: boolean, emailCampaigns: boolean } } }> };
+
+export type UpdateClubOperationalFlagMutationVariables = Exact<{
+  clubId: Scalars['ID']['input'];
+  key: Scalars['String']['input'];
+  value: Scalars['Boolean']['input'];
+}>;
+
+
+export type UpdateClubOperationalFlagMutation = { __typename?: 'Mutation', updateClubOperationalFlag: { __typename?: 'FeatureFlagsType', modules: { __typename?: 'ModuleFlagsType', golf: boolean, bookings: boolean, billing: boolean, marketing: boolean, pos: boolean, reports: boolean }, features: { __typename?: 'FeatureLevelFlagsType', golfLottery: boolean, memberWindows: boolean, aiDynamicPricing: boolean, automatedFlows: boolean, memberPricing: boolean, houseAccounts: boolean, whiteLabelApp: boolean, customDomain: boolean }, operational: { __typename?: 'OperationalFlagsType', maintenanceMode: boolean, newMemberRegistration: boolean, onlineBooking: boolean, emailCampaigns: boolean } } };
 
 export type GetTeeSheetQueryVariables = Exact<{
   courseId: Scalars['ID']['input'];

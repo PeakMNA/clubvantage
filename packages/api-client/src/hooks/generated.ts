@@ -1534,6 +1534,15 @@ export type ClubBillingSettingsType = {
   whtRates: Scalars['JSON']['output'];
 };
 
+export type ClubFeatureFlagsSummaryType = {
+  __typename?: 'ClubFeatureFlagsSummaryType';
+  clubId: Scalars['ID']['output'];
+  clubName: Scalars['String']['output'];
+  flags: FeatureFlagsType;
+  hasOperationalOverrides: Scalars['Boolean']['output'];
+  subscriptionTier: Scalars['String']['output'];
+};
+
 export type ClubGolfSettingsType = {
   __typename?: 'ClubGolfSettingsType';
   caddyDrivesCart: Scalars['Boolean']['output'];
@@ -4526,6 +4535,7 @@ export type Mutation = {
   updateCheckInPolicy: CheckInSettingsType;
   /** Update club-wide billing configuration settings */
   updateClubBillingSettings: ClubBillingSettingsType;
+  updateClubOperationalFlag: FeatureFlagsType;
   updateClubProfile: ClubProfileType;
   /** Update a course schedule */
   updateCourseSchedule: ScheduleMutationResponse;
@@ -5805,6 +5815,13 @@ export type MutationUpdateClubBillingSettingsArgs = {
 };
 
 
+export type MutationUpdateClubOperationalFlagArgs = {
+  clubId: Scalars['ID']['input'];
+  key: Scalars['String']['input'];
+  value: Scalars['Boolean']['input'];
+};
+
+
 export type MutationUpdateClubProfileArgs = {
   input: UpdateClubProfileInput;
 };
@@ -6825,6 +6842,7 @@ export type Query = {
   activeDiscounts: Array<DiscountGraphQlType>;
   /** Get active schedule for a course and date */
   activeSchedule?: Maybe<GolfCourseScheduleType>;
+  allClubFeatureFlags: Array<ClubFeatureFlagsSummaryType>;
   /** Get a single membership application by ID */
   application: MembershipApplicationType;
   /** Get application statistics */
@@ -6879,6 +6897,7 @@ export type Query = {
   closeChecklist?: Maybe<CloseChecklistGqlType>;
   /** Get club-wide billing configuration settings */
   clubBillingSettings: ClubBillingSettingsType;
+  clubFeatureFlags: FeatureFlagsType;
   /** Get club golf settings including cart, rental, and caddy policies */
   clubGolfSettings?: Maybe<ClubGolfSettingsType>;
   clubProfile: ClubProfileType;
@@ -7175,6 +7194,7 @@ export type Query = {
   teeTimesWithDrafts: Array<Scalars['ID']['output']>;
   /** Get HTML template for a starter ticket */
   ticketHTML: Scalars['String']['output'];
+  tierDefaults: Array<TierDefaultsType>;
   /** Get today's settlement for the current club */
   todaySettlement?: Maybe<DailySettlementGraphQlType>;
   /** Get discounts applied to a transaction */
@@ -7345,6 +7365,11 @@ export type QueryCityLedgerStatementsArgs = {
 
 export type QueryCloseChecklistArgs = {
   periodId: Scalars['ID']['input'];
+};
+
+
+export type QueryClubFeatureFlagsArgs = {
+  clubId: Scalars['ID']['input'];
 };
 
 
@@ -9396,6 +9421,12 @@ export type TicketValidationResultType = {
   teeTimeId?: Maybe<Scalars['ID']['output']>;
   ticketId?: Maybe<Scalars['ID']['output']>;
   valid: Scalars['Boolean']['output'];
+};
+
+export type TierDefaultsType = {
+  __typename?: 'TierDefaultsType';
+  flags: FeatureFlagsType;
+  tier: Scalars['String']['output'];
 };
 
 export type TierDiscountInput = {
@@ -11644,6 +11675,32 @@ export type UpdateOperationalFlagMutationVariables = Exact<{
 
 
 export type UpdateOperationalFlagMutation = { __typename?: 'Mutation', updateOperationalFlag: { __typename?: 'FeatureFlagsType', modules: { __typename?: 'ModuleFlagsType', golf: boolean, bookings: boolean, billing: boolean, marketing: boolean, pos: boolean, reports: boolean }, features: { __typename?: 'FeatureLevelFlagsType', golfLottery: boolean, memberWindows: boolean, aiDynamicPricing: boolean, automatedFlows: boolean, memberPricing: boolean, houseAccounts: boolean, whiteLabelApp: boolean, customDomain: boolean }, operational: { __typename?: 'OperationalFlagsType', maintenanceMode: boolean, newMemberRegistration: boolean, onlineBooking: boolean, emailCampaigns: boolean } } };
+
+export type GetClubFeatureFlagsQueryVariables = Exact<{
+  clubId: Scalars['ID']['input'];
+}>;
+
+
+export type GetClubFeatureFlagsQuery = { __typename?: 'Query', clubFeatureFlags: { __typename?: 'FeatureFlagsType', modules: { __typename?: 'ModuleFlagsType', golf: boolean, bookings: boolean, billing: boolean, marketing: boolean, pos: boolean, reports: boolean }, features: { __typename?: 'FeatureLevelFlagsType', golfLottery: boolean, memberWindows: boolean, aiDynamicPricing: boolean, automatedFlows: boolean, memberPricing: boolean, houseAccounts: boolean, whiteLabelApp: boolean, customDomain: boolean }, operational: { __typename?: 'OperationalFlagsType', maintenanceMode: boolean, newMemberRegistration: boolean, onlineBooking: boolean, emailCampaigns: boolean } } };
+
+export type GetAllClubFeatureFlagsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetAllClubFeatureFlagsQuery = { __typename?: 'Query', allClubFeatureFlags: Array<{ __typename?: 'ClubFeatureFlagsSummaryType', clubId: string, clubName: string, subscriptionTier: string, hasOperationalOverrides: boolean, flags: { __typename?: 'FeatureFlagsType', modules: { __typename?: 'ModuleFlagsType', golf: boolean, bookings: boolean, billing: boolean, marketing: boolean, pos: boolean, reports: boolean }, features: { __typename?: 'FeatureLevelFlagsType', golfLottery: boolean, memberWindows: boolean, aiDynamicPricing: boolean, automatedFlows: boolean, memberPricing: boolean, houseAccounts: boolean, whiteLabelApp: boolean, customDomain: boolean }, operational: { __typename?: 'OperationalFlagsType', maintenanceMode: boolean, newMemberRegistration: boolean, onlineBooking: boolean, emailCampaigns: boolean } } }> };
+
+export type GetTierDefaultsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetTierDefaultsQuery = { __typename?: 'Query', tierDefaults: Array<{ __typename?: 'TierDefaultsType', tier: string, flags: { __typename?: 'FeatureFlagsType', modules: { __typename?: 'ModuleFlagsType', golf: boolean, bookings: boolean, billing: boolean, marketing: boolean, pos: boolean, reports: boolean }, features: { __typename?: 'FeatureLevelFlagsType', golfLottery: boolean, memberWindows: boolean, aiDynamicPricing: boolean, automatedFlows: boolean, memberPricing: boolean, houseAccounts: boolean, whiteLabelApp: boolean, customDomain: boolean }, operational: { __typename?: 'OperationalFlagsType', maintenanceMode: boolean, newMemberRegistration: boolean, onlineBooking: boolean, emailCampaigns: boolean } } }> };
+
+export type UpdateClubOperationalFlagMutationVariables = Exact<{
+  clubId: Scalars['ID']['input'];
+  key: Scalars['String']['input'];
+  value: Scalars['Boolean']['input'];
+}>;
+
+
+export type UpdateClubOperationalFlagMutation = { __typename?: 'Mutation', updateClubOperationalFlag: { __typename?: 'FeatureFlagsType', modules: { __typename?: 'ModuleFlagsType', golf: boolean, bookings: boolean, billing: boolean, marketing: boolean, pos: boolean, reports: boolean }, features: { __typename?: 'FeatureLevelFlagsType', golfLottery: boolean, memberWindows: boolean, aiDynamicPricing: boolean, automatedFlows: boolean, memberPricing: boolean, houseAccounts: boolean, whiteLabelApp: boolean, customDomain: boolean }, operational: { __typename?: 'OperationalFlagsType', maintenanceMode: boolean, newMemberRegistration: boolean, onlineBooking: boolean, emailCampaigns: boolean } } };
 
 export type GetTeeSheetQueryVariables = Exact<{
   courseId: Scalars['ID']['input'];
@@ -21145,6 +21202,281 @@ export const useUpdateOperationalFlagMutation = <
 
 
 useUpdateOperationalFlagMutation.fetcher = (variables: UpdateOperationalFlagMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<UpdateOperationalFlagMutation, UpdateOperationalFlagMutationVariables>(UpdateOperationalFlagDocument, variables, options);
+
+export const GetClubFeatureFlagsDocument = `
+    query GetClubFeatureFlags($clubId: ID!) {
+  clubFeatureFlags(clubId: $clubId) {
+    modules {
+      golf
+      bookings
+      billing
+      marketing
+      pos
+      reports
+    }
+    features {
+      golfLottery
+      memberWindows
+      aiDynamicPricing
+      automatedFlows
+      memberPricing
+      houseAccounts
+      whiteLabelApp
+      customDomain
+    }
+    operational {
+      maintenanceMode
+      newMemberRegistration
+      onlineBooking
+      emailCampaigns
+    }
+  }
+}
+    `;
+
+export const useGetClubFeatureFlagsQuery = <
+      TData = GetClubFeatureFlagsQuery,
+      TError = unknown
+    >(
+      variables: GetClubFeatureFlagsQueryVariables,
+      options?: Omit<UseQueryOptions<GetClubFeatureFlagsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetClubFeatureFlagsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetClubFeatureFlagsQuery, TError, TData>(
+      {
+    queryKey: ['GetClubFeatureFlags', variables],
+    queryFn: graphqlFetcher<GetClubFeatureFlagsQuery, GetClubFeatureFlagsQueryVariables>(GetClubFeatureFlagsDocument, variables),
+    ...options
+  }
+    )};
+
+useGetClubFeatureFlagsQuery.getKey = (variables: GetClubFeatureFlagsQueryVariables) => ['GetClubFeatureFlags', variables];
+
+export const useInfiniteGetClubFeatureFlagsQuery = <
+      TData = InfiniteData<GetClubFeatureFlagsQuery>,
+      TError = unknown
+    >(
+      variables: GetClubFeatureFlagsQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetClubFeatureFlagsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetClubFeatureFlagsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetClubFeatureFlagsQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? ['GetClubFeatureFlags.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetClubFeatureFlagsQuery, GetClubFeatureFlagsQueryVariables>(GetClubFeatureFlagsDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetClubFeatureFlagsQuery.getKey = (variables: GetClubFeatureFlagsQueryVariables) => ['GetClubFeatureFlags.infinite', variables];
+
+
+useGetClubFeatureFlagsQuery.fetcher = (variables: GetClubFeatureFlagsQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetClubFeatureFlagsQuery, GetClubFeatureFlagsQueryVariables>(GetClubFeatureFlagsDocument, variables, options);
+
+export const GetAllClubFeatureFlagsDocument = `
+    query GetAllClubFeatureFlags {
+  allClubFeatureFlags {
+    clubId
+    clubName
+    subscriptionTier
+    hasOperationalOverrides
+    flags {
+      modules {
+        golf
+        bookings
+        billing
+        marketing
+        pos
+        reports
+      }
+      features {
+        golfLottery
+        memberWindows
+        aiDynamicPricing
+        automatedFlows
+        memberPricing
+        houseAccounts
+        whiteLabelApp
+        customDomain
+      }
+      operational {
+        maintenanceMode
+        newMemberRegistration
+        onlineBooking
+        emailCampaigns
+      }
+    }
+  }
+}
+    `;
+
+export const useGetAllClubFeatureFlagsQuery = <
+      TData = GetAllClubFeatureFlagsQuery,
+      TError = unknown
+    >(
+      variables?: GetAllClubFeatureFlagsQueryVariables,
+      options?: Omit<UseQueryOptions<GetAllClubFeatureFlagsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetAllClubFeatureFlagsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetAllClubFeatureFlagsQuery, TError, TData>(
+      {
+    queryKey: variables === undefined ? ['GetAllClubFeatureFlags'] : ['GetAllClubFeatureFlags', variables],
+    queryFn: graphqlFetcher<GetAllClubFeatureFlagsQuery, GetAllClubFeatureFlagsQueryVariables>(GetAllClubFeatureFlagsDocument, variables),
+    ...options
+  }
+    )};
+
+useGetAllClubFeatureFlagsQuery.getKey = (variables?: GetAllClubFeatureFlagsQueryVariables) => variables === undefined ? ['GetAllClubFeatureFlags'] : ['GetAllClubFeatureFlags', variables];
+
+export const useInfiniteGetAllClubFeatureFlagsQuery = <
+      TData = InfiniteData<GetAllClubFeatureFlagsQuery>,
+      TError = unknown
+    >(
+      variables: GetAllClubFeatureFlagsQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetAllClubFeatureFlagsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetAllClubFeatureFlagsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetAllClubFeatureFlagsQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? variables === undefined ? ['GetAllClubFeatureFlags.infinite'] : ['GetAllClubFeatureFlags.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetAllClubFeatureFlagsQuery, GetAllClubFeatureFlagsQueryVariables>(GetAllClubFeatureFlagsDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetAllClubFeatureFlagsQuery.getKey = (variables?: GetAllClubFeatureFlagsQueryVariables) => variables === undefined ? ['GetAllClubFeatureFlags.infinite'] : ['GetAllClubFeatureFlags.infinite', variables];
+
+
+useGetAllClubFeatureFlagsQuery.fetcher = (variables?: GetAllClubFeatureFlagsQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetAllClubFeatureFlagsQuery, GetAllClubFeatureFlagsQueryVariables>(GetAllClubFeatureFlagsDocument, variables, options);
+
+export const GetTierDefaultsDocument = `
+    query GetTierDefaults {
+  tierDefaults {
+    tier
+    flags {
+      modules {
+        golf
+        bookings
+        billing
+        marketing
+        pos
+        reports
+      }
+      features {
+        golfLottery
+        memberWindows
+        aiDynamicPricing
+        automatedFlows
+        memberPricing
+        houseAccounts
+        whiteLabelApp
+        customDomain
+      }
+      operational {
+        maintenanceMode
+        newMemberRegistration
+        onlineBooking
+        emailCampaigns
+      }
+    }
+  }
+}
+    `;
+
+export const useGetTierDefaultsQuery = <
+      TData = GetTierDefaultsQuery,
+      TError = unknown
+    >(
+      variables?: GetTierDefaultsQueryVariables,
+      options?: Omit<UseQueryOptions<GetTierDefaultsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseQueryOptions<GetTierDefaultsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useQuery<GetTierDefaultsQuery, TError, TData>(
+      {
+    queryKey: variables === undefined ? ['GetTierDefaults'] : ['GetTierDefaults', variables],
+    queryFn: graphqlFetcher<GetTierDefaultsQuery, GetTierDefaultsQueryVariables>(GetTierDefaultsDocument, variables),
+    ...options
+  }
+    )};
+
+useGetTierDefaultsQuery.getKey = (variables?: GetTierDefaultsQueryVariables) => variables === undefined ? ['GetTierDefaults'] : ['GetTierDefaults', variables];
+
+export const useInfiniteGetTierDefaultsQuery = <
+      TData = InfiniteData<GetTierDefaultsQuery>,
+      TError = unknown
+    >(
+      variables: GetTierDefaultsQueryVariables,
+      options: Omit<UseInfiniteQueryOptions<GetTierDefaultsQuery, TError, TData>, 'queryKey'> & { queryKey?: UseInfiniteQueryOptions<GetTierDefaultsQuery, TError, TData>['queryKey'] }
+    ) => {
+    
+    return useInfiniteQuery<GetTierDefaultsQuery, TError, TData>(
+      (() => {
+    const { queryKey: optionsQueryKey, ...restOptions } = options;
+    return {
+      queryKey: optionsQueryKey ?? variables === undefined ? ['GetTierDefaults.infinite'] : ['GetTierDefaults.infinite', variables],
+      queryFn: (metaData) => graphqlFetcher<GetTierDefaultsQuery, GetTierDefaultsQueryVariables>(GetTierDefaultsDocument, {...variables, ...(metaData.pageParam ?? {})})(),
+      ...restOptions
+    }
+  })()
+    )};
+
+useInfiniteGetTierDefaultsQuery.getKey = (variables?: GetTierDefaultsQueryVariables) => variables === undefined ? ['GetTierDefaults.infinite'] : ['GetTierDefaults.infinite', variables];
+
+
+useGetTierDefaultsQuery.fetcher = (variables?: GetTierDefaultsQueryVariables, options?: RequestInit['headers']) => graphqlFetcher<GetTierDefaultsQuery, GetTierDefaultsQueryVariables>(GetTierDefaultsDocument, variables, options);
+
+export const UpdateClubOperationalFlagDocument = `
+    mutation UpdateClubOperationalFlag($clubId: ID!, $key: String!, $value: Boolean!) {
+  updateClubOperationalFlag(clubId: $clubId, key: $key, value: $value) {
+    modules {
+      golf
+      bookings
+      billing
+      marketing
+      pos
+      reports
+    }
+    features {
+      golfLottery
+      memberWindows
+      aiDynamicPricing
+      automatedFlows
+      memberPricing
+      houseAccounts
+      whiteLabelApp
+      customDomain
+    }
+    operational {
+      maintenanceMode
+      newMemberRegistration
+      onlineBooking
+      emailCampaigns
+    }
+  }
+}
+    `;
+
+export const useUpdateClubOperationalFlagMutation = <
+      TError = unknown,
+      TContext = unknown
+    >(options?: UseMutationOptions<UpdateClubOperationalFlagMutation, TError, UpdateClubOperationalFlagMutationVariables, TContext>) => {
+    
+    return useMutation<UpdateClubOperationalFlagMutation, TError, UpdateClubOperationalFlagMutationVariables, TContext>(
+      {
+    mutationKey: ['UpdateClubOperationalFlag'],
+    mutationFn: (variables?: UpdateClubOperationalFlagMutationVariables) => graphqlFetcher<UpdateClubOperationalFlagMutation, UpdateClubOperationalFlagMutationVariables>(UpdateClubOperationalFlagDocument, variables)(),
+    ...options
+  }
+    )};
+
+
+useUpdateClubOperationalFlagMutation.fetcher = (variables: UpdateClubOperationalFlagMutationVariables, options?: RequestInit['headers']) => graphqlFetcher<UpdateClubOperationalFlagMutation, UpdateClubOperationalFlagMutationVariables>(UpdateClubOperationalFlagDocument, variables, options);
 
 export const GetTeeSheetDocument = `
     query GetTeeSheet($courseId: ID!, $date: DateTime!) {

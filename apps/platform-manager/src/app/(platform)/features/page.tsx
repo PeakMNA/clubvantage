@@ -1,365 +1,273 @@
 'use client';
 
 import * as React from 'react';
-import { Plus, MessageSquare, ThumbsUp, Clock, CheckCircle2 } from 'lucide-react';
+import { ToggleLeft, Check, X, AlertTriangle } from 'lucide-react';
+import Link from 'next/link';
 import { PageHeader, Section } from '@/components/layout';
-import { Button, Badge, Card, CardContent } from '@/components/ui';
-import {
-  DataTable,
-  ColumnDef,
-  StatusBadge,
-  KPICard,
-  KPIGrid,
-} from '@/components/data';
+import { Card, CardContent } from '@/components/ui';
+import { DataTable, ColumnDef, KPICard, KPIGrid, TierBadge } from '@/components/data';
+import { useAllClubFeatureFlags, useTierDefaults } from '@/hooks/use-feature-flags';
+import { getFeatureFlagLabel, getFeatureFlagsByCategory } from '@/lib/feature-flag-labels';
 import { cn } from '@/lib/utils';
 
-// Mock feature data
-interface Feature {
-  id: string;
-  rank: number;
-  title: string;
-  description: string;
-  category: string;
-  votes: number;
-  comments: number;
-  status: 'considering' | 'planned' | 'in_progress' | 'completed';
-  eta?: string;
-}
+export default function FeatureFlagsPage() {
+  const { data: clubsData, isLoading: clubsLoading } = useAllClubFeatureFlags();
+  const { data: tierData, isLoading: tierLoading } = useTierDefaults();
 
-const mockFeatures: Feature[] = [
-  {
-    id: '1',
-    rank: 1,
-    title: 'Mobile App for Members',
-    description: 'Native iOS and Android app for members to manage bookings and view statements',
-    category: 'Portal',
-    votes: 247,
-    comments: 34,
-    status: 'planned',
-    eta: 'Q2 2026',
-  },
-  {
-    id: '2',
-    rank: 2,
-    title: 'Golf Tee Sheet Management',
-    description: 'Visual tee sheet with drag-drop booking and caddie assignment',
-    category: 'Golf',
-    votes: 203,
-    comments: 41,
-    status: 'in_progress',
-    eta: 'Q1 2026',
-  },
-  {
-    id: '3',
-    rank: 3,
-    title: 'Payment Reminders',
-    description: 'Automated payment reminder emails before due date',
-    category: 'Billing',
-    votes: 189,
-    comments: 22,
-    status: 'in_progress',
-  },
-  {
-    id: '4',
-    rank: 4,
-    title: 'Xero Integration',
-    description: 'Two-way sync with Xero accounting software',
-    category: 'Integrations',
-    votes: 134,
-    comments: 27,
-    status: 'planned',
-    eta: 'Q2 2026',
-  },
-  {
-    id: '5',
-    rank: 5,
-    title: 'Multi-Language Support',
-    description: 'Full localization for Thai, Chinese, and Malay',
-    category: 'Platform',
-    votes: 98,
-    comments: 15,
-    status: 'considering',
-  },
-  {
-    id: '6',
-    rank: 6,
-    title: 'Member Portal Dark Mode',
-    description: 'Dark theme option for member portal',
-    category: 'Portal',
-    votes: 76,
-    comments: 8,
-    status: 'completed',
-  },
-  {
-    id: '7',
-    rank: 7,
-    title: 'Bulk Invoice Generation',
-    description: 'Generate invoices for multiple members at once',
-    category: 'Billing',
-    votes: 65,
-    comments: 12,
-    status: 'completed',
-  },
-];
+  const clubs = clubsData?.allClubFeatureFlags || [];
+  const tiers = tierData?.tierDefaults || [];
 
-// Category colors
-const categoryColors: Record<string, string> = {
-  Portal: 'bg-blue-100 text-blue-800',
-  Golf: 'bg-emerald-100 text-emerald-800',
-  Billing: 'bg-amber-100 text-amber-800',
-  Integrations: 'bg-purple-100 text-purple-800',
-  Platform: 'bg-slate-100 text-slate-800',
-};
-
-// Status tabs
-const statusTabs = [
-  { id: 'all', label: 'All Features' },
-  { id: 'considering', label: 'Considering' },
-  { id: 'planned', label: 'Planned' },
-  { id: 'in_progress', label: 'In Progress' },
-  { id: 'completed', label: 'Completed' },
-];
-
-export default function FeaturesPage() {
-  const [activeTab, setActiveTab] = React.useState('all');
-
-  // Filter features
-  const filteredFeatures = React.useMemo(() => {
-    if (activeTab === 'all') return mockFeatures;
-    return mockFeatures.filter((f) => f.status === activeTab);
-  }, [activeTab]);
-
-  // Calculate category stats
-  const categoryStats = React.useMemo(() => {
-    const stats: Record<string, number> = {};
-    mockFeatures.forEach((f) => {
-      stats[f.category] = (stats[f.category] || 0) + f.votes;
+  // Calculate KPIs
+  const totalClubs = clubs.length;
+  const clubsByTier = React.useMemo(() => {
+    const counts: Record<string, number> = {};
+    clubs.forEach((club) => {
+      counts[club.subscriptionTier] = (counts[club.subscriptionTier] || 0) + 1;
     });
-    return Object.entries(stats)
-      .sort((a, b) => b[1] - a[1])
-      .map(([category, votes]) => ({ category, votes }));
-  }, []);
+    return counts;
+  }, [clubs]);
+  const clubsWithOverrides = clubs.filter((c) => c.hasOperationalOverrides).length;
 
-  // Pending suggestions count (mock)
-  const pendingSuggestions = 5;
+  // Get flag metadata organized by category
+  const flagsByCategory = getFeatureFlagsByCategory();
 
-  // Table columns
-  const columns: ColumnDef<Feature>[] = [
+  // Helper to check if a flag is enabled in a tier
+  const isFlagEnabled = (tier: any, flagKey: string): boolean => {
+    const [category, key] = flagKey.split('.');
+    if (!tier?.flags) return false;
+    const categoryFlags = tier.flags[category as keyof typeof tier.flags];
+    return categoryFlags?.[key as keyof typeof categoryFlags] === true;
+  };
+
+  // Count enabled modules and features for a club
+  const countEnabledFlags = (flags: any, category: 'modules' | 'features') => {
+    if (!flags || !flags[category]) return 0;
+    return Object.values(flags[category]).filter(Boolean).length;
+  };
+
+  // Tier comparison table data
+  const tierComparisonRows = React.useMemo(() => {
+    const rows: { category: string; flag: string; label: string; tiers: Record<string, boolean> }[] = [];
+
+    ['module', 'feature', 'operational'].forEach((category) => {
+      const flags = flagsByCategory[category as keyof typeof flagsByCategory];
+      Object.entries(flags).forEach(([key, metadata]) => {
+        const row: any = {
+          category,
+          flag: key,
+          label: metadata.label,
+          tiers: {},
+        };
+
+        tiers.forEach((tier) => {
+          row.tiers[tier.tier] = isFlagEnabled(tier, key);
+        });
+
+        rows.push(row);
+      });
+    });
+
+    return rows;
+  }, [tiers, flagsByCategory]);
+
+  // Clubs table columns
+  const clubColumns: ColumnDef<(typeof clubs)[0]>[] = [
     {
-      id: 'rank',
-      header: '#',
-      width: '50px',
+      id: 'club',
+      header: 'Club',
       cell: (row) => (
-        <span className="font-medium text-slate-500">{row.rank}</span>
-      ),
-    },
-    {
-      id: 'feature',
-      header: 'Feature',
-      cell: (row) => (
-        <div className="max-w-md">
-          <p className="font-medium text-slate-900">{row.title}</p>
-          <p className="text-sm text-slate-500 truncate">{row.description}</p>
+        <div>
+          <p className="font-medium text-slate-900">{row.clubName}</p>
+          <p className="text-xs text-slate-500">{row.clubId}</p>
         </div>
       ),
     },
     {
-      id: 'category',
-      header: 'Category',
+      id: 'tier',
+      header: 'Tier',
+      cell: (row) => <TierBadge tier={row.subscriptionTier.toLowerCase() as any} />,
+    },
+    {
+      id: 'modules',
+      header: 'Modules',
+      align: 'center',
       cell: (row) => (
-        <span
-          className={cn(
-            'inline-flex px-2 py-0.5 rounded text-xs font-medium',
-            categoryColors[row.category]
-          )}
-        >
-          {row.category}
+        <span className="text-sm text-slate-600">
+          {countEnabledFlags(row.flags, 'modules')}/6
         </span>
       ),
     },
     {
-      id: 'votes',
-      header: 'Votes',
+      id: 'features',
+      header: 'Features',
       align: 'center',
-      sortable: true,
       cell: (row) => (
-        <div className="flex items-center justify-center gap-1 text-slate-600">
-          <ThumbsUp className="h-4 w-4" />
-          <span className="font-medium">{row.votes}</span>
-        </div>
+        <span className="text-sm text-slate-600">
+          {countEnabledFlags(row.flags, 'features')}/8
+        </span>
       ),
     },
     {
-      id: 'comments',
-      header: 'Comments',
-      align: 'center',
+      id: 'operational',
+      header: 'Operational',
       cell: (row) => (
-        <div className="flex items-center justify-center gap-1 text-slate-500">
-          <MessageSquare className="h-4 w-4" />
-          <span>{row.comments}</span>
+        <div className="flex items-center gap-2">
+          {row.hasOperationalOverrides && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">
+              <AlertTriangle className="h-3 w-3" />
+              Overrides
+            </span>
+          )}
+          {row.flags?.operational?.maintenanceMode && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+              <AlertTriangle className="h-3 w-3" />
+              Maintenance
+            </span>
+          )}
         </div>
       ),
-    },
-    {
-      id: 'status',
-      header: 'Status',
-      cell: (row) => <StatusBadge status={row.status} />,
     },
   ];
+
+  if (clubsLoading || tierLoading) {
+    return (
+      <div>
+        <PageHeader
+          title="Feature Flags"
+          description="Manage tier-based feature access and operational toggles"
+        />
+        <div className="text-center py-12 text-slate-500">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div>
       <PageHeader
-        title="Feature Voting"
-        description="Manage roadmap features and review suggestions"
-        actions={
-          <div className="flex items-center gap-3">
-            <Button variant="secondary">
-              Review Queue
-              {pendingSuggestions > 0 && (
-                <Badge variant="destructive" className="ml-2">
-                  {pendingSuggestions}
-                </Badge>
-              )}
-            </Button>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Create Feature
-            </Button>
-          </div>
-        }
+        title="Feature Flags"
+        description="Manage tier-based feature access and operational toggles"
       />
 
-      {/* Status Tabs */}
-      <div className="flex items-center gap-1 mb-6 border-b border-slate-200">
-        {statusTabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={cn(
-              'px-4 py-3 text-sm font-medium border-b-2 transition-colors -mb-px',
-              activeTab === tab.id
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-slate-500 hover:text-slate-700'
-            )}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      {/* KPI Cards */}
+      <KPIGrid className="mb-8">
+        <KPICard label="Total Clubs" value={totalClubs} />
+        <KPICard label="Starter Tier" value={clubsByTier.STARTER || 0} />
+        <KPICard label="Professional Tier" value={clubsByTier.PROFESSIONAL || 0} />
+        <KPICard label="Enterprise Tier" value={clubsByTier.ENTERPRISE || 0} />
+        <KPICard label="With Overrides" value={clubsWithOverrides} />
+      </KPIGrid>
 
-      {/* Feature Table */}
-      <Section className="mb-8">
-        <DataTable
-          data={filteredFeatures}
-          columns={columns}
-          sortable
-          onRowClick={(feature) => console.log('Open feature', feature.id)}
-          rowActions={(feature) => [
-            { label: 'Edit', onClick: () => console.log('Edit', feature.id) },
-            { label: 'View Votes', onClick: () => console.log('Votes', feature.id) },
-            { label: 'Archive', onClick: () => console.log('Archive', feature.id), destructive: true },
-          ]}
-        />
+      {/* Tier Comparison Matrix */}
+      <Section title="Tier Comparison" className="mb-8">
+        <Card>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-slate-50 border-b border-slate-200">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                      Feature
+                    </th>
+                    {tiers.map((tier) => (
+                      <th key={tier.tier} className="px-6 py-3 text-center">
+                        <TierBadge tier={tier.tier.toLowerCase() as any} />
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  {/* Modules Section */}
+                  <tr className="bg-slate-100">
+                    <td colSpan={tiers.length + 1} className="px-6 py-2">
+                      <span className="text-xs font-semibold text-slate-700 uppercase tracking-wide">
+                        Modules
+                      </span>
+                    </td>
+                  </tr>
+                  {tierComparisonRows
+                    .filter((row) => row.category === 'module')
+                    .map((row) => (
+                      <tr key={row.flag} className="hover:bg-slate-50">
+                        <td className="px-6 py-4 text-sm text-slate-900">{row.label}</td>
+                        {tiers.map((tier) => (
+                          <td key={tier.tier} className="px-6 py-4 text-center">
+                            {row.tiers[tier.tier] ? (
+                              <Check className="h-5 w-5 text-emerald-600 mx-auto" />
+                            ) : (
+                              <X className="h-5 w-5 text-stone-300 mx-auto" />
+                            )}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+
+                  {/* Features Section */}
+                  <tr className="bg-slate-100">
+                    <td colSpan={tiers.length + 1} className="px-6 py-2">
+                      <span className="text-xs font-semibold text-slate-700 uppercase tracking-wide">
+                        Features
+                      </span>
+                    </td>
+                  </tr>
+                  {tierComparisonRows
+                    .filter((row) => row.category === 'feature')
+                    .map((row) => (
+                      <tr key={row.flag} className="hover:bg-slate-50">
+                        <td className="px-6 py-4 text-sm text-slate-900">{row.label}</td>
+                        {tiers.map((tier) => (
+                          <td key={tier.tier} className="px-6 py-4 text-center">
+                            {row.tiers[tier.tier] ? (
+                              <Check className="h-5 w-5 text-emerald-600 mx-auto" />
+                            ) : (
+                              <X className="h-5 w-5 text-stone-300 mx-auto" />
+                            )}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+
+                  {/* Operational Section */}
+                  <tr className="bg-slate-100">
+                    <td colSpan={tiers.length + 1} className="px-6 py-2">
+                      <span className="text-xs font-semibold text-slate-700 uppercase tracking-wide">
+                        Operational
+                      </span>
+                    </td>
+                  </tr>
+                  {tierComparisonRows
+                    .filter((row) => row.category === 'operational')
+                    .map((row) => (
+                      <tr key={row.flag} className="hover:bg-slate-50">
+                        <td className="px-6 py-4 text-sm text-slate-900">{row.label}</td>
+                        {tiers.map((tier) => (
+                          <td key={tier.tier} className="px-6 py-4 text-center">
+                            {row.tiers[tier.tier] ? (
+                              <Check className="h-5 w-5 text-emerald-600 mx-auto" />
+                            ) : (
+                              <X className="h-5 w-5 text-stone-300 mx-auto" />
+                            )}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
       </Section>
 
-      {/* Analytics */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Votes by Category */}
-        <Section title="Votes by Category">
-          <Card>
-            <CardContent className="pt-6 space-y-4">
-              {categoryStats.map(({ category, votes }) => (
-                <div key={category}>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-medium text-slate-700">{category}</span>
-                    <span className="text-sm text-slate-500">{votes}</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-slate-200 overflow-hidden">
-                    <div
-                      className={cn(
-                        'h-full rounded-full',
-                        categoryColors[category]?.includes('blue') ? 'bg-blue-500' :
-                        categoryColors[category]?.includes('emerald') ? 'bg-emerald-500' :
-                        categoryColors[category]?.includes('amber') ? 'bg-amber-500' :
-                        categoryColors[category]?.includes('purple') ? 'bg-purple-500' :
-                        'bg-slate-500'
-                      )}
-                      style={{ width: `${(votes / 400) * 100}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </Section>
-
-        {/* Status Summary */}
-        <Section title="Status Summary">
-          <div className="grid grid-cols-2 gap-4">
-            <Card>
-              <CardContent className="pt-4 pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-stone-100">
-                    <Clock className="h-5 w-5 text-stone-600" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-slate-900">
-                      {mockFeatures.filter((f) => f.status === 'considering').length}
-                    </p>
-                    <p className="text-xs text-slate-500">Considering</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-4 pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
-                    <Clock className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-slate-900">
-                      {mockFeatures.filter((f) => f.status === 'planned').length}
-                    </p>
-                    <p className="text-xs text-slate-500">Planned</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-4 pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100">
-                    <Clock className="h-5 w-5 text-amber-600" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-slate-900">
-                      {mockFeatures.filter((f) => f.status === 'in_progress').length}
-                    </p>
-                    <p className="text-xs text-slate-500">In Progress</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-4 pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100">
-                    <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-slate-900">
-                      {mockFeatures.filter((f) => f.status === 'completed').length}
-                    </p>
-                    <p className="text-xs text-slate-500">Completed</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </Section>
-      </div>
+      {/* Clubs Table */}
+      <Section title="Clubs">
+        <DataTable
+          data={clubs}
+          columns={clubColumns}
+          sortable
+          onRowClick={(club) => {
+            window.location.href = `/tenants/${club.clubId}?tab=configuration`;
+          }}
+        />
+      </Section>
     </div>
   );
 }

@@ -2965,6 +2965,19 @@ type FeatureLevelFlagsType {
   whiteLabelApp: Boolean!
 }
 
+type ClubFeatureFlagsSummaryType {
+  clubId: ID!
+  clubName: String!
+  flags: FeatureFlagsType!
+  hasOperationalOverrides: Boolean!
+  subscriptionTier: String!
+}
+
+type TierDefaultsType {
+  flags: FeatureFlagsType!
+  tier: String!
+}
+
 type FifoAllocationItem {
   allocatedAmount: String!
   balance: String!
@@ -4745,6 +4758,7 @@ type Mutation {
   updateMinimumSpendRequirement(input: UpdateRequirementInput!): MinimumSpendRequirement!
   updateModifierGroup(id: ID!, input: UpdateModifierGroupInput!): ModifierGroup!
   updateOperationalFlag(key: String!, value: Boolean!): FeatureFlagsType!
+  updateClubOperationalFlag(clubId: ID!, key: String!, value: Boolean!): FeatureFlagsType!
   updateOutletGridConfig(input: UpdateOutletGridConfigInput!, outletId: ID!): OutletGridConfig!
   updateOutletProductConfig(input: UpdateOutletProductConfigInput!, outletId: ID!, productId: ID!): OutletProductConfig!
 
@@ -5672,6 +5686,9 @@ type Query {
   """Get paginated list of invoices"""
   invoices(after: String, endDate: DateTime, first: Int = 10, memberId: ID, search: String, skip: Int, sortBy: String = "invoiceDate", sortOrder: String = "desc", startDate: DateTime, status: InvoiceStatus): InvoiceConnection!
   isFeatureEnabled(featureKey: String!): Boolean!
+  allClubFeatureFlags: [ClubFeatureFlagsSummaryType!]!
+  clubFeatureFlags(clubId: ID!): FeatureFlagsType!
+  tierDefaults: [TierDefaultsType!]!
 
   """Check if all players in a tee time are settled"""
   isTeeTimeFullySettled(teeTimeId: ID!): Boolean!

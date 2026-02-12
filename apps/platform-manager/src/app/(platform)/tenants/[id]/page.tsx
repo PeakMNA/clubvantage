@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { PageHeader, Section } from '@/components/layout';
 import { Button, Badge, Card, CardHeader, CardTitle, CardContent } from '@/components/ui';
-import { KPICard, KPIGrid, HealthScore, StatusBadge, TierBadge } from '@/components/data';
+import { KPICard, KPIGrid, HealthScore, StatusBadge, TierBadge, FeaturesPanel } from '@/components/data';
 import { cn } from '@/lib/utils';
 
 // Mock tenant data
@@ -295,33 +295,20 @@ function HealthBar({ label, value }: { label: string; value: number }) {
 // Configuration Tab
 function ConfigurationTab({ tenant }: { tenant: typeof mockTenant }) {
   return (
-    <div className="grid lg:grid-cols-2 gap-6">
-      <Section title="Club Settings">
-        <Card>
-          <CardContent className="pt-6 space-y-3">
-            <ConfigRow label="Timezone" value={tenant.config.timezone} />
-            <ConfigRow label="Currency" value={tenant.config.currency} />
-            <ConfigRow label="Language" value={tenant.config.language.toUpperCase()} />
-            <ConfigRow label="Created" value={tenant.createdAt} />
-          </CardContent>
-        </Card>
-      </Section>
+    <div className="space-y-6">
+      <div className="grid lg:grid-cols-2 gap-6">
+        <Section title="Club Settings">
+          <Card>
+            <CardContent className="pt-6 space-y-3">
+              <ConfigRow label="Timezone" value={tenant.config.timezone} />
+              <ConfigRow label="Currency" value={tenant.config.currency} />
+              <ConfigRow label="Language" value={tenant.config.language.toUpperCase()} />
+              <ConfigRow label="Created" value={tenant.createdAt} />
+            </CardContent>
+          </Card>
+        </Section>
 
-      <Section title="Enabled Features">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex flex-wrap gap-2">
-              {tenant.config.features.map((feature) => (
-                <Badge key={feature} variant="default">
-                  {feature}
-                </Badge>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </Section>
-
-      <Section title="Branding Preview">
+        <Section title="Branding Preview">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
@@ -342,6 +329,16 @@ function ConfigurationTab({ tenant }: { tenant: typeof mockTenant }) {
             </div>
           </CardContent>
         </Card>
+      </Section>
+      </div>
+
+      {/* Feature Flags Section */}
+      <Section title="Feature Flags">
+        <FeaturesPanel
+          clubId={tenant.id}
+          clubName={tenant.name}
+          tier={tenant.tier}
+        />
       </Section>
     </div>
   );

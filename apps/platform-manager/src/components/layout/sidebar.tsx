@@ -18,6 +18,7 @@ import {
   UserCog,
   ChevronLeft,
   ChevronRight,
+  ToggleLeft,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -71,6 +72,7 @@ const navigation: NavSection[] = [
   {
     title: 'FEATURES',
     items: [
+      { id: 'features-flags', label: 'Feature Flags', href: '/features', icon: ToggleLeft },
       { id: 'features-roadmap', label: 'Roadmap', href: '/features/roadmap', icon: Lightbulb },
       { id: 'features-suggestions', label: 'Suggestions', href: '/features/suggestions', icon: MessageSquare, badge: 5 },
     ],

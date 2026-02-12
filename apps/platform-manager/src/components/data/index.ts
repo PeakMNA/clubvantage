@@ -11,3 +11,4 @@ export {
   DetailRow,
   DetailActions,
 } from './detail-panel';
+export { FeaturesPanel } from './features-panel';

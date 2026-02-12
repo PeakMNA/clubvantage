@@ -1,4 +1,4 @@
-import { ObjectType, Field } from '@nestjs/graphql';
+import { ObjectType, Field, ID } from '@nestjs/graphql';
 
 @ObjectType()
 export class ModuleFlagsType {
@@ -73,4 +73,31 @@ export class FeatureFlagsType {
 
   @Field(() => OperationalFlagsType)
   operational: OperationalFlagsType;
+}
+
+@ObjectType()
+export class ClubFeatureFlagsSummaryType {
+  @Field(() => ID)
+  clubId: string;
+
+  @Field()
+  clubName: string;
+
+  @Field()
+  subscriptionTier: string;
+
+  @Field(() => FeatureFlagsType)
+  flags: FeatureFlagsType;
+
+  @Field()
+  hasOperationalOverrides: boolean;
+}
+
+@ObjectType()
+export class TierDefaultsType {
+  @Field()
+  tier: string;
+
+  @Field(() => FeatureFlagsType)
+  flags: FeatureFlagsType;
 }

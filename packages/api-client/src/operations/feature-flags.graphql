@@ -61,3 +61,130 @@ mutation UpdateOperationalFlag($key: String!, $value: Boolean!) {
     }
   }
 }
+
+# Platform Admin Queries & Mutations
+
+query GetClubFeatureFlags($clubId: ID!) {
+  clubFeatureFlags(clubId: $clubId) {
+    modules {
+      golf
+      bookings
+      billing
+      marketing
+      pos
+      reports
+    }
+    features {
+      golfLottery
+      memberWindows
+      aiDynamicPricing
+      automatedFlows
+      memberPricing
+      houseAccounts
+      whiteLabelApp
+      customDomain
+    }
+    operational {
+      maintenanceMode
+      newMemberRegistration
+      onlineBooking
+      emailCampaigns
+    }
+  }
+}
+
+query GetAllClubFeatureFlags {
+  allClubFeatureFlags {
+    clubId
+    clubName
+    subscriptionTier
+    hasOperationalOverrides
+    flags {
+      modules {
+        golf
+        bookings
+        billing
+        marketing
+        pos
+        reports
+      }
+      features {
+        golfLottery
+        memberWindows
+        aiDynamicPricing
+        automatedFlows
+        memberPricing
+        houseAccounts
+        whiteLabelApp
+        customDomain
+      }
+      operational {
+        maintenanceMode
+        newMemberRegistration
+        onlineBooking
+        emailCampaigns
+      }
+    }
+  }
+}
+
+query GetTierDefaults {
+  tierDefaults {
+    tier
+    flags {
+      modules {
+        golf
+        bookings
+        billing
+        marketing
+        pos
+        reports
+      }
+      features {
+        golfLottery
+        memberWindows
+        aiDynamicPricing
+        automatedFlows
+        memberPricing
+        houseAccounts
+        whiteLabelApp
+        customDomain
+      }
+      operational {
+        maintenanceMode
+        newMemberRegistration
+        onlineBooking
+        emailCampaigns
+      }
+    }
+  }
+}
+
+mutation UpdateClubOperationalFlag($clubId: ID!, $key: String!, $value: Boolean!) {
+  updateClubOperationalFlag(clubId: $clubId, key: $key, value: $value) {
+    modules {
+      golf
+      bookings
+      billing
+      marketing
+      pos
+      reports
+    }
+    features {
+      golfLottery
+      memberWindows
+      aiDynamicPricing
+      automatedFlows
+      memberPricing
+      houseAccounts
+      whiteLabelApp
+      customDomain
+    }
+    operational {
+      maintenanceMode
+      newMemberRegistration
+      onlineBooking
+      emailCampaigns
+    }
+  }
+}

@@ -183,6 +183,61 @@ export class FeatureFlagsService {
   }
 
   /**
+   * Get tier defaults for all subscription tiers.
+   * Returns array of tier names with their default feature flags.
+   */
+  getTierDefaults(): Array<{ tier: string; flags: ClubFeatureFlags }> {
+    return Object.entries(TIER_DEFAULTS).map(([tier, flags]) => ({
+      tier,
+      flags,
+    }));
+  }
+
+  /**
+   * Get all clubs with their resolved feature flags.
+   * Used by platform admins to view feature flags across all clubs.
+   * Leverages Redis cache for individual club flags.
+   */
+  async getAllClubsWithFlags(): Promise<
+    Array<{
+      clubId: string;
+      clubName: string;
+      subscriptionTier: string;
+      flags: ClubFeatureFlags;
+      hasOperationalOverrides: boolean;
+    }>
+  > {
+    const clubs = await this.prisma.club.findMany({
+      select: {
+        id: true,
+        name: true,
+        subscriptionTier: true,
+        features: true,
+      },
+      orderBy: { name: 'asc' },
+    });
+
+    return Promise.all(
+      clubs.map(async (club) => {
+        const flags = await this.getFeatureFlags(club.id);
+        const hasOperationalOverrides =
+          club.features !== null &&
+          typeof club.features === 'object' &&
+          'operational' in club.features &&
+          Object.keys((club.features as any).operational || {}).length > 0;
+
+        return {
+          clubId: club.id,
+          clubName: club.name,
+          subscriptionTier: club.subscriptionTier,
+          flags,
+          hasOperationalOverrides,
+        };
+      }),
+    );
+  }
+
+  /**
    * Update an operational flag for a club.
    * Only operational flags can be toggled by staff. Module and feature flags
    * are controlled by the subscription tier.
