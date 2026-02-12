@@ -9,6 +9,7 @@ import * as bcrypt from 'bcrypt';
 import 'dotenv/config';
 import { seedLookups } from './seed-lookups';
 import { seedMultitenancy } from './seed-multitenancy';
+import { seedConfigurablePackages } from './seed-configurable-packages';
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
@@ -4575,6 +4576,11 @@ async function main() {
   // MULTI-TENANCY SEED
   // ============================================================================
   await seedMultitenancy(prisma);
+
+  // ============================================================================
+  // CONFIGURABLE PACKAGES (Feature Definitions, Verticals, Packages, Migration)
+  // ============================================================================
+  await seedConfigurablePackages(prisma);
 
   console.log('');
   console.log('🎉 Database seed completed successfully!');

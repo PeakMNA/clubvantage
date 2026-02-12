@@ -1,10 +1,10 @@
 'use client';
 
 import * as React from 'react';
-import { ToggleLeft, Check, X, AlertTriangle } from 'lucide-react';
+import { ToggleLeft, Check, X, AlertTriangle, Blocks, Package, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { PageHeader, Section } from '@/components/layout';
-import { Card, CardContent } from '@/components/ui';
+import { Button, Card, CardContent } from '@/components/ui';
 import { DataTable, ColumnDef, KPICard, KPIGrid, TierBadge } from '@/components/data';
 import { useAllClubFeatureFlags, useTierDefaults } from '@/hooks/use-feature-flags';
 import { getFeatureFlagLabel, getFeatureFlagsByCategory } from '@/lib/feature-flag-labels';
@@ -145,8 +145,26 @@ export default function FeatureFlagsPage() {
     <div>
       <PageHeader
         title="Feature Flags"
-        description="Manage tier-based feature access and operational toggles"
+        description="Manage package-based feature access and operational toggles"
       />
+
+      {/* Quick Nav */}
+      <div className="flex items-center gap-3 mb-6">
+        <Link href="/features/registry">
+          <Button variant="secondary" size="sm">
+            <Blocks className="h-4 w-4 mr-2" />
+            Feature Registry
+            <ChevronRight className="h-4 w-4 ml-1" />
+          </Button>
+        </Link>
+        <Link href="/features/verticals">
+          <Button variant="secondary" size="sm">
+            <Package className="h-4 w-4 mr-2" />
+            Verticals & Packages
+            <ChevronRight className="h-4 w-4 ml-1" />
+          </Button>
+        </Link>
+      </div>
 
       {/* KPI Cards */}
       <KPIGrid className="mb-8">
@@ -264,7 +282,7 @@ export default function FeatureFlagsPage() {
           columns={clubColumns}
           sortable
           onRowClick={(club) => {
-            window.location.href = `/tenants/${club.clubId}?tab=configuration`;
+            window.location.href = `/tenants/${club.clubId}?tab=package`;
           }}
         />
       </Section>

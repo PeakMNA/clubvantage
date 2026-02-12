@@ -52,6 +52,7 @@ import { ReportsGraphqlModule } from './reports/reports.module';
 import { SettingsGraphqlModule } from './settings/settings.module';
 import { UsersGraphqlModule } from './users/users.module';
 import { FeatureFlagsGraphqlModule } from './feature-flags/feature-flags.module';
+import { ConfigurablePackagesGraphqlModule } from './configurable-packages/configurable-packages.module';
 
 // GraphQL error formatter logger
 const graphqlLogger = new Logger('GraphQL');
@@ -172,6 +173,7 @@ function formatGraphQLError(
     SettingsGraphqlModule,
     UsersGraphqlModule,
     FeatureFlagsGraphqlModule,
+    ConfigurablePackagesGraphqlModule,
   ],
 })
 export class GraphqlModule {}

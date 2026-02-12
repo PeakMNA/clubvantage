@@ -11,10 +11,27 @@ import {
   Ban,
   Archive,
   Building2,
+  Package,
+  Plus,
+  Check,
+  X as XIcon,
+  DollarSign,
+  Users,
+  Shield,
+  Zap,
 } from 'lucide-react';
 import { PageHeader, Section } from '@/components/layout';
 import { Button, Badge, Card, CardHeader, CardTitle, CardContent } from '@/components/ui';
 import { KPICard, KPIGrid, HealthScore, StatusBadge, TierBadge, FeaturesPanel } from '@/components/data';
+import {
+  useClubPackage,
+  useClubAddons,
+  useAssignClubPackage,
+  useAddClubAddon,
+  useRemoveClubAddon,
+  useVerticals,
+  useFeatureDefinitions,
+} from '@/hooks/use-configurable-packages';
 import { cn } from '@/lib/utils';
 
 // Mock tenant data
@@ -68,6 +85,7 @@ const mockTenant = {
 const tabs = [
   { id: 'overview', label: 'Overview' },
   { id: 'configuration', label: 'Configuration' },
+  { id: 'package', label: 'Package' },
   { id: 'subscription', label: 'Subscription' },
   { id: 'users', label: 'Users' },
   { id: 'audit', label: 'Audit Log' },
@@ -192,6 +210,7 @@ export default function TenantDetailPage() {
       {/* Tab Content */}
       {activeTab === 'overview' && <OverviewTab tenant={mockTenant} />}
       {activeTab === 'configuration' && <ConfigurationTab tenant={mockTenant} />}
+      {activeTab === 'package' && <PackageTab clubId={params.id as string} />}
       {activeTab === 'subscription' && <SubscriptionTab tenant={mockTenant} />}
       {activeTab === 'users' && <UsersTab tenant={mockTenant} />}
       {activeTab === 'audit' && <AuditTab tenant={mockTenant} />}
@@ -432,6 +451,335 @@ function UsageRow({
           style={{ width: `${percentage}%` }}
         />
       </div>
+    </div>
+  );
+}
+
+// Package Tab
+const TIER_COLORS: Record<string, string> = {
+  STARTER: 'bg-slate-100 text-slate-700',
+  PRO: 'bg-blue-100 text-blue-700',
+  ENTERPRISE: 'bg-purple-100 text-purple-700',
+  CUSTOM: 'bg-amber-100 text-amber-700',
+};
+
+function PackageTab({ clubId }: { clubId: string }) {
+  const { data: clubPkgData, isLoading: pkgLoading } = useClubPackage(clubId);
+  const { data: addonsData, isLoading: addonsLoading } = useClubAddons(clubId);
+  const { data: verticalsData } = useVerticals();
+  const { data: featuresData } = useFeatureDefinitions();
+  const assignPackageMutation = useAssignClubPackage();
+  const addAddonMutation = useAddClubAddon();
+  const removeAddonMutation = useRemoveClubAddon();
+
+  const [showAssign, setShowAssign] = React.useState(false);
+  const [selectedPackageId, setSelectedPackageId] = React.useState('');
+  const [showAddAddon, setShowAddAddon] = React.useState(false);
+  const [selectedAddonId, setSelectedAddonId] = React.useState('');
+
+  const clubPackage = clubPkgData?.clubPackage;
+  const addons = addonsData?.clubAddons ?? [];
+  const verticals = verticalsData?.verticals ?? [];
+  const allFeatures = featuresData?.featureDefinitions ?? [];
+
+  // Build flat list of all packages across verticals for the assign dropdown
+  const allPackages = React.useMemo(() => {
+    const pkgs: Array<{ id: string; name: string; verticalName: string; tier: string }> = [];
+    for (const v of verticals) {
+      for (const p of (v.packages || [])) {
+        pkgs.push({ id: p.id, name: p.name, verticalName: v.name, tier: p.tier });
+      }
+    }
+    return pkgs;
+  }, [verticals]);
+
+  // Available add-on features (FEATURE category with addonPrice, not already active)
+  const availableAddons = React.useMemo(() => {
+    const activeIds = new Set(addons.map((a) => a.featureDefinition?.id));
+    return allFeatures.filter(
+      (f) => f.category === 'FEATURE' && f.addonPrice && !activeIds.has(f.id),
+    );
+  }, [allFeatures, addons]);
+
+  async function handleAssign() {
+    if (!selectedPackageId) return;
+    await assignPackageMutation.mutateAsync({
+      input: { clubId, packageId: selectedPackageId },
+    });
+    setShowAssign(false);
+    setSelectedPackageId('');
+  }
+
+  async function handleAddAddon() {
+    if (!selectedAddonId) return;
+    await addAddonMutation.mutateAsync({
+      input: { clubId, featureDefinitionId: selectedAddonId },
+    });
+    setShowAddAddon(false);
+    setSelectedAddonId('');
+  }
+
+  async function handleRemoveAddon(featureDefinitionId: string) {
+    await removeAddonMutation.mutateAsync({ clubId, featureDefinitionId });
+  }
+
+  if (pkgLoading || addonsLoading) {
+    return (
+      <div className="flex items-center justify-center h-48 text-slate-400">
+        Loading package data...
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Current Package */}
+      <Section title="Current Package">
+        <Card>
+          <CardContent className="pt-6">
+            {clubPackage ? (
+              <div className="space-y-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center">
+                      <Package className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-semibold text-slate-900">
+                        {clubPackage.package.name}
+                      </h3>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className={cn(
+                          'text-xs font-medium px-2 py-0.5 rounded-full',
+                          TIER_COLORS[clubPackage.package.tier] || TIER_COLORS.CUSTOM,
+                        )}>
+                          {clubPackage.package.tier}
+                        </span>
+                        <span className="text-xs text-slate-500">
+                          {clubPackage.package.vertical?.name}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setShowAssign(true)}
+                  >
+                    Change Package
+                  </Button>
+                </div>
+
+                {/* Pricing */}
+                <div className="grid grid-cols-3 gap-4 pt-2 border-t border-slate-100">
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="h-4 w-4 text-slate-400" />
+                    <div>
+                      <p className="text-xs text-slate-500">Monthly</p>
+                      <p className="text-sm font-semibold text-slate-900">
+                        ${Number(clubPackage.package.basePrice).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-slate-400" />
+                    <div>
+                      <p className="text-xs text-slate-500">Member Limit</p>
+                      <p className="text-sm font-semibold text-slate-900">
+                        {clubPackage.memberLimitOverride ??
+                          clubPackage.package.defaultMemberLimit?.toLocaleString() ??
+                          'Unlimited'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Shield className="h-4 w-4 text-slate-400" />
+                    <div>
+                      <p className="text-xs text-slate-500">Staff Limit</p>
+                      <p className="text-sm font-semibold text-slate-900">
+                        {clubPackage.userLimitOverride ??
+                          clubPackage.package.defaultUserLimit?.toLocaleString() ??
+                          'Unlimited'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Included Features */}
+                {clubPackage.package.features && clubPackage.package.features.length > 0 && (
+                  <div className="pt-2 border-t border-slate-100">
+                    <p className="text-xs font-medium text-slate-500 mb-2">Included Features</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {clubPackage.package.features
+                        .filter((pf: any) => pf.enabled)
+                        .map((pf: any) => (
+                          <span
+                            key={pf.featureDefinition.key}
+                            className="inline-flex items-center gap-1 text-xs bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full"
+                          >
+                            <Check className="h-3 w-3" />
+                            {pf.featureDefinition.name}
+                          </span>
+                        ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Package className="h-8 w-8 text-slate-300 mx-auto mb-2" />
+                <p className="text-sm text-slate-500 mb-3">No package assigned</p>
+                <Button size="sm" onClick={() => setShowAssign(true)}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Assign Package
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </Section>
+
+      {/* Assign Package Form */}
+      {showAssign && (
+        <Section>
+          <div className="p-4 bg-blue-50/50 border border-blue-200 rounded-xl space-y-4">
+            <h3 className="text-sm font-semibold text-slate-900">
+              {clubPackage ? 'Change Package' : 'Assign Package'}
+            </h3>
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">
+                Select Package
+              </label>
+              <select
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                value={selectedPackageId}
+                onChange={(e) => setSelectedPackageId(e.target.value)}
+              >
+                <option value="">Choose a package...</option>
+                {verticals.map((v) => (
+                  <optgroup key={v.id} label={v.name}>
+                    {(v.packages || []).map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name} — ${Number(p.basePrice).toLocaleString()}/mo
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => { setShowAssign(false); setSelectedPackageId(''); }}
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleAssign}
+                disabled={!selectedPackageId || assignPackageMutation.isPending}
+              >
+                {assignPackageMutation.isPending ? 'Assigning...' : 'Assign Package'}
+              </Button>
+            </div>
+          </div>
+        </Section>
+      )}
+
+      {/* Add-ons */}
+      <Section title="Active Add-ons">
+        <Card>
+          <CardContent className="pt-6">
+            {addons.length > 0 ? (
+              <div className="space-y-3">
+                {addons.map((addon) => (
+                  <div
+                    key={addon.id}
+                    className="flex items-center justify-between p-3 rounded-lg border border-slate-200 bg-white"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="h-8 w-8 rounded-lg bg-purple-50 flex items-center justify-center">
+                        <Zap className="h-4 w-4 text-purple-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-slate-900">
+                          {addon.featureDefinition?.name}
+                        </p>
+                        {addon.featureDefinition?.addonPrice && (
+                          <p className="text-xs text-slate-500">
+                            ${Number(addon.featureDefinition.addonPrice).toFixed(0)}/mo
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleRemoveAddon(addon.featureDefinition.id)}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                      title="Remove add-on"
+                    >
+                      <XIcon className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500 text-center py-4">No active add-ons</p>
+            )}
+
+            {/* Add addon button */}
+            {!showAddAddon && availableAddons.length > 0 && (
+              <div className="mt-4 pt-4 border-t border-slate-100">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setShowAddAddon(true)}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Add-on
+                </Button>
+              </div>
+            )}
+
+            {/* Add addon form */}
+            {showAddAddon && (
+              <div className="mt-4 pt-4 border-t border-slate-100 space-y-3">
+                <label className="block text-xs font-medium text-slate-600">
+                  Select Feature Add-on
+                </label>
+                <select
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                  value={selectedAddonId}
+                  onChange={(e) => setSelectedAddonId(e.target.value)}
+                >
+                  <option value="">Choose a feature...</option>
+                  {availableAddons.map((f) => (
+                    <option key={f.id} value={f.id}>
+                      {f.name} — ${Number(f.addonPrice).toFixed(0)}/mo
+                    </option>
+                  ))}
+                </select>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => { setShowAddAddon(false); setSelectedAddonId(''); }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleAddAddon}
+                    disabled={!selectedAddonId || addAddonMutation.isPending}
+                  >
+                    {addAddonMutation.isPending ? 'Adding...' : 'Add Add-on'}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </Section>
     </div>
   );
 }

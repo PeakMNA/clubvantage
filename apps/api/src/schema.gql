@@ -138,6 +138,12 @@ type ActivityLogResultType {
   meta: PaginationMetaType!
 }
 
+input AddClubAddonInput {
+  clubId: ID!
+  featureDefinitionId: ID!
+  priceOverride: Float
+}
+
 input AddGroupPlayersInput {
   players: [GroupPlayerInput!]!
 }
@@ -361,6 +367,14 @@ enum ArrangementStatus {
   COMPLETED
   DEFAULTED
   DRAFT
+}
+
+input AssignClubPackageInput {
+  clubId: ID!
+  customPriceOverride: Float
+  memberLimitOverride: Int
+  packageId: ID!
+  userLimitOverride: Int
 }
 
 input AssignEquipmentInput {
@@ -1387,6 +1401,16 @@ input CloseShiftInput {
   varianceNote: String
 }
 
+type ClubAddonType {
+  createdAt: DateTime!
+  endDate: DateTime
+  featureDefinition: FeatureDefinitionType!
+  id: ID!
+  priceOverride: Float
+  startDate: DateTime!
+  updatedAt: DateTime!
+}
+
 """Club billing configuration settings"""
 type ClubBillingSettingsType {
   """AR account number format pattern"""
@@ -1530,6 +1554,14 @@ type ClubBillingSettingsType {
   whtRates: JSON!
 }
 
+type ClubFeatureFlagsSummaryType {
+  clubId: ID!
+  clubName: String!
+  flags: FeatureFlagsType!
+  hasOperationalOverrides: Boolean!
+  subscriptionTier: String!
+}
+
 type ClubGolfSettingsType {
   caddyDrivesCart: Boolean!
   cartPolicy: CartPolicy!
@@ -1537,6 +1569,19 @@ type ClubGolfSettingsType {
   maxGuestsPerMember: Int!
   rentalPolicy: RentalPolicy!
   requireGuestContact: Boolean!
+}
+
+type ClubPackageType {
+  club: ClubSummaryType!
+  createdAt: DateTime!
+  customPriceOverride: Float
+  endDate: DateTime
+  id: ID!
+  memberLimitOverride: Int
+  package: PackageType!
+  startDate: DateTime!
+  updatedAt: DateTime!
+  userLimitOverride: Int
 }
 
 type ClubProfileType {
@@ -1556,6 +1601,11 @@ type ClubProfileType {
   subscriptionTier: String!
   timezone: String
   website: String
+}
+
+type ClubSummaryType {
+  id: ID!
+  name: String!
 }
 
 type CollectionMetricsType {
@@ -1820,6 +1870,15 @@ input CreateFacilityInput {
   type: ResourceTypeEnum!
 }
 
+input CreateFeatureDefinitionInput {
+  addonPrice: Float
+  category: FeatureCategory!
+  description: String
+  key: String!
+  name: String!
+  sortOrder: Int
+}
+
 input CreateGreenFeeRateInput {
   amount: Float!
   holes: Int!
@@ -1974,6 +2033,18 @@ input CreateModifierInput {
   name: String!
   priceAdjustment: Float
   sortOrder: Int
+}
+
+input CreatePackageInput {
+  annualPrice: Float
+  basePrice: Float!
+  defaultMemberLimit: Int
+  defaultUserLimit: Int
+  name: String!
+  slug: String!
+  sortOrder: Int
+  tier: PackageTier!
+  verticalId: ID
 }
 
 input CreatePaymentArrangementInput {
@@ -2260,6 +2331,14 @@ input CreateUserInput {
   permissions: [String!]
   phone: String
   role: UserRole!
+}
+
+input CreateVerticalInput {
+  description: String
+  iconUrl: String
+  name: String!
+  slug: String!
+  sortOrder: Int
 }
 
 input CreateWaitlistEntryInput {
@@ -2948,6 +3027,26 @@ type FacilityType {
   type: ResourceTypeEnum!
 }
 
+"""Category of a feature definition"""
+enum FeatureCategory {
+  FEATURE
+  MODULE
+  OPERATIONAL
+}
+
+type FeatureDefinitionType {
+  addonPrice: Float
+  category: FeatureCategory!
+  createdAt: DateTime!
+  description: String
+  id: ID!
+  isActive: Boolean!
+  key: String!
+  name: String!
+  sortOrder: Int!
+  updatedAt: DateTime!
+}
+
 type FeatureFlagsType {
   features: FeatureLevelFlagsType!
   modules: ModuleFlagsType!
@@ -2963,19 +3062,6 @@ type FeatureLevelFlagsType {
   memberPricing: Boolean!
   memberWindows: Boolean!
   whiteLabelApp: Boolean!
-}
-
-type ClubFeatureFlagsSummaryType {
-  clubId: ID!
-  clubName: String!
-  flags: FeatureFlagsType!
-  hasOperationalOverrides: Boolean!
-  subscriptionTier: String!
-}
-
-type TierDefaultsType {
-  flags: FeatureFlagsType!
-  tier: String!
 }
 
 type FifoAllocationItem {
@@ -4094,6 +4180,7 @@ type Mutation {
   """Accept a waitlist offer"""
   acceptWaitlistOffer(input: WaitlistActionInput!): WaitlistResponseType!
   activatePaymentArrangement(id: ID!): PaymentArrangementType!
+  addClubAddon(input: AddClubAddonInput!): ClubAddonType!
 
   """Add players to a group booking"""
   addGroupPlayers(id: ID!, input: AddGroupPlayersInput!): GroupBookingMutationResponse!
@@ -4122,6 +4209,7 @@ type Mutation {
 
   """Approve a pending discount that requires manager approval"""
   approveDiscount(input: ApproveDiscountInput!): AppliedDiscountType!
+  assignClubPackage(input: AssignClubPackageInput!): ClubPackageType!
   assignEquipment(input: AssignEquipmentInput!): EquipmentAssignmentResponse!
 
   """Auto-assign players to flights"""
@@ -4255,6 +4343,7 @@ type Mutation {
 
   """Create a new facility"""
   createFacility(input: CreateFacilityInput!): FacilityResponseType!
+  createFeatureDefinition(input: CreateFeatureDefinitionInput!): FeatureDefinitionType!
 
   """Create a green fee rate"""
   createGreenFeeRate(input: CreateGreenFeeRateInput!): GreenFeeRateMutationResponse!
@@ -4290,6 +4379,7 @@ type Mutation {
   """Create a new minimum spend requirement"""
   createMinimumSpendRequirement(input: CreateRequirementInput!): MinimumSpendRequirement!
   createModifierGroup(input: CreateModifierGroupInput!): ModifierGroup!
+  createPackage(input: CreatePackageInput!): PackageType!
   createPaymentArrangement(input: CreatePaymentArrangementInput!): PaymentArrangementType!
 
   """Create a new pro shop category"""
@@ -4334,6 +4424,7 @@ type Mutation {
 
   """Create a new user"""
   createUser(input: CreateUserInput!): UserType!
+  createVertical(input: CreateVerticalInput!): VerticalType!
 
   """Add to waitlist"""
   createWaitlistEntry(input: CreateWaitlistEntryInput!): WaitlistMutationResponse!
@@ -4539,6 +4630,7 @@ type Mutation {
 
   """Remove an applied discount"""
   removeAppliedDiscount(appliedDiscountId: ID!): Boolean!
+  removeClubAddon(clubId: ID!, featureDefinitionId: ID!): ClubAddonType!
 
   """Remove a specific interest from a dependent"""
   removeDependentInterest(categoryId: ID!, dependentId: ID!): EngagementDeleteResponse!
@@ -4622,6 +4714,7 @@ type Mutation {
 
   """Set role-specific button overrides for an outlet"""
   setPOSRoleOverrides(input: POSRoleOverridesInput!, outletId: ID!): SetRoleOverridesMutationResponse!
+  setPackageFeatures(features: [PackageFeatureInput!]!, packageId: ID!): [PackageFeatureType!]!
 
   """Settle all players in a flight at once"""
   settleAllPlayers(input: SettleAllPlayersInput!): SettlementResultType!
@@ -4691,6 +4784,7 @@ type Mutation {
 
   """Update club-wide billing configuration settings"""
   updateClubBillingSettings(input: UpdateClubBillingSettingsInput!): ClubBillingSettingsType!
+  updateClubOperationalFlag(clubId: ID!, key: String!, value: Boolean!): FeatureFlagsType!
   updateClubProfile(input: UpdateClubProfileInput!): ClubProfileType!
 
   """Update a course schedule"""
@@ -4707,6 +4801,7 @@ type Mutation {
 
   """Update an existing facility"""
   updateFacility(input: UpdateFacilityInput!): FacilityResponseType!
+  updateFeatureDefinition(id: ID!, input: UpdateFeatureDefinitionInput!): FeatureDefinitionType!
 
   """Update a green fee rate"""
   updateGreenFeeRate(id: ID!, input: UpdateGreenFeeRateInput!): GreenFeeRateMutationResponse!
@@ -4758,7 +4853,6 @@ type Mutation {
   updateMinimumSpendRequirement(input: UpdateRequirementInput!): MinimumSpendRequirement!
   updateModifierGroup(id: ID!, input: UpdateModifierGroupInput!): ModifierGroup!
   updateOperationalFlag(key: String!, value: Boolean!): FeatureFlagsType!
-  updateClubOperationalFlag(clubId: ID!, key: String!, value: Boolean!): FeatureFlagsType!
   updateOutletGridConfig(input: UpdateOutletGridConfigInput!, outletId: ID!): OutletGridConfig!
   updateOutletProductConfig(input: UpdateOutletProductConfigInput!, outletId: ID!, productId: ID!): OutletProductConfig!
 
@@ -4767,6 +4861,7 @@ type Mutation {
 
   """Update POS integration settings"""
   updatePOSConfig(input: POSConfigInput!): CheckInSettingsType!
+  updatePackage(id: ID!, input: UpdatePackageInput!): PackageType!
 
   """Update a stored payment method"""
   updatePaymentMethod(input: UpdateStoredPaymentInput!): StoredPaymentMethod!
@@ -4836,6 +4931,7 @@ type Mutation {
 
   """Update an existing user"""
   updateUser(id: ID!, input: UpdateUserInput!): UserType!
+  updateVertical(id: ID!, input: UpdateVerticalInput!): VerticalType!
 
   """Update a waitlist entry"""
   updateWaitlistEntry(id: ID!, input: UpdateWaitlistEntryInput!): WaitlistMutationResponse!
@@ -5018,6 +5114,42 @@ input POSTemplateInput {
   name: String!
   outletType: String!
   toolbarConfig: JSON!
+}
+
+input PackageFeatureInput {
+  enabled: Boolean!
+  featureDefinitionId: ID!
+}
+
+type PackageFeatureType {
+  enabled: Boolean!
+  featureDefinition: FeatureDefinitionType!
+  id: ID!
+}
+
+"""Package tier level"""
+enum PackageTier {
+  CUSTOM
+  ENTERPRISE
+  PRO
+  STARTER
+}
+
+type PackageType {
+  annualPrice: Float
+  basePrice: Float!
+  createdAt: DateTime!
+  defaultMemberLimit: Int
+  defaultUserLimit: Int
+  features: [PackageFeatureType!]
+  id: ID!
+  isActive: Boolean!
+  name: String!
+  slug: String!
+  sortOrder: Int!
+  tier: PackageTier!
+  updatedAt: DateTime!
+  vertical: VerticalType
 }
 
 type PageInfo {
@@ -5500,6 +5632,7 @@ type Query {
 
   """Get active schedule for a course and date"""
   activeSchedule(courseId: ID!, date: DateTime!): GolfCourseScheduleType
+  allClubFeatureFlags: [ClubFeatureFlagsSummaryType!]!
 
   """Get a single membership application by ID"""
   application(id: ID!): MembershipApplicationType!
@@ -5574,12 +5707,15 @@ type Query {
   checkSubAccountLimit(input: CheckLimitInput!): SubAccountLimitCheck!
   cityLedgerStatements(cityLedgerId: ID!): [StatementGQLType!]!
   closeChecklist(periodId: ID!): CloseChecklistGQLType
+  clubAddons(clubId: ID!): [ClubAddonType!]!
 
   """Get club-wide billing configuration settings"""
   clubBillingSettings: ClubBillingSettingsType!
+  clubFeatureFlags(clubId: ID!): FeatureFlagsType!
 
   """Get club golf settings including cart, rental, and caddy policies"""
   clubGolfSettings: ClubGolfSettingsType
+  clubPackage(clubId: ID!): ClubPackageType
   clubProfile: ClubProfileType!
 
   """Get schedules for a course"""
@@ -5629,6 +5765,8 @@ type Query {
 
   """Get list of facilities"""
   facilities(filter: FacilityFilterInput): [FacilityType!]!
+  featureDefinition(id: ID!): FeatureDefinitionType!
+  featureDefinitions(category: FeatureCategory): [FeatureDefinitionType!]!
   featureFlags: FeatureFlagsType!
 
   """Get check-in info for all players in a tee time"""
@@ -5686,9 +5824,6 @@ type Query {
   """Get paginated list of invoices"""
   invoices(after: String, endDate: DateTime, first: Int = 10, memberId: ID, search: String, skip: Int, sortBy: String = "invoiceDate", sortOrder: String = "desc", startDate: DateTime, status: InvoiceStatus): InvoiceConnection!
   isFeatureEnabled(featureKey: String!): Boolean!
-  allClubFeatureFlags: [ClubFeatureFlagsSummaryType!]!
-  clubFeatureFlags(clubId: ID!): FeatureFlagsType!
-  tierDefaults: [TierDefaultsType!]!
 
   """Check if all players in a tee time are settled"""
   isTeeTimeFullySettled(teeTimeId: ID!): Boolean!
@@ -5833,6 +5968,8 @@ type Query {
   outletGridConfig(outletId: ID!): OutletGridConfig
   outletProductConfigs(outletId: ID!): [OutletProductConfig!]!
   outletProductPanel(outletId: ID!): OutletProductPanel!
+  package(id: ID!): PackageType!
+  packages(verticalId: ID): [PackageType!]!
 
   """Get a single payment/receipt by ID"""
   payment(id: ID!): PaymentType!
@@ -6016,6 +6153,7 @@ type Query {
 
   """Get HTML template for a starter ticket"""
   ticketHTML(teeTimeId: ID!): String!
+  tierDefaults: [TierDefaultsType!]!
 
   """Get today's settlement for the current club"""
   todaySettlement: DailySettlementGraphQLType
@@ -6046,6 +6184,8 @@ type Query {
 
   """Validate a ticket by QR code data"""
   validateTicket(qrCodeData: String!): TicketValidationResultType!
+  vertical(id: ID!): VerticalType!
+  verticals: [VerticalType!]!
 
   """Get waitlist entries"""
   waitlist(date: String, facilityId: ID, first: Int = 20, serviceId: ID, skip: Int): WaitlistConnection!
@@ -7207,6 +7347,11 @@ type TicketValidationResultType {
   valid: Boolean!
 }
 
+type TierDefaultsType {
+  flags: FeatureFlagsType!
+  tier: String!
+}
+
 input TierDiscountInput {
   discountPercent: Float!
   tierName: String!
@@ -7646,6 +7791,14 @@ input UpdateFacilityInput {
   type: ResourceTypeEnum
 }
 
+input UpdateFeatureDefinitionInput {
+  addonPrice: Float
+  description: String
+  isActive: Boolean
+  name: String
+  sortOrder: Int
+}
+
 input UpdateGreenFeeRateInput {
   amount: Float
   holes: Int
@@ -7806,6 +7959,16 @@ input UpdateOutletProductConfigInput {
   quickKeyPosition: Int
   sortPriority: Int
   visibilityRules: VisibilityRulesInput
+}
+
+input UpdatePackageInput {
+  annualPrice: Float
+  basePrice: Float
+  defaultMemberLimit: Int
+  defaultUserLimit: Int
+  isActive: Boolean
+  name: String
+  sortOrder: Int
 }
 
 input UpdatePaymentMethodInput {
@@ -8111,6 +8274,14 @@ input UpdateUserInput {
   role: UserRole
 }
 
+input UpdateVerticalInput {
+  description: String
+  iconUrl: String
+  isActive: Boolean
+  name: String
+  sortOrder: Int
+}
+
 input UpdateWaitlistEntryInput {
   playerCount: Int
   priority: Int
@@ -8201,6 +8372,19 @@ type VerifyDocumentResultType {
 input VerifyPinInput {
   pin: String!
   subAccountId: String!
+}
+
+type VerticalType {
+  createdAt: DateTime!
+  description: String
+  iconUrl: String
+  id: ID!
+  isActive: Boolean!
+  name: String!
+  packages: [PackageType!]
+  slug: String!
+  sortOrder: Int!
+  updatedAt: DateTime!
 }
 
 input VisibilityRulesInput {

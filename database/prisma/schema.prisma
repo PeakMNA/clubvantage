@@ -98,6 +98,9 @@ model Club {
   marketingContent       MarketingContentPiece[]
   marketingChannels      MarketingChannelConfig[]
   marketingBrandConfig   MarketingBrandConfig?
+  clubPackage            ClubPackage?
+  clubAddons             ClubAddon[]
+  clubOperationalFlags   ClubOperationalFlag[]
 
   @@index([slug])
   @@index([isActive])
@@ -4871,4 +4874,153 @@ model MarketingEvent {
   @@index([clubId, campaignId])
   @@index([memberId])
   @@map("marketing_events")
+}
+
+// ============================================================================
+// Configurable Packages & Feature Flags
+// ============================================================================
+
+enum FeatureCategory {
+  MODULE
+  FEATURE
+  OPERATIONAL
+}
+
+enum PackageTier {
+  STARTER
+  PRO
+  ENTERPRISE
+  CUSTOM
+}
+
+/// Master registry of all available features/modules
+model FeatureDefinition {
+  id                   String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key                  String              @unique @db.VarChar(100)
+  name                 String              @db.VarChar(255)
+  description          String?
+  category             FeatureCategory
+  addonPrice           Decimal?            @db.Decimal(10, 2)
+  sortOrder            Int                 @default(0)
+  isActive             Boolean             @default(true)
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+
+  packageFeatures      PackageFeature[]
+  clubAddons           ClubAddon[]
+  clubOperationalFlags ClubOperationalFlag[]
+
+  @@index([category])
+  @@index([isActive])
+  @@map("feature_definitions")
+}
+
+/// Club verticals (Golf, Spa, Sports, Private...)
+model Vertical {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String   @db.VarChar(255)
+  slug        String   @unique @db.VarChar(100)
+  description String?
+  iconUrl     String?  @db.VarChar(500)
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  packages    Package[]
+
+  @@index([isActive])
+  @@map("verticals")
+}
+
+/// Subscription packages
+model Package {
+  id                 String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  verticalId         String?      @db.Uuid
+  vertical           Vertical?    @relation(fields: [verticalId], references: [id])
+  name               String       @db.VarChar(255)
+  slug               String       @unique @db.VarChar(100)
+  tier               PackageTier
+  basePrice          Decimal      @db.Decimal(10, 2)
+  annualPrice        Decimal?     @db.Decimal(10, 2)
+  defaultMemberLimit Int?
+  defaultUserLimit   Int?
+  isActive           Boolean      @default(true)
+  sortOrder          Int          @default(0)
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  features           PackageFeature[]
+  clubPackages       ClubPackage[]
+
+  @@index([verticalId])
+  @@index([isActive])
+  @@map("packages")
+}
+
+/// Which features a package includes
+model PackageFeature {
+  id                  String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  packageId           String            @db.Uuid
+  package             Package           @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  featureDefinitionId String            @db.Uuid
+  featureDefinition   FeatureDefinition @relation(fields: [featureDefinitionId], references: [id], onDelete: Cascade)
+  enabled             Boolean           @default(true)
+  createdAt           DateTime          @default(now())
+
+  @@unique([packageId, featureDefinitionId])
+  @@map("package_features")
+}
+
+/// A club's assigned package + overrides
+model ClubPackage {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId              String    @unique @db.Uuid
+  club                Club      @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  packageId           String    @db.Uuid
+  package             Package   @relation(fields: [packageId], references: [id])
+  memberLimitOverride Int?
+  userLimitOverride   Int?
+  customPriceOverride Decimal?  @db.Decimal(10, 2)
+  startDate           DateTime  @default(now())
+  endDate             DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([packageId])
+  @@map("club_packages")
+}
+
+/// Per-club add-on modules
+model ClubAddon {
+  id                  String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId              String            @db.Uuid
+  club                Club              @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  featureDefinitionId String            @db.Uuid
+  featureDefinition   FeatureDefinition @relation(fields: [featureDefinitionId], references: [id])
+  priceOverride       Decimal?          @db.Decimal(10, 2)
+  startDate           DateTime          @default(now())
+  endDate             DateTime?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  @@unique([clubId, featureDefinitionId])
+  @@index([clubId])
+  @@map("club_addons")
+}
+
+/// Per-club operational toggle overrides
+model ClubOperationalFlag {
+  id                  String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clubId              String            @db.Uuid
+  club                Club              @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  featureDefinitionId String            @db.Uuid
+  featureDefinition   FeatureDefinition @relation(fields: [featureDefinitionId], references: [id])
+  enabled             Boolean
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  @@unique([clubId, featureDefinitionId])
+  @@index([clubId])
+  @@map("club_operational_flags")
 }

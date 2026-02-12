@@ -75,7 +75,7 @@ export class FeatureFlagsResolver {
   @Query(() => [TierDefaultsType], { name: 'tierDefaults' })
   async getTierDefaults(@GqlCurrentUser() user: JwtPayload) {
     requirePlatformAdmin(user);
-    return this.featureFlagsService.getTierDefaults();
+    return await this.featureFlagsService.getTierDefaults();
   }
 
   @Mutation(() => FeatureFlagsType, { name: 'updateClubOperationalFlag' })

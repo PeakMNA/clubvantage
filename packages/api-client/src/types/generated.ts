@@ -150,6 +150,12 @@ export type ActivityLogResultType = {
   meta: PaginationMetaType;
 };
 
+export type AddClubAddonInput = {
+  clubId: Scalars['ID']['input'];
+  featureDefinitionId: Scalars['ID']['input'];
+  priceOverride?: InputMaybe<Scalars['Float']['input']>;
+};
+
 export type AddGroupPlayersInput = {
   players: Array<GroupPlayerInput>;
 };
@@ -381,6 +387,14 @@ export type ArrangementStatus =
   | 'COMPLETED'
   | 'DEFAULTED'
   | 'DRAFT';
+
+export type AssignClubPackageInput = {
+  clubId: Scalars['ID']['input'];
+  customPriceOverride?: InputMaybe<Scalars['Float']['input']>;
+  memberLimitOverride?: InputMaybe<Scalars['Int']['input']>;
+  packageId: Scalars['ID']['input'];
+  userLimitOverride?: InputMaybe<Scalars['Int']['input']>;
+};
 
 export type AssignEquipmentInput = {
   bookingId?: InputMaybe<Scalars['ID']['input']>;
@@ -1431,6 +1445,17 @@ export type CloseShiftInput = {
   varianceNote?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type ClubAddonType = {
+  __typename?: 'ClubAddonType';
+  createdAt: Scalars['DateTime']['output'];
+  endDate?: Maybe<Scalars['DateTime']['output']>;
+  featureDefinition: FeatureDefinitionType;
+  id: Scalars['ID']['output'];
+  priceOverride?: Maybe<Scalars['Float']['output']>;
+  startDate: Scalars['DateTime']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+};
+
 /** Club billing configuration settings */
 export type ClubBillingSettingsType = {
   __typename?: 'ClubBillingSettingsType';
@@ -1549,6 +1574,20 @@ export type ClubGolfSettingsType = {
   requireGuestContact: Scalars['Boolean']['output'];
 };
 
+export type ClubPackageType = {
+  __typename?: 'ClubPackageType';
+  club: ClubSummaryType;
+  createdAt: Scalars['DateTime']['output'];
+  customPriceOverride?: Maybe<Scalars['Float']['output']>;
+  endDate?: Maybe<Scalars['DateTime']['output']>;
+  id: Scalars['ID']['output'];
+  memberLimitOverride?: Maybe<Scalars['Int']['output']>;
+  package: PackageType;
+  startDate: Scalars['DateTime']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+  userLimitOverride?: Maybe<Scalars['Int']['output']>;
+};
+
 export type ClubProfileType = {
   __typename?: 'ClubProfileType';
   address?: Maybe<Scalars['String']['output']>;
@@ -1567,6 +1606,12 @@ export type ClubProfileType = {
   subscriptionTier: Scalars['String']['output'];
   timezone?: Maybe<Scalars['String']['output']>;
   website?: Maybe<Scalars['String']['output']>;
+};
+
+export type ClubSummaryType = {
+  __typename?: 'ClubSummaryType';
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
 };
 
 export type CollectionMetricsType = {
@@ -1825,6 +1870,15 @@ export type CreateFacilityInput = {
   type: ResourceTypeEnum;
 };
 
+export type CreateFeatureDefinitionInput = {
+  addonPrice?: InputMaybe<Scalars['Float']['input']>;
+  category: FeatureCategory;
+  description?: InputMaybe<Scalars['String']['input']>;
+  key: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+  sortOrder?: InputMaybe<Scalars['Int']['input']>;
+};
+
 export type CreateGreenFeeRateInput = {
   amount: Scalars['Float']['input'];
   holes: Scalars['Int']['input'];
@@ -1969,6 +2023,18 @@ export type CreateModifierInput = {
   name: Scalars['String']['input'];
   priceAdjustment?: InputMaybe<Scalars['Float']['input']>;
   sortOrder?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type CreatePackageInput = {
+  annualPrice?: InputMaybe<Scalars['Float']['input']>;
+  basePrice: Scalars['Float']['input'];
+  defaultMemberLimit?: InputMaybe<Scalars['Int']['input']>;
+  defaultUserLimit?: InputMaybe<Scalars['Int']['input']>;
+  name: Scalars['String']['input'];
+  slug: Scalars['String']['input'];
+  sortOrder?: InputMaybe<Scalars['Int']['input']>;
+  tier: PackageTier;
+  verticalId?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export type CreatePaymentArrangementInput = {
@@ -2252,6 +2318,14 @@ export type CreateUserInput = {
   permissions?: InputMaybe<Array<Scalars['String']['input']>>;
   phone?: InputMaybe<Scalars['String']['input']>;
   role: UserRole;
+};
+
+export type CreateVerticalInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  iconUrl?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+  slug: Scalars['String']['input'];
+  sortOrder?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type CreateWaitlistEntryInput = {
@@ -2963,6 +3037,26 @@ export type FacilityType = {
   location?: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
   type: ResourceTypeEnum;
+};
+
+/** Category of a feature definition */
+export type FeatureCategory =
+  | 'FEATURE'
+  | 'MODULE'
+  | 'OPERATIONAL';
+
+export type FeatureDefinitionType = {
+  __typename?: 'FeatureDefinitionType';
+  addonPrice?: Maybe<Scalars['Float']['output']>;
+  category: FeatureCategory;
+  createdAt: Scalars['DateTime']['output'];
+  description?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  isActive: Scalars['Boolean']['output'];
+  key: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  sortOrder: Scalars['Int']['output'];
+  updatedAt: Scalars['DateTime']['output'];
 };
 
 export type FeatureFlagsType = {
@@ -4121,6 +4215,7 @@ export type Mutation = {
   /** Accept a waitlist offer */
   acceptWaitlistOffer: WaitlistResponseType;
   activatePaymentArrangement: PaymentArrangementType;
+  addClubAddon: ClubAddonType;
   /** Add players to a group booking */
   addGroupPlayers: GroupBookingMutationResponse;
   /** Add a line item to a player */
@@ -4140,6 +4235,7 @@ export type Mutation = {
   approveCreditNote: CreditNoteGraphQlType;
   /** Approve a pending discount that requires manager approval */
   approveDiscount: AppliedDiscountType;
+  assignClubPackage: ClubPackageType;
   assignEquipment: EquipmentAssignmentResponse;
   /** Auto-assign players to flights */
   assignFlights: GroupBookingFlightsResponse;
@@ -4232,6 +4328,7 @@ export type Mutation = {
   createEquipmentCategory: EquipmentCategoryResponse;
   /** Create a new facility */
   createFacility: FacilityResponseType;
+  createFeatureDefinition: FeatureDefinitionType;
   /** Create a green fee rate */
   createGreenFeeRate: GreenFeeRateMutationResponse;
   /** Create a group booking */
@@ -4256,6 +4353,7 @@ export type Mutation = {
   /** Create a new minimum spend requirement */
   createMinimumSpendRequirement: MinimumSpendRequirement;
   createModifierGroup: ModifierGroup;
+  createPackage: PackageType;
   createPaymentArrangement: PaymentArrangementType;
   /** Create a new pro shop category */
   createProShopCategory: ProShopCategoryType;
@@ -4287,6 +4385,7 @@ export type Mutation = {
   createTimePeriod: TimePeriodMutationResponse;
   /** Create a new user */
   createUser: UserType;
+  createVertical: VerticalType;
   /** Add to waitlist */
   createWaitlistEntry: WaitlistMutationResponse;
   /** Decline a waitlist offer */
@@ -4426,6 +4525,7 @@ export type Mutation = {
   releaseEquipmentForBooking: EquipmentReleaseResponse;
   /** Remove an applied discount */
   removeAppliedDiscount: Scalars['Boolean']['output'];
+  removeClubAddon: ClubAddonType;
   /** Remove a specific interest from a dependent */
   removeDependentInterest: EngagementDeleteResponse;
   /** Remove entry from waitlist */
@@ -4483,6 +4583,7 @@ export type Mutation = {
   setMemberInterests: Array<MemberInterestType>;
   /** Set role-specific button overrides for an outlet */
   setPOSRoleOverrides: SetRoleOverridesMutationResponse;
+  setPackageFeatures: Array<PackageFeatureType>;
   /** Settle all players in a flight at once */
   settleAllPlayers: SettlementResultType;
   signOffChecklistStep: CloseChecklistStepGqlType;
@@ -4544,6 +4645,7 @@ export type Mutation = {
   updateEquipmentStatus: EquipmentResponse;
   /** Update an existing facility */
   updateFacility: FacilityResponseType;
+  updateFeatureDefinition: FeatureDefinitionType;
   /** Update a green fee rate */
   updateGreenFeeRate: GreenFeeRateMutationResponse;
   /** Update a group booking */
@@ -4585,6 +4687,7 @@ export type Mutation = {
   updatePOSButtonRegistry: UpdateButtonRegistryMutationResponse;
   /** Update POS integration settings */
   updatePOSConfig: CheckInSettingsType;
+  updatePackage: PackageType;
   /** Update a stored payment method */
   updatePaymentMethod: StoredPaymentMethod;
   /** Update a single player rental status (cart/caddy) */
@@ -4631,6 +4734,7 @@ export type Mutation = {
   updateTimePeriod: TimePeriodMutationResponse;
   /** Update an existing user */
   updateUser: UserType;
+  updateVertical: VerticalType;
   /** Update a waitlist entry */
   updateWaitlistEntry: WaitlistMutationResponse;
   /** Upload a new document for a member */
@@ -4657,6 +4761,11 @@ export type MutationAcceptWaitlistOfferArgs = {
 
 export type MutationActivatePaymentArrangementArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationAddClubAddonArgs = {
+  input: AddClubAddonInput;
 };
 
 
@@ -4709,6 +4818,11 @@ export type MutationApproveCreditNoteArgs = {
 
 export type MutationApproveDiscountArgs = {
   input: ApproveDiscountInput;
+};
+
+
+export type MutationAssignClubPackageArgs = {
+  input: AssignClubPackageInput;
 };
 
 
@@ -4976,6 +5090,11 @@ export type MutationCreateFacilityArgs = {
 };
 
 
+export type MutationCreateFeatureDefinitionArgs = {
+  input: CreateFeatureDefinitionInput;
+};
+
+
 export type MutationCreateGreenFeeRateArgs = {
   input: CreateGreenFeeRateInput;
 };
@@ -5038,6 +5157,11 @@ export type MutationCreateMinimumSpendRequirementArgs = {
 
 export type MutationCreateModifierGroupArgs = {
   input: CreateModifierGroupInput;
+};
+
+
+export type MutationCreatePackageArgs = {
+  input: CreatePackageInput;
 };
 
 
@@ -5131,6 +5255,11 @@ export type MutationCreateTimePeriodArgs = {
 
 export type MutationCreateUserArgs = {
   input: CreateUserInput;
+};
+
+
+export type MutationCreateVerticalArgs = {
+  input: CreateVerticalInput;
 };
 
 
@@ -5513,6 +5642,12 @@ export type MutationRemoveAppliedDiscountArgs = {
 };
 
 
+export type MutationRemoveClubAddonArgs = {
+  clubId: Scalars['ID']['input'];
+  featureDefinitionId: Scalars['ID']['input'];
+};
+
+
 export type MutationRemoveDependentInterestArgs = {
   categoryId: Scalars['ID']['input'];
   dependentId: Scalars['ID']['input'];
@@ -5665,6 +5800,12 @@ export type MutationSetMemberInterestsArgs = {
 export type MutationSetPosRoleOverridesArgs = {
   input: PosRoleOverridesInput;
   outletId: Scalars['ID']['input'];
+};
+
+
+export type MutationSetPackageFeaturesArgs = {
+  features: Array<PackageFeatureInput>;
+  packageId: Scalars['ID']['input'];
 };
 
 
@@ -5861,6 +6002,12 @@ export type MutationUpdateFacilityArgs = {
 };
 
 
+export type MutationUpdateFeatureDefinitionArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateFeatureDefinitionInput;
+};
+
+
 export type MutationUpdateGreenFeeRateArgs = {
   id: Scalars['ID']['input'];
   input: UpdateGreenFeeRateInput;
@@ -5989,6 +6136,12 @@ export type MutationUpdatePosButtonRegistryArgs = {
 
 export type MutationUpdatePosConfigArgs = {
   input: PosConfigInput;
+};
+
+
+export type MutationUpdatePackageArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdatePackageInput;
 };
 
 
@@ -6133,6 +6286,12 @@ export type MutationUpdateTimePeriodArgs = {
 export type MutationUpdateUserArgs = {
   id: Scalars['ID']['input'];
   input: UpdateUserInput;
+};
+
+
+export type MutationUpdateVerticalArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateVerticalInput;
 };
 
 
@@ -6341,6 +6500,43 @@ export type PosTemplateInput = {
   name: Scalars['String']['input'];
   outletType: Scalars['String']['input'];
   toolbarConfig: Scalars['JSON']['input'];
+};
+
+export type PackageFeatureInput = {
+  enabled: Scalars['Boolean']['input'];
+  featureDefinitionId: Scalars['ID']['input'];
+};
+
+export type PackageFeatureType = {
+  __typename?: 'PackageFeatureType';
+  enabled: Scalars['Boolean']['output'];
+  featureDefinition: FeatureDefinitionType;
+  id: Scalars['ID']['output'];
+};
+
+/** Package tier level */
+export type PackageTier =
+  | 'CUSTOM'
+  | 'ENTERPRISE'
+  | 'PRO'
+  | 'STARTER';
+
+export type PackageType = {
+  __typename?: 'PackageType';
+  annualPrice?: Maybe<Scalars['Float']['output']>;
+  basePrice: Scalars['Float']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  defaultMemberLimit?: Maybe<Scalars['Int']['output']>;
+  defaultUserLimit?: Maybe<Scalars['Int']['output']>;
+  features?: Maybe<Array<PackageFeatureType>>;
+  id: Scalars['ID']['output'];
+  isActive: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  slug: Scalars['String']['output'];
+  sortOrder: Scalars['Int']['output'];
+  tier: PackageTier;
+  updatedAt: Scalars['DateTime']['output'];
+  vertical?: Maybe<VerticalType>;
 };
 
 export type PageInfo = {
@@ -6891,11 +7087,13 @@ export type Query = {
   checkSubAccountLimit: SubAccountLimitCheck;
   cityLedgerStatements: Array<StatementGqlType>;
   closeChecklist?: Maybe<CloseChecklistGqlType>;
+  clubAddons: Array<ClubAddonType>;
   /** Get club-wide billing configuration settings */
   clubBillingSettings: ClubBillingSettingsType;
   clubFeatureFlags: FeatureFlagsType;
   /** Get club golf settings including cart, rental, and caddy policies */
   clubGolfSettings?: Maybe<ClubGolfSettingsType>;
+  clubPackage?: Maybe<ClubPackageType>;
   clubProfile: ClubProfileType;
   /** Get schedules for a course */
   courseSchedules: Array<GolfCourseScheduleType>;
@@ -6931,6 +7129,8 @@ export type Query = {
   equipmentItem?: Maybe<Equipment>;
   /** Get list of facilities */
   facilities: Array<FacilityType>;
+  featureDefinition: FeatureDefinitionType;
+  featureDefinitions: Array<FeatureDefinitionType>;
   featureFlags: FeatureFlagsType;
   /** Get check-in info for all players in a tee time */
   flightCheckInInfo: FlightCheckInInfoType;
@@ -7064,6 +7264,8 @@ export type Query = {
   outletGridConfig?: Maybe<OutletGridConfig>;
   outletProductConfigs: Array<OutletProductConfig>;
   outletProductPanel: OutletProductPanel;
+  package: PackageType;
+  packages: Array<PackageType>;
   /** Get a single payment/receipt by ID */
   payment: PaymentType;
   paymentArrangement: PaymentArrangementType;
@@ -7211,6 +7413,8 @@ export type Query = {
   validateTeeTicket: TeeTicketValidationResult;
   /** Validate a ticket by QR code data */
   validateTicket: TicketValidationResultType;
+  vertical: VerticalType;
+  verticals: Array<VerticalType>;
   /** Get waitlist entries */
   waitlist: WaitlistConnection;
   /** Get waitlist entries */
@@ -7364,7 +7568,17 @@ export type QueryCloseChecklistArgs = {
 };
 
 
+export type QueryClubAddonsArgs = {
+  clubId: Scalars['ID']['input'];
+};
+
+
 export type QueryClubFeatureFlagsArgs = {
+  clubId: Scalars['ID']['input'];
+};
+
+
+export type QueryClubPackageArgs = {
   clubId: Scalars['ID']['input'];
 };
 
@@ -7472,6 +7686,16 @@ export type QueryEquipmentItemArgs = {
 
 export type QueryFacilitiesArgs = {
   filter?: InputMaybe<FacilityFilterInput>;
+};
+
+
+export type QueryFeatureDefinitionArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryFeatureDefinitionsArgs = {
+  category?: InputMaybe<FeatureCategory>;
 };
 
 
@@ -7804,6 +8028,16 @@ export type QueryOutletProductConfigsArgs = {
 
 export type QueryOutletProductPanelArgs = {
   outletId: Scalars['ID']['input'];
+};
+
+
+export type QueryPackageArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryPackagesArgs = {
+  verticalId?: InputMaybe<Scalars['ID']['input']>;
 };
 
 
@@ -8201,6 +8435,11 @@ export type QueryValidateTeeTicketArgs = {
 
 export type QueryValidateTicketArgs = {
   qrCodeData: Scalars['String']['input'];
+};
+
+
+export type QueryVerticalArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -9821,6 +10060,14 @@ export type UpdateFacilityInput = {
   type?: InputMaybe<ResourceTypeEnum>;
 };
 
+export type UpdateFeatureDefinitionInput = {
+  addonPrice?: InputMaybe<Scalars['Float']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  isActive?: InputMaybe<Scalars['Boolean']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  sortOrder?: InputMaybe<Scalars['Int']['input']>;
+};
+
 export type UpdateGreenFeeRateInput = {
   amount?: InputMaybe<Scalars['Float']['input']>;
   holes?: InputMaybe<Scalars['Int']['input']>;
@@ -9967,6 +10214,16 @@ export type UpdateOutletProductConfigInput = {
   quickKeyPosition?: InputMaybe<Scalars['Int']['input']>;
   sortPriority?: InputMaybe<Scalars['Int']['input']>;
   visibilityRules?: InputMaybe<VisibilityRulesInput>;
+};
+
+export type UpdatePackageInput = {
+  annualPrice?: InputMaybe<Scalars['Float']['input']>;
+  basePrice?: InputMaybe<Scalars['Float']['input']>;
+  defaultMemberLimit?: InputMaybe<Scalars['Int']['input']>;
+  defaultUserLimit?: InputMaybe<Scalars['Int']['input']>;
+  isActive?: InputMaybe<Scalars['Boolean']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  sortOrder?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type UpdatePaymentMethodInput = {
@@ -10269,6 +10526,14 @@ export type UpdateUserInput = {
   role?: InputMaybe<UserRole>;
 };
 
+export type UpdateVerticalInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  iconUrl?: InputMaybe<Scalars['String']['input']>;
+  isActive?: InputMaybe<Scalars['Boolean']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  sortOrder?: InputMaybe<Scalars['Int']['input']>;
+};
+
 export type UpdateWaitlistEntryInput = {
   playerCount?: InputMaybe<Scalars['Int']['input']>;
   priority?: InputMaybe<Scalars['Int']['input']>;
@@ -10363,6 +10628,20 @@ export type VerifyDocumentResultType = {
 export type VerifyPinInput = {
   pin: Scalars['String']['input'];
   subAccountId: Scalars['String']['input'];
+};
+
+export type VerticalType = {
+  __typename?: 'VerticalType';
+  createdAt: Scalars['DateTime']['output'];
+  description?: Maybe<Scalars['String']['output']>;
+  iconUrl?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  isActive: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  packages?: Maybe<Array<PackageType>>;
+  slug: Scalars['String']['output'];
+  sortOrder: Scalars['Int']['output'];
+  updatedAt: Scalars['DateTime']['output'];
 };
 
 export type VisibilityRulesInput = {
@@ -11220,6 +11499,141 @@ export type RecordCashMovementMutationVariables = Exact<{
 
 
 export type RecordCashMovementMutation = { __typename?: 'Mutation', recordCashMovement: { __typename?: 'CashMovementGraphQLType', id: string, shiftId: string, type: CashMovementType, amount: number, description?: string | null | undefined, reference?: string | null | undefined, reason?: string | null | undefined, approvedBy?: string | null | undefined, transactionId?: string | null | undefined, performedBy: string, performedAt: string } };
+
+export type FeatureDefinitionFieldsFragment = { __typename?: 'FeatureDefinitionType', id: string, key: string, name: string, description?: string | null | undefined, category: FeatureCategory, addonPrice?: number | null | undefined, sortOrder: number, isActive: boolean, createdAt: string, updatedAt: string };
+
+export type GetFeatureDefinitionsQueryVariables = Exact<{
+  category?: InputMaybe<FeatureCategory>;
+}>;
+
+
+export type GetFeatureDefinitionsQuery = { __typename?: 'Query', featureDefinitions: Array<{ __typename?: 'FeatureDefinitionType', id: string, key: string, name: string, description?: string | null | undefined, category: FeatureCategory, addonPrice?: number | null | undefined, sortOrder: number, isActive: boolean, createdAt: string, updatedAt: string }> };
+
+export type GetFeatureDefinitionQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetFeatureDefinitionQuery = { __typename?: 'Query', featureDefinition: { __typename?: 'FeatureDefinitionType', id: string, key: string, name: string, description?: string | null | undefined, category: FeatureCategory, addonPrice?: number | null | undefined, sortOrder: number, isActive: boolean, createdAt: string, updatedAt: string } };
+
+export type CreateFeatureDefinitionMutationVariables = Exact<{
+  input: CreateFeatureDefinitionInput;
+}>;
+
+
+export type CreateFeatureDefinitionMutation = { __typename?: 'Mutation', createFeatureDefinition: { __typename?: 'FeatureDefinitionType', id: string, key: string, name: string, description?: string | null | undefined, category: FeatureCategory, addonPrice?: number | null | undefined, sortOrder: number, isActive: boolean, createdAt: string, updatedAt: string } };
+
+export type UpdateFeatureDefinitionMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  input: UpdateFeatureDefinitionInput;
+}>;
+
+
+export type UpdateFeatureDefinitionMutation = { __typename?: 'Mutation', updateFeatureDefinition: { __typename?: 'FeatureDefinitionType', id: string, key: string, name: string, description?: string | null | undefined, category: FeatureCategory, addonPrice?: number | null | undefined, sortOrder: number, isActive: boolean, createdAt: string, updatedAt: string } };
+
+export type VerticalFieldsFragment = { __typename?: 'VerticalType', id: string, name: string, slug: string, description?: string | null | undefined, iconUrl?: string | null | undefined, isActive: boolean, sortOrder: number, createdAt: string, updatedAt: string };
+
+export type GetVerticalsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetVerticalsQuery = { __typename?: 'Query', verticals: Array<{ __typename?: 'VerticalType', id: string, name: string, slug: string, description?: string | null | undefined, iconUrl?: string | null | undefined, isActive: boolean, sortOrder: number, createdAt: string, updatedAt: string, packages?: Array<{ __typename?: 'PackageType', id: string, name: string, slug: string, tier: PackageTier, basePrice: number, annualPrice?: number | null | undefined, isActive: boolean, sortOrder: number }> | null | undefined }> };
+
+export type GetVerticalQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetVerticalQuery = { __typename?: 'Query', vertical: { __typename?: 'VerticalType', id: string, name: string, slug: string, description?: string | null | undefined, iconUrl?: string | null | undefined, isActive: boolean, sortOrder: number, createdAt: string, updatedAt: string, packages?: Array<{ __typename?: 'PackageType', id: string, name: string, slug: string, tier: PackageTier, basePrice: number, annualPrice?: number | null | undefined, defaultMemberLimit?: number | null | undefined, defaultUserLimit?: number | null | undefined, isActive: boolean, sortOrder: number, features?: Array<{ __typename?: 'PackageFeatureType', id: string, enabled: boolean, featureDefinition: { __typename?: 'FeatureDefinitionType', id: string, key: string, name: string, description?: string | null | undefined, category: FeatureCategory, addonPrice?: number | null | undefined, sortOrder: number, isActive: boolean, createdAt: string, updatedAt: string } }> | null | undefined }> | null | undefined } };
+
+export type CreateVerticalMutationVariables = Exact<{
+  input: CreateVerticalInput;
+}>;
+
+
+export type CreateVerticalMutation = { __typename?: 'Mutation', createVertical: { __typename?: 'VerticalType', id: string, name: string, slug: string, description?: string | null | undefined, iconUrl?: string | null | undefined, isActive: boolean, sortOrder: number, createdAt: string, updatedAt: string } };
+
+export type UpdateVerticalMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  input: UpdateVerticalInput;
+}>;
+
+
+export type UpdateVerticalMutation = { __typename?: 'Mutation', updateVertical: { __typename?: 'VerticalType', id: string, name: string, slug: string, description?: string | null | undefined, iconUrl?: string | null | undefined, isActive: boolean, sortOrder: number, createdAt: string, updatedAt: string } };
+
+export type PackageFieldsFragment = { __typename?: 'PackageType', id: string, name: string, slug: string, tier: PackageTier, basePrice: number, annualPrice?: number | null | undefined, defaultMemberLimit?: number | null | undefined, defaultUserLimit?: number | null | undefined, isActive: boolean, sortOrder: number, createdAt: string, updatedAt: string, vertical?: { __typename?: 'VerticalType', id: string, name: string, slug: string } | null | undefined };
+
+export type GetPackagesQueryVariables = Exact<{
+  verticalId?: InputMaybe<Scalars['ID']['input']>;
+}>;
+
+
+export type GetPackagesQuery = { __typename?: 'Query', packages: Array<{ __typename?: 'PackageType', id: string, name: string, slug: string, tier: PackageTier, basePrice: number, annualPrice?: number | null | undefined, defaultMemberLimit?: number | null | undefined, defaultUserLimit?: number | null | undefined, isActive: boolean, sortOrder: number, createdAt: string, updatedAt: string, features?: Array<{ __typename?: 'PackageFeatureType', id: string, enabled: boolean, featureDefinition: { __typename?: 'FeatureDefinitionType', id: string, key: string, name: string, description?: string | null | undefined, category: FeatureCategory, addonPrice?: number | null | undefined, sortOrder: number, isActive: boolean, createdAt: string, updatedAt: string } }> | null | undefined, vertical?: { __typename?: 'VerticalType', id: string, name: string, slug: string } | null | undefined }> };
+
+export type GetPackageQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetPackageQuery = { __typename?: 'Query', package: { __typename?: 'PackageType', id: string, name: string, slug: string, tier: PackageTier, basePrice: number, annualPrice?: number | null | undefined, defaultMemberLimit?: number | null | undefined, defaultUserLimit?: number | null | undefined, isActive: boolean, sortOrder: number, createdAt: string, updatedAt: string, features?: Array<{ __typename?: 'PackageFeatureType', id: string, enabled: boolean, featureDefinition: { __typename?: 'FeatureDefinitionType', id: string, key: string, name: string, description?: string | null | undefined, category: FeatureCategory, addonPrice?: number | null | undefined, sortOrder: number, isActive: boolean, createdAt: string, updatedAt: string } }> | null | undefined, vertical?: { __typename?: 'VerticalType', id: string, name: string, slug: string } | null | undefined } };
+
+export type CreatePackageMutationVariables = Exact<{
+  input: CreatePackageInput;
+}>;
+
+
+export type CreatePackageMutation = { __typename?: 'Mutation', createPackage: { __typename?: 'PackageType', id: string, name: string, slug: string, tier: PackageTier, basePrice: number, annualPrice?: number | null | undefined, defaultMemberLimit?: number | null | undefined, defaultUserLimit?: number | null | undefined, isActive: boolean, sortOrder: number, createdAt: string, updatedAt: string, vertical?: { __typename?: 'VerticalType', id: string, name: string, slug: string } | null | undefined } };
+
+export type UpdatePackageMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+  input: UpdatePackageInput;
+}>;
+
+
+export type UpdatePackageMutation = { __typename?: 'Mutation', updatePackage: { __typename?: 'PackageType', id: string, name: string, slug: string, tier: PackageTier, basePrice: number, annualPrice?: number | null | undefined, defaultMemberLimit?: number | null | undefined, defaultUserLimit?: number | null | undefined, isActive: boolean, sortOrder: number, createdAt: string, updatedAt: string, vertical?: { __typename?: 'VerticalType', id: string, name: string, slug: string } | null | undefined } };
+
+export type SetPackageFeaturesMutationVariables = Exact<{
+  packageId: Scalars['ID']['input'];
+  features: Array<PackageFeatureInput> | PackageFeatureInput;
+}>;
+
+
+export type SetPackageFeaturesMutation = { __typename?: 'Mutation', setPackageFeatures: Array<{ __typename?: 'PackageFeatureType', id: string, enabled: boolean, featureDefinition: { __typename?: 'FeatureDefinitionType', id: string, key: string, name: string, description?: string | null | undefined, category: FeatureCategory, addonPrice?: number | null | undefined, sortOrder: number, isActive: boolean, createdAt: string, updatedAt: string } }> };
+
+export type GetClubPackageQueryVariables = Exact<{
+  clubId: Scalars['ID']['input'];
+}>;
+
+
+export type GetClubPackageQuery = { __typename?: 'Query', clubPackage?: { __typename?: 'ClubPackageType', id: string, memberLimitOverride?: number | null | undefined, userLimitOverride?: number | null | undefined, customPriceOverride?: number | null | undefined, startDate: string, endDate?: string | null | undefined, createdAt: string, updatedAt: string, club: { __typename?: 'ClubSummaryType', id: string, name: string }, package: { __typename?: 'PackageType', id: string, name: string, slug: string, tier: PackageTier, basePrice: number, annualPrice?: number | null | undefined, defaultMemberLimit?: number | null | undefined, defaultUserLimit?: number | null | undefined, isActive: boolean, sortOrder: number, createdAt: string, updatedAt: string, features?: Array<{ __typename?: 'PackageFeatureType', id: string, enabled: boolean, featureDefinition: { __typename?: 'FeatureDefinitionType', id: string, key: string, name: string, description?: string | null | undefined, category: FeatureCategory, addonPrice?: number | null | undefined, sortOrder: number, isActive: boolean, createdAt: string, updatedAt: string } }> | null | undefined, vertical?: { __typename?: 'VerticalType', id: string, name: string, slug: string } | null | undefined } } | null | undefined };
+
+export type AssignClubPackageMutationVariables = Exact<{
+  input: AssignClubPackageInput;
+}>;
+
+
+export type AssignClubPackageMutation = { __typename?: 'Mutation', assignClubPackage: { __typename?: 'ClubPackageType', id: string, memberLimitOverride?: number | null | undefined, userLimitOverride?: number | null | undefined, customPriceOverride?: number | null | undefined, startDate: string, club: { __typename?: 'ClubSummaryType', id: string, name: string }, package: { __typename?: 'PackageType', id: string, name: string, slug: string, tier: PackageTier, basePrice: number, annualPrice?: number | null | undefined, defaultMemberLimit?: number | null | undefined, defaultUserLimit?: number | null | undefined, isActive: boolean, sortOrder: number, createdAt: string, updatedAt: string, vertical?: { __typename?: 'VerticalType', id: string, name: string, slug: string } | null | undefined } } };
+
+export type GetClubAddonsQueryVariables = Exact<{
+  clubId: Scalars['ID']['input'];
+}>;
+
+
+export type GetClubAddonsQuery = { __typename?: 'Query', clubAddons: Array<{ __typename?: 'ClubAddonType', id: string, priceOverride?: number | null | undefined, startDate: string, endDate?: string | null | undefined, createdAt: string, updatedAt: string, featureDefinition: { __typename?: 'FeatureDefinitionType', id: string, key: string, name: string, description?: string | null | undefined, category: FeatureCategory, addonPrice?: number | null | undefined, sortOrder: number, isActive: boolean, createdAt: string, updatedAt: string } }> };
+
+export type AddClubAddonMutationVariables = Exact<{
+  input: AddClubAddonInput;
+}>;
+
+
+export type AddClubAddonMutation = { __typename?: 'Mutation', addClubAddon: { __typename?: 'ClubAddonType', id: string, priceOverride?: number | null | undefined, startDate: string, featureDefinition: { __typename?: 'FeatureDefinitionType', id: string, key: string, name: string, description?: string | null | undefined, category: FeatureCategory, addonPrice?: number | null | undefined, sortOrder: number, isActive: boolean, createdAt: string, updatedAt: string } } };
+
+export type RemoveClubAddonMutationVariables = Exact<{
+  clubId: Scalars['ID']['input'];
+  featureDefinitionId: Scalars['ID']['input'];
+}>;
+
+
+export type RemoveClubAddonMutation = { __typename?: 'Mutation', removeClubAddon: { __typename?: 'ClubAddonType', id: string, endDate?: string | null | undefined, featureDefinition: { __typename?: 'FeatureDefinitionType', id: string, key: string, name: string, description?: string | null | undefined, category: FeatureCategory, addonPrice?: number | null | undefined, sortOrder: number, isActive: boolean, createdAt: string, updatedAt: string } } };
 
 export type CheckMemberCreditQueryVariables = Exact<{
   input: CheckCreditInput;

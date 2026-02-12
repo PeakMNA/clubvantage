@@ -1,0 +1,270 @@
+# Configurable Packages - Queries & Mutations
+
+# ============================================================================
+# FEATURE DEFINITIONS
+# ============================================================================
+
+fragment FeatureDefinitionFields on FeatureDefinitionType {
+  id
+  key
+  name
+  description
+  category
+  addonPrice
+  sortOrder
+  isActive
+  createdAt
+  updatedAt
+}
+
+query GetFeatureDefinitions($category: FeatureCategory) {
+  featureDefinitions(category: $category) {
+    ...FeatureDefinitionFields
+  }
+}
+
+query GetFeatureDefinition($id: ID!) {
+  featureDefinition(id: $id) {
+    ...FeatureDefinitionFields
+  }
+}
+
+mutation CreateFeatureDefinition($input: CreateFeatureDefinitionInput!) {
+  createFeatureDefinition(input: $input) {
+    ...FeatureDefinitionFields
+  }
+}
+
+mutation UpdateFeatureDefinition($id: ID!, $input: UpdateFeatureDefinitionInput!) {
+  updateFeatureDefinition(id: $id, input: $input) {
+    ...FeatureDefinitionFields
+  }
+}
+
+# ============================================================================
+# VERTICALS
+# ============================================================================
+
+fragment VerticalFields on VerticalType {
+  id
+  name
+  slug
+  description
+  iconUrl
+  isActive
+  sortOrder
+  createdAt
+  updatedAt
+}
+
+query GetVerticals {
+  verticals {
+    ...VerticalFields
+    packages {
+      id
+      name
+      slug
+      tier
+      basePrice
+      annualPrice
+      isActive
+      sortOrder
+    }
+  }
+}
+
+query GetVertical($id: ID!) {
+  vertical(id: $id) {
+    ...VerticalFields
+    packages {
+      id
+      name
+      slug
+      tier
+      basePrice
+      annualPrice
+      defaultMemberLimit
+      defaultUserLimit
+      isActive
+      sortOrder
+      features {
+        id
+        enabled
+        featureDefinition {
+          ...FeatureDefinitionFields
+        }
+      }
+    }
+  }
+}
+
+mutation CreateVertical($input: CreateVerticalInput!) {
+  createVertical(input: $input) {
+    ...VerticalFields
+  }
+}
+
+mutation UpdateVertical($id: ID!, $input: UpdateVerticalInput!) {
+  updateVertical(id: $id, input: $input) {
+    ...VerticalFields
+  }
+}
+
+# ============================================================================
+# PACKAGES
+# ============================================================================
+
+fragment PackageFields on PackageType {
+  id
+  name
+  slug
+  tier
+  basePrice
+  annualPrice
+  defaultMemberLimit
+  defaultUserLimit
+  isActive
+  sortOrder
+  createdAt
+  updatedAt
+  vertical {
+    id
+    name
+    slug
+  }
+}
+
+query GetPackages($verticalId: ID) {
+  packages(verticalId: $verticalId) {
+    ...PackageFields
+    features {
+      id
+      enabled
+      featureDefinition {
+        ...FeatureDefinitionFields
+      }
+    }
+  }
+}
+
+query GetPackage($id: ID!) {
+  package(id: $id) {
+    ...PackageFields
+    features {
+      id
+      enabled
+      featureDefinition {
+        ...FeatureDefinitionFields
+      }
+    }
+  }
+}
+
+mutation CreatePackage($input: CreatePackageInput!) {
+  createPackage(input: $input) {
+    ...PackageFields
+  }
+}
+
+mutation UpdatePackage($id: ID!, $input: UpdatePackageInput!) {
+  updatePackage(id: $id, input: $input) {
+    ...PackageFields
+  }
+}
+
+mutation SetPackageFeatures($packageId: ID!, $features: [PackageFeatureInput!]!) {
+  setPackageFeatures(packageId: $packageId, features: $features) {
+    id
+    enabled
+    featureDefinition {
+      ...FeatureDefinitionFields
+    }
+  }
+}
+
+# ============================================================================
+# CLUB PACKAGE ASSIGNMENT
+# ============================================================================
+
+query GetClubPackage($clubId: ID!) {
+  clubPackage(clubId: $clubId) {
+    id
+    memberLimitOverride
+    userLimitOverride
+    customPriceOverride
+    startDate
+    endDate
+    createdAt
+    updatedAt
+    club {
+      id
+      name
+    }
+    package {
+      ...PackageFields
+      features {
+        id
+        enabled
+        featureDefinition {
+          ...FeatureDefinitionFields
+        }
+      }
+    }
+  }
+}
+
+mutation AssignClubPackage($input: AssignClubPackageInput!) {
+  assignClubPackage(input: $input) {
+    id
+    memberLimitOverride
+    userLimitOverride
+    customPriceOverride
+    startDate
+    club {
+      id
+      name
+    }
+    package {
+      ...PackageFields
+    }
+  }
+}
+
+# ============================================================================
+# CLUB ADD-ONS
+# ============================================================================
+
+query GetClubAddons($clubId: ID!) {
+  clubAddons(clubId: $clubId) {
+    id
+    priceOverride
+    startDate
+    endDate
+    createdAt
+    updatedAt
+    featureDefinition {
+      ...FeatureDefinitionFields
+    }
+  }
+}
+
+mutation AddClubAddon($input: AddClubAddonInput!) {
+  addClubAddon(input: $input) {
+    id
+    priceOverride
+    startDate
+    featureDefinition {
+      ...FeatureDefinitionFields
+    }
+  }
+}
+
+mutation RemoveClubAddon($clubId: ID!, $featureDefinitionId: ID!) {
+  removeClubAddon(clubId: $clubId, featureDefinitionId: $featureDefinitionId) {
+    id
+    endDate
+    featureDefinition {
+      ...FeatureDefinitionFields
+    }
+  }
+}
