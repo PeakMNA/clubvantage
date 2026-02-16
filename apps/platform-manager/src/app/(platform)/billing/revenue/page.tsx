@@ -1,176 +1,231 @@
 'use client';
 
 import * as React from 'react';
-import { DollarSign, TrendingUp, TrendingDown, Users, ArrowUpRight } from 'lucide-react';
+import { DollarSign, TrendingUp, Building2, Layers, Loader2, Package } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-
-// Mock data
-const revenueData = {
-  mrr: 52400,
-  mrrGrowth: 8.2,
-  arr: 628800,
-  arrGrowth: 12.5,
-  arpu: 1115,
-  churnRate: 1.2,
-};
-
-const revenueByTier = [
-  { tier: 'Enterprise', count: 12, mrr: 24000, percentage: 45.8 },
-  { tier: 'Professional', count: 28, mrr: 22400, percentage: 42.7 },
-  { tier: 'Starter', count: 7, mrr: 6000, percentage: 11.5 },
-];
-
-const recentTransactions = [
-  { id: '1', tenant: 'Green Valley CC', type: 'subscription', amount: 2500, date: 'Today', status: 'completed' },
-  { id: '2', tenant: 'Sentosa Golf', type: 'subscription', amount: 3200, date: 'Today', status: 'completed' },
-  { id: '3', tenant: 'Bangkok Sports', type: 'upgrade', amount: 400, date: 'Yesterday', status: 'completed' },
-  { id: '4', tenant: 'Riverside CC', type: 'subscription', amount: 450, date: 'Yesterday', status: 'failed' },
-  { id: '5', tenant: 'Laguna Golf', type: 'subscription', amount: 750, date: '2 days ago', status: 'completed' },
-];
-
-function KPICard({ label, value, trend, trendUp = true }: { label: string; value: string; trend?: string; trendUp?: boolean }) {
-  return (
-    <Card>
-      <CardContent className="pt-6">
-        <p className="text-sm text-slate-500 uppercase tracking-wide">{label}</p>
-        <p className="text-3xl font-bold text-slate-900 mt-1">{value}</p>
-        {trend && (
-          <div className={`flex items-center gap-1 mt-2 text-sm ${trendUp ? 'text-emerald-600' : 'text-red-600'}`}>
-            {trendUp ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
-            {trend}
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
+import { useAllClubFeatureFlags } from '@/hooks/use-feature-flags';
+import { useVerticals } from '@/hooks/use-configurable-packages';
 
 export default function RevenuePage() {
+  const { data: flagsData, isLoading: loadingFlags } = useAllClubFeatureFlags();
+  const { data: verticalsData, isLoading: loadingVerticals } = useVerticals();
+
+  const clubs = flagsData?.allClubFeatureFlags ?? [];
+  const verticals = verticalsData?.verticals ?? [];
+
+  // Tier distribution
+  const tierBreakdown = React.useMemo(() => {
+    const counts = { STARTER: 0, PROFESSIONAL: 0, ENTERPRISE: 0 };
+    for (const club of clubs) {
+      const t = (club.subscriptionTier || '').toUpperCase();
+      if (t === 'ENTERPRISE') counts.ENTERPRISE++;
+      else if (t === 'PROFESSIONAL' || t === 'PRO') counts.PROFESSIONAL++;
+      else counts.STARTER++;
+    }
+    return counts;
+  }, [clubs]);
+
+  // Collect packages with pricing for reference
+  const packagesByTier = React.useMemo(() => {
+    const tiers: Record<string, Array<{ name: string; basePrice: number; verticalName: string }>> = {};
+    for (const v of verticals) {
+      for (const p of (v.packages || [])) {
+        const tier = (p.tier || 'CUSTOM').toUpperCase();
+        if (!tiers[tier]) tiers[tier] = [];
+        tiers[tier].push({
+          name: p.name,
+          basePrice: Number(p.basePrice) || 0,
+          verticalName: v.name,
+        });
+      }
+    }
+    return tiers;
+  }, [verticals]);
+
+  // Calculate estimated MRR based on avg base price per tier * tenant count
+  const revenueEstimate = React.useMemo(() => {
+    let totalEstimatedMRR = 0;
+    const tierRevenue: Array<{ tier: string; count: number; avgPrice: number; estimatedMRR: number }> = [];
+
+    for (const [tier, count] of Object.entries(tierBreakdown)) {
+      const packages = packagesByTier[tier] || [];
+      const avgPrice = packages.length > 0
+        ? packages.reduce((sum, p) => sum + p.basePrice, 0) / packages.length
+        : 0;
+      const estimated = Math.round(avgPrice * count);
+      totalEstimatedMRR += estimated;
+      tierRevenue.push({ tier, count, avgPrice: Math.round(avgPrice), estimatedMRR: estimated });
+    }
+
+    return { totalEstimatedMRR, tierRevenue };
+  }, [tierBreakdown, packagesByTier]);
+
+  const isLoading = loadingFlags || loadingVerticals;
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Revenue Overview</h1>
+          <p className="text-slate-500 mt-1">Platform-wide revenue metrics</p>
+        </div>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Revenue Overview</h1>
-        <p className="text-slate-500 mt-1">Platform-wide revenue metrics and trends</p>
+        <p className="text-slate-500 mt-1">Platform-wide revenue metrics and tenant breakdown</p>
       </div>
 
       {/* KPI Cards */}
       <div className="grid md:grid-cols-4 gap-4">
         <KPICard
-          label="Monthly Recurring Revenue"
-          value={`$${revenueData.mrr.toLocaleString()}`}
-          trend={`+${revenueData.mrrGrowth}% from last month`}
-          trendUp={true}
+          label="Total Tenants"
+          value={clubs.length.toString()}
+          icon={<Building2 className="h-5 w-5 text-blue-600" />}
         />
         <KPICard
-          label="Annual Recurring Revenue"
-          value={`$${revenueData.arr.toLocaleString()}`}
-          trend={`+${revenueData.arrGrowth}% YoY`}
-          trendUp={true}
+          label="Estimated MRR"
+          value={`$${revenueEstimate.totalEstimatedMRR.toLocaleString()}`}
+          icon={<DollarSign className="h-5 w-5 text-emerald-600" />}
+          subtitle="Based on package base prices"
         />
         <KPICard
-          label="Avg Revenue Per User"
-          value={`$${revenueData.arpu.toLocaleString()}`}
-          trend="+$45 from last month"
-          trendUp={true}
+          label="Verticals"
+          value={verticals.length.toString()}
+          icon={<Layers className="h-5 w-5 text-purple-600" />}
         />
         <KPICard
-          label="Monthly Churn Rate"
-          value={`${revenueData.churnRate}%`}
-          trend="-0.3% from last month"
-          trendUp={true}
+          label="Available Packages"
+          value={Object.values(packagesByTier).flat().length.toString()}
+          icon={<Package className="h-5 w-5 text-amber-600" />}
         />
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
+      <div className="grid lg:grid-cols-2 gap-6">
         {/* Revenue by Tier */}
-        <Card className="lg:col-span-1">
+        <Card>
           <CardHeader>
-            <CardTitle>Revenue by Tier</CardTitle>
+            <CardTitle>Estimated Revenue by Tier</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {revenueByTier.map((tier) => (
-                <div key={tier.tier}>
-                  <div className="flex justify-between items-center mb-2">
-                    <div>
-                      <span className="font-medium text-slate-900">{tier.tier}</span>
-                      <span className="text-sm text-slate-500 ml-2">({tier.count} tenants)</span>
+              {revenueEstimate.tierRevenue.map((tier) => {
+                const pct = revenueEstimate.totalEstimatedMRR > 0
+                  ? Math.round((tier.estimatedMRR / revenueEstimate.totalEstimatedMRR) * 100)
+                  : 0;
+                return (
+                  <div key={tier.tier}>
+                    <div className="flex justify-between items-center mb-2">
+                      <div>
+                        <span className="font-medium text-slate-900 capitalize">{tier.tier.toLowerCase()}</span>
+                        <span className="text-sm text-slate-500 ml-2">({tier.count} tenants)</span>
+                      </div>
+                      <span className="font-semibold text-slate-900">
+                        ${tier.estimatedMRR.toLocaleString()}
+                      </span>
                     </div>
-                    <span className="font-semibold text-slate-900">${tier.mrr.toLocaleString()}</span>
+                    <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${
+                          tier.tier === 'ENTERPRISE' ? 'bg-purple-500' :
+                          tier.tier === 'PROFESSIONAL' ? 'bg-blue-500' : 'bg-slate-400'
+                        }`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1">
+                      {pct}% of estimated MRR (avg ${tier.avgPrice}/mo per tenant)
+                    </p>
                   </div>
-                  <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full ${
-                        tier.tier === 'Enterprise' ? 'bg-blue-600' :
-                        tier.tier === 'Professional' ? 'bg-blue-400' : 'bg-blue-200'
-                      }`}
-                      style={{ width: `${tier.percentage}%` }}
-                    />
-                  </div>
-                  <p className="text-xs text-slate-500 mt-1">{tier.percentage}% of MRR</p>
-                </div>
-              ))}
+                );
+              })}
             </div>
+            <p className="text-xs text-slate-400 mt-4 pt-3 border-t border-slate-100">
+              Estimates based on average package base prices per tier. Actual revenue requires a billing API.
+            </p>
           </CardContent>
         </Card>
 
-        {/* Recent Transactions */}
-        <Card className="lg:col-span-2">
+        {/* Package Pricing Reference */}
+        <Card>
           <CardHeader>
-            <CardTitle>Recent Transactions</CardTitle>
+            <CardTitle>Package Pricing Reference</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {recentTransactions.map((tx) => (
-                <div
-                  key={tx.id}
-                  className="flex items-center justify-between py-3 border-b border-slate-100 last:border-0"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                      tx.status === 'completed' ? 'bg-emerald-100' : 'bg-red-100'
-                    }`}>
-                      <DollarSign className={`h-5 w-5 ${
-                        tx.status === 'completed' ? 'text-emerald-600' : 'text-red-600'
-                      }`} />
+            {Object.keys(packagesByTier).length > 0 ? (
+              <div className="space-y-4">
+                {Object.entries(packagesByTier)
+                  .sort(([a], [b]) => {
+                    const order: Record<string, number> = { STARTER: 0, PRO: 1, PROFESSIONAL: 1, ENTERPRISE: 2 };
+                    return (order[a] ?? 3) - (order[b] ?? 3);
+                  })
+                  .map(([tier, packages]) => (
+                    <div key={tier}>
+                      <h4 className="text-sm font-semibold text-slate-700 mb-2 capitalize">
+                        {tier.toLowerCase()} Tier
+                      </h4>
+                      <div className="space-y-2">
+                        {packages.map((pkg) => (
+                          <div
+                            key={pkg.name}
+                            className="flex items-center justify-between p-2 rounded-lg bg-slate-50"
+                          >
+                            <div>
+                              <p className="text-sm font-medium text-slate-900">{pkg.name}</p>
+                              <p className="text-xs text-slate-500">{pkg.verticalName}</p>
+                            </div>
+                            <span className="text-sm font-semibold text-slate-900">
+                              ${pkg.basePrice.toLocaleString()}/mo
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-slate-900">{tx.tenant}</p>
-                      <p className="text-sm text-slate-500 capitalize">{tx.type} • {tx.date}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className={`font-semibold ${tx.status === 'completed' ? 'text-slate-900' : 'text-red-600'}`}>
-                      ${tx.amount.toLocaleString()}
-                    </p>
-                    <Badge variant={tx.status === 'completed' ? 'success' : 'destructive'}>
-                      {tx.status}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
+                  ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500 text-center py-8">No packages configured yet</p>
+            )}
           </CardContent>
         </Card>
       </div>
-
-      {/* Revenue Chart Placeholder */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Revenue Trend</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-64 flex items-center justify-center bg-slate-50 rounded-lg">
-            <div className="text-center">
-              <TrendingUp className="h-12 w-12 text-slate-300 mx-auto mb-2" />
-              <p className="text-slate-500">Revenue chart would go here</p>
-              <p className="text-sm text-slate-400">Using Recharts library</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
+  );
+}
+
+function KPICard({
+  label,
+  value,
+  icon,
+  subtitle,
+}: {
+  label: string;
+  value: string;
+  icon: React.ReactNode;
+  subtitle?: string;
+}) {
+  return (
+    <Card>
+      <CardContent className="pt-6">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-lg bg-slate-50 flex items-center justify-center">
+            {icon}
+          </div>
+          <div>
+            <p className="text-sm text-slate-500">{label}</p>
+            <p className="text-2xl font-bold text-slate-900">{value}</p>
+            {subtitle && <p className="text-xs text-slate-400">{subtitle}</p>}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

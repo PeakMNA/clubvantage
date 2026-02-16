@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import {
   Users,
   Clock,
@@ -8,120 +8,112 @@ import {
   AlertCircle,
   RefreshCw,
   ChevronRight,
-  MapPin
+  MapPin,
+  Loader2
 } from 'lucide-react'
 import { PageHeader, Button } from '@clubvantage/ui'
-import { FlightStatusBadge, type FlightStatus } from '@/components/golf/flight-status-badge'
-import { PlayerTypeBadge, type PlayerType } from '@/components/golf/player-type-badge'
-import type { Flight, Player, Cart, Caddy } from '@/components/golf/types'
-
-// Mock data for staging area
-const generateStagingData = () => {
-  const now = new Date()
-  const currentHour = now.getHours()
-  const currentMinute = now.getMinutes()
-
-  const flights: Flight[] = [
-    {
-      id: 'staging-1',
-      time: `${currentHour}:${(currentMinute - 15).toString().padStart(2, '0')} AM`,
-      date: now.toISOString().split('T')[0] as string,
-      status: 'CHECKED_IN',
-      players: [
-        { id: 'p1', name: 'Somchai W.', type: 'member' as PlayerType, memberId: 'M-0001', handicap: 12, checkedIn: true },
-        { id: 'p2', name: 'Prasert C.', type: 'member' as PlayerType, memberId: 'M-0003', handicap: 8, checkedIn: true },
-        { id: 'p3', name: 'Wichai P.', type: 'member' as PlayerType, memberId: 'M-0008', handicap: 15, checkedIn: true },
-        { id: 'p4', name: 'Narong T.', type: 'member' as PlayerType, memberId: 'M-0012', handicap: 10, checkedIn: true },
-      ],
-      cartId: 'cart-1',
-      caddyId: 'caddy-1',
-    },
-    {
-      id: 'staging-2',
-      time: `${currentHour}:${currentMinute.toString().padStart(2, '0')} AM`,
-      date: now.toISOString().split('T')[0] as string,
-      status: 'CHECKED_IN',
-      players: [
-        { id: 'p5', name: 'Apinya S.', type: 'member' as PlayerType, memberId: 'M-0005', handicap: 18, checkedIn: true },
-        { id: 'p6', name: 'John Smith', type: 'guest' as PlayerType, handicap: 20, checkedIn: true },
-        { id: 'p7', name: 'Mike Johnson', type: 'guest' as PlayerType, handicap: 22, checkedIn: true },
-        null,
-      ],
-      cartId: 'cart-2',
-    },
-    {
-      id: 'staging-3',
-      time: `${currentHour}:${(currentMinute + 8).toString().padStart(2, '0')} AM`,
-      date: now.toISOString().split('T')[0] as string,
-      status: 'BOOKED',
-      players: [
-        { id: 'p8', name: 'Nisa W.', type: 'member' as PlayerType, memberId: 'M-0002', handicap: 24 },
-        { id: 'p9', name: 'Corporate Guest 1', type: 'guest' as PlayerType },
-        { id: 'p10', name: 'Corporate Guest 2', type: 'guest' as PlayerType },
-        { id: 'p11', name: 'Corporate Guest 3', type: 'guest' as PlayerType },
-      ],
-    },
-    {
-      id: 'staging-4',
-      time: `${currentHour}:${(currentMinute + 16).toString().padStart(2, '0')} AM`,
-      date: now.toISOString().split('T')[0] as string,
-      status: 'BOOKED',
-      players: [
-        { id: 'p12', name: 'Sompong K.', type: 'member' as PlayerType, memberId: 'M-0015', handicap: 6 },
-        { id: 'p13', name: 'Tanawat R.', type: 'member' as PlayerType, memberId: 'M-0018', handicap: 14 },
-        null,
-        null,
-      ],
-    },
-  ]
-
-  return flights
-}
-
-const mockCarts: Cart[] = [
-  { id: 'cart-1', number: '01', type: '2-seater', status: 'IN_USE', currentAssignment: '7:00 AM' },
-  { id: 'cart-2', number: '02', type: '2-seater', status: 'IN_USE', currentAssignment: '7:08 AM' },
-  { id: 'cart-3', number: '03', type: '4-seater', status: 'AVAILABLE' },
-  { id: 'cart-4', number: '04', type: '4-seater', status: 'AVAILABLE' },
-]
-
-const mockCaddies: Caddy[] = [
-  { id: 'caddy-1', name: 'Somchai Prasert', skillLevel: 'expert', status: 'ASSIGNED', experience: 12, currentAssignment: '7:00 AM' },
-  { id: 'caddy-2', name: 'Niran Wongsawat', skillLevel: 'advanced', status: 'AVAILABLE', experience: 8 },
-  { id: 'caddy-3', name: 'Prasit Chaiyasit', skillLevel: 'intermediate', status: 'AVAILABLE', experience: 3 },
-]
+import { FlightStatusBadge } from '@/components/golf/flight-status-badge'
+import { PlayerTypeBadge } from '@/components/golf/player-type-badge'
+import {
+  useGetTeeSheetQuery,
+  useCheckInFlightMutation,
+} from '@clubvantage/api-client'
+import { useCourses, useGolfMutations } from '@/hooks/use-golf'
+import { useQueryClient } from '@tanstack/react-query'
 
 export default function StagingPage() {
-  const [flights, setFlights] = useState<Flight[]>([])
   const [lastRefresh, setLastRefresh] = useState(new Date())
+  const queryClient = useQueryClient()
 
-  useEffect(() => {
-    setFlights(generateStagingData())
-  }, [])
+  // Get first course
+  const { courses, isLoading: coursesLoading } = useCourses()
+  const firstCourseId = courses[0]?.id
 
-  const readyToGo = useMemo(() =>
-    flights.filter(f => f.status === 'CHECKED_IN'),
-    [flights]
+  // Fetch today's tee sheet
+  const todayStr = useMemo(() => new Date().toISOString(), [])
+  const { data: teeSheetData, isLoading: teeSheetLoading, refetch } = useGetTeeSheetQuery(
+    { courseId: firstCourseId || '', date: todayStr },
+    { enabled: !!firstCourseId, staleTime: 15 * 1000 }
   )
 
-  const waitingForCheckIn = useMemo(() =>
-    flights.filter(f => f.status === 'BOOKED'),
-    [flights]
-  )
+  // Mutations
+  const checkInMutation = useCheckInFlightMutation()
+  const { checkIn: checkInTeeTime } = useGolfMutations()
 
-  const handleRefresh = () => {
-    setFlights(generateStagingData())
+  // Separate flights into checked-in (ready to go) and booked (waiting)
+  const { readyToGo, waitingForCheckIn } = useMemo(() => {
+    if (!teeSheetData?.teeSheet) return { readyToGo: [], waitingForCheckIn: [] }
+
+    const now = new Date()
+    // Only show flights in the next 2 hours
+    const twoHoursFromNow = new Date(now.getTime() + 2 * 60 * 60 * 1000)
+
+    const relevantSlots = teeSheetData.teeSheet.filter(slot => {
+      if (!slot.booking) return false
+      const status = slot.booking.status
+      return status === 'CHECKED_IN' || status === 'CONFIRMED'
+    })
+
+    return {
+      readyToGo: relevantSlots.filter(s => s.booking?.status === 'CHECKED_IN'),
+      waitingForCheckIn: relevantSlots.filter(s => s.booking?.status === 'CONFIRMED'),
+    }
+  }, [teeSheetData])
+
+  const totalPlayers = useMemo(() => {
+    const allSlots = [...readyToGo, ...waitingForCheckIn]
+    return allSlots.reduce((acc, s) =>
+      acc + (s.booking?.players?.length || 0), 0
+    )
+  }, [readyToGo, waitingForCheckIn])
+
+  const handleRefresh = useCallback(() => {
+    refetch()
     setLastRefresh(new Date())
+  }, [refetch])
+
+  const handleSendOff = useCallback(async (bookingId: string) => {
+    // "Send off" marks the flight as started by checking in
+    // In the staging context, this confirms the group is heading to the first tee
+    try {
+      await checkInTeeTime(bookingId)
+      queryClient.invalidateQueries({ queryKey: ['GetTeeSheet'] })
+    } catch (err) {
+      console.error('Failed to send off flight:', err)
+    }
+  }, [checkInTeeTime, queryClient])
+
+  const handleCheckIn = useCallback(async (bookingId: string) => {
+    try {
+      await checkInMutation.mutateAsync({
+        input: { teeTimeId: bookingId, players: [] }
+      })
+      queryClient.invalidateQueries({ queryKey: ['GetTeeSheet'] })
+    } catch (err) {
+      console.error('Failed to check in flight:', err)
+    }
+  }, [checkInMutation, queryClient])
+
+  const getPlayerName = (player: any) => {
+    if (player.member) {
+      return `${player.member.firstName} ${player.member.lastName}`
+    }
+    return player.guestName || 'Guest'
   }
 
-  const handleSendOff = (flightId: string) => {
-    setFlights(prev => prev.map(f =>
-      f.id === flightId ? { ...f, status: 'STARTED' as FlightStatus } : f
-    ))
+  const getPlayerType = (player: any) => {
+    return player.playerType?.toLowerCase() || 'guest'
   }
 
-  const getCart = (cartId?: string) => mockCarts.find(c => c.id === cartId)
-  const getCaddy = (caddyId?: string) => mockCaddies.find(c => c.id === caddyId)
+  const isLoading = coursesLoading || teeSheetLoading
+
+  if (isLoading) {
+    return (
+      <div className="p-6 flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -170,9 +162,7 @@ export default function StagingPage() {
               <Users className="h-5 w-5 text-blue-500" />
             </div>
             <div>
-              <div className="text-2xl font-bold">
-                {flights.reduce((acc, f) => acc + f.players.filter(p => p !== null).length, 0)}
-              </div>
+              <div className="text-2xl font-bold">{totalPlayers}</div>
               <div className="text-sm text-muted-foreground">Total Players</div>
             </div>
           </div>
@@ -206,41 +196,35 @@ export default function StagingPage() {
                 No flights ready to go
               </div>
             ) : (
-              readyToGo.map(flight => (
-                <div key={flight.id} className="p-4 hover:bg-muted/50">
+              readyToGo.map(slot => (
+                <div key={slot.booking!.id} className="p-4 hover:bg-muted/50">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
-                      <span className="text-lg font-semibold">{flight.time}</span>
-                      <FlightStatusBadge status={flight.status} />
+                      <span className="text-lg font-semibold">{slot.time}</span>
+                      <FlightStatusBadge status={slot.booking!.status as any} />
                     </div>
-                    <Button size="sm" onClick={() => handleSendOff(flight.id)}>
+                    <Button
+                      size="sm"
+                      onClick={() => handleSendOff(slot.booking!.id)}
+                    >
                       Send Off
                       <ChevronRight className="ml-1 h-4 w-4" />
                     </Button>
                   </div>
                   <div className="grid grid-cols-2 gap-2 mb-3">
-                    {flight.players.map((player, idx) => (
+                    {slot.booking!.players?.map((player, idx) => (
                       <div key={idx} className="flex items-center gap-2 text-sm">
-                        {player ? (
-                          <>
-                            <PlayerTypeBadge type={player.type} />
-                            <span>{player.name}</span>
-                            {player.handicap && (
-                              <span className="text-muted-foreground">({player.handicap})</span>
-                            )}
-                          </>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
+                        <PlayerTypeBadge type={getPlayerType(player)} />
+                        <span>{getPlayerName(player)}</span>
                       </div>
                     ))}
                   </div>
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    {flight.cartId && (
-                      <span>Cart: #{getCart(flight.cartId)?.number}</span>
+                    {slot.booking!.players?.some(p => p.cartType && p.cartType !== 'WALKING') && (
+                      <span>Cart requested</span>
                     )}
-                    {flight.caddyId && (
-                      <span>Caddy: {getCaddy(flight.caddyId)?.name}</span>
+                    {slot.booking!.players?.some(p => p.caddy) && (
+                      <span>Caddy: {slot.booking!.players.find(p => p.caddy)?.caddy?.firstName}</span>
                     )}
                   </div>
                 </div>
@@ -264,28 +248,27 @@ export default function StagingPage() {
                 No flights waiting for check-in
               </div>
             ) : (
-              waitingForCheckIn.map(flight => (
-                <div key={flight.id} className="p-4 hover:bg-muted/50">
+              waitingForCheckIn.map(slot => (
+                <div key={slot.booking!.id} className="p-4 hover:bg-muted/50">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
-                      <span className="text-lg font-semibold">{flight.time}</span>
-                      <FlightStatusBadge status={flight.status} />
+                      <span className="text-lg font-semibold">{slot.time}</span>
+                      <FlightStatusBadge status={slot.booking!.status as any} />
                     </div>
-                    <Button variant="outline" size="sm">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={checkInMutation.isPending}
+                      onClick={() => handleCheckIn(slot.booking!.id)}
+                    >
                       Check In
                     </Button>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
-                    {flight.players.map((player, idx) => (
+                    {slot.booking!.players?.map((player, idx) => (
                       <div key={idx} className="flex items-center gap-2 text-sm">
-                        {player ? (
-                          <>
-                            <PlayerTypeBadge type={player.type} />
-                            <span>{player.name}</span>
-                          </>
-                        ) : (
-                          <span className="text-muted-foreground">Empty slot</span>
-                        )}
+                        <PlayerTypeBadge type={getPlayerType(player)} />
+                        <span>{getPlayerName(player)}</span>
                       </div>
                     ))}
                   </div>

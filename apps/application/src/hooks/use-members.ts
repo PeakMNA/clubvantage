@@ -11,6 +11,7 @@ import {
   useCreateMemberMutation,
   useUpdateMemberMutation,
   useDeleteMemberMutation,
+  useChangeMemberStatusMutation,
   queryKeys,
   request,
 } from '@clubvantage/api-client';
@@ -193,6 +194,13 @@ export function useMemberMutations() {
     },
   });
 
+  const changeMemberStatusMutation = useChangeMemberStatusMutation({
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.members.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.members.stats });
+    },
+  });
+
   const createMember = useCallback(
     async (data: {
       firstName: string;
@@ -230,13 +238,22 @@ export function useMemberMutations() {
     [deleteMutation]
   );
 
+  const changeMemberStatus = useCallback(
+    async (id: string, status: MemberStatus, reason?: string) => {
+      return changeMemberStatusMutation.mutateAsync({ id, input: { status, reason } });
+    },
+    [changeMemberStatusMutation]
+  );
+
   return {
     createMember,
     updateMember,
     deleteMember,
+    changeMemberStatus,
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
     isDeleting: deleteMutation.isPending,
+    isChangingStatus: changeMemberStatusMutation.isPending,
   };
 }
 

@@ -128,8 +128,8 @@ export async function fetchTeeSheet(
 
     // Generate slots from firstTeeTime to lastTeeTime
     const slots: GolfTimeSlot[] = []
-    const [startH, startM] = course.firstTeeTime.split(':').map(Number)
-    const [endH, endM] = course.lastTeeTime.split(':').map(Number)
+    const [startH = 0, startM = 0] = course.firstTeeTime.split(':').map(Number)
+    const [endH = 0, endM = 0] = course.lastTeeTime.split(':').map(Number)
     const startMinutes = startH * 60 + startM
     const endMinutes = endH * 60 + endM
     const interval = course.teeInterval || 8

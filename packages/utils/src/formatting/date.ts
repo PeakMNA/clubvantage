@@ -15,14 +15,15 @@ import {
   endOfMonth,
   differenceInDays,
 } from 'date-fns';
-import { th, enSG } from 'date-fns/locale';
+import { th, enGB } from 'date-fns/locale';
+import type { Locale } from 'date-fns';
 
 export type LocaleCode = 'th' | 'en-SG' | 'en-MY';
 
 const LOCALE_MAP: Record<LocaleCode, Locale> = {
   th: th,
-  'en-SG': enSG,
-  'en-MY': enSG, // Use SG locale for MY
+  'en-SG': enGB,
+  'en-MY': enGB, // Use GB locale for SEA English
 };
 
 /**

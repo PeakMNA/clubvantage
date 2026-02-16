@@ -122,18 +122,18 @@ const tickets: Ticket[] = [
   },
 ];
 
-const priorityConfig: Record<string, { label: string; color: string }> = {
+const priorityConfig = {
   high: { label: 'High', color: 'bg-red-100 text-red-700' },
   medium: { label: 'Medium', color: 'bg-amber-100 text-amber-700' },
   low: { label: 'Low', color: 'bg-slate-100 text-slate-600' },
-};
+} satisfies Record<string, { label: string; color: string }>;
 
-const statusConfig: Record<string, { label: string; icon: React.ElementType; color: string; badgeVariant: 'default' | 'warning' | 'success' | 'destructive' }> = {
-  open: { label: 'Open', icon: AlertCircle, color: 'text-amber-500', badgeVariant: 'warning' },
-  in_progress: { label: 'In Progress', icon: Clock, color: 'text-blue-500', badgeVariant: 'default' },
-  waiting: { label: 'Waiting', icon: Clock, color: 'text-slate-500', badgeVariant: 'default' },
-  resolved: { label: 'Resolved', icon: CheckCircle, color: 'text-emerald-500', badgeVariant: 'success' },
-  closed: { label: 'Closed', icon: CheckCircle, color: 'text-slate-400', badgeVariant: 'default' },
+const statusConfig = {
+  open: { label: 'Open', icon: AlertCircle, color: 'text-amber-500', badgeVariant: 'warning' as const },
+  in_progress: { label: 'In Progress', icon: Clock, color: 'text-blue-500', badgeVariant: 'default' as const },
+  waiting: { label: 'Waiting', icon: Clock, color: 'text-slate-500', badgeVariant: 'default' as const },
+  resolved: { label: 'Resolved', icon: CheckCircle, color: 'text-emerald-500', badgeVariant: 'success' as const },
+  closed: { label: 'Closed', icon: CheckCircle, color: 'text-slate-400', badgeVariant: 'default' as const },
 };
 
 export default function SupportTicketsPage() {
@@ -217,7 +217,7 @@ export default function SupportTicketsPage() {
         </div>
         <div className="flex items-center gap-2">
           <span className="text-sm text-slate-500">Status:</span>
-          {['all', 'open', 'in_progress', 'waiting', 'resolved'].map((status) => (
+          {(['all', 'open', 'in_progress', 'waiting', 'resolved'] as const).map((status) => (
             <button
               key={status}
               onClick={() => setStatusFilter(status)}
@@ -233,7 +233,7 @@ export default function SupportTicketsPage() {
         </div>
         <div className="flex items-center gap-2">
           <span className="text-sm text-slate-500">Priority:</span>
-          {['all', 'high', 'medium', 'low'].map((priority) => (
+          {(['all', 'high', 'medium', 'low'] as const).map((priority) => (
             <button
               key={priority}
               onClick={() => setPriorityFilter(priority)}
@@ -255,6 +255,7 @@ export default function SupportTicketsPage() {
           <div className="divide-y divide-slate-100">
             {filteredTickets.map((ticket) => {
               const status = statusConfig[ticket.status];
+              const priority = priorityConfig[ticket.priority];
               const StatusIcon = status.icon;
               return (
                 <div
@@ -269,8 +270,8 @@ export default function SupportTicketsPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="font-mono text-sm text-slate-500">{ticket.id}</span>
-                          <span className={`text-xs px-2 py-0.5 rounded-full ${priorityConfig[ticket.priority].color}`}>
-                            {priorityConfig[ticket.priority].label}
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${priority.color}`}>
+                            {priority.label}
                           </span>
                           <Badge variant={status.badgeVariant}>{status.label}</Badge>
                         </div>
